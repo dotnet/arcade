@@ -18,48 +18,66 @@ using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Microsoft.DotNet.Helix.Client;
 using Microsoft.DotNet.Helix.Client.Models;
+using Microsoft.DotNet.Helix.JobMonitor.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.JobMonitor
 {
-    internal sealed class JobMonitorRunner : IDisposable
+    internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
     {
         private readonly JobMonitorOptions _options;
         private readonly ILogger _logger;
-        private readonly HttpClient _azdoClient;
-        private readonly IHelixApi _helixApi;
+        private readonly IAzureDevOpsService _azdo;
+        private readonly IHelixService _helix;
+        private readonly Func<TimeSpan, CancellationToken, Task> _delayFunc;
 
+        /// <summary>
+        /// Constructor for production use with real services.
+        /// </summary>
         public JobMonitorRunner(JobMonitorOptions options, ILogger logger)
+            : this(options, logger,
+                   CreateRealAzureDevOpsService(options, logger),
+                   CreateRealHelixService(options, logger),
+                   null)
+        {
+        }
+
+        /// <summary>
+        /// Constructor for testing with injected services.
+        /// </summary>
+        internal JobMonitorRunner(
+            JobMonitorOptions options,
+            ILogger logger,
+            IAzureDevOpsService azdo,
+            IHelixService helix,
+            Func<TimeSpan, CancellationToken, Task> delayFunc)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _azdo = azdo ?? throw new ArgumentNullException(nameof(azdo));
+            _helix = helix ?? throw new ArgumentNullException(nameof(helix));
+            _delayFunc = delayFunc ?? Task.Delay;
             Directory.CreateDirectory(_options.WorkingDirectory);
-
-            _helixApi = string.IsNullOrEmpty(_options.HelixAccessToken)
-                ? ApiFactory.GetAnonymous(_options.HelixBaseUri)
-                : ApiFactory.GetAuthenticated(_options.HelixBaseUri, _options.HelixAccessToken);
-
-            _azdoClient = new HttpClient();
-            string encodedToken = Convert.ToBase64String(Encoding.UTF8.GetBytes("unused:" + _options.SystemAccessToken));
-            _azdoClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", encodedToken);
-            _azdoClient.DefaultRequestHeaders.UserAgent.ParseAdd("dotnet-helix-job-monitor");
         }
 
-        // Tag prefix used to identify Azure DevOps test runs created by this monitor for a
-        // particular Helix job. The full tag value is "MonitoredJob:{helixJobName}" and is
-        // attached to the test run when it is created. This lets us look up which Helix jobs
-        // we have already processed without encoding the Helix job name into the run name.
-        private const string MonitoredJobTagPrefix = "MonitoredJob:";
+        public Task<int> RunAsync(CancellationToken cancellationToken)
+        {
+            return RunCoreAsync(cancellationToken);
+        }
 
         public async Task<int> RunAsync()
         {
-            HashSet<string> processedHelixJobs = await GetProcessedHelixJobNamesAsync();
-
             var cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(_options.MaximumWaitMinutes));
-            CancellationToken cancellationToken = cancellationTokenSource.Token;
+            return await RunCoreAsync(cancellationTokenSource.Token);
+        }
+
+        private async Task<int> RunCoreAsync(CancellationToken cancellationToken)
+        {
+            IReadOnlySet<string> alreadyProcessed = await _azdo.GetProcessedHelixJobNamesAsync(cancellationToken);
+            var processedHelixJobs = new HashSet<string>(alreadyProcessed, StringComparer.OrdinalIgnoreCase);
 
             bool anyNonMonitorJobFailures = false;
             int failedHelixJobCount = 0;
@@ -69,27 +87,19 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                AzureDevOpsTimelineRecord[] timelineRecords = await GetTimelineRecordsAsync();
-                IImmutableList<JobSummary> jobs = await RetryAsync(
-                    // TODO: "pr/public" is hardcoded but could come from the build technically
-                    async () => await _helixApi.Job.ListAsync(source: $"pr/public/{_options.Organization}/{_options.RepositoryName}/refs/pull/{_options.PrNumber}/merge"),
-                    cancellationToken);
+                IReadOnlyList<AzureDevOpsTimelineRecord> timelineRecords = await _azdo.GetTimelineRecordsAsync(cancellationToken);
+                IReadOnlyList<HelixJobInfo> jobs = await _helix.GetJobsAsync(cancellationToken);
 
-                // Filter jobs to completed ones belonging to this build
-                IReadOnlyCollection<JobSummary> completedJobs =
-                [
-                    ..jobs
-                        .Where(j => ((JObject)j.Properties).TryGetValue("BuildId", out JToken buildId) && buildId?.ToString() == _options.BuildId)
-                        .Where(j => j.Finished != null)
-                        .OrderBy(j => j.Name, StringComparer.OrdinalIgnoreCase)
-                ];
+                IReadOnlyCollection<HelixJobInfo> completedJobs = jobs
+                    .Where(j => j.IsCompleted)
+                    .OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
 
                 _logger.LogInformation("{CompletedCount}/{TotalCount} Helix jobs finished", completedJobs.Count, jobs.Count);
 
-                foreach (JobSummary job in completedJobs.Where(j => !processedHelixJobs.Contains(j.Name)))
+                foreach (HelixJobInfo job in completedJobs.Where(j => !processedHelixJobs.Contains(j.JobName)))
                 {
-                    bool passed = await ProcessCompletedJobAsync(job, cancellationToken);
-                    processedHelixJobs.Add(job.Name);
+                    bool passed = await ProcessCompletedJobAsync(job, processedHelixJobs, cancellationToken);
                     processedHelixJobCount++;
                     if (!passed)
                     {
@@ -99,7 +109,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 anyNonMonitorJobFailures = HelixJobMonitorUtilities.HasFailedNonMonitorJobs(timelineRecords, _options.JobMonitorName);
                 bool allPipelineJobsComplete = HelixJobMonitorUtilities.AreNonMonitorJobsComplete(timelineRecords, _options.JobMonitorName);
-                bool allHelixJobsComplete = jobs.Count != 0 && jobs.Count == completedJobs.Count;
+                bool allHelixJobsComplete = jobs.Count == 0 || jobs.All(j => j.IsCompleted);
 
                 if (allPipelineJobsComplete && allHelixJobsComplete)
                 {
@@ -122,304 +132,373 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     return 0;
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(Math.Max(5, _options.PollingIntervalSeconds)), cancellationToken);
+                // If all pipeline jobs are dead and Helix jobs are still running,
+                // those jobs are orphaned — no point waiting.
+                if (allPipelineJobsComplete && anyNonMonitorJobFailures && !allHelixJobsComplete)
+                {
+                    _logger.LogError("All non-monitor pipeline jobs failed/canceled while Helix jobs are still running. Exiting.");
+                    return 1;
+                }
+
+                await _delayFunc(TimeSpan.FromSeconds(Math.Max(5, _options.PollingIntervalSeconds)), cancellationToken);
+            }
+        }
+
+        private async Task<bool> ProcessCompletedJobAsync(
+            HelixJobInfo job,
+            HashSet<string> processedHelixJobs,
+            CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Processing completed job {jobName}...", job.JobName);
+
+            string testRunName = job.TestRunName ?? job.JobName;
+            int testRunId = await _azdo.CreateTestRunAsync(testRunName, job.JobName, cancellationToken);
+
+            try
+            {
+                HelixJobPassFail passFail = await _helix.GetJobPassFailAsync(job.JobName, cancellationToken);
+                IReadOnlyList<WorkItemTestResults> downloadedResults = await _helix.DownloadTestResultsAsync(
+                    job.JobName, passFail, cancellationToken);
+
+                bool allTestsPassed = await _azdo.UploadTestResultsAsync(testRunId, downloadedResults, cancellationToken);
+                await _azdo.CompleteTestRunAsync(testRunId, cancellationToken);
+
+                processedHelixJobs.Add(job.JobName);
+
+                _logger.LogInformation("Job '{JobName}' completed ({PassedCount} passed, {FailedCount} failed).",
+                    job.JobName, passFail.PassedWorkItems.Count, passFail.FailedWorkItems.Count);
+
+                return !passFail.HasFailures && allTestsPassed
+                    && !job.Status.Equals("failed", StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to process job '{JobName}'. Test run ID was {TestRunId}.", job.JobName, testRunId);
+                // Don't add to processedHelixJobs — allows retry to pick it up.
+                return false;
             }
         }
 
         public void Dispose()
         {
-            _azdoClient.Dispose();
+            // Real services handle their own cleanup via the azdo/helix service implementations
         }
 
-        private async Task<bool> ProcessCompletedJobAsync(JobSummary helixJob, CancellationToken cancellationToken)
+        // -----------------------------------------------------------------
+        // Factory methods for production service implementations
+        // -----------------------------------------------------------------
+
+        private static IAzureDevOpsService CreateRealAzureDevOpsService(JobMonitorOptions options, ILogger logger)
+            => new RealAzureDevOpsService(options, logger);
+
+        private static IHelixService CreateRealHelixService(JobMonitorOptions options, ILogger logger)
+            => new RealHelixService(options, logger);
+
+        // -----------------------------------------------------------------
+        // Real AzDO service implementation (extracted from original runner)
+        // -----------------------------------------------------------------
+
+        private sealed class RealAzureDevOpsService : IAzureDevOpsService, IDisposable
         {
-            _logger.LogInformation("Processing completed job {jobName}...", helixJob.Name);
+            private const string MonitoredJobTagPrefix = "MonitoredJob:";
+            private readonly JobMonitorOptions _options;
+            private readonly ILogger _logger;
+            private readonly HttpClient _azdoClient;
 
-            string testRunName = GetTestRunNameFromJob(helixJob);
-            int testRunId = await StartTestRunAsync(testRunName, helixJob.Name);
-            string resultsDirectory = Path.Combine(_options.WorkingDirectory, SanitizeDirName(helixJob.Name));
-            Directory.CreateDirectory(resultsDirectory);
-
-            IImmutableList<WorkItemSummary> workItems = await RetryAsync(() => _helixApi.WorkItem.ListAsync(helixJob.Name), cancellationToken);
-
-            int failedWorkItemCount = workItems.Count(wi => wi.ExitCode != 0 || !wi.State.Equals("Finished", StringComparison.OrdinalIgnoreCase));
-            bool helixJobSuccessful = failedWorkItemCount == 0;
-            int sucessfulWorkItemCount = workItems.Count - failedWorkItemCount;
-
-            try
+            public RealAzureDevOpsService(JobMonitorOptions options, ILogger logger)
             {
-                List<WorkItemTestResults> downloadedFiles = await DownloadTestResultsAsync(helixJob.Name, workItems, resultsDirectory, cancellationToken);
-                if (!await UploadDownloadedResultsAsync(downloadedFiles, testRunId, cancellationToken))
-                {
-                    sucessfulWorkItemCount--;
-                    failedWorkItemCount++;
-                    helixJobSuccessful = false;
-                }
-            }
-            catch (Exception ex)
-            {
-                // TODO: Handle better here
-                _logger.LogError(ex, "Failed to upload test results for job {JobName} to Azure DevOps. Test run ID was {TestRunId}.", helixJob.Name, testRunId);
-                return false;
-            }
-
-            await StopTestRunAsync(testRunId, testRunName);
-
-            _logger.LogInformation("Job '{JobName}' completed ({PassedCount} passed, {FailedCount} failed).", helixJob.Name, sucessfulWorkItemCount, failedWorkItemCount);
-            return failedWorkItemCount == 0;
-        }
-
-        private async Task<HashSet<string>> GetProcessedHelixJobNamesAsync()
-        {
-            // The Azure DevOps "Test Runs - List" API filters by build using the VSTFS
-            // artifact URI (buildUri), not a numeric buildIds parameter. Passing buildIds
-            // results in a 404 from the service.
-            string buildUri = Uri.EscapeDataString($"vstfs:///Build/Build/{_options.BuildId}");
-            JObject data = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs?buildUri={buildUri}&api-version=7.1");
-            var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (JObject run in (data?["value"] as JArray ?? []).Cast<JObject>())
-            {
-                int? runId = run.Value<int?>("id");
-                string state = run.Value<string>("state");
-                if (runId == null || !string.Equals(state, "Completed", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                string helixJobName = await GetMonitoredHelixJobNameAsync(runId.Value);
-                if (!string.IsNullOrEmpty(helixJobName))
-                {
-                    processed.Add(helixJobName);
-                }
+                _options = options;
+                _logger = logger;
+                _azdoClient = new HttpClient();
+                string encodedToken = Convert.ToBase64String(Encoding.UTF8.GetBytes("unused:" + options.SystemAccessToken));
+                _azdoClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", encodedToken);
+                _azdoClient.DefaultRequestHeaders.UserAgent.ParseAdd("dotnet-helix-job-monitor");
             }
 
-            return processed;
-        }
-
-        private async Task<string> GetMonitoredHelixJobNameAsync(int testRunId)
-        {
-            // The list test-runs API does not return tags, so fetch the run details for each one
-            // we encounter to inspect its tags for the MonitoredJob marker.
-            JObject run = await SendAsync(
-                HttpMethod.Get,
-                $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}?api-version=7.1");
-
-            if (run?["tags"] is not JArray tags)
+            public async Task<IReadOnlyList<AzureDevOpsTimelineRecord>> GetTimelineRecordsAsync(CancellationToken cancellationToken)
             {
+                JObject data = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/build/builds/{_options.BuildId}/timeline?api-version=7.1-preview.2", cancellationToken: cancellationToken);
+                return data?["records"]?.ToObject<AzureDevOpsTimelineRecord[]>() ?? [];
+            }
+
+            public async Task<IReadOnlySet<string>> GetProcessedHelixJobNamesAsync(CancellationToken cancellationToken)
+            {
+                string buildUri = Uri.EscapeDataString($"vstfs:///Build/Build/{_options.BuildId}");
+                JObject data = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs?buildUri={buildUri}&api-version=7.1", cancellationToken: cancellationToken);
+                var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (JObject run in (data?["value"] as JArray ?? []).Cast<JObject>())
+                {
+                    int? runId = run.Value<int?>("id");
+                    string state = run.Value<string>("state");
+                    if (runId == null || !string.Equals(state, "Completed", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    string helixJobName = await GetMonitoredHelixJobNameAsync(runId.Value, cancellationToken);
+                    if (!string.IsNullOrEmpty(helixJobName))
+                    {
+                        processed.Add(helixJobName);
+                    }
+                }
+
+                return processed;
+            }
+
+            private async Task<string> GetMonitoredHelixJobNameAsync(int testRunId, CancellationToken cancellationToken)
+            {
+                JObject run = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}?api-version=7.1", cancellationToken: cancellationToken);
+                if (run?["tags"] is not JArray tags)
+                {
+                    return null;
+                }
+
+                foreach (JToken tag in tags)
+                {
+                    string tagName = tag?.Value<string>("name");
+                    if (!string.IsNullOrEmpty(tagName) && tagName.StartsWith(MonitoredJobTagPrefix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return tagName.Substring(MonitoredJobTagPrefix.Length);
+                    }
+                }
+
                 return null;
             }
 
-            foreach (JToken tag in tags)
+            public async Task<int> CreateTestRunAsync(string name, string helixJobName, CancellationToken cancellationToken)
             {
-                string tagName = tag?.Value<string>("name");
-                if (!string.IsNullOrEmpty(tagName)
-                    && tagName.StartsWith(MonitoredJobTagPrefix, StringComparison.OrdinalIgnoreCase))
-                {
-                    return tagName.Substring(MonitoredJobTagPrefix.Length);
-                }
-            }
-
-            return null;
-        }
-
-        private static string GetTestRunNameFromJob(JobSummary helixJob)
-        {
-            // The Helix SDK stamps the desired Azure DevOps test run name onto the job as a
-            // "TestRunName" property when submitting (matching what StartAzurePipelinesTestRun
-            // would have used). Fall back to the Helix job name if the property is missing so
-            // we always produce a non-empty name.
-            if (helixJob.Properties is JObject properties
-                && properties.TryGetValue("TestRunName", out JToken testRunName))
-            {
-                string value = testRunName?.ToString();
-                if (!string.IsNullOrEmpty(value))
-                {
-                    return value;
-                }
-            }
-
-            return helixJob.Name;
-        }
-
-        private async Task<AzureDevOpsTimelineRecord[]> GetTimelineRecordsAsync()
-        {
-            JObject data = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/build/builds/{_options.BuildId}/timeline?api-version=7.1-preview.2");
-            return data?["records"]?.ToObject<AzureDevOpsTimelineRecord[]>() ?? [];
-        }
-
-        private async Task<int> StartTestRunAsync(string testRunName, string helixJobName)
-        {
-            JObject result = await SendAsync(
-                HttpMethod.Post,
-                $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs?api-version=5.0",
-                new JObject
-                {
-                    ["automated"] = true,
-                    ["build"] = new JObject { ["id"] = _options.BuildId },
-                    ["name"] = testRunName,
-                    ["state"] = "InProgress",
-                    ["tags"] = new JArray
+                JObject result = await SendAsync(HttpMethod.Post,
+                    $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs?api-version=5.0",
+                    new JObject
                     {
-                        new JObject { ["name"] = MonitoredJobTagPrefix + helixJobName },
+                        ["automated"] = true,
+                        ["build"] = new JObject { ["id"] = _options.BuildId },
+                        ["name"] = name,
+                        ["state"] = "InProgress",
+                        ["tags"] = new JArray { new JObject { ["name"] = MonitoredJobTagPrefix + helixJobName } },
                     },
-                });
+                    cancellationToken: cancellationToken);
+                return result?["id"]?.ToObject<int>() ?? 0;
+            }
 
-            return result?["id"]?.ToObject<int>() ?? 0;
-        }
-
-        private async Task StopTestRunAsync(int testRunId, string testRunName)
-        {
-            await SendAsync(
-                new HttpMethod("PATCH"),
-                $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}?api-version=5.0",
-                new JObject { ["state"] = "Completed" });
-
-            _logger.LogInformation("Stopped test run '{TestRunName}'.", testRunName);
-        }
-
-        private async Task<List<WorkItemTestResults>> DownloadTestResultsAsync(
-            string jobName,
-            IImmutableList<WorkItemSummary> workItems,
-            string outputDirectory,
-            CancellationToken cancellationToken)
-        {
-            List<WorkItemTestResults> downloadedFiles = [];
-
-            JobResultsUri resultsUri = await RetryAsync(
-                () => _helixApi.Job.ResultsAsync(jobName),
-                cancellationToken);
-
-            foreach (WorkItemSummary workItem in workItems)
+            public async Task CompleteTestRunAsync(int testRunId, CancellationToken cancellationToken)
             {
-                IImmutableList<UploadedFile> availableFiles = await RetryAsync(
-                    () => _helixApi.WorkItem.ListFilesAsync(workItem.Name, jobName, false),
+                await SendAsync(new HttpMethod("PATCH"),
+                    $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}?api-version=5.0",
+                    new JObject { ["state"] = "Completed" },
+                    cancellationToken: cancellationToken);
+            }
+
+            public async Task<bool> UploadTestResultsAsync(int testRunId, IReadOnlyList<WorkItemTestResults> results, CancellationToken cancellationToken)
+            {
+                var publisher = new AzureDevOpsResultPublisher(
+                    new AzureDevOpsReportingParameters(
+                        new Uri(_options.CollectionUri, UriKind.Absolute),
+                        _options.TeamProject,
+                        testRunId.ToString(CultureInfo.InvariantCulture),
+                        _options.SystemAccessToken),
+                    _logger);
+
+                bool allPassed = true;
+                foreach (WorkItemTestResults workItem in results)
+                {
+                    _logger.LogInformation("Publishing test results for work item '{WorkItemName}' in job '{JobName}'...", workItem.WorkItemName, workItem.JobName);
+                    allPassed &= await publisher.UploadTestResultsAsync(workItem.TestResultFiles,
+                        new { HelixJobId = workItem.JobName, HelixWorkItemName = workItem.WorkItemName },
+                        cancellationToken);
+                }
+
+                return allPassed;
+            }
+
+            private async Task<JObject> SendAsync(HttpMethod method, string requestUri, JToken body = null, CancellationToken cancellationToken = default)
+            {
+                return await RetryAsync(async () =>
+                {
+                    using var request = new HttpRequestMessage(method, requestUri);
+                    if (body != null)
+                    {
+                        request.Content = new StringContent(body.ToString(Formatting.None), Encoding.UTF8, "application/json");
+                    }
+
+                    using HttpResponseMessage response = await _azdoClient.SendAsync(request, cancellationToken);
+                    string content = response.Content != null ? await response.Content.ReadAsStringAsync(cancellationToken) : null;
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new HttpRequestException($"Request to {requestUri} failed with {(int)response.StatusCode} {response.ReasonPhrase}. {content}");
+                    }
+
+                    return string.IsNullOrWhiteSpace(content) ? [] : JObject.Parse(content);
+                }, cancellationToken);
+            }
+
+            public void Dispose() => _azdoClient.Dispose();
+        }
+
+        // -----------------------------------------------------------------
+        // Real Helix service implementation (extracted from original runner)
+        // -----------------------------------------------------------------
+
+        private sealed class RealHelixService : IHelixService
+        {
+            private readonly JobMonitorOptions _options;
+            private readonly ILogger _logger;
+            private readonly IHelixApi _helixApi;
+
+            public RealHelixService(JobMonitorOptions options, ILogger logger)
+            {
+                _options = options;
+                _logger = logger;
+                _helixApi = string.IsNullOrEmpty(options.HelixAccessToken)
+                    ? ApiFactory.GetAnonymous(options.HelixBaseUri)
+                    : ApiFactory.GetAuthenticated(options.HelixBaseUri, options.HelixAccessToken);
+            }
+
+            public async Task<IReadOnlyList<HelixJobInfo>> GetJobsAsync(CancellationToken cancellationToken)
+            {
+                IImmutableList<JobSummary> jobs = await RetryAsync(
+                    async () => await _helixApi.Job.ListAsync(
+                        source: $"pr/public/{_options.Organization}/{_options.RepositoryName}/refs/pull/{_options.PrNumber}/merge"),
                     cancellationToken);
 
-                availableFiles = [.. availableFiles.Where(f => LooksLikeTestResultFile(f.Name))];
+                return jobs
+                    .Where(j => ((JObject)j.Properties).TryGetValue("BuildId", out JToken buildId) && buildId?.ToString() == _options.BuildId)
+                    .Select(j => new HelixJobInfo(
+                        j.Name,
+                        j.Finished != null ? "finished" : "running",
+                        GetTestRunNameFromJob(j)))
+                    .ToList();
+            }
 
-                if (availableFiles.Count == 0)
+            public async Task<HelixJobPassFail> GetJobPassFailAsync(string jobName, CancellationToken cancellationToken)
+            {
+                IImmutableList<WorkItemSummary> workItems = await RetryAsync(
+                    () => _helixApi.WorkItem.ListAsync(jobName),
+                    cancellationToken);
+
+                var passed = new List<string>();
+                var failed = new List<string>();
+
+                foreach (WorkItemSummary wi in workItems)
                 {
-                    _logger.LogInformation("Work item '{WorkItemName}' in job '{JobName}' has no test result files to download.", workItem.Name, jobName);
-                    continue;
-                }
-
-                string workItemDirectory = Path.Combine(outputDirectory, SanitizeDirName(workItem.Name));
-                Directory.CreateDirectory(workItemDirectory);
-
-                List<string> workItemFiles = [];
-                foreach (UploadedFile file in availableFiles)
-                {
-                    string relativePath = file.Name.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
-                    string destinationFile = Path.Combine(workItemDirectory, relativePath);
-                    string directory = Path.GetDirectoryName(destinationFile);
-
-                    if (!string.IsNullOrEmpty(directory))
+                    if (wi.ExitCode != 0 || !wi.State.Equals("Finished", StringComparison.OrdinalIgnoreCase))
                     {
-                        Directory.CreateDirectory(directory);
+                        failed.Add(wi.Name);
                     }
-
-                    try
+                    else
                     {
-                        _logger.LogInformation("Downloading {FileName} for work item {WorkItemName} in job {JobName}...", file.Name, workItem.Name, jobName);
-
-                        BlobClient blobClient = CreateBlobClient(file.Link, resultsUri.ResultsUriRSAS);
-                        await blobClient.DownloadToAsync(destinationFile, cancellationToken);
-                        workItemFiles.Add(destinationFile);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Failed to download '{FileName}' for '{JobName}/{WorkItemName}'.", file.Name, jobName, workItem.Name);
+                        passed.Add(wi.Name);
                     }
                 }
 
-                downloadedFiles.Add(new WorkItemTestResults(jobName, workItem.Name, workItemFiles));
+                return new HelixJobPassFail(passed, failed);
             }
 
-            return downloadedFiles;
-        }
-
-        private async Task<bool> UploadDownloadedResultsAsync(List<WorkItemTestResults> testResults, int testRunId, CancellationToken cancellationToken)
-        {
-            var publisher = new AzureDevOpsResultPublisher(
-                new AzureDevOpsReportingParameters(
-                    new Uri(_options.CollectionUri, UriKind.Absolute),
-                    _options.TeamProject,
-                    testRunId.ToString(CultureInfo.InvariantCulture),
-                    _options.SystemAccessToken),
-                _logger);
-
-            bool allTestsPassed = true;
-
-            foreach (WorkItemTestResults workItemTestResult in testResults)
+            public async Task<IReadOnlyList<WorkItemTestResults>> DownloadTestResultsAsync(
+                string jobName,
+                HelixJobPassFail passFail,
+                CancellationToken cancellationToken)
             {
-                _logger.LogInformation("Publishing test results for work item '{WorkItemName}' in job '{JobName}'...", workItemTestResult.WorkItemName, workItemTestResult.JobName);
-                allTestsPassed &= await publisher.UploadTestResultsAsync(
-                    workItemTestResult.TestResultFiles,
-                    // Metadata that will be appended to each test case
-                    new
+                List<WorkItemTestResults> downloadedFiles = [];
+                string outputDirectory = Path.Combine(_options.WorkingDirectory, SanitizeDirName(jobName));
+                Directory.CreateDirectory(outputDirectory);
+
+                JobResultsUri resultsUri = await RetryAsync(() => _helixApi.Job.ResultsAsync(jobName), cancellationToken);
+
+                IEnumerable<string> workItemNames = passFail.PassedWorkItems
+                    .Concat(passFail.FailedWorkItems)
+                    .Distinct(StringComparer.OrdinalIgnoreCase);
+
+                foreach (string workItemName in workItemNames)
+                {
+                    IImmutableList<UploadedFile> availableFiles = await RetryAsync(
+                        () => _helixApi.WorkItem.ListFilesAsync(workItemName, jobName, false),
+                        cancellationToken);
+
+                    availableFiles = [.. availableFiles.Where(f => LooksLikeTestResultFile(f.Name))];
+                    if (availableFiles.Count == 0)
                     {
-                        HelixJobId = workItemTestResult.JobName,
-                        HelixWorkItemName = workItemTestResult.WorkItemName,
-                    },
-                cancellationToken);
-            }
+                        continue;
+                    }
 
-            return allTestsPassed;
-        }
+                    string workItemDirectory = Path.Combine(outputDirectory, SanitizeDirName(workItemName));
+                    Directory.CreateDirectory(workItemDirectory);
 
-        private async Task<JObject> SendAsync(HttpMethod method, string requestUri, JToken body = null, CancellationToken cancellationToken = default)
-        {
-            return await RetryAsync(async () =>
-            {
-                using var request = new HttpRequestMessage(method, requestUri);
-                if (body != null)
-                {
-                    request.Content = new StringContent(body.ToString(Formatting.None), Encoding.UTF8, "application/json");
+                    List<string> workItemFiles = [];
+                    foreach (UploadedFile file in availableFiles)
+                    {
+                        string relativePath = file.Name.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+                        string destinationFile = Path.Combine(workItemDirectory, relativePath);
+                        string directory = Path.GetDirectoryName(destinationFile);
+                        if (!string.IsNullOrEmpty(directory))
+                        {
+                            Directory.CreateDirectory(directory);
+                        }
+
+                        try
+                        {
+                            BlobClient blobClient = CreateBlobClient(file.Link, resultsUri.ResultsUriRSAS);
+                            await blobClient.DownloadToAsync(destinationFile, cancellationToken);
+                            workItemFiles.Add(destinationFile);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Failed to download '{FileName}' for '{JobName}/{WorkItemName}'.", file.Name, jobName, workItemName);
+                        }
+                    }
+
+                    downloadedFiles.Add(new WorkItemTestResults(jobName, workItemName, workItemFiles));
                 }
 
-                using HttpResponseMessage response = await _azdoClient.SendAsync(request, cancellationToken);
-                string content = response.Content != null ? await response.Content.ReadAsStringAsync(cancellationToken) : null;
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException($"Request to {requestUri} failed with {(int)response.StatusCode} {response.ReasonPhrase}. {content}");
-                }
-
-                if (string.IsNullOrWhiteSpace(content))
-                {
-                    return [];
-                }
-
-                return JObject.Parse(content);
-            }, cancellationToken);
-        }
-
-        private static BlobClient CreateBlobClient(string fileLink, string resultsSas)
-        {
-            var options = new BlobClientOptions();
-            options.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);
-
-            if (string.IsNullOrEmpty(resultsSas))
-            {
-                return new BlobClient(new Uri(fileLink), options);
+                return downloadedFiles;
             }
 
-            string strippedUri = fileLink.Contains('?') ? fileLink.Substring(0, fileLink.LastIndexOf('?', StringComparison.Ordinal)) : fileLink;
-            return new BlobClient(new Uri(strippedUri), new AzureSasCredential(resultsSas), options);
-        }
-
-        private static bool LooksLikeTestResultFile(string path)
-            => LocalTestResultsReader.LooksLikeTestResultFile(path);
-
-        private static string SanitizeDirName(string value)
-        {
-            foreach (char invalidChar in Path.GetInvalidFileNameChars())
+            private static string GetTestRunNameFromJob(JobSummary helixJob)
             {
-                value = value.Replace(invalidChar, '-');
+                if (helixJob.Properties is JObject properties
+                    && properties.TryGetValue("TestRunName", out JToken testRunName))
+                {
+                    string value = testRunName?.ToString();
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        return value;
+                    }
+                }
+
+                return helixJob.Name;
             }
 
-            return value;
+            private static BlobClient CreateBlobClient(string fileLink, string resultsSas)
+            {
+                var options = new BlobClientOptions();
+                options.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);
+                if (string.IsNullOrEmpty(resultsSas))
+                {
+                    return new BlobClient(new Uri(fileLink), options);
+                }
+
+                string strippedUri = fileLink.Contains('?') ? fileLink.Substring(0, fileLink.LastIndexOf('?', StringComparison.Ordinal)) : fileLink;
+                return new BlobClient(new Uri(strippedUri), new AzureSasCredential(resultsSas), options);
+            }
+
+            private static bool LooksLikeTestResultFile(string path)
+                => LocalTestResultsReader.LooksLikeTestResultFile(path);
+
+            private static string SanitizeDirName(string value)
+            {
+                foreach (char invalidChar in Path.GetInvalidFileNameChars())
+                {
+                    value = value.Replace(invalidChar, '-');
+                }
+
+                return value;
+            }
         }
+
+        // -----------------------------------------------------------------
+        // Shared retry helper
+        // -----------------------------------------------------------------
 
         private static async Task<T> RetryAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken)
         {
@@ -427,7 +506,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             for (int attempt = 0; attempt < 5; attempt++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-
                 try
                 {
                     return await action();
@@ -443,5 +521,5 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         }
     }
 
-    record WorkItemTestResults(string JobName, string WorkItemName, List<string> TestResultFiles);
+    public record WorkItemTestResults(string JobName, string WorkItemName, List<string> TestResultFiles);
 }
