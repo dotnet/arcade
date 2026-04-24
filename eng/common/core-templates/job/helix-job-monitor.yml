@@ -227,6 +227,7 @@ jobs:
 
       if [ -n '${{ parameters.toolNupkgArtifactName }}' ]; then
         # Tool was installed into a tool-path that has been prepended to PATH.
+        export DOTNET_ROOT="$(Build.SourcesDirectory)/.dotnet"
         '${{ parameters.toolCommand }}' "${toolArgs[@]}"
       else
         # Tool was restored from the local .config/dotnet-tools.json manifest; invoke it
