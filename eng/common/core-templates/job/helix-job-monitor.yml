@@ -121,10 +121,10 @@ jobs:
   pool:
     ${{ if eq(variables['System.TeamProject'], 'public') }}:
       name: $(DncEngPublicBuildPool)
-      image: build.azurelinux.3.amd64.open
-    ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+      demands: ImageOverride -equals build.azurelinux.3.amd64.open
+    ${{ else }}:
       name: $(DncEngInternalBuildPool)
-      image: build.azurelinux.3.amd64.open
+      demands: ImageOverride -equals build.azurelinux.3.amd64
   steps:
   - checkout: self
     fetchDepth: 1
