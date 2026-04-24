@@ -178,7 +178,7 @@ jobs:
         ./eng/common/dotnet.sh tool install \
           --tool-path "$toolPath" "$packageId" \
           --version "$toolVersion" \
-          --add-source "$toolSource" \
+          --source "$toolSource" \
           --ignore-failed-sources
 
         echo "##vso[task.prependpath]$toolPath"
