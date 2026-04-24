@@ -221,24 +221,65 @@ try {
 
     $mergeBranchName = "merge/$MergeFromBranch-to-$MergeToBranch"
 
-    # When ResetToTargetPaths is configured, we need to create a proper merge commit
-    # so that the target branch content is included. Without this, the merge branch
-    # would just be the source branch with some files overwritten, missing all
-    # target-only changes (APIs, fixes, platform versions, etc.).
+    # When ResetToTargetPaths is configured, we attempt to create a proper merge commit
+    # so that the target branch content is included. If there are conflicts outside
+    # the pattern list, we fall back to the original source-only behavior so that
+    # GitHub's merge button surfaces the real conflicts to the reviewer.
     if ($ResetToTargetPaths) {
         # Configure git user for the merge commit
         Invoke-Block { & git config user.name "github-actions[bot]" }
         Invoke-Block { & git config user.email "41898282+github-actions[bot]@users.noreply.github.com" }
 
+        $patterns = ($ResetToTargetPaths -split ";") | % { $_.Trim() } | ? { $_ }
+
         # Start from the target branch and merge source into it
         Invoke-Block { & git checkout -B $mergeBranchName "origin/$MergeToBranch" }
 
-        # Merge source branch. Use -X theirs to auto-resolve conflicts in favor of
-        # the source branch, since ResetToTargetPaths will overwrite target-wins files
-        # in the next step anyway.
-        Invoke-Block { & git merge --no-ff "origin/$MergeFromBranch" -X theirs -m "Merge branch '$MergeFromBranch' into $MergeToBranch" }
+        # Try a clean merge first
+        $mergeOutput = & git merge --no-ff "origin/$MergeFromBranch" -m "Merge branch '$MergeFromBranch' into $MergeToBranch" 2>&1
+        $mergeExitCode = $LASTEXITCODE
 
-        $patterns = $ResetToTargetPaths -split ";"
+        if ($mergeExitCode -ne 0) {
+            Write-Host "Merge produced conflicts. Checking if all conflicts are within ResetToTargetPaths..."
+
+            # Get list of conflicting files
+            [string[]] $conflictFiles = & git diff --name-only --diff-filter=U
+
+            # Check which conflicts fall outside ResetToTargetPaths patterns
+            $outsidePatternConflicts = @()
+            foreach ($file in $conflictFiles) {
+                $covered = $false
+                foreach ($pattern in $patterns) {
+                    if ($file -like $pattern) {
+                        $covered = $true
+                        break
+                    }
+                }
+                if (-not $covered) {
+                    $outsidePatternConflicts += $file
+                }
+            }
+
+            # Abort the conflicted merge before proceeding
+            Invoke-Block { & git merge --abort }
+
+            if ($outsidePatternConflicts.Count -eq 0) {
+                # All conflicts are in ResetToTargetPaths files which will be overwritten
+                # by target branch content anyway, so it's safe to auto-resolve them.
+                Write-Host "All conflicts are within ResetToTargetPaths patterns. Auto-resolving with -X theirs..."
+                Invoke-Block { & git merge --no-ff "origin/$MergeFromBranch" -X theirs -m "Merge branch '$MergeFromBranch' into $MergeToBranch" }
+            } else {
+                # There are conflicts outside ResetToTargetPaths. We must NOT auto-resolve
+                # these because it would hide real conflicts from the PR reviewer.
+                # Fall back to the original behavior: create branch from source HEAD
+                # so GitHub's merge button will surface the conflicts.
+                Write-Host -f Yellow "Conflicts detected outside ResetToTargetPaths patterns:"
+                $outsidePatternConflicts | % { Write-Host -f Yellow "  - $_" }
+                Write-Host -f Yellow "Falling back to source-only branch so GitHub surfaces these conflicts in the PR."
+                Invoke-Block { & git checkout -B $mergeBranchName }
+            }
+        }
+
         ResetFilesToTargetBranch $patterns $MergeToBranch
     }
     else {
