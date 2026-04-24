@@ -52,6 +52,18 @@
     <HelixProperties Condition="'$(HelixArchitecture)' != ''" Include="architecture" Value="$(HelixArchitecture)" />
     <HelixProperties Include="operatingSystem" Value="$(HelixTargetQueue)" />
   </ItemGroup>
+
+  <!--
+    When the standalone Helix Job Monitor is enabled, stamp the desired Azure DevOps test run name
+    onto the Helix job as a property. The monitor reads this property to name the test run it
+    creates after the job completes (mirroring what StartAzurePipelinesTestRun would have used).
+  -->
+  <PropertyGroup Condition="'$(EnableHelixJobMonitor)' == 'true'">
+    <_HelixJobMonitorTestRunName>$(TestRunNamePrefix)$(HelixTargetQueue)$(TestRunNameSuffix)</_HelixJobMonitorTestRunName>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(EnableHelixJobMonitor)' == 'true' and '$(_HelixJobMonitorTestRunName)' != ''">
+    <HelixProperties Include="TestRunName" Value="$(_HelixJobMonitorTestRunName)" />
+  </ItemGroup>
   
   <ItemGroup Condition="Exists('$(HelixTestConfigurationFilePath)')">
     <HelixCorrelationPayload Include="$(HelixTestConfigurationFilePath)" AsArchive="false" />
