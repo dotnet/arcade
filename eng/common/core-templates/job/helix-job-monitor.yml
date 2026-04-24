@@ -126,13 +126,8 @@ jobs:
       name: $(DncEngInternalBuildPool)
       image: build.azurelinux.3.amd64.open
   steps:
-  - ${{ if ne(parameters.toolNupkgArtifactName, '') }}:
-    - checkout: none
-  - ${{ else }}:
-    # The default code path restores the tool from the repo's .config/dotnet-tools.json,
-    # so the repository content (including the manifest and global.json) must be available.
-    - checkout: self
-      fetchDepth: 1
+  - checkout: self
+    fetchDepth: 1
 
   - ${{ if ne(parameters.toolNupkgArtifactName, '') }}:
     - task: DownloadPipelineArtifact@2
