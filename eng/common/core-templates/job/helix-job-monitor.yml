@@ -14,16 +14,6 @@ parameters:
   type: object
   default: {}
 
-# Version of the .NET SDK installed on the agent before running the tool.
-- name: dotnetVersion
-  type: string
-  default: 11.0.x
-
-# Whether the UseDotNet@2 task is allowed to install preview SDKs.
-- name: includePreviewVersions
-  type: boolean
-  default: true
-
 # NuGet package id of the Helix job monitor tool.
 - name: toolPackageId
   type: string
@@ -34,12 +24,15 @@ parameters:
   type: string
   default: dotnet-helix-job-monitor
 
-# Optional explicit tool version. When empty, the latest available version is installed.
+# Optional explicit tool version. Only honored when 'toolNupkgArtifactName' is set; in the
+# default code path the version is taken from the consuming repo's .config/dotnet-tools.json.
 - name: toolVersion
   type: string
   default: ''
 
-# Optional NuGet feed used as an additional source when installing the tool.
+# Optional NuGet feed used as an additional source when installing the tool. Only honored
+# when 'toolNupkgArtifactName' is set; in the default code path the tool is restored from
+# the consuming repo's .config/dotnet-tools.json manifest and no extra feeds are consulted.
 - name: toolSource
   type: string
   default: ''
@@ -61,11 +54,6 @@ parameters:
 
 # Maximum run time of the monitor job in minutes. Also used for --max-wait-minutes.
 - name: timeoutInMinutes
-  type: number
-  default: 360
-
-# Per-step timeout in minutes for the install / run steps.
-- name: stepTimeoutInMinutes
   type: number
   default: 360
 
@@ -92,16 +80,6 @@ parameters:
   type: string
   default: ''
 
-# Optional working directory used to stage downloaded Helix test results (--working-directory).
-- name: workingDirectory
-  type: string
-  default: ''
-
-# Optional Azure DevOps job attempt number (--attempt). Defaults to SYSTEM_JOBATTEMPT.
-- name: attempt
-  type: string
-  default: ''
-
 # Optional dependency list for the generated job.
 - name: dependsOn
   type: object
@@ -113,10 +91,14 @@ parameters:
   default: ''
 
 # Advanced: optional pipeline artifact (produced earlier in this run) that contains the tool
-# nupkg. When set, the artifact is downloaded and the directory containing the nupkg is added
-# as a NuGet source for the 'dotnet tool install' command. Primarily intended for the Arcade
-# repository itself, where the Helix job monitor tool is built in the same pipeline that runs
-# this template; other repos should leave this empty and consume the published feed instead.
+# nupkg. When set, the artifact is downloaded and the tool is installed from the nupkg into
+# a local tool-path; this bypasses the repo's .config/dotnet-tools.json manifest and is
+# primarily intended for the Arcade repository itself, where the Helix job monitor tool is
+# built in the same pipeline that runs this template.
+#
+# When this parameter is empty (the default), the consuming repository must declare the tool
+# in its .config/dotnet-tools.json manifest (alongside other local .NET tools); the template
+# will check out the repo and run 'dotnet tool restore' to install the version pinned there.
 - name: toolNupkgArtifactName
   type: string
   default: ''
@@ -144,139 +126,120 @@ jobs:
       name: $(DncEngInternalBuildPool)
       image: build.azurelinux.3.amd64.open
   steps:
-  - checkout: none
-
-  - task: UseDotNet@2
-    displayName: Install .NET SDK
-    timeoutInMinutes: ${{ parameters.stepTimeoutInMinutes }}
-    inputs:
-      packageType: sdk
-      version: ${{ parameters.dotnetVersion }}
-      includePreviewVersions: ${{ parameters.includePreviewVersions }}
+  - ${{ if ne(parameters.toolNupkgArtifactName, '') }}:
+    - checkout: none
+  - ${{ else }}:
+    # The default code path restores the tool from the repo's .config/dotnet-tools.json,
+    # so the repository content (including the manifest and global.json) must be available.
+    - checkout: self
+      fetchDepth: 1
 
   - ${{ if ne(parameters.toolNupkgArtifactName, '') }}:
     - task: DownloadPipelineArtifact@2
-      displayName: Download Helix job monitor nupkg artifact
-      timeoutInMinutes: ${{ parameters.stepTimeoutInMinutes }}
+      displayName: Download Helix Job Monitor artifact
       inputs:
         buildType: current
         artifactName: ${{ parameters.toolNupkgArtifactName }}
         itemPattern: '${{ parameters.toolNupkgArtifactSubPath }}/${{ parameters.toolPackageId }}.*.nupkg'
         targetPath: $(Agent.TempDirectory)/helix-job-monitor-nupkg
 
-  - pwsh: |
-      $toolPath = Join-Path $env:AGENT_TEMPDIRECTORY 'helix-job-monitor-tool'
-      New-Item -ItemType Directory -Force -Path $toolPath | Out-Null
+    - bash: |
+        set -euo pipefail
 
-      Push-Location $env:AGENT_TEMPDIRECTORY
-      try {
-        $packageId = '${{ parameters.toolPackageId }}'
-        $toolVersion = '${{ parameters.toolVersion }}'
-        $toolSource = '${{ parameters.toolSource }}'
+        toolPath="$AGENT_TEMPDIRECTORY/helix-job-monitor-tool"
+        mkdir -p "$toolPath"
 
-        $nupkgArtifactName = '${{ parameters.toolNupkgArtifactName }}'
-        $nupkgArtifactSubPath = '${{ parameters.toolNupkgArtifactSubPath }}'
-        if (-not [string]::IsNullOrWhiteSpace($nupkgArtifactName)) {
-          $nupkgDir = Join-Path $env:AGENT_TEMPDIRECTORY (Join-Path 'helix-job-monitor-nupkg' $nupkgArtifactSubPath)
-          if (-not (Test-Path $nupkgDir)) {
-            throw "Expected nupkg directory '$nupkgDir' was not produced by the artifact download."
-          }
+        pushd "$AGENT_TEMPDIRECTORY" > /dev/null
+        trap 'popd > /dev/null' EXIT
 
-          $nupkg = Get-ChildItem -Path $nupkgDir -Filter "$packageId.*.nupkg" -File | Select-Object -First 1
-          if ($null -eq $nupkg) {
-            throw "No '$packageId.*.nupkg' found in '$nupkgDir'."
-          }
+        packageId='${{ parameters.toolPackageId }}'
+        toolVersion='${{ parameters.toolVersion }}'
+        nupkgArtifactSubPath='${{ parameters.toolNupkgArtifactSubPath }}'
+        nupkgDir="$AGENT_TEMPDIRECTORY/helix-job-monitor-nupkg/$nupkgArtifactSubPath"
 
-          # Derive the version from the nupkg filename so the local package is selected
-          # deterministically instead of resolving against any other configured feed.
-          $derivedVersion = $nupkg.BaseName.Substring($packageId.Length + 1)
-          if ([string]::IsNullOrWhiteSpace($toolVersion)) {
-            $toolVersion = $derivedVersion
-          }
+        if [ ! -d "$nupkgDir" ]; then
+          echo "Expected nupkg directory '$nupkgDir' was not produced by the artifact download." >&2
+          exit 1
+        fi
 
-          Write-Host "Using locally built '$packageId' version '$toolVersion' from '$nupkgDir'."
-          $toolSource = $nupkgDir
-        }
+        nupkg=$(find "$nupkgDir" -maxdepth 1 -type f -name "$packageId.*.nupkg" | head -n 1)
+        if [ -z "$nupkg" ]; then
+          echo "No '$packageId.*.nupkg' found in '$nupkgDir'." >&2
+          exit 1
+        fi
 
-        $updateArgs = @('tool', 'update', '--tool-path', $toolPath, $packageId)
-        if (-not [string]::IsNullOrWhiteSpace($toolVersion)) {
-          $updateArgs += @('--version', $toolVersion)
-        }
-        if (-not [string]::IsNullOrWhiteSpace($toolSource)) {
-          $updateArgs += @('--add-source', $toolSource)
-          $updateArgs += @('--ignore-failed-sources')
-        }
+        # Derive the version from the nupkg filename so the local package is selected
+        # deterministically instead of resolving against any other configured feed.
+        nupkgBase=$(basename "$nupkg" .nupkg)
+        derivedVersion="${nupkgBase#${packageId}.}"
+        if [ -z "$toolVersion" ]; then
+          toolVersion="$derivedVersion"
+        fi
 
-        & dotnet @updateArgs
-        if ($LASTEXITCODE -ne 0) {
-          $installArgs = @('tool', 'install', '--tool-path', $toolPath, $packageId)
-          if (-not [string]::IsNullOrWhiteSpace($toolVersion)) {
-            $installArgs += @('--version', $toolVersion)
-          }
-          if (-not [string]::IsNullOrWhiteSpace($toolSource)) {
-            $installArgs += @('--add-source', $toolSource)
-            $installArgs += @('--ignore-failed-sources')
-          }
+        echo "Using locally built '$packageId' version '$toolVersion' from '$nupkgDir'."
+        toolSource="$nupkgDir"
 
-          & dotnet @installArgs
-        }
+        ./eng/common/dotnet.sh tool install \
+          --tool-path "$toolPath" "$packageId" \
+          --version "$toolVersion" \
+          --add-source "$toolSource" \
+          --ignore-failed-sources
 
-        if ($LASTEXITCODE -ne 0) {
-          throw "Failed to install the Helix job monitor tool package '$packageId'."
-        }
+        echo "##vso[task.prependpath]$toolPath"
+        echo "##vso[task.setvariable variable=HelixJobMonitorToolPath]$toolPath"
+      displayName: Install Helix Job Monitor
 
-        Write-Host "##vso[task.prependpath]$toolPath"
-        Write-Host "##vso[task.setvariable variable=HelixJobMonitorToolPath]$toolPath"
-      }
-      finally {
-        Pop-Location
-      }
-    displayName: Install Helix job monitor
-    timeoutInMinutes: ${{ parameters.stepTimeoutInMinutes }}
+  - ${{ else }}:
+    - bash: ./eng/common/dotnet.sh tool restore
+      displayName: Restore Helix Job Monitor
 
-  - pwsh: |
-      $toolArgs = @(
-        '--helix-base-uri',           '${{ parameters.helixBaseUri }}',
-        '--polling-interval-seconds', '${{ parameters.pollingIntervalSeconds }}',
-        '--max-wait-minutes',         '${{ parameters.timeoutInMinutes }}',
-        '--job-monitor-name',         '${{ parameters.jobMonitorName }}'
+  - bash: |
+      set -euo pipefail
+
+      toolArgs=(
+        --helix-base-uri           '${{ parameters.helixBaseUri }}'
+        --polling-interval-seconds '${{ parameters.pollingIntervalSeconds }}'
+        --max-wait-minutes         '${{ parameters.timeoutInMinutes }}'
+        --job-monitor-name         '${{ parameters.jobMonitorName }}'
+        --attempt                  '$(System.JobAttempt)'
       )
 
-      $organization     = '${{ parameters.organization }}'
-      $repository       = '${{ parameters.repository }}'
-      $prNumber         = '${{ parameters.prNumber }}'
-      $workingDirectory = '${{ parameters.workingDirectory }}'
-      $attempt          = '${{ parameters.attempt }}'
+      organization='${{ parameters.organization }}'
+      repository='${{ parameters.repository }}'
+      prNumber='${{ parameters.prNumber }}'
 
       # Fall back to Azure DevOps-provided environment variables when the caller did not
       # supply organization / repository / pr-number explicitly. BUILD_REPOSITORY_NAME is
       # typically 'owner/repo' for GitHub-backed builds.
-      if ([string]::IsNullOrWhiteSpace($organization) -or [string]::IsNullOrWhiteSpace($repository)) {
-        $buildRepoName = $env:BUILD_REPOSITORY_NAME
-        if (-not [string]::IsNullOrWhiteSpace($buildRepoName) -and $buildRepoName.Contains('/')) {
-          $repoParts = $buildRepoName.Split('/', 2)
-          if ([string]::IsNullOrWhiteSpace($organization)) { $organization = $repoParts[0] }
-          if ([string]::IsNullOrWhiteSpace($repository))   { $repository   = $repoParts[1] }
-        }
-      }
+      if [ -z "$organization" ] || [ -z "$repository" ]; then
+        buildRepoName="${BUILD_REPOSITORY_NAME:-}"
+        if [ -n "$buildRepoName" ] && [[ "$buildRepoName" == */* ]]; then
+          repoOwner="${buildRepoName%%/*}"
+          repoName="${buildRepoName#*/}"
+          if [ -z "$organization" ]; then organization="$repoOwner"; fi
+          if [ -z "$repository" ];   then repository="$repoName";   fi
+        fi
+      fi
 
-      if ([string]::IsNullOrWhiteSpace($prNumber)) {
-        $prNumber = $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
-      }
+      if [ -z "$prNumber" ]; then
+        prNumber="${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER:-}"
+      fi
 
-      if (-not [string]::IsNullOrWhiteSpace($organization))     { $toolArgs += @('--organization',      $organization) }
-      if (-not [string]::IsNullOrWhiteSpace($repository))       { $toolArgs += @('--repository',        $repository) }
-      if (-not [string]::IsNullOrWhiteSpace($prNumber))         { $toolArgs += @('--pr-number',         $prNumber) }
-      if (-not [string]::IsNullOrWhiteSpace($workingDirectory)) { $toolArgs += @('--working-directory', $workingDirectory) }
-      if (-not [string]::IsNullOrWhiteSpace($attempt))          { $toolArgs += @('--attempt',           $attempt) }
+      if [ -n "$organization" ]; then toolArgs+=( --organization "$organization" ); fi
+      if [ -n "$repository" ];   then toolArgs+=( --repository   "$repository" );   fi
+      if [ -n "$prNumber" ];     then toolArgs+=( --pr-number    "$prNumber" );     fi
 
-      & '${{ parameters.toolCommand }}' @toolArgs
-
-      if ($LASTEXITCODE -ne 0) {
-        throw "The Helix job monitor tool exited with code $LASTEXITCODE."
-      }
-    displayName: Run Helix job monitor
-    timeoutInMinutes: ${{ parameters.stepTimeoutInMinutes }}
+      if [ -n '${{ parameters.toolNupkgArtifactName }}' ]; then
+        # Tool was installed into a tool-path that has been prepended to PATH.
+        '${{ parameters.toolCommand }}' "${toolArgs[@]}"
+      else
+        # Tool was restored from the local .config/dotnet-tools.json manifest; invoke it
+        # through the manifest from the repo root.
+        pushd "$BUILD_SOURCESDIRECTORY" > /dev/null
+        trap 'popd > /dev/null' EXIT
+        ./eng/common/dotnet.sh tool run '${{ parameters.toolCommand }}' -- "${toolArgs[@]}"
+      fi
+    displayName: Run Helix Job Monitor
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       HELIX_ACCESSTOKEN: ${{ parameters.helixAccessToken }}

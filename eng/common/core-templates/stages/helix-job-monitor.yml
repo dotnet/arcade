@@ -29,16 +29,6 @@ parameters:
   type: string
   default: Helix Job Monitor
 
-# .NET SDK installed before running the tool.
-- name: dotnetVersion
-  type: string
-  default: 11.0.x
-
-# Whether the UseDotNet@2 task is allowed to install preview SDKs.
-- name: includePreviewVersions
-  type: boolean
-  default: true
-
 # NuGet package id of the Helix job monitor tool.
 - name: toolPackageId
   type: string
@@ -79,11 +69,6 @@ parameters:
   type: number
   default: 360
 
-# Per-step timeout in minutes for the install / run steps.
-- name: stepTimeoutInMinutes
-  type: number
-  default: 360
-
 # JobMonitorOptions: --job-monitor-name.
 - name: jobMonitorName
   type: string
@@ -101,16 +86,6 @@ parameters:
 
 # JobMonitorOptions: --pr-number. Required for PR validation pipelines.
 - name: prNumber
-  type: string
-  default: ''
-
-# JobMonitorOptions: --working-directory.
-- name: workingDirectory
-  type: string
-  default: ''
-
-# JobMonitorOptions: --attempt. Defaults to SYSTEM_JOBATTEMPT inside the tool.
-- name: attempt
   type: string
   default: ''
 
@@ -139,8 +114,6 @@ stages:
     parameters:
       jobName: ${{ parameters.jobName }}
       displayName: ${{ parameters.jobDisplayName }}
-      dotnetVersion: ${{ parameters.dotnetVersion }}
-      includePreviewVersions: ${{ parameters.includePreviewVersions }}
       toolPackageId: ${{ parameters.toolPackageId }}
       toolCommand: ${{ parameters.toolCommand }}
       toolVersion: ${{ parameters.toolVersion }}
@@ -151,10 +124,7 @@ stages:
       helixAccessToken: ${{ parameters.helixAccessToken }}
       pollingIntervalSeconds: ${{ parameters.pollingIntervalSeconds }}
       timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
-      stepTimeoutInMinutes: ${{ parameters.stepTimeoutInMinutes }}
       jobMonitorName: ${{ parameters.jobMonitorName }}
       organization: ${{ parameters.organization }}
       repository: ${{ parameters.repository }}
       prNumber: ${{ parameters.prNumber }}
-      workingDirectory: ${{ parameters.workingDirectory }}
-      attempt: ${{ parameters.attempt }}
