@@ -144,9 +144,6 @@ jobs:
         toolPath="$AGENT_TEMPDIRECTORY/helix-job-monitor-tool"
         mkdir -p "$toolPath"
 
-        pushd "$AGENT_TEMPDIRECTORY" > /dev/null
-        trap 'popd > /dev/null' EXIT
-
         packageId='${{ parameters.toolPackageId }}'
         toolVersion='${{ parameters.toolVersion }}'
         nupkgArtifactSubPath='${{ parameters.toolNupkgArtifactSubPath }}'
@@ -172,16 +169,23 @@ jobs:
         fi
 
         echo "Using locally built '$packageId' version '$toolVersion' from '$nupkgDir'."
-        toolSource="$nupkgDir"
 
-        "$BUILD_SOURCESDIRECTORY/eng/common/dotnet.sh" tool install \
+        ./eng/common/dotnet.sh tool install \
           --tool-path "$toolPath" "$packageId" \
           --version "$toolVersion" \
-          --add-source "$toolSource" \
+          --add-source "$nupkgDir" \
           --ignore-failed-sources
 
         echo "##vso[task.prependpath]$toolPath"
         echo "##vso[task.setvariable variable=HelixJobMonitorToolPath]$toolPath"
+
+        # Export DOTNET_ROOT so the tool shim can find the repo-local .NET runtime
+        # that was installed by eng/common/dotnet.sh above.
+        localDotnet="$BUILD_SOURCESDIRECTORY/.dotnet"
+        if [ -d "$localDotnet" ]; then
+          echo "##vso[task.setvariable variable=DOTNET_ROOT]$localDotnet"
+          echo "##vso[task.prependpath]$localDotnet"
+        fi
       displayName: Install Helix Job Monitor
 
   - ${{ else }}:
@@ -225,14 +229,7 @@ jobs:
       if [ -n "$prNumber" ];     then toolArgs+=( --pr-number    "$prNumber" );     fi
 
       if [ -n '${{ parameters.toolNupkgArtifactName }}' ]; then
-        # Tool was installed into a tool-path that has been prepended to PATH.
-        # Ensure the repo-local .NET runtime (installed by eng/common/dotnet.sh)
-        # is discoverable by the tool.
-        localDotnet="$BUILD_SOURCESDIRECTORY/.dotnet"
-        if [ -d "$localDotnet" ]; then
-          export DOTNET_ROOT="$localDotnet"
-          export PATH="$localDotnet:$PATH"
-        fi
+        # Tool was installed into a tool-path and DOTNET_ROOT was set by the install step.
         '${{ parameters.toolCommand }}' "${toolArgs[@]}"
       else
         # Tool was restored from the local .config/dotnet-tools.json manifest; invoke it
