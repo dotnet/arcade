@@ -226,6 +226,13 @@ jobs:
 
       if [ -n '${{ parameters.toolNupkgArtifactName }}' ]; then
         # Tool was installed into a tool-path that has been prepended to PATH.
+        # Ensure the repo-local .NET runtime (installed by eng/common/dotnet.sh)
+        # is discoverable by the tool.
+        localDotnet="$BUILD_SOURCESDIRECTORY/.dotnet"
+        if [ -d "$localDotnet" ]; then
+          export DOTNET_ROOT="$localDotnet"
+          export PATH="$localDotnet:$PATH"
+        fi
         '${{ parameters.toolCommand }}' "${toolArgs[@]}"
       else
         # Tool was restored from the local .config/dotnet-tools.json manifest; invoke it
