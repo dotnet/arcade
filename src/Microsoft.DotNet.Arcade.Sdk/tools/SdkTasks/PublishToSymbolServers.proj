@@ -4,14 +4,24 @@
   <!--
     This MSBuild file is intended to be used as the body of the default 
     publishing release pipeline. The release pipeline will use this file
-    to invoke the PublishSymbols tasks to publish symbols to MSDL and SymWeb.
+    to publish symbols to MSDL and SymWeb using the internal SymbolUploadHelper.
+
+    Symbols are staged in the dnceng Azure DevOps org and then promoted to the
+    target symbol servers (internal/public) via the SymbolRequest promotion service.
+
+    Note: Unlike the previous PublishSymbols task (Microsoft.SymbolUploader.Build.Task),
+    this task does not validate that individual files are indexable during dry runs.
+    The 1ES symbol publishing tool now manages indexability validation. Dry runs will
+    still decompose packages and exercise the request lifecycle but skip per-file
+    indexability checks.
   
     Parameters:
   
       - PDBArtifactsDirectory   : Full path to directory containing PDB files to be published and (optionally) DLLs matching these PDBs
       - BlobBasePath            : Full path containing *.symbols.nupkg packages to be published.
-      - DotNetSymbolServerTokenMsdl   : PAT to access MSDL.
-      - DotNetSymbolServerTokenSymWeb : PAT to access SymWeb.
+      - DotNetSymbolServerTokenStaging : (Optional) PAT to access the staging org (dnceng). If empty, Entra/managed identity auth is used.
+      - ManagedIdentityClientId : (Optional) Client ID of the managed identity to use for Entra auth.
+      - SymbolRequestProject    : (Required for non-dry-run) Project name for registration with the SymbolRequest promotion service.
       - DotNetSymbolExpirationInDays  : Expiration days for published packages. Default is 3650.
       - SymbolPublishingExclusionsFile : Path to file containing exclusion list to be used by Symbol Uploader.
       - PublishSpecialClrFiles : If true, publish the DAC, DBI and SOS using the coreclr index. If false, don't do any special indexing.
@@ -81,26 +91,21 @@
       Text="Going to ignore this file -> %(PackageExcludeFiles.Identity)." />
 
     <ItemGroup>
-      <!-- Symbol Uploader: MSDL -->
-      <SymbolServerTargets Include="https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection" Condition="$(PublishToMSDL)">
-        <PersonalAccessToken>$(DotNetSymbolServerTokenMsdl)</PersonalAccessToken>
-      </SymbolServerTargets>
-      <!-- 
-        Symbol Uploader: SymWeb 
-        Watson, VS insertion testings and the typical internal dev usage require SymWeb.
-        Currently we need to call the task twice (https://github.com/dotnet/core-eng/issues/3489).
-      -->
-      <SymbolServerTargets Include="https://microsoft.artifacts.visualstudio.com/DefaultCollection" Condition="$(PublishToSymWeb)">
-        <PersonalAccessToken>$(DotNetSymbolServerTokenSymWeb)</PersonalAccessToken>
-      </SymbolServerTargets>
+      <!-- Symbol publishing targets are now handled by the SymbolRequest promotion service.
+           PublishToMSDL controls the public server, PublishToSymWeb controls the internal server. -->
     </ItemGroup>
 
-    <Message Importance="High" Text="Publishing symbol packages to %(SymbolServerTargets.Identity)" Condition="$(PublishToSymbolServer)" />
-    <PublishSymbols PackagesToPublish="@(PackagesToPublishToSymbolServer)"
-                    FilesToPublish="@(FilesToPublishToSymbolServer)"
+    <Message Importance="High" Text="Publishing symbols: staging to dnceng, then promoting (internal=$(PublishToSymWeb), public=$(PublishToMSDL))" Condition="$(PublishToSymbolServer)" />
+    <PublishSymbolsUsingSymbolUploadHelper
+                    StagingAzdoOrg="dnceng"
+                    SymbolRequestProject="$(SymbolRequestProject)"
+                    PersonalAccessToken="$(DotNetSymbolServerTokenStaging)"
+                    ManagedIdentityClientId="$(ManagedIdentityClientId)"
+                    PublishToInternalServer="$(PublishToSymWeb)"
+                    PublishToPublicServer="$(PublishToMSDL)"
+                    PDBArtifactsDirectory="$(PDBArtifactsDirectory)"
+                    PackagesToPublish="@(PackagesToPublishToSymbolServer)"
                     PackageExcludeFiles="@(PackageExcludeFiles)"
-                    PersonalAccessToken="%(SymbolServerTargets.PersonalAccessToken)"
-                    SymbolServerPath="%(SymbolServerTargets.Identity)"
                     ExpirationInDays="$(DotNetSymbolExpirationInDays)"
                     VerboseLogging="true"
                     DryRun="$(DryRun)"
@@ -112,7 +117,7 @@
   </Target>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="$(MicrosoftSymbolUploaderBuildTaskVersion)" />
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" />
   </ItemGroup>
 
 </Project>

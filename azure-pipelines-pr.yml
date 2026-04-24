@@ -165,8 +165,7 @@ stages:
           inputs:
             filePath: eng\common\sdk-task.ps1
             arguments: -task PublishToSymbolServers /p:DryRun="true" -restore -msbuildEngine dotnet
-              /p:DotNetSymbolServerTokenMsdl=DryRunPTA
-              /p:DotNetSymbolServerTokenSymWeb=DryRunPTA
+              /p:DotNetSymbolServerTokenStaging=DryRunPAT
               /p:PDBArtifactsDirectory='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
               /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
               /p:SymbolPublishingExclusionsFile='$(System.DefaultWorkingDirectory)/eng/SymbolPublishingExclusionsFile.txt'
