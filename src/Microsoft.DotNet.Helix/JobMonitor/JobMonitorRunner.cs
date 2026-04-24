@@ -183,7 +183,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 string name = run.Value<string>("name");
                 string state = run.Value<string>("state");
                 if (!string.IsNullOrEmpty(name)
-                    && !name.StartsWith("Helix Job Monitor - ", StringComparison.OrdinalIgnoreCase)
+                    && name.StartsWith("Helix Job Monitor - ", StringComparison.OrdinalIgnoreCase)
                     && string.Equals(state, "Completed", StringComparison.OrdinalIgnoreCase))
                 {
                     processed.Add(name);
