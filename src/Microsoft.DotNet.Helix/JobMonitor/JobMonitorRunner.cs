@@ -229,14 +229,20 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             // "TestRunName" property when submitting (matching what StartAzurePipelinesTestRun
             // would have used). Fall back to the Helix job name if the property is missing so
             // we always produce a non-empty name.
-            if (helixJob.Properties is JObject properties
-                && properties.TryGetValue("TestRunName", out JToken testRunName))
+            if (helixJob.Properties is JObject properties)
             {
-                string value = testRunName?.ToString();
-                if (!string.IsNullOrEmpty(value))
+                if (properties.TryGetValue("TestRunName", out JToken testRunName))
                 {
-                    return value;
+                    string value = testRunName?.ToString();
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        return value;
+                    }
                 }
+
+                properties.TryGetValue("System.PhaseName", out JToken phaseName);
+                properties.TryGetValue("System.JobName", out JToken jobName);
+                return $"{phaseName} {jobName} run on {helixJob.QueueId}".Trim();
             }
 
             return helixJob.Name;
