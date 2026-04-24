@@ -364,8 +364,7 @@ stages:
 
 - template: /eng/common/core-templates/stages/helix-job-monitor.yml
   parameters:
-    dependsOn:
-    - build
+    dependsOn: []
     # Install the Helix job monitor from the nupkg produced by the Build stage's
     # Windows_NT Release job, instead of pulling it from a published feed.
     toolNupkgArtifactName: Artifacts_Windows_NT_Release
