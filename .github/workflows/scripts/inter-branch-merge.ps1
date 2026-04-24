@@ -221,6 +221,9 @@ try {
 
     $mergeBranchName = "merge/$MergeFromBranch-to-$MergeToBranch"
 
+    # Track whether we created a merge commit (affects push strategy for PR updates)
+    $createdMergeCommit = $false
+
     # When ResetToTargetPaths is configured, we attempt to create a proper merge commit
     # so that the target branch content is included. If there are conflicts outside
     # the pattern list, we fall back to the original source-only behavior so that
@@ -239,7 +242,9 @@ try {
         $mergeOutput = & git merge --no-ff "origin/$MergeFromBranch" -m "Merge branch '$MergeFromBranch' into $MergeToBranch" 2>&1
         $mergeExitCode = $LASTEXITCODE
 
-        if ($mergeExitCode -ne 0) {
+        if ($mergeExitCode -eq 0) {
+            $createdMergeCommit = $true
+        } else {
             Write-Host "Merge produced conflicts. Checking if all conflicts are within ResetToTargetPaths..."
 
             # Get list of conflicting files
@@ -268,6 +273,7 @@ try {
                 # by target branch content anyway, so it's safe to auto-resolve them.
                 Write-Host "All conflicts are within ResetToTargetPaths patterns. Auto-resolving with -X theirs..."
                 Invoke-Block { & git merge --no-ff "origin/$MergeFromBranch" -X theirs -m "Merge branch '$MergeFromBranch' into $MergeToBranch" }
+                $createdMergeCommit = $true
             } else {
                 # There are conflicts outside ResetToTargetPaths. We must NOT auto-resolve
                 # these because it would hide real conflicts from the PR reviewer.
@@ -276,7 +282,7 @@ try {
                 Write-Host -f Yellow "Conflicts detected outside ResetToTargetPaths patterns:"
                 $outsidePatternConflicts | % { Write-Host -f Yellow "  - $_" }
                 Write-Host -f Yellow "Falling back to source-only branch so GitHub surfaces these conflicts in the PR."
-                Invoke-Block { & git checkout -B $mergeBranchName }
+                Invoke-Block { & git checkout -B $mergeBranchName "origin/$MergeFromBranch" }
             }
         }
 
@@ -337,7 +343,13 @@ try {
 
         try {
             if ($PSCmdlet.ShouldProcess("Update remote branch $mergeBranchName on $remoteName")) {
-                Invoke-Block { & git push $remoteName "${mergeBranchName}:${mergeBranchName}" }
+                if ($createdMergeCommit) {
+                    # Merge commits create non-fast-forwardable history on each run,
+                    # so we need --force to update the branch.
+                    Invoke-Block { & git push --force $remoteName "${mergeBranchName}:${mergeBranchName}" }
+                } else {
+                    Invoke-Block { & git push $remoteName "${mergeBranchName}:${mergeBranchName}" }
+                }
             }
             $prUpdatedSuccess = $true
         }
