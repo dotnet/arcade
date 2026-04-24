@@ -47,9 +47,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _azdoClient.DefaultRequestHeaders.UserAgent.ParseAdd("dotnet-helix-job-monitor");
         }
 
+        // Tag prefix used to identify Azure DevOps test runs created by this monitor for a
+        // particular Helix job. The full tag value is "MonitoredJob:{helixJobName}" and is
+        // attached to the test run when it is created. This lets us look up which Helix jobs
+        // we have already processed without encoding the Helix job name into the run name.
+        private const string MonitoredJobTagPrefix = "MonitoredJob:";
+
         public async Task<int> RunAsync()
         {
-            HashSet<string> processedRuns = await GetProcessedRunNamesAsync();
+            HashSet<string> processedHelixJobs = await GetProcessedHelixJobNamesAsync();
 
             var cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(_options.MaximumWaitMinutes));
@@ -80,10 +86,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 _logger.LogInformation("{CompletedCount}/{TotalCount} Helix jobs finished", completedJobs.Count, jobs.Count);
 
-                foreach (JobSummary job in completedJobs.Where(j => !processedRuns.Contains(j.Name)))
+                foreach (JobSummary job in completedJobs.Where(j => !processedHelixJobs.Contains(j.Name)))
                 {
                     bool passed = await ProcessCompletedJobAsync(job, cancellationToken);
-                    processedRuns.Add(job.Name);
+                    processedHelixJobs.Add(job.Name);
                     processedHelixJobCount++;
                     if (!passed)
                     {
@@ -129,8 +135,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             _logger.LogInformation("Processing completed job {jobName}...", helixJob.Name);
 
-            string testRunName = HelixJobMonitorUtilities.GetTestRunName(helixJob.Name);
-            int testRunId = await StartTestRunAsync(testRunName);
+            string testRunName = GetTestRunNameFromJob(helixJob);
+            int testRunId = await StartTestRunAsync(testRunName, helixJob.Name);
             string resultsDirectory = Path.Combine(_options.WorkingDirectory, SanitizeDirName(helixJob.Name));
             Directory.CreateDirectory(resultsDirectory);
 
@@ -163,7 +169,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return failedWorkItemCount == 0;
         }
 
-        private async Task<HashSet<string>> GetProcessedRunNamesAsync()
+        private async Task<HashSet<string>> GetProcessedHelixJobNamesAsync()
         {
             // The Azure DevOps "Test Runs - List" API filters by build using the VSTFS
             // artifact URI (buildUri), not a numeric buildIds parameter. Passing buildIds
@@ -174,17 +180,66 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             foreach (JObject run in (data?["value"] as JArray ?? []).Cast<JObject>())
             {
-                string name = run.Value<string>("name");
+                int? runId = run.Value<int?>("id");
                 string state = run.Value<string>("state");
-                if (!string.IsNullOrEmpty(name)
-                    && name.StartsWith("Helix Job Monitor - ", StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(state, "Completed", StringComparison.OrdinalIgnoreCase))
+                if (runId == null || !string.Equals(state, "Completed", StringComparison.OrdinalIgnoreCase))
                 {
-                    processed.Add(name);
+                    continue;
+                }
+
+                string helixJobName = await GetMonitoredHelixJobNameAsync(runId.Value);
+                if (!string.IsNullOrEmpty(helixJobName))
+                {
+                    processed.Add(helixJobName);
                 }
             }
 
             return processed;
+        }
+
+        private async Task<string> GetMonitoredHelixJobNameAsync(int testRunId)
+        {
+            // The list test-runs API does not return tags, so fetch the run details for each one
+            // we encounter to inspect its tags for the MonitoredJob marker.
+            JObject run = await SendAsync(
+                HttpMethod.Get,
+                $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}?api-version=7.1");
+
+            if (run?["tags"] is not JArray tags)
+            {
+                return null;
+            }
+
+            foreach (JToken tag in tags)
+            {
+                string tagName = tag?.Value<string>("name");
+                if (!string.IsNullOrEmpty(tagName)
+                    && tagName.StartsWith(MonitoredJobTagPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return tagName.Substring(MonitoredJobTagPrefix.Length);
+                }
+            }
+
+            return null;
+        }
+
+        private static string GetTestRunNameFromJob(JobSummary helixJob)
+        {
+            // The Helix SDK stamps the desired Azure DevOps test run name onto the job as a
+            // "TestRunName" property when submitting (matching what StartAzurePipelinesTestRun
+            // would have used). Fall back to the Helix job name if the property is missing so
+            // we always produce a non-empty name.
+            if (helixJob.Properties is JObject properties
+                && properties.TryGetValue("TestRunName", out JToken testRunName))
+            {
+                string value = testRunName?.ToString();
+                if (!string.IsNullOrEmpty(value))
+                {
+                    return value;
+                }
+            }
+
+            return helixJob.Name;
         }
 
         private async Task<AzureDevOpsTimelineRecord[]> GetTimelineRecordsAsync()
@@ -193,7 +248,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return data?["records"]?.ToObject<AzureDevOpsTimelineRecord[]>() ?? [];
         }
 
-        private async Task<int> StartTestRunAsync(string testRunName)
+        private async Task<int> StartTestRunAsync(string testRunName, string helixJobName)
         {
             JObject result = await SendAsync(
                 HttpMethod.Post,
@@ -204,6 +259,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     ["build"] = new JObject { ["id"] = _options.BuildId },
                     ["name"] = testRunName,
                     ["state"] = "InProgress",
+                    ["tags"] = new JArray
+                    {
+                        new JObject { ["name"] = MonitoredJobTagPrefix + helixJobName },
+                    },
                 });
 
             return result?["id"]?.ToObject<int>() ?? 0;

@@ -31,13 +31,5 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.True(HelixJobMonitorUtilities.HasFailedNonMonitorJobs(records, "Helix Job Monitor"));
         }
-
-        [Fact]
-        public void GetTestRunName_ProducesStableName()
-        {
-            Assert.Equal(
-                "Helix Job Monitor - coreclr-tests-linux-x64",
-                HelixJobMonitorUtilities.GetTestRunName("coreclr-tests-linux-x64"));
-        }
     }
 }

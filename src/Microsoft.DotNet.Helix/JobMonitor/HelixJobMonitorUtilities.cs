@@ -39,9 +39,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 string.Equals(r.Result, "failed", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(r.Result, "canceled", StringComparison.OrdinalIgnoreCase));
 
-        public static string GetTestRunName(string helixJobName)
-            => $"Helix Job Monitor - {helixJobName}";
-
         private static IEnumerable<AzureDevOpsTimelineRecord> GetRelevantJobRecords(IEnumerable<AzureDevOpsTimelineRecord> records, string jobMonitorName)
         {
             return (records ?? [])
