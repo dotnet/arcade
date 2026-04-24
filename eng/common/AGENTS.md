@@ -1,9 +1,5 @@
-# `eng/common` is managed by Arcade
+# `eng/common`
 
-Files under `eng/common` are managed in the [`dotnet/arcade`](https://github.com/dotnet/arcade) repository and syndicated to other repositories.
-
-Do not edit files in this directory directly in downstream repositories. Those changes are likely to be overwritten the next time `eng/common` is updated.
-
-If you need to change something in `eng/common`, make the change in the Arcade repository and ensure it is backported there so the update can flow correctly.
-
-For more information about Arcade, see the [Arcade documentation](https://github.com/dotnet/arcade/tree/main/Documentation).
+Files under `eng/common` come from [Arcade](https://github.com/dotnet/arcade).
+Edits in `eng/common` will be overwritten by automation unless the changes are made directly in the Arcade repository.
+For more information, see the [Arcade documentation](https://github.com/dotnet/arcade/tree/main/Documentation).
