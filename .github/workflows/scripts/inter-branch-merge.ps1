@@ -358,6 +358,10 @@ try {
 
         try {
             if ($PSCmdlet.ShouldProcess("Update remote branch $mergeBranchName on $remoteName")) {
+                # Refresh the remote tracking ref for the merge branch so the
+                # human-commit safety check below uses current remote state.
+                & git fetch $remoteName $mergeBranchName 2>$null
+
                 if ($createdMergeCommit) {
                     # Merge commits create non-fast-forwardable history on each run,
                     # so we need --force to update the branch. But first check if the
@@ -371,9 +375,15 @@ try {
                     Invoke-Block { & git push --force $remoteName "${mergeBranchName}:${mergeBranchName}" }
                 } else {
                     # Try non-force push first. If it fails (e.g. remote diverged from
-                    # a previous merge-commit run), retry with --force.
+                    # a previous merge-commit run), retry with --force after checking
+                    # for human-pushed commits (same guard as the merge-commit path).
                     & git push $remoteName "${mergeBranchName}:${mergeBranchName}" 2>&1 | Write-Host
                     if ($LASTEXITCODE -ne 0) {
+                        [string[]] $extraCommits = & git rev-list "$mergeBranchName..origin/$mergeBranchName" 2>$null
+                        if ($extraCommits -and $extraCommits.Count -gt 0) {
+                            Write-Warning "Remote branch '$mergeBranchName' has $($extraCommits.Count) commit(s) not in the local branch. Skipping force push to avoid overwriting manual changes."
+                            throw "Remote branch has unmerged commits"
+                        }
                         Write-Host "Non-force push failed (likely diverged history). Retrying with --force..."
                         Invoke-Block { & git push --force $remoteName "${mergeBranchName}:${mergeBranchName}" }
                     }
