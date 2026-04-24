@@ -176,16 +176,16 @@ jobs:
           --add-source "$nupkgDir" \
           --ignore-failed-sources
 
-        echo "##vso[task.prependpath]$toolPath"
-        echo "##vso[task.setvariable variable=HelixJobMonitorToolPath]$toolPath"
-
-        # Export DOTNET_ROOT so the tool shim can find the repo-local .NET runtime
-        # that was installed by eng/common/dotnet.sh above.
-        localDotnet="$BUILD_SOURCESDIRECTORY/.dotnet"
-        if [ -d "$localDotnet" ]; then
-          echo "##vso[task.setvariable variable=DOTNET_ROOT]$localDotnet"
-          echo "##vso[task.prependpath]$localDotnet"
+        # Locate the tool DLL so the run step can invoke it via ./eng/common/dotnet.sh exec.
+        toolDll=$(find "$toolPath/.store" -path '*/tools/*/any/*.deps.json' -type f | head -n 1)
+        toolDll="${toolDll%.deps.json}.dll"
+        if [ ! -f "$toolDll" ]; then
+          echo "Could not find tool DLL in '$toolPath/.store'." >&2
+          exit 1
         fi
+
+        echo "Tool DLL: $toolDll"
+        echo "##vso[task.setvariable variable=HelixJobMonitorDll]$toolDll"
       displayName: Install Helix Job Monitor
 
   - ${{ else }}:
@@ -229,8 +229,8 @@ jobs:
       if [ -n "$prNumber" ];     then toolArgs+=( --pr-number    "$prNumber" );     fi
 
       if [ -n '${{ parameters.toolNupkgArtifactName }}' ]; then
-        # Tool was installed into a tool-path and DOTNET_ROOT was set by the install step.
-        '${{ parameters.toolCommand }}' "${toolArgs[@]}"
+        # Tool was installed from a local nupkg; run the DLL via the repo-local dotnet.
+        ./eng/common/dotnet.sh exec "$(HelixJobMonitorDll)" "${toolArgs[@]}"
       else
         # Tool was restored from the local .config/dotnet-tools.json manifest; invoke it
         # through the manifest from the repo root.
