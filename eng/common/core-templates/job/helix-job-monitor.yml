@@ -170,11 +170,23 @@ jobs:
 
         echo "Using locally built '$packageId' version '$toolVersion' from '$nupkgDir'."
 
+        # Create a minimal NuGet.config that only references the local nupkg directory.
+        # This avoids conflicts with the repo's package source mapping which blocks --add-source.
+        toolNugetConfig="$AGENT_TEMPDIRECTORY/helix-job-monitor-nuget.config"
+        cat > "$toolNugetConfig" <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="local-tool" value="$nupkgDir" />
+  </packageSources>
+</configuration>
+EOF
+
         ./eng/common/dotnet.sh tool install \
           --tool-path "$toolPath" "$packageId" \
           --version "$toolVersion" \
-          --add-source "$nupkgDir" \
-          --ignore-failed-sources
+          --configfile "$toolNugetConfig"
 
         # Locate the tool DLL so the run step can invoke it via ./eng/common/dotnet.sh exec.
         toolDll=$(find "$toolPath/.store" -path '*/tools/*/any/*.deps.json' -type f | head -n 1)
