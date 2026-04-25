@@ -173,15 +173,7 @@ jobs:
         # Create a minimal NuGet.config that only references the local nupkg directory.
         # This avoids conflicts with the repo's package source mapping which blocks --add-source.
         toolNugetConfig="$AGENT_TEMPDIRECTORY/helix-job-monitor-nuget.config"
-        cat > "$toolNugetConfig" <<EOF
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <packageSources>
-    <clear />
-    <add key="local-tool" value="$nupkgDir" />
-  </packageSources>
-</configuration>
-EOF
+        printf '<?xml version="1.0" encoding="utf-8"?>\n<configuration>\n  <packageSources>\n    <clear />\n    <add key="local-tool" value="%s" />\n  </packageSources>\n</configuration>\n' "$nupkgDir" > "$toolNugetConfig"
 
         ./eng/common/dotnet.sh tool install \
           --tool-path "$toolPath" "$packageId" \
