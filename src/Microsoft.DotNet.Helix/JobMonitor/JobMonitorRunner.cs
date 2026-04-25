@@ -357,9 +357,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             public async Task<IReadOnlyList<HelixJobInfo>> GetJobsAsync(CancellationToken cancellationToken)
             {
+                // Build the Helix source filter. For PR builds, use the PR merge ref.
+                // For CI builds without a PR, use the branch-based source.
+                string source = _options.PrNumber.HasValue
+                    ? $"pr/public/{_options.Organization}/{_options.RepositoryName}/refs/pull/{_options.PrNumber}/merge"
+                    : $"official/public/{_options.Organization}/{_options.RepositoryName}";
+
                 IImmutableList<JobSummary> jobs = await RetryAsync(
-                    async () => await _helixApi.Job.ListAsync(
-                        source: $"pr/public/{_options.Organization}/{_options.RepositoryName}/refs/pull/{_options.PrNumber}/merge"),
+                    async () => await _helixApi.Job.ListAsync(source: source),
                     cancellationToken);
 
                 return jobs

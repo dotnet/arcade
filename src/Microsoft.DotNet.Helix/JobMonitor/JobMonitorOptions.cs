@@ -115,11 +115,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 throw new InvalidOperationException("Organization must be provided either by argument or pipeline environment.");
             }
-
-            if (!PrNumber.HasValue)
-            {
-                throw new InvalidOperationException("Pull request number must be provided either by argument or pipeline environment.");
-            }
         }
 
         private static string RequireValue(string value, string argumentName, string environmentName)
