@@ -18,8 +18,22 @@
     </AssemblyAttribute>
   </ItemGroup>
 
+  <!--
+    Default implementation source files: all *.cs under the current project directory.
+    These are parsed for XML doc comments that are copied into the generated not-supported stubs.
+    Opt out by removing items from this group, e.g.:
+      <ItemGroup>
+        <NotSupportedAssemblyImplementationSource Remove="**/*.cs" />
+      </ItemGroup>
+  -->
+  <ItemGroup Condition="'$(GeneratePlatformNotSupportedAssemblyMessage)' != '' and '$(IncludeNotSupportedAssemblyImplementationSources)' != 'false'">
+    <NotSupportedAssemblyImplementationSource Include="**/*.cs"
+                                              Exclude="$(IntermediateOutputPath)**/*.cs" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(GeneratePlatformNotSupportedAssemblyMessage)' != ''">
-    <ProjectReference Include="$(ContractProject)">
+    <ProjectReference Include="$(ContractProject)"
+                      Condition="'$(ContractProject)' != ''">
       <Targets>SourceFilesProjectOutputGroup</Targets>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <OutputItemType>_contractSourceFilesGroup</OutputItemType>
@@ -29,7 +43,7 @@
   </ItemGroup>
 
   <Target Name="_GetGenFacadeNotSupportedCompileInputs">
-    <!-- Populates the Reference Sources while building in VS-->
+    <!-- Populates the Source Files while building in VS-->
     <MSBuild
       Projects="@(ProjectReference)"
       Targets="SourceFilesProjectOutputGroup"
@@ -55,6 +69,7 @@
 
     <NotSupportedAssemblyGenerator
       SourceFiles="@(GenFacadeNotSupportedCompileInput)"
+      ImplementationSourceFiles="@(NotSupportedAssemblyImplementationSource)"
       LangVersion="$(LangVersion)"
       Message="$(GeneratePlatformNotSupportedAssemblyMessage)"
       ApiExclusionListPath="$(ApiExclusionListPath)"
