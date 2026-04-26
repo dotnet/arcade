@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Sdk;
@@ -156,6 +157,92 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
             using(h)
             {
                 Assert.Equal(exitCode, h.ExitCode);
+            }
+        }
+
+        [Theory]
+        [InlineData(CrashDumpCollectionType.Mini, "1")]
+        [InlineData(CrashDumpCollectionType.Heap, "2")]
+        [InlineData(CrashDumpCollectionType.Triage, "3")]
+        [InlineData(CrashDumpCollectionType.Full, "4")]
+        public void CrashDumpCollection_SetsEnvVars(CrashDumpCollectionType dumpType, string expectedTypeValue)
+        {
+            using RemoteInvokeHandle h = RemoteExecutor.Invoke(expectedType =>
+            {
+                Assert.Equal("1", Environment.GetEnvironmentVariable("DOTNET_DbgEnableMiniDump"));
+                Assert.Equal(expectedType, Environment.GetEnvironmentVariable("DOTNET_DbgMiniDumpType"));
+                return RemoteExecutor.SuccessExitCode;
+            }, expectedTypeValue, new RemoteInvokeOptions
+            {
+                RollForward = "Major",
+                CrashDumpCollectionType = dumpType
+            });
+        }
+
+        [Fact]
+        public void DisableCrashDumpCollection_RemovesEnvVars()
+        {
+            // Pre-set the env vars on the StartInfo to simulate inherited values
+            var options = new RemoteInvokeOptions
+            {
+                RollForward = "Major",
+                DisableCrashDumpCollection = true
+            };
+            options.StartInfo.Environment["DOTNET_DbgEnableMiniDump"] = "1";
+            options.StartInfo.Environment["DOTNET_DbgMiniDumpType"] = "4";
+            options.StartInfo.Environment["DOTNET_DbgMiniDumpName"] = "/tmp/test.dmp";
+
+            using RemoteInvokeHandle h = RemoteExecutor.Invoke(() =>
+            {
+                Assert.Null(Environment.GetEnvironmentVariable("DOTNET_DbgEnableMiniDump"));
+                Assert.Null(Environment.GetEnvironmentVariable("DOTNET_DbgMiniDumpType"));
+                Assert.Null(Environment.GetEnvironmentVariable("DOTNET_DbgMiniDumpName"));
+            }, options);
+        }
+
+        [Fact]
+        public void CrashDumpCollection_DefaultLeavesEnvVarsUntouched()
+        {
+            // When neither option is set, env vars should pass through from the parent unchanged
+            using RemoteInvokeHandle h = RemoteExecutor.Invoke(() =>
+            {
+                // Without explicit config, the child inherits whatever the parent has.
+                // The parent test process shouldn't have DOTNET_DbgEnableMiniDump set,
+                // so the child shouldn't either.
+                string parentValue = Environment.GetEnvironmentVariable("DOTNET_DbgEnableMiniDump");
+                Assert.Null(parentValue);
+            }, new RemoteInvokeOptions { RollForward = "Major" });
+        }
+
+        [Fact]
+        public static unsafe void CrashDumpCollection_CreatesDumpOnCrash()
+        {
+            string dumpDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            Directory.CreateDirectory(dumpDir);
+            try
+            {
+                var options = new RemoteInvokeOptions
+                {
+                    RollForward = "Major",
+                    CrashDumpCollectionType = CrashDumpCollectionType.Mini,
+                    CheckExitCode = false,
+                    // Point the dump path to our temp directory so we can verify the file is created.
+                    // Use %p so the filename includes the PID and is unique.
+                    CrashDumpPath = Path.Combine(dumpDir, "crashdump.%p.dmp")
+                };
+
+                RemoteExecutor.Invoke(() =>
+                {
+                    // Trigger an access violation to crash the process
+                    *(int*)0x10000 = 0;
+                }, options).Dispose();
+
+                string[] dumpFiles = Directory.GetFiles(dumpDir, "*.dmp");
+                Assert.NotEmpty(dumpFiles);
+            }
+            finally
+            {
+                Directory.Delete(dumpDir, recursive: true);
             }
         }
     }
