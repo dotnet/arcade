@@ -151,7 +151,7 @@ public sealed class AzureDevOpsResultPublisher
         {
             ProcessTestForMetadata(result);
         }
-
+        /*
         var uploadedUrls = new Dictionary<int, string>();
         /* TODO
         foreach ((int key, List<TestListRow>? testNames) in partitionedResults)
@@ -159,7 +159,7 @@ public sealed class AzureDevOpsResultPublisher
             byte[] csvBytes = CreateCompressedCsv(testNames);
             string fileName = $"{Guid.NewGuid():N}.csv.gz";
             uploadedUrls[key] = await _uploadClient.UploadAsync(csvBytes, fileName, "application/gzip", cancellationToken);
-        }*/
+        }* /
 
         var dataModel = new
         {
