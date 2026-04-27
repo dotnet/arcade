@@ -9,7 +9,6 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
