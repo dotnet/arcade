@@ -67,7 +67,24 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             IReadOnlySet<string> alreadyProcessed = await _azdo.GetProcessedHelixJobNamesAsync(cancellationToken);
             var processedHelixJobs = new HashSet<string>(alreadyProcessed, StringComparer.OrdinalIgnoreCase);
+            IReadOnlyList<HelixJobInfo> latestAssociatedJobs = Array.Empty<HelixJobInfo>();
 
+            try
+            {
+                return await RunLoopAsync(processedHelixJobs, latestJobs => latestAssociatedJobs = latestJobs, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                ReportTimeout(latestAssociatedJobs, processedHelixJobs);
+                return 1;
+            }
+        }
+
+        private async Task<int> RunLoopAsync(
+            HashSet<string> processedHelixJobs,
+            Action<IReadOnlyList<HelixJobInfo>> reportLatestJobs,
+            CancellationToken cancellationToken)
+        {
             bool anyNonMonitorJobFailures = false;
             int failedHelixJobCount = 0;
             int processedHelixJobCount = 0;
@@ -80,6 +97,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 IReadOnlyList<AzureDevOpsTimelineRecord> timelineRecords = await _azdo.GetTimelineRecordsAsync(cancellationToken);
                 IReadOnlyList<HelixJobInfo> associatedJobsWithBuild = await _helix.GetJobsAsync(cancellationToken);
+                reportLatestJobs(associatedJobsWithBuild);
 
                 // Filter jobs to completed ones belonging to this build
                 IReadOnlyCollection<HelixJobInfo> completedJobs =
@@ -191,6 +209,32 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             (_azdo as IDisposable)?.Dispose();
             (_helix as IDisposable)?.Dispose();
+        }
+
+        private void ReportTimeout(
+            IReadOnlyList<HelixJobInfo> latestAssociatedJobs,
+            HashSet<string> processedHelixJobs)
+        {
+            var timeout = TimeSpan.FromMinutes(_options.MaximumWaitMinutes);
+            var unfinishedJobs = latestAssociatedJobs
+                .Where(j => !j.IsCompleted || !processedHelixJobs.Contains(j.JobName))
+                .OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (unfinishedJobs.Count == 0)
+            {
+                _logger.LogCritical("Helix Job Monitor timed out after {TimeoutMinutes} minute(s) ({Timeout}). No unfinished Helix jobs were tracked at the time of timeout.",
+                    timeout.TotalMinutes,
+                    timeout);
+                return;
+            }
+
+            _logger.LogError(
+                "Helix Job Monitor timed out after {TimeoutMinutes} minute(s) ({Timeout}). {UnfinishedCount} Helix job(s) had not finished: {UnfinishedJobs}",
+                timeout.TotalMinutes,
+                timeout,
+                unfinishedJobs.Count,
+                string.Join(", ", unfinishedJobs.Select(j => $"{j.JobName} (status: {j.Status})")));
         }
     }
 }
