@@ -9,7 +9,6 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
@@ -63,17 +62,17 @@ public sealed class AzureDevOpsResultPublisher
     {
         try
         {
+            long publishedTestCount = 0;
             var converted = ConvertResults(results, resultMetadata).ToList();
-            var hotPathTests = new List<PublishedTestCase>();
-
             foreach (List<ConvertedResult> batch in Batch(converted, 1000, static t => Size(t.Converted)))
             {
                 IReadOnlyList<PublishedTestCase> publishedTests = await PublishResultsAsync(batch, cancellationToken);
-                hotPathTests.AddRange(publishedTests);
-                _logger.LogInformation("Uploaded {Count} results", publishedTests.Count);
+                publishedTestCount += publishedTests.Count;
             }
 
-            await SendMetadataAsync(hotPathTests, results, cancellationToken);
+            _logger.LogInformation("Uploaded {Count} results", publishedTestCount);
+
+            await SendMetadataAsync(results, cancellationToken);
         }
         catch (TerminalError ex)
         {
@@ -95,7 +94,6 @@ public sealed class AzureDevOpsResultPublisher
     }
 
     private static async Task SendMetadataAsync(
-        IReadOnlyList<PublishedTestCase> backChannelCases,
         IEnumerable<AggregatedResult> allTestResults,
         CancellationToken cancellationToken)
     {
@@ -149,6 +147,7 @@ public sealed class AzureDevOpsResultPublisher
 
         foreach (AggregatedResult result in allTestResults)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ProcessTestForMetadata(result);
         }
         /*

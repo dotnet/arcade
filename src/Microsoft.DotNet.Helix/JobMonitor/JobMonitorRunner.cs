@@ -146,7 +146,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _logger.LogInformation("Processing completed job {jobName}...", helixJob.Name);
 
             string testRunName = GetTestRunNameFromJob(helixJob);
-            int testRunId = await StartTestRunAsync(testRunName, helixJob.Name);
             string resultsDirectory = Path.Combine(_options.WorkingDirectory, SanitizeDirName(helixJob.Name));
             Directory.CreateDirectory(resultsDirectory);
 
@@ -155,6 +154,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             int failedWorkItemCount = workItems.Count(wi => wi.ExitCode != 0 || !wi.State.Equals("Finished", StringComparison.OrdinalIgnoreCase));
             bool helixJobSuccessful = failedWorkItemCount == 0;
             int sucessfulWorkItemCount = workItems.Count - failedWorkItemCount;
+
+            int testRunId = await StartTestRunAsync(testRunName, helixJob.Name);
 
             try
             {
@@ -172,8 +173,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 _logger.LogError(ex, "Failed to upload test results for job {JobName} to Azure DevOps. Test run ID was {TestRunId}.", helixJob.Name, testRunId);
                 return false;
             }
-
-            await StopTestRunAsync(testRunId, testRunName);
+            finally
+            {
+                await StopTestRunAsync(testRunId, testRunName);
+            }
 
             _logger.LogInformation("Job '{JobName}' completed ({PassedCount} passed, {FailedCount} failed).", helixJob.Name, sucessfulWorkItemCount, failedWorkItemCount);
             return failedWorkItemCount == 0;

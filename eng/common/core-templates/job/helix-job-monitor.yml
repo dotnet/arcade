@@ -4,11 +4,6 @@ parameters:
   type: string
   default: HelixJobMonitor
 
-# Azure DevOps job display name.
-- name: displayName
-  type: string
-  default: Helix Job Monitor
-
 # Pool override. When empty the template selects a default azurelinux pool based on the team project.
 - name: pool
   type: object
@@ -112,7 +107,7 @@ parameters:
 
 jobs:
 - job: ${{ parameters.jobName }}
-  displayName: ${{ parameters.displayName }}
+  displayName: Monitor Helix Jobs
   timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
   ${{ if ne(length(parameters.dependsOn), 0) }}:
     dependsOn: ${{ parameters.dependsOn }}
@@ -236,7 +231,7 @@ jobs:
         trap 'popd > /dev/null' EXIT
         ./eng/common/dotnet.sh tool run '${{ parameters.toolCommand }}' -- "${toolArgs[@]}"
       fi
-    displayName: Run Helix Job Monitor
+    displayName: Monitor Helix Jobs
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       HELIX_ACCESSTOKEN: ${{ parameters.helixAccessToken }}
