@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         // particular Helix job. The full tag value is "MonitoredJob:{helixJobName}" and is
         // attached to the test run when it is created. This lets us look up which Helix jobs
         // we have already processed without encoding the Helix job name into the run name.
-        private const string MonitoredJobTagPrefix = "MonitoredHelixJob";
+        private const string MonitoredJobTagPrefix = "MonitoredJob";
 
         private readonly JobMonitorOptions _options;
         private readonly ILogger _logger;
