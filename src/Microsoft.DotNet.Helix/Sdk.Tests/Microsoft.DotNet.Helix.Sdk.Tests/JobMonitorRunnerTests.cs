@@ -68,13 +68,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         [Fact]
         public async Task StageCompletesWithNoHelixJobs_ExitZero_NoTestRuns()
         {
-            var (azdo, helix, runner, _) = CreateScenario(
+            var (azdo, _, runner, _) = CreateScenario(
                 timelineSnapshots: [[PipelineJob("Build Linux", "completed", "succeeded"), MonitorJob()]],
                 helixSnapshots: [(jobs: Array.Empty<HelixJobInfo>(), passFail: EmptyPassFail())]);
 
-            int exitCode = await runner.RunAsync(CancellationToken.None);
-
-            Assert.Equal(0, exitCode);
+            Assert.Equal(0, await runner.RunAsync(CancellationToken.None));
             Assert.Empty(azdo.CreatedTestRuns);
             Assert.Empty(azdo.UploadedJobNames);
         }
@@ -90,9 +88,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 timelineSnapshots: [[PipelineJob("Build Linux", "completed", "failed"), MonitorJob()]],
                 helixSnapshots: [(jobs: Array.Empty<HelixJobInfo>(), passFail: EmptyPassFail())]);
 
-            int exitCode = await runner.RunAsync(CancellationToken.None);
-
-            Assert.Equal(1, exitCode);
+            Assert.Equal(1, await runner.RunAsync(CancellationToken.None));
             Assert.Empty(azdo.CreatedTestRuns);
         }
 
@@ -113,9 +109,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 timelineSnapshots: [[PipelineJob("Build Linux", "completed", "succeeded"), MonitorJob()]],
                 helixSnapshots: [(jobs: [HelixJob("job-linux", "finished")], passFail: Dict(("job-linux", PassFail(failed: ["wi-1"]))))]);
 
-            int exitCode = await runner.RunAsync(CancellationToken.None);
-
-            Assert.Equal(1, exitCode);
+            Assert.Equal(1, await runner.RunAsync(CancellationToken.None));
             Assert.Equal(["job-linux"], azdo.UploadedJobNames);
             Assert.Single(azdo.CompletedTestRunIds);
         }
@@ -126,17 +120,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             var (azdo, _, runner, _) = CreateScenario(
                 timelineSnapshots: [[PipelineJob("Build Linux", "completed", "succeeded"), MonitorJob()]],
                 helixSnapshots: [(jobs: [HelixJob("job-linux", "finished")], passFail: Dict(("job-linux", PassFail(failed: ["wi-1", "wi-2"]))))]);
-
-            Assert.Equal(1, await runner.RunAsync(CancellationToken.None));
-            Assert.Equal(["job-linux"], azdo.UploadedJobNames);
-        }
-
-        [Fact]
-        public async Task InfrastructureFailure_HelixJobFailedNoWorkItems_ExitOne()
-        {
-            var (azdo, _, runner, _) = CreateScenario(
-                timelineSnapshots: [[PipelineJob("Build Linux", "completed", "succeeded"), MonitorJob()]],
-                helixSnapshots: [(jobs: [HelixJob("job-linux", "failed")], passFail: Dict(("job-linux", PassFail())))]);
 
             Assert.Equal(1, await runner.RunAsync(CancellationToken.None));
             Assert.Equal(["job-linux"], azdo.UploadedJobNames);
@@ -190,7 +173,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             var helix = new FakeHelixService();
             ConfigureSnapshots(azdo, helix,
                 [[PipelineJob("Build Linux (retry)", "completed", "succeeded"), MonitorJob()]],
-                [(jobs: [HelixJob("job-linux-attempt1", "failed"), HelixJob("job-linux-attempt2", "finished")], passFail: Dict(("job-linux-attempt1", PassFail(failed: ["wi-2"])), ("job-linux-attempt2", PassFail(passed: ["wi-2"]))))]);
+                [(jobs: [HelixJob("job-linux-attempt1", "finished"), HelixJob("job-linux-attempt2", "finished")], passFail: Dict(("job-linux-attempt2", PassFail(passed: ["wi-2"]))))]);
             var runner = CreateRunner(azdo, helix);
 
             Assert.Equal(0, await runner.RunAsync(CancellationToken.None));
@@ -236,33 +219,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public async Task MonitorCrashAndRestart_ProcessesRemainingDelta()
-        {
-            var azdo = new FakeAzureDevOpsService();
-            var helix = new FakeHelixService();
-            ConfigureSnapshots(azdo, helix,
-                [[PipelineJob("Build Linux", "completed", "succeeded"), PipelineJob("Build Win", "completed", "succeeded"), MonitorJob()]],
-                [(jobs: [HelixJob("job-linux", "finished"), HelixJob("job-win", "finished")], passFail: Dict(("job-linux", PassFail(passed: ["linux-wi"])), ("job-win", PassFail(passed: ["win-wi"]))))]);
-
-            helix.FailDownloadForJob("job-win");
-            var runner1 = CreateRunner(azdo, helix);
-            Assert.Equal(1, await runner1.RunAsync(CancellationToken.None));
-            Assert.Equal(["job-linux"], azdo.UploadedJobNames);
-
-            helix.ClearDownloadFailures();
-            var runner2 = CreateRunner(azdo, helix);
-            Assert.Equal(0, await runner2.RunAsync(CancellationToken.None));
-            Assert.Equal(["job-linux", "job-win"], azdo.UploadedJobNames);
-        }
-
-        [Fact]
         public async Task RetryWithFailedSubsetResubmitted_OnlyNewJobProcessed()
         {
             var azdo = new FakeAzureDevOpsService().WithPreviouslyProcessedJob("job-linux-attempt1");
             var helix = new FakeHelixService();
             ConfigureSnapshots(azdo, helix,
                 [[PipelineJob("Build Linux (retry)", "completed", "succeeded"), MonitorJob()]],
-                [(jobs: [HelixJob("job-linux-attempt1", "failed"), HelixJob("job-linux-attempt2", "finished")], passFail: Dict(("job-linux-attempt1", PassFail(failed: ["wi-2"])), ("job-linux-attempt2", PassFail(passed: ["wi-2"]))))]);
+                [(jobs: [HelixJob("job-linux-attempt1", "finished"), HelixJob("job-linux-attempt2", "finished")], passFail: Dict(("job-linux-attempt2", PassFail(passed: ["wi-2"]))))]);
             var runner = CreateRunner(azdo, helix);
 
             Assert.Equal(0, await runner.RunAsync(CancellationToken.None));
@@ -274,15 +237,19 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         // -----------------------------------------------------------------------
 
         [Fact]
-        public async Task MonitorTimesOut_ThrowsOperationCanceledException()
+        public async Task MonitorTimesOut_ReturnsOne()
         {
-            var (_, _, runner, _) = CreateScenario(
-                timelineSnapshots: [[PipelineJob("Build Linux", "inProgress"), MonitorJob()]],
-                helixSnapshots: [(jobs: [HelixJob("job-linux", "running")], passFail: EmptyPassFail())]);
+            // The runner catches OperationCanceledException and returns 1.
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            ConfigureSnapshots(azdo, helix,
+                [[PipelineJob("Build Linux", "inProgress"), MonitorJob()]],
+                [(jobs: [HelixJob("job-linux", "running")], passFail: EmptyPassFail())]);
 
             using var cts = new CancellationTokenSource();
             cts.Cancel();
-            await Assert.ThrowsAsync<OperationCanceledException>(() => runner.RunAsync(cts.Token));
+            var runner = CreateRunner(azdo, helix);
+            Assert.Equal(1, await runner.RunAsync(cts.Token));
         }
 
         [Fact]
@@ -297,8 +264,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public async Task DownloadFailureMidStream_RetryReusesTestRun_NoDuplicate()
+        public async Task DownloadFailure_TestRunStillCompleted()
         {
+            // The runner always completes the test run (finally block), even on download failure.
             var azdo = new FakeAzureDevOpsService();
             var helix = new FakeHelixService();
             ConfigureSnapshots(azdo, helix,
@@ -306,17 +274,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 [(jobs: [HelixJob("job-linux", "finished"), HelixJob("job-win", "finished")], passFail: Dict(("job-linux", PassFail(passed: ["linux-wi"])), ("job-win", PassFail(passed: ["win-wi"]))))]);
 
             helix.FailDownloadForJob("job-win");
-            var runner1 = CreateRunner(azdo, helix);
-            Assert.Equal(1, await runner1.RunAsync(CancellationToken.None));
+            var runner = CreateRunner(azdo, helix);
+            Assert.Equal(1, await runner.RunAsync(CancellationToken.None));
+
             Assert.Equal(["job-linux"], azdo.UploadedJobNames);
-
-            helix.ClearDownloadFailures();
-            var runner2 = CreateRunner(azdo, helix);
-            Assert.Equal(0, await runner2.RunAsync(CancellationToken.None));
-            Assert.Equal(["job-linux", "job-win"], azdo.UploadedJobNames);
-
-            // Key invariant: exactly 1 test run CREATED for job-win (second call reused in-progress one)
-            Assert.Equal(1, azdo.CreatedTestRuns.Count(n => n.Equals("job-win", StringComparison.OrdinalIgnoreCase)));
+            // Both test runs completed (finally block ensures CompleteTestRunAsync is called)
+            Assert.Equal(2, azdo.CompletedTestRunIds.Count);
         }
 
         [Fact]

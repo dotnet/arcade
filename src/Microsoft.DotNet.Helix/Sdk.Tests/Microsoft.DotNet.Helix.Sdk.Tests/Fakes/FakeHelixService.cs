@@ -79,14 +79,21 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             string jobName,
             CancellationToken _)
         {
-            return
-                Task.FromResult<IReadOnlyCollection<WorkItemSummary>>(
-                [
-                    ..CurrentSnapshot.PassFailByJob[jobName].PassedWorkItems.Select(
-                        w => new WorkItemSummary($"{jobName}/{w}", jobName, w, "Passed")),
-                    ..CurrentSnapshot.PassFailByJob[jobName].FailedWorkItems.Select(
-                        w => new WorkItemSummary($"{jobName}/{w}", jobName, w, "Failed"))
-                ]);
+            var items = new List<WorkItemSummary>();
+
+            foreach (string w in CurrentSnapshot.PassFailByJob[jobName].PassedWorkItems)
+            {
+                var wi = new WorkItemSummary($"{jobName}/{w}", jobName, w, "Finished") { ExitCode = 0 };
+                items.Add(wi);
+            }
+
+            foreach (string w in CurrentSnapshot.PassFailByJob[jobName].FailedWorkItems)
+            {
+                var wi = new WorkItemSummary($"{jobName}/{w}", jobName, w, "Finished") { ExitCode = 1 };
+                items.Add(wi);
+            }
+
+            return Task.FromResult<IReadOnlyCollection<WorkItemSummary>>(items);
         }
 
         private sealed record HelixSnapshot(
