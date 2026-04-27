@@ -18,13 +18,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             JobName = helixJob.Name;
             Status = helixJob.Finished != null ? "finished" : "running";
             TestRunName = GetTestRunNameFromJob(helixJob);
+            StageName = GetStringPropertyFromJob(helixJob, "System.StageName");
         }
 
-        public HelixJobInfo(string jobName, string status, string testRunName = null)
+        public HelixJobInfo(string jobName, string status, string testRunName = null, string stageName = null)
         {
             JobName = jobName ?? throw new ArgumentNullException(nameof(jobName));
             Status = status ?? throw new ArgumentNullException(nameof(status));
             TestRunName = testRunName;
+            StageName = stageName;
         }
 
         public string JobName { get; }
@@ -36,6 +38,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
         /// Falls back to the job name if not set.
         /// </summary>
         public string TestRunName { get; }
+
+        /// <summary>
+        /// Name of the Azure DevOps pipeline stage that submitted this Helix job, taken from
+        /// the "System.StageName" property stamped onto the job by <c>SendHelixJob</c>. May be
+        /// null if the property is not present.
+        /// </summary>
+        public string StageName { get; }
 
         public bool IsCompleted => Status.Equals("finished", StringComparison.OrdinalIgnoreCase)
             || Status.Equals("failed", StringComparison.OrdinalIgnoreCase);
@@ -63,6 +72,21 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             }
 
             return helixJob.Name;
+        }
+
+        private static string GetStringPropertyFromJob(JobSummary helixJob, string propertyName)
+        {
+            if (helixJob.Properties is JObject properties
+                && properties.TryGetValue(propertyName, out JToken token))
+            {
+                string value = token?.ToString();
+                if (!string.IsNullOrEmpty(value))
+                {
+                    return value;
+                }
+            }
+
+            return null;
         }
     }
 }

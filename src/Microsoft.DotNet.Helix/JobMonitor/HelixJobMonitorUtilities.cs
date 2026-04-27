@@ -39,6 +39,55 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 string.Equals(r.Result, "failed", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(r.Result, "canceled", StringComparison.OrdinalIgnoreCase));
 
+        /// <summary>
+        /// Returns the subset of <paramref name="records"/> that belongs to the pipeline stage
+        /// named <paramref name="stageName"/>, including the Stage record itself and any
+        /// descendant records (Phases, Jobs, Tasks). When the named Stage is not present in the
+        /// timeline an empty list is returned.
+        /// </summary>
+        public static IReadOnlyList<AzureDevOpsTimelineRecord> FilterRecordsToStage(
+            IEnumerable<AzureDevOpsTimelineRecord> records,
+            string stageName)
+        {
+            if (string.IsNullOrEmpty(stageName))
+            {
+                return (records ?? []).ToList();
+            }
+
+            var all = (records ?? []).ToList();
+            var stageRoot = all.FirstOrDefault(r =>
+                string.Equals(r.Type, "Stage", StringComparison.OrdinalIgnoreCase)
+                && string.Equals(r.Name, stageName, StringComparison.OrdinalIgnoreCase));
+
+            if (stageRoot == null)
+            {
+                return [];
+            }
+
+            // Iteratively collect all descendants of the stage record by following ParentId.
+            var byParent = all
+                .Where(r => !string.IsNullOrEmpty(r.ParentId))
+                .ToLookup(r => r.ParentId, StringComparer.OrdinalIgnoreCase);
+
+            var result = new List<AzureDevOpsTimelineRecord> { stageRoot };
+            var queue = new Queue<string>();
+            queue.Enqueue(stageRoot.Id);
+            while (queue.Count > 0)
+            {
+                string parentId = queue.Dequeue();
+                foreach (AzureDevOpsTimelineRecord child in byParent[parentId])
+                {
+                    result.Add(child);
+                    if (!string.IsNullOrEmpty(child.Id))
+                    {
+                        queue.Enqueue(child.Id);
+                    }
+                }
+            }
+
+            return result;
+        }
+
         private static IEnumerable<AzureDevOpsTimelineRecord> GetRelevantJobRecords(IEnumerable<AzureDevOpsTimelineRecord> records, string jobMonitorName)
         {
             return (records ?? [])

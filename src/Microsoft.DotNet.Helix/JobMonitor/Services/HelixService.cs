@@ -53,7 +53,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     .Select(j => new HelixJobInfo(
                         j.Name,
                         j.Finished != null ? "finished" : "running",
-                        GetTestRunNameFromJob(j)))
+                        GetTestRunNameFromJob(j),
+                        GetStringPropertyFromJob(j, "System.StageName")))
              ];
         }
 
@@ -125,6 +126,21 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             return helixJob.Name;
+        }
+
+        private static string GetStringPropertyFromJob(JobSummary helixJob, string propertyName)
+        {
+            if (helixJob.Properties is JObject properties
+                && properties.TryGetValue(propertyName, out JToken token))
+            {
+                string value = token?.ToString();
+                if (!string.IsNullOrEmpty(value))
+                {
+                    return value;
+                }
+            }
+
+            return null;
         }
 
         private static BlobClient CreateBlobClient(string fileLink, string resultsSas)

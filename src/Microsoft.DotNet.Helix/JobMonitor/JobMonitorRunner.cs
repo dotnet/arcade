@@ -65,9 +65,18 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task<int> RunCoreAsync(CancellationToken cancellationToken)
         {
+            if (_options.MonitorAllStages || string.IsNullOrEmpty(_options.StageName))
+            {
+                _logger.LogInformation("Monitoring Helix jobs for the pipeline");
+            }
+            else
+            {
+                _logger.LogInformation("Monitoring Helix jobs sent from stage '{StageName}'", _options.StageName);
+            }
+
             IReadOnlySet<string> alreadyProcessed = await _azdo.GetProcessedHelixJobNamesAsync(cancellationToken);
             var processedHelixJobs = new HashSet<string>(alreadyProcessed, StringComparer.OrdinalIgnoreCase);
-            IReadOnlyList<HelixJobInfo> latestAssociatedJobs = Array.Empty<HelixJobInfo>();
+            IReadOnlyList<HelixJobInfo> latestAssociatedJobs = [];
 
             try
             {
@@ -89,7 +98,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             int failedHelixJobCount = 0;
             int processedHelixJobCount = 0;
             int allHelixJobCount = 0;
-            int completedJobsCount = 0;
+            int completedJobsCount = -1;
 
             while (true)
             {
@@ -97,6 +106,20 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 IReadOnlyList<AzureDevOpsTimelineRecord> timelineRecords = await _azdo.GetTimelineRecordsAsync(cancellationToken);
                 IReadOnlyList<HelixJobInfo> associatedJobsWithBuild = await _helix.GetJobsAsync(cancellationToken);
+
+                // When the monitor is scoped to a single stage, drop timeline records and Helix jobs
+                // that belong to other stages so they don't gate completion or contribute failures.
+                if (!_options.MonitorAllStages && !string.IsNullOrEmpty(_options.StageName))
+                {
+                    timelineRecords = HelixJobMonitorUtilities.FilterRecordsToStage(timelineRecords, _options.StageName);
+                    associatedJobsWithBuild =
+                    [
+                        ..associatedJobsWithBuild.Where(j =>
+                            string.IsNullOrEmpty(j.StageName)
+                            || string.Equals(j.StageName, _options.StageName, StringComparison.OrdinalIgnoreCase))
+                    ];
+                }
+
                 reportLatestJobs(associatedJobsWithBuild);
 
                 // Filter jobs to completed ones belonging to this build
@@ -205,12 +228,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return failedWorkItemCount == 0;
         }
 
-        public void Dispose()
-        {
-            (_azdo as IDisposable)?.Dispose();
-            (_helix as IDisposable)?.Dispose();
-        }
-
         private void ReportTimeout(
             IReadOnlyList<HelixJobInfo> latestAssociatedJobs,
             HashSet<string> processedHelixJobs)
@@ -235,6 +252,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 timeout,
                 unfinishedJobs.Count,
                 string.Join(", ", unfinishedJobs.Select(j => $"{j.JobName} (status: {j.Status})")));
+        }
+
+        public void Dispose()
+        {
+            (_azdo as IDisposable)?.Dispose();
+            (_helix as IDisposable)?.Dispose();
         }
     }
 }
