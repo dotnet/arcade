@@ -64,27 +64,37 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             bool anyNonMonitorJobFailures = false;
             int failedHelixJobCount = 0;
             int processedHelixJobCount = 0;
+            int allHelixJobCount = 0;
+            int completedJobsCount = 0;
 
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 AzureDevOpsTimelineRecord[] timelineRecords = await GetTimelineRecordsAsync();
-                IImmutableList<JobSummary> jobs = await RetryAsync(
-                    // TODO: "pr/public" is hardcoded but could come from the build technically
-                    async () => await _helixApi.Job.ListAsync(source: $"pr/public/{_options.Organization}/{_options.RepositoryName}/refs/pull/{_options.PrNumber}/merge"),
-                    cancellationToken);
+                IReadOnlyList<JobSummary> associatedJobsWithBuild =
+                [
+                    ..(await RetryAsync(
+                        // TODO: "pr/public" is hardcoded but could come from the build technically
+                        async () => await _helixApi.Job.ListAsync(source: $"pr/public/{_options.Organization}/{_options.RepositoryName}/refs/pull/{_options.PrNumber}/merge"),
+                        cancellationToken))
+                    .Where(j => ((JObject)j.Properties).TryGetValue("BuildId", out JToken buildId) && buildId?.ToString() == _options.BuildId)
+                ];
 
                 // Filter jobs to completed ones belonging to this build
                 IReadOnlyCollection<JobSummary> completedJobs =
                 [
-                    ..jobs
-                        .Where(j => ((JObject)j.Properties).TryGetValue("BuildId", out JToken buildId) && buildId?.ToString() == _options.BuildId)
+                    ..associatedJobsWithBuild
                         .Where(j => j.Finished != null)
                         .OrderBy(j => j.Name, StringComparer.OrdinalIgnoreCase)
                 ];
 
-                _logger.LogInformation("{CompletedCount}/{TotalCount} Helix jobs finished", completedJobs.Count, jobs.Count);
+                if (allHelixJobCount != associatedJobsWithBuild.Count || completedJobsCount != completedJobs.Count)
+                {
+                    _logger.LogInformation("{CompletedCount}/{TotalCount} Helix jobs finished", completedJobs.Count, associatedJobsWithBuild.Count);
+                    allHelixJobCount = associatedJobsWithBuild.Count;
+                    completedJobsCount = completedJobs.Count;
+                }
 
                 foreach (JobSummary job in completedJobs.Where(j => !processedHelixJobs.Contains(j.Name)))
                 {
@@ -99,7 +109,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 anyNonMonitorJobFailures = HelixJobMonitorUtilities.HasFailedNonMonitorJobs(timelineRecords, _options.JobMonitorName);
                 bool allPipelineJobsComplete = HelixJobMonitorUtilities.AreNonMonitorJobsComplete(timelineRecords, _options.JobMonitorName);
-                bool allHelixJobsComplete = jobs.Count != 0 && jobs.Count == completedJobs.Count;
+                bool allHelixJobsComplete = associatedJobsWithBuild.Count != 0 && associatedJobsWithBuild.Count == completedJobs.Count;
 
                 if (allPipelineJobsComplete && allHelixJobsComplete)
                 {
