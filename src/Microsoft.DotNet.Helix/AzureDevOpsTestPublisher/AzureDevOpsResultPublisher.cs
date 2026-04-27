@@ -300,7 +300,7 @@ public sealed class AzureDevOpsResultPublisher
             Convert.ToBase64String(Encoding.UTF8.GetBytes(attachment.Text)));
 
         string path = subResultId is long subId
-            ? $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results/{testId}/subresults/{subId}/attachments?api-version=7.1-preview.1"
+            ? $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results/{testId}/attachments?testSubResultId={subId}&api-version=7.1-preview.1"
             : $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results/{testId}/attachments?api-version=7.1-preview.1";
 
         using HttpResponseMessage response = await SendWithRetryAsync(HttpMethod.Post, path, request, cancellationToken);
