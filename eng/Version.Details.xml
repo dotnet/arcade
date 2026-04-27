@@ -172,9 +172,5 @@
       <Uri>https://github.com/nuget/nuget.client</Uri>
       <Sha>779eff1e73420573dd39dbbe54896ff8f08955e1</Sha>
     </Dependency>
-    <Dependency Name="System.Composition" Version="10.0.3">
-      <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>dc5fd7a8dce8309e4add8fd4bd5d8718f221b15a</Sha>
-    </Dependency>
   </ToolsetDependencies>
 </Dependencies>
