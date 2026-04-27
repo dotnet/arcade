@@ -139,9 +139,6 @@ jobs:
         toolPath="$AGENT_TEMPDIRECTORY/helix-job-monitor-tool"
         mkdir -p "$toolPath"
 
-        pushd "$AGENT_TEMPDIRECTORY" > /dev/null
-        trap 'popd > /dev/null' EXIT
-
         packageId='${{ parameters.toolPackageId }}'
         toolVersion='${{ parameters.toolVersion }}'
         nupkgArtifactSubPath='${{ parameters.toolNupkgArtifactSubPath }}'
@@ -167,17 +164,28 @@ jobs:
         fi
 
         echo "Using locally built '$packageId' version '$toolVersion' from '$nupkgDir'."
-        toolSource="$nupkgDir"
+
+        # Create a minimal NuGet.config that only references the local nupkg directory.
+        # This avoids conflicts with the repo's package source mapping which blocks --add-source.
+        toolNugetConfig="$AGENT_TEMPDIRECTORY/helix-job-monitor-nuget.config"
+        printf '<?xml version="1.0" encoding="utf-8"?>\n<configuration>\n  <packageSources>\n    <clear />\n    <add key="local-tool" value="%s" />\n  </packageSources>\n</configuration>\n' "$nupkgDir" > "$toolNugetConfig"
 
         pushd "$(Build.SourcesDirectory)" > /dev/null
         ./eng/common/dotnet.sh tool install \
           --tool-path "$toolPath" "$packageId" \
           --version "$toolVersion" \
-          --source "$toolSource" \
-          --ignore-failed-sources
+          --configfile "$toolNugetConfig"
 
-        echo "##vso[task.prependpath]$toolPath"
-        echo "##vso[task.setvariable variable=HelixJobMonitorToolPath]$toolPath"
+        # Locate the tool DLL so the run step can invoke it via ./eng/common/dotnet.sh exec.
+        toolDll=$(find "$toolPath/.store" -path '*/tools/*/any/*.deps.json' -type f | head -n 1)
+        toolDll="${toolDll%.deps.json}.dll"
+        if [ ! -f "$toolDll" ]; then
+          echo "Could not find tool DLL in '$toolPath/.store'." >&2
+          exit 1
+        fi
+
+        echo "Tool DLL: $toolDll"
+        echo "##vso[task.setvariable variable=HelixJobMonitorDll]$toolDll"
       displayName: Install Helix Job Monitor
 
   - ${{ else }}:
@@ -221,9 +229,9 @@ jobs:
       if [ -n "$prNumber" ];     then toolArgs+=( --pr-number    "$prNumber" );     fi
 
       if [ -n '${{ parameters.toolNupkgArtifactName }}' ]; then
-        # Tool was installed into a tool-path that has been prepended to PATH.
+        # Tool was installed from a local nupkg; run the DLL via the repo-local dotnet.
         export DOTNET_ROOT="$(Build.SourcesDirectory)/.dotnet"
-        '${{ parameters.toolCommand }}' "${toolArgs[@]}"
+        ./eng/common/dotnet.sh exec "$(HelixJobMonitorDll)" "${toolArgs[@]}"
       else
         # Tool was restored from the local .config/dotnet-tools.json manifest; invoke it
         # through the manifest from the repo root.
