@@ -229,6 +229,7 @@ stages:
   - template: /eng/common/core-templates/job/helix-job-monitor.yml
     parameters:
       timeoutInMinutes: 60 # TODO: Increase this
+      monitorAllStages: false
       # Install from the nupkg produced by the Build stage's Windows_NT Release job.
       toolNupkgArtifactName: Artifacts_Windows_NT_Release
       toolNupkgArtifactSubPath: packages/Release/NonShipping
