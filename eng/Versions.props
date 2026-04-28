@@ -13,14 +13,6 @@
   <PropertyGroup>
     <!-- corefx -->
     <SystemRuntimeInteropServicesRuntimeInformation>4.3.0</SystemRuntimeInteropServicesRuntimeInformation>
-    <!-- nuget -->
-    <!-- Important: Don't version higher than what's available in the toolset SDK as
-         NuGet assemblies aren't redistributed with .NETCoreApp msbuild tasks. -->
-    <NuGetCommandsVersion>7.0.3</NuGetCommandsVersion>
-    <NuGetFrameworksVersion>7.0.3</NuGetFrameworksVersion>
-    <NuGetPackagingVersion>7.0.3</NuGetPackagingVersion>
-    <NuGetProjectModelVersion>7.0.3</NuGetProjectModelVersion>
-    <NuGetVersioningVersion>7.0.3</NuGetVersioningVersion>
     <!-- runtime -->
     <MicrosoftNETCorePlatformsVersion>5.0.0</MicrosoftNETCorePlatformsVersion>
     <MicrosoftNETRuntimeEmscripten2023Nodewin_x64>6.0.4</MicrosoftNETRuntimeEmscripten2023Nodewin_x64>
