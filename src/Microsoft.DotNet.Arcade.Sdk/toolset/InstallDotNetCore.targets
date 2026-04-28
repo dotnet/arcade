@@ -10,7 +10,7 @@
     <Exec Condition="'$(OS)' != 'Windows_NT'" Command="chmod +x &quot;$(_DotNetInstallScript)&quot;" />
 
     <PropertyGroup>
-      <_DotNetPath Condition="'$(DOTNET_INSTALL_DIR)' != ''">$(DOTNET_INSTALL_DIR)</_DotNetPath>
+      <_DotNetPath Condition="'$(DOTNET_GLOBAL_INSTALL_DIR)' != ''">$(DOTNET_GLOBAL_INSTALL_DIR)</_DotNetPath>
       <_DotNetPath Condition="'$(_DotNetPath)' == ''">$(RepoRoot).dotnet</_DotNetPath>
     </PropertyGroup>
 
