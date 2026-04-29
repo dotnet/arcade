@@ -34,14 +34,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly Dictionary<string, HashSet<string>> _workItemsByJob = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
-        /// Tracks which original Helix jobs have already had their failed work items resubmitted,
-        /// so we don't resubmit twice for the same source job.
-        /// </summary>
-        private readonly HashSet<string> _resubmittedSourceJobs = new(StringComparer.OrdinalIgnoreCase);
-
-        private bool IsRetryAttempt => _options.Attempt.GetValueOrDefault(1) > 1;
-
-        /// <summary>
         /// Constructor for production use with real services.
         /// </summary>
         public JobMonitorRunner(JobMonitorOptions options, ILogger logger)
@@ -259,6 +251,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task ResubmitFailedJobsAsync(HashSet<string> processedHelixJobs, CancellationToken cancellationToken)
         {
+            // TODO: Only retry jobs from the last iteration
+
             foreach (string jobName in processedHelixJobs)
             {
                 IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(jobName, cancellationToken);
