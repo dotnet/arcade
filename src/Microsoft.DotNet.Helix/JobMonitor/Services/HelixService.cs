@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure;
@@ -15,7 +16,9 @@ using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Azure.Storage.Blobs.Models;
 
 namespace Microsoft.DotNet.Helix.JobMonitor
 {
@@ -176,17 +179,173 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return await RetryHelper.RetryAsync(() => _helixApi.WorkItem.ListAsync(jobName), cancellationToken);
         }
 
-        public Task<HelixJobInfo> ResubmitWorkItemsAsync(
+        public async Task<HelixJobInfo> ResubmitWorkItemsAsync(
             string originalJobName,
             IReadOnlyCollection<string> failedWorkItemNames,
             CancellationToken cancellationToken)
         {
-            // TODO: Implement real Helix resubmission via the Helix API.
-            // This should:
-            // 1. Get the original job's details (queue, correlation payloads, properties)
-            // 2. Create a new job with the same configuration but only the failed work items
-            // 3. Preserve BuildId, StageName, and other discovery properties
-            throw new NotImplementedException("Real Helix resubmission is not yet implemented.");
+            if (failedWorkItemNames?.Count == 0)
+            {
+                _logger.LogDebug("No failed work items provided for resubmission of job '{JobName}'.", originalJobName);
+                return null;
+            }
+
+            // 1. Read the original job's metadata so we can clone its queue, type, source, and properties.
+            JobDetails details = await RetryHelper.RetryAsync(
+                () => _helixApi.Job.DetailsAsync(originalJobName),
+                cancellationToken);
+
+            if (string.IsNullOrEmpty(details.QueueId)
+                || string.IsNullOrEmpty(details.Type)
+                || string.IsNullOrEmpty(details.JobList))
+            {
+                _logger.LogWarning(
+                    "Cannot resubmit job '{JobName}' because its details are missing required fields (QueueId/Type/JobList).",
+                    originalJobName);
+                return null;
+            }
+
+            // 2. Download the original job-list JSON; it contains the work item entries that
+            //    reference the existing payload/correlation payload blobs which we want to reuse.
+            string originalJobListJson;
+            try
+            {
+                BlobClient jobListBlob = CreateBlobClient(details.JobList, resultsSas: null);
+                Response<BlobDownloadResult> download = await RetryHelper.RetryAsync(
+                    () => jobListBlob.DownloadContentAsync(cancellationToken),
+                    cancellationToken);
+                originalJobListJson = download.Value.Content.ToString();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to download original job list for '{JobName}' from '{JobListUri}'.", originalJobName, details.JobList);
+                return null;
+            }
+
+            // 3. Filter the entries to just the failed work items. We keep the JObject entries
+            //    intact so PayloadUri / CorrelationPayloadUrisWithDestinations / Command etc. are
+            //    preserved verbatim and continue to point at the original payload blobs.
+            JArray originalEntries;
+            try
+            {
+                originalEntries = JArray.Parse(originalJobListJson);
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Original job list for '{JobName}' is not a valid JSON array.", originalJobName);
+                return null;
+            }
+
+            var requestedSet = new HashSet<string>(failedWorkItemNames, StringComparer.OrdinalIgnoreCase);
+            var filteredEntries = new JArray(
+                originalEntries
+                    .OfType<JObject>()
+                    .Where(entry => entry["WorkItemId"] is JValue id
+                        && id.Value is string idValue
+                        && requestedSet.Contains(idValue)));
+
+            if (filteredEntries.Count == 0)
+            {
+                _logger.LogWarning(
+                    "Cannot resubmit job '{JobName}': none of the requested work items were found in its job list.",
+                    originalJobName);
+                return null;
+            }
+
+            string filteredJobListJson = filteredEntries.ToString(Formatting.Indented);
+
+            // 4. Create a fresh storage container for the new job list and upload it.
+            ContainerInformation container = await RetryHelper.RetryAsync(
+                () => _helixApi.Storage.NewAsync(
+                    new ContainerCreationRequest(expirationInDays: 30, desiredName: "joblists", targetQueue: details.QueueId),
+                    cancellationToken),
+                cancellationToken);
+
+            string blobName = $"job-list-{Guid.NewGuid():N}.json";
+            var containerUri = new Uri($"https://{container.StorageAccountName}.blob.core.windows.net/{container.ContainerName}");
+            var containerClient = new BlobContainerClient(containerUri, new AzureSasCredential(container.WriteToken));
+            BlobClient jobListBlobClient = containerClient.GetBlobClient(blobName);
+
+            await RetryHelper.RetryAsync(
+                () => jobListBlobClient.UploadAsync(BinaryData.FromString(filteredJobListJson), overwrite: true, cancellationToken),
+                cancellationToken);
+
+            string newJobListUri = AppendSasIfPresent(jobListBlobClient.Uri, container.ReadToken);
+
+            // 5. Build the new job creation request, copying over Source / Properties / Creator
+            //    so the resubmitted job remains discoverable (BuildId, System.StageName, TestRunName, etc.).
+            var creationRequest = new JobCreationRequest(details.Type, newJobListUri, details.QueueId)
+            {
+                Source = details.Source,
+                Creator = details.Creator,
+                Properties = ConvertPropertiesToImmutableDictionary(details.Properties),
+            };
+
+            string idempotencyKey = Guid.NewGuid().ToString("N");
+            JobCreationResult newJob = await RetryHelper.RetryAsync(
+                () => _helixApi.Job.NewAsync(creationRequest, idempotencyKey, cancellationToken: cancellationToken),
+                cancellationToken);
+
+            _logger.LogInformation(
+                "Resubmitted {Count} failed work item(s) from '{OriginalJobName}' as new job '{NewJobName}'.",
+                filteredEntries.Count, originalJobName, newJob.Name);
+
+            string testRunName = GetStringPropertyFromProperties(details.Properties, "TestRunName") ?? newJob.Name;
+            string stageName = GetStringPropertyFromProperties(details.Properties, "System.StageName");
+
+            return new HelixJobInfo(newJob.Name, "running", testRunName, stageName);
+        }
+
+        private static IImmutableDictionary<string, string> ConvertPropertiesToImmutableDictionary(JToken properties)
+        {
+            if (properties is not JObject obj)
+            {
+                return ImmutableDictionary<string, string>.Empty;
+            }
+
+            ImmutableDictionary<string, string>.Builder builder = ImmutableDictionary.CreateBuilder<string, string>();
+            foreach (JProperty prop in obj.Properties())
+            {
+                if (prop.Value is null || prop.Value.Type == JTokenType.Null)
+                {
+                    continue;
+                }
+
+                builder[prop.Name] = prop.Value.Type == JTokenType.String
+                    ? (string)prop.Value
+                    : prop.Value.ToString(Formatting.None);
+            }
+
+            return builder.ToImmutable();
+        }
+
+        private static string GetStringPropertyFromProperties(JToken properties, string name)
+        {
+            if (properties is JObject obj && obj.TryGetValue(name, out JToken token))
+            {
+                string value = token?.ToString();
+                if (!string.IsNullOrEmpty(value))
+                {
+                    return value;
+                }
+            }
+
+            return null;
+        }
+
+        private static string AppendSasIfPresent(Uri blobUri, string sas)
+        {
+            if (string.IsNullOrEmpty(sas))
+            {
+                return blobUri.ToString();
+            }
+
+            string trimmed = sas.StartsWith("?", StringComparison.Ordinal) ? sas.Substring(1) : sas;
+            var builder = new UriBuilder(blobUri)
+            {
+                Query = trimmed,
+            };
+            return builder.Uri.ToString();
         }
     }
 }
