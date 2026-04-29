@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 cancellationToken.ThrowIfCancellationRequested();
 
                 IReadOnlyList<AzureDevOpsTimelineRecord> timelineRecords = await _azdo.GetTimelineRecordsAsync(cancellationToken);
-                IReadOnlyList<HelixJobInfo> associatedJobsWithBuild = await _helix.GetJobsAsync(cancellationToken);
+                IReadOnlyList<HelixJobInfo> associatedJobsWithBuild = await _helix.GetLatestJobsAsync(cancellationToken);
 
                 // When the monitor is scoped to a single stage, drop timeline records and Helix jobs
                 // that belong to other stages so they don't gate completion or contribute failures.
@@ -253,9 +253,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private async Task ResubmitFailedJobsAsync(HashSet<string> processedHelixJobNames, CancellationToken cancellationToken)
         {
             // Only consider resubmitting jobs from the previous attempt
-            List<HelixJobInfo> processedHelixJobs = (await _helix.GetJobsAsync(cancellationToken))
+            List<HelixJobInfo> processedHelixJobs = (await _helix.GetLatestJobsAsync(cancellationToken))
                 .Where(j => processedHelixJobNames.Contains(j.JobName))
-                .Where(j => j.Properties["System.JobAttempt"].Value<string>() == (_options.Attempt - 1).ToString())
                 .ToList();
 
             foreach (HelixJobInfo processedJob in processedHelixJobs)

@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 : ApiFactory.GetAuthenticated(options.HelixBaseUri, options.HelixAccessToken);
         }
 
-        public async Task<IReadOnlyList<HelixJobInfo>> GetJobsAsync(CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<HelixJobInfo>> GetLatestJobsAsync(CancellationToken cancellationToken)
         {
             // Build the Helix source filter. For PR builds, use the PR merge ref.
             // For CI builds without a PR, use the branch-based source.
@@ -53,6 +53,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             [
                 ..jobs
                     .Where(j => ((JObject)j.Properties).TryGetValue("BuildId", out JToken buildId) && buildId?.ToString() == _options.BuildId)
+                    // TODO: .Where(j => j.JobName is not in anyone's previous job property)
                     .Select(j => new HelixJobInfo(
                         j.Name,
                         j.Finished != null ? "finished" : "running",
@@ -278,7 +279,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 Source = details.Source,
                 Creator = details.Creator,
-                Properties = ConvertPropertiesToImmutableDictionary(details.Properties),
+                Properties = ConvertPropertiesToImmutableDictionary(details.Properties), // TODO: INsert originalJobName as the previous job
             };
 
             string idempotencyKey = Guid.NewGuid().ToString("N");
