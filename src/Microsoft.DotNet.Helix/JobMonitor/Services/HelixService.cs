@@ -175,5 +175,18 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             return await RetryHelper.RetryAsync(() => _helixApi.WorkItem.ListAsync(jobName), cancellationToken);
         }
+
+        public Task<HelixJobInfo> ResubmitFailedWorkItemsAsync(
+            string originalJobName,
+            IReadOnlyCollection<string> failedWorkItemNames,
+            CancellationToken cancellationToken)
+        {
+            // TODO: Implement real Helix resubmission via the Helix API.
+            // This should:
+            // 1. Get the original job's details (queue, correlation payloads, properties)
+            // 2. Create a new job with the same configuration but only the failed work items
+            // 3. Preserve BuildId, StageName, and other discovery properties
+            throw new NotImplementedException("Real Helix resubmission is not yet implemented.");
+        }
     }
 }

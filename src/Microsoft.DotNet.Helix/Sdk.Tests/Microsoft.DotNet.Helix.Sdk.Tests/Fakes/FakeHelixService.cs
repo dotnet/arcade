@@ -110,6 +110,40 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             return Task.FromResult<IReadOnlyCollection<WorkItemSummary>>(items);
         }
 
+        /// <summary>
+        /// Tracks resubmission calls for test assertions.
+        /// Each entry is (originalJobName, failedWorkItemNames, newJobName).
+        /// </summary>
+        public List<(string OriginalJob, IReadOnlyCollection<string> FailedItems, string NewJob)> Resubmissions { get; } = [];
+
+        /// <summary>
+        /// Configures the result of a resubmission. When <see cref="ResubmitFailedWorkItemsAsync"/>
+        /// is called for <paramref name="originalJobName"/>, a new <see cref="HelixJobInfo"/> with
+        /// <paramref name="newJobName"/> is returned. The new job will appear in subsequent
+        /// <see cref="GetJobsAsync"/> calls via the responses already configured.
+        /// </summary>
+        private readonly Dictionary<string, string> _resubmissionNewJobNames = new(StringComparer.OrdinalIgnoreCase);
+
+        public FakeHelixService ConfigureResubmission(string originalJobName, string newJobName)
+        {
+            _resubmissionNewJobNames[originalJobName] = newJobName;
+            return this;
+        }
+
+        public Task<HelixJobInfo> ResubmitFailedWorkItemsAsync(
+            string originalJobName,
+            IReadOnlyCollection<string> failedWorkItemNames,
+            CancellationToken cancellationToken)
+        {
+            if (!_resubmissionNewJobNames.TryGetValue(originalJobName, out string newJobName))
+            {
+                newJobName = $"{originalJobName}-resubmit";
+            }
+
+            Resubmissions.Add((originalJobName, failedWorkItemNames, newJobName));
+            return Task.FromResult<HelixJobInfo>(new HelixJobInfo(newJobName, "running"));
+        }
+
         private sealed record HelixSnapshot(
             HelixJobInfo[] Jobs,
             Dictionary<string, HelixJobPassFail> PassFailByJob,

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.JobMonitor;
@@ -740,10 +741,243 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         // -----------------------------------------------------------------------
+        // Retry with Helix work item resubmission
+        // -----------------------------------------------------------------------
+
+        /// <summary>
+        /// On attempt 2, the monitor finds a completed Helix job with 2 failed work items.
+        /// It resubmits the failed items. The resubmitted job completes with all items passing.
+        /// The monitor should exit 0 (the resubmission "healed" the failures).
+        /// Only the failed items should be resubmitted. Results from both the original and
+        /// resubmitted jobs should be uploaded (no duplicates — different Helix job names).
+        /// </summary>
+        [Fact]
+        public async Task RetryAttempt2_ResubmitsFailedWorkItems_ResubmissionPasses_ExitZero()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            // Pipeline jobs already completed
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"));
+            // Extra polls while resubmitted job runs
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"));
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"));
+
+            // Poll 1: original Helix job finished with 1 pass + 2 failures
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["wi-ok"], failed: ["wi-fail-1", "wi-fail-2"]),
+                });
+            // Configure: resubmission of helix-linux creates "helix-linux-resub"
+            helix.ConfigureResubmission("helix-linux", "helix-linux-resub");
+
+            // Poll 2: resubmitted job appears, running
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished"), HelixJob("helix-linux-resub", "running")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["wi-ok"], failed: ["wi-fail-1", "wi-fail-2"]),
+                });
+
+            // Poll 3: resubmitted job finished — both items now pass
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished"), HelixJob("helix-linux-resub", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["wi-ok"], failed: ["wi-fail-1", "wi-fail-2"]),
+                    ["helix-linux-resub"] = PassFail(passed: ["wi-fail-1", "wi-fail-2"]),
+                });
+
+            var runner = CreateRunner(azdo, helix, attempt: 2);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            // Resubmission healed the failures → exit 0
+            Assert.Equal(0, exitCode);
+
+            // Both Helix jobs had results uploaded (separate test runs, no duplicates)
+            Assert.Contains("helix-linux", azdo.UploadedJobNames);
+            Assert.Contains("helix-linux-resub", azdo.UploadedJobNames);
+            Assert.Equal(2, azdo.CreatedTestRuns.Count);
+
+            // Only the 2 failed items were resubmitted (not the passing one)
+            Assert.Single(helix.Resubmissions);
+            Assert.Equal("helix-linux", helix.Resubmissions[0].OriginalJob);
+            Assert.Equal(2, helix.Resubmissions[0].FailedItems.Count);
+            Assert.Contains("wi-fail-1", helix.Resubmissions[0].FailedItems);
+            Assert.Contains("wi-fail-2", helix.Resubmissions[0].FailedItems);
+        }
+
+        /// <summary>
+        /// On attempt 2, the monitor resubmits failed work items, but the resubmission
+        /// also fails. The monitor should exit 1.
+        /// </summary>
+        [Fact]
+        public async Task RetryAttempt2_ResubmitsFailedWorkItems_ResubmissionAlsoFails_ExitOne()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"));
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"));
+
+            // Poll 1: original job has 1 failure
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["wi-ok"], failed: ["wi-fail"]),
+                });
+            helix.ConfigureResubmission("helix-linux", "helix-linux-resub");
+
+            // Poll 2: resubmission finished but STILL fails
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished"), HelixJob("helix-linux-resub", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["wi-ok"], failed: ["wi-fail"]),
+                    ["helix-linux-resub"] = PassFail(failed: ["wi-fail"]),
+                });
+
+            var runner = CreateRunner(azdo, helix, attempt: 2);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            // Resubmission also failed → exit 1
+            Assert.Equal(1, exitCode);
+            Assert.Equal(2, azdo.UploadedJobNames.Count);
+        }
+
+        /// <summary>
+        /// On attempt 2, two original Helix jobs have failures. Only the failed work items
+        /// from each are resubmitted (not passing items). As resubmissions pass, the
+        /// set of still-failing items shrinks. Both resubmissions pass → exit 0.
+        /// </summary>
+        [Fact]
+        public async Task RetryAttempt2_MultipleJobs_OnlyFailedItemsResubmitted_ExitZero()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"),
+                PipelineJob("Test Windows", "completed", "succeeded"));
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"),
+                PipelineJob("Test Windows", "completed", "succeeded"));
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"),
+                PipelineJob("Test Windows", "completed", "succeeded"));
+
+            // Poll 1: both original jobs finished with mixed results
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished"), HelixJob("helix-windows", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["linux-ok-1", "linux-ok-2"], failed: ["linux-fail"]),
+                    ["helix-windows"] = PassFail(passed: ["win-ok"], failed: ["win-fail-1", "win-fail-2"]),
+                });
+            helix.ConfigureResubmission("helix-linux", "helix-linux-resub");
+            helix.ConfigureResubmission("helix-windows", "helix-windows-resub");
+
+            // Poll 2: linux resubmission finished (passes), windows still running
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-linux", "finished"), HelixJob("helix-windows", "finished"),
+                    HelixJob("helix-linux-resub", "finished"), HelixJob("helix-windows-resub", "running"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["linux-ok-1", "linux-ok-2"], failed: ["linux-fail"]),
+                    ["helix-windows"] = PassFail(passed: ["win-ok"], failed: ["win-fail-1", "win-fail-2"]),
+                    ["helix-linux-resub"] = PassFail(passed: ["linux-fail"]),
+                });
+
+            // Poll 3: windows resubmission also passes
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-linux", "finished"), HelixJob("helix-windows", "finished"),
+                    HelixJob("helix-linux-resub", "finished"), HelixJob("helix-windows-resub", "finished"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["linux-ok-1", "linux-ok-2"], failed: ["linux-fail"]),
+                    ["helix-windows"] = PassFail(passed: ["win-ok"], failed: ["win-fail-1", "win-fail-2"]),
+                    ["helix-linux-resub"] = PassFail(passed: ["linux-fail"]),
+                    ["helix-windows-resub"] = PassFail(passed: ["win-fail-1", "win-fail-2"]),
+                });
+
+            var runner = CreateRunner(azdo, helix, attempt: 2);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(0, exitCode);
+
+            // 4 test runs: 2 original + 2 resubmissions
+            Assert.Equal(4, azdo.CreatedTestRuns.Count);
+            Assert.Equal(4, azdo.UploadedJobNames.Count);
+
+            // Each original job only had its failed items resubmitted
+            Assert.Equal(2, helix.Resubmissions.Count);
+            var linuxResub = helix.Resubmissions.Single(r => r.OriginalJob == "helix-linux");
+            Assert.Single(linuxResub.FailedItems); // only "linux-fail"
+            Assert.Contains("linux-fail", linuxResub.FailedItems);
+
+            var windowsResub = helix.Resubmissions.Single(r => r.OriginalJob == "helix-windows");
+            Assert.Equal(2, windowsResub.FailedItems.Count);
+            Assert.Contains("win-fail-1", windowsResub.FailedItems);
+            Assert.Contains("win-fail-2", windowsResub.FailedItems);
+        }
+
+        /// <summary>
+        /// On attempt 1 (not a retry), the monitor does NOT resubmit failed work items.
+        /// Resubmission only happens on attempt > 1.
+        /// </summary>
+        [Fact]
+        public async Task Attempt1_DoesNotResubmitFailedWorkItems_ExitOne()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["wi-ok"], failed: ["wi-fail"]),
+                });
+
+            // Attempt 1 (default) — no resubmission
+            var runner = CreateRunner(azdo, helix);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(1, exitCode);
+            Assert.Empty(helix.Resubmissions);
+            Assert.Single(azdo.UploadedJobNames); // only original
+        }
+
+        // -----------------------------------------------------------------------
         // Helpers
         // -----------------------------------------------------------------------
 
-        private static JobMonitorOptions DefaultOptions() => new()
+        private static JobMonitorOptions DefaultOptions(int attempt = 1) => new()
         {
             BuildId = "123",
             CollectionUri = "https://dev.azure.com/dnceng/",
@@ -756,13 +990,14 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             SystemAccessToken = "token",
             TeamProject = "public",
             WorkingDirectory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "job-monitor-test"),
+            Attempt = attempt,
         };
 
         private static readonly Func<TimeSpan, CancellationToken, Task> NoDelay = (_, _) => Task.CompletedTask;
 
-        private static JobMonitorRunner CreateRunner(FakeAzureDevOpsService azdo, FakeHelixService helix, string stageName = null)
+        private static JobMonitorRunner CreateRunner(FakeAzureDevOpsService azdo, FakeHelixService helix, string stageName = null, int attempt = 1)
         {
-            var options = DefaultOptions();
+            var options = DefaultOptions(attempt);
             if (stageName != null)
             {
                 options.MonitorAllStages = false;

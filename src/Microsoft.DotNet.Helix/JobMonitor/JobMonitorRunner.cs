@@ -89,13 +89,32 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
         }
 
+        /// <summary>
+        /// Tracks the latest outcome for each logical work item, keyed by work item name.
+        /// When a resubmission passes a previously-failed item, the outcome is updated.
+        /// </summary>
+        private readonly Dictionary<string, bool> _workItemOutcomes = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Tracks which work item names belong to which Helix job, so resubmission only
+        /// resubmits items from the specific source job.
+        /// </summary>
+        private readonly Dictionary<string, HashSet<string>> _workItemsByJob = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Tracks which original Helix jobs have already had their failed work items resubmitted,
+        /// so we don't resubmit twice for the same source job.
+        /// </summary>
+        private readonly HashSet<string> _resubmittedSourceJobs = new(StringComparer.OrdinalIgnoreCase);
+
+        private bool IsRetryAttempt => _options.Attempt.GetValueOrDefault(1) > 1;
+
         private async Task<int> RunLoopAsync(
             HashSet<string> processedHelixJobs,
             Action<IReadOnlyList<HelixJobInfo>> reportLatestJobs,
             CancellationToken cancellationToken)
         {
             bool anyNonMonitorJobFailures = false;
-            int failedHelixJobCount = 0;
             int processedHelixJobCount = 0;
             int allHelixJobCount = 0;
             int completedJobsCount = -1;
@@ -137,14 +156,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     completedJobsCount = completedJobs.Count;
                 }
 
+                bool resubmittedThisIteration = false;
                 foreach (HelixJobInfo job in completedJobs.Where(j => !processedHelixJobs.Contains(j.JobName)))
                 {
-                    bool passed = await ProcessCompletedJobAsync(job, cancellationToken);
+                    await ProcessCompletedJobAsync(job, cancellationToken);
                     processedHelixJobs.Add(job.JobName);
                     processedHelixJobCount++;
-                    if (!passed)
+
+                    // On retry attempts, resubmit failed work items from this job
+                    if (IsRetryAttempt)
                     {
-                        failedHelixJobCount++;
+                        resubmittedThisIteration |= await TryResubmitFailedWorkItemsAsync(job.JobName, cancellationToken);
                     }
                 }
 
@@ -152,19 +174,31 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 bool allPipelineJobsComplete = HelixJobMonitorUtilities.AreNonMonitorJobsComplete(timelineRecords, _options.JobMonitorName);
                 bool allHelixJobsComplete = associatedJobsWithBuild.Count == 0 || associatedJobsWithBuild.All(j => j.IsCompleted);
 
+                // If we just issued resubmissions, don't exit yet — wait for them to appear and complete.
+                if (resubmittedThisIteration)
+                {
+                    await _delayFunc(TimeSpan.FromSeconds(Math.Max(5, _options.PollingIntervalSeconds)), cancellationToken);
+                    continue;
+                }
+
                 if (allPipelineJobsComplete && allHelixJobsComplete)
                 {
-                    _logger.LogInformation("Final summary: processed {ProcessedCount} Helix job(s); {FailedCount} failed.", processedHelixJobCount, failedHelixJobCount);
-                    if (anyNonMonitorJobFailures || failedHelixJobCount > 0)
+                    bool anyWorkItemFailed = _workItemOutcomes.Values.Any(passed => !passed);
+                    _logger.LogInformation("Final summary: processed {ProcessedCount} Helix job(s); {FailedWorkItems} work item(s) failed.",
+                        processedHelixJobCount, _workItemOutcomes.Values.Count(passed => !passed));
+
+                    if (anyNonMonitorJobFailures || anyWorkItemFailed)
                     {
                         if (anyNonMonitorJobFailures)
                         {
                             _logger.LogError("One or more non-monitor pipeline jobs failed.");
                         }
 
-                        if (failedHelixJobCount > 0)
+                        if (anyWorkItemFailed)
                         {
-                            _logger.LogError("The Helix Job Monitor detected failures in {FailedCount} Helix job(s).", failedHelixJobCount);
+                            var failedItems = _workItemOutcomes.Where(kv => !kv.Value).Select(kv => kv.Key).ToList();
+                            _logger.LogError("The Helix Job Monitor detected {Count} failed work item(s): {Items}",
+                                failedItems.Count, string.Join(", ", failedItems));
                         }
 
                         return 1;
@@ -185,7 +219,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
         }
 
-        private async Task<bool> ProcessCompletedJobAsync(
+        private async Task ProcessCompletedJobAsync(
             HelixJobInfo helixJob,
             CancellationToken cancellationToken)
         {
@@ -193,9 +227,20 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(helixJob.JobName, cancellationToken);
 
+            // Update per-work-item outcome tracking
+            var jobWorkItems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (WorkItemSummary wi in workItems)
+            {
+                bool passed = wi.ExitCode == 0 && wi.State.Equals("Finished", StringComparison.OrdinalIgnoreCase);
+                // A resubmission result overwrites a prior failure for the same work item name
+                _workItemOutcomes[wi.Name] = passed;
+                jobWorkItems.Add(wi.Name);
+            }
+
+            _workItemsByJob[helixJob.JobName] = jobWorkItems;
+
             int failedWorkItemCount = workItems.Count(wi => wi.ExitCode != 0 || !wi.State.Equals("Finished", StringComparison.OrdinalIgnoreCase));
-            bool helixJobSuccessful = failedWorkItemCount == 0;
-            int sucessfulWorkItemCount = workItems.Count - failedWorkItemCount;
+            int successfulWorkItemCount = workItems.Count - failedWorkItemCount;
 
             int testRunId = await _azdo.CreateTestRunAsync(helixJob.TestRunName, helixJob.JobName, cancellationToken);
 
@@ -206,26 +251,64 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     [..workItems.Select(w => w.Name)],
                     cancellationToken);
 
-                if (!await _azdo.UploadTestResultsAsync(testRunId, downloadedFiles, cancellationToken))
-                {
-                    sucessfulWorkItemCount--;
-                    failedWorkItemCount++;
-                    helixJobSuccessful = false;
-                }
+                await _azdo.UploadTestResultsAsync(testRunId, downloadedFiles, cancellationToken);
             }
             catch (Exception ex)
             {
-                // TODO: Handle better here
                 _logger.LogError(ex, "Failed to upload test results for job {JobName} to Azure DevOps. Test run ID was {TestRunId}.", helixJob.JobName, testRunId);
-                return false;
             }
             finally
             {
                 await _azdo.CompleteTestRunAsync(testRunId, cancellationToken);
             }
 
-            _logger.LogInformation("Job '{JobName}' completed ({PassedCount} passed, {FailedCount} failed).", helixJob.JobName, sucessfulWorkItemCount, failedWorkItemCount);
-            return failedWorkItemCount == 0;
+            _logger.LogInformation("Job '{JobName}' completed ({PassedCount} passed, {FailedCount} failed).", helixJob.JobName, successfulWorkItemCount, failedWorkItemCount);
+        }
+
+        /// <summary>
+        /// Returns true if a resubmission was issued.
+        /// </summary>
+        private async Task<bool> TryResubmitFailedWorkItemsAsync(string jobName, CancellationToken cancellationToken)
+        {
+            // Don't resubmit from the same source job twice
+            if (!_resubmittedSourceJobs.Add(jobName))
+            {
+                return false;
+            }
+
+            // Find work items FROM THIS JOB that are currently failed in the outcome map
+            if (!_workItemsByJob.TryGetValue(jobName, out HashSet<string> jobItems))
+            {
+                return false;
+            }
+
+            var failedWorkItems = jobItems
+                .Where(wi => _workItemOutcomes.TryGetValue(wi, out bool passed) && !passed)
+                .ToList();
+
+            if (failedWorkItems.Count == 0)
+            {
+                return false;
+            }
+
+            _logger.LogInformation("Resubmitting {Count} failed work item(s) from job '{JobName}': {Items}",
+                failedWorkItems.Count, jobName, string.Join(", ", failedWorkItems));
+
+            try
+            {
+                HelixJobInfo newJob = await _helix.ResubmitFailedWorkItemsAsync(jobName, failedWorkItems, cancellationToken);
+                if (newJob != null)
+                {
+                    _logger.LogInformation("Resubmitted as new Helix job '{NewJobName}'.", newJob.JobName);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to resubmit work items from job '{JobName}'.", jobName);
+            }
+
+            return false;
         }
 
         private void ReportTimeout(

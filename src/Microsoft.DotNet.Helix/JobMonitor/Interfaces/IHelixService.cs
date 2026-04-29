@@ -31,5 +31,16 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         Task<IReadOnlyCollection<WorkItemSummary>> ListWorkItemsAsync(
             string jobName,
             CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Resubmits the specified failed work items from a completed Helix job as a new job.
+        /// The new job copies correlation payloads and queue from the original, but only includes
+        /// the specified work items. Returns the new job's info, or null if resubmission is not possible.
+        /// The new job must preserve BuildId and StageName properties so it is discoverable by GetJobsAsync.
+        /// </summary>
+        Task<HelixJobInfo> ResubmitFailedWorkItemsAsync(
+            string originalJobName,
+            IReadOnlyCollection<string> failedWorkItemNames,
+            CancellationToken cancellationToken);
     }
 }
