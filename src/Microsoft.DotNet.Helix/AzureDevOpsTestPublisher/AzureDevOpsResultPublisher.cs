@@ -214,31 +214,14 @@ public sealed class AzureDevOpsResultPublisher
             return [];
         }
 
-        var hotPathTests = new List<PublishedTestCase>();
-        foreach ((PublishedTestCaseResultReference First, AggregatedResult Second, PublishedTestCase Third) triplet in publishedResults.Zip(originalList, testCaseResults))
-        {
-            PublishedTestCaseResultReference published = triplet.First;
-            AggregatedResult original = triplet.Second;
-            PublishedTestCase testCase = triplet.Third;
+        List<PublishedTestCase> publishedTestCases = [];
 
+        foreach ((PublishedTestCaseResultReference published, AggregatedResult original, PublishedTestCase testCase) in publishedResults.Zip(originalList, testCaseResults))
+        {
             if (published.Id == -1)
             {
                 _logger.LogWarning("Azure DevOps test ID returned -1, unable to attach files.");
                 continue;
-            }
-
-            testCase = testCase with { Id = published.Id };
-            bool addedTest = false;
-
-            void AddToHotPath()
-            {
-                if (addedTest)
-                {
-                    return;
-                }
-
-                addedTest = true;
-                hotPathTests.Add(testCase);
             }
 
             async Task IterateSubResultsAsync(
@@ -254,11 +237,6 @@ public sealed class AzureDevOpsResultPublisher
                     }
 
                     return;
-                }
-
-                if (original.AggregationType == AggregationType.Rerun)
-                {
-                    AddToHotPath();
                 }
 
                 if (publishedSubResults.Count != originalSubResults.Count)
@@ -284,9 +262,11 @@ public sealed class AzureDevOpsResultPublisher
             }
 
             await IterateSubResultsAsync(published.SubResults, original.SubResults, published.Id);
+
+            publishedTestCases.Add(testCase);
         }
 
-        return hotPathTests;
+        return publishedTestCases;
     }
 
     private async Task SendAttachmentAsync(
