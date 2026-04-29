@@ -181,10 +181,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         public async Task<HelixJobInfo> ResubmitWorkItemsAsync(
             string originalJobName,
-            IReadOnlyCollection<string> failedWorkItemNames,
+            IReadOnlyCollection<WorkItemSummary> failedWorkItems,
             CancellationToken cancellationToken)
         {
-            if (failedWorkItemNames?.Count == 0)
+            if (failedWorkItems.Count == 0)
             {
                 _logger.LogDebug("No failed work items provided for resubmission of job '{JobName}'.", originalJobName);
                 return null;
@@ -236,7 +236,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return null;
             }
 
-            var requestedSet = new HashSet<string>(failedWorkItemNames, StringComparer.OrdinalIgnoreCase);
+            var requestedSet = new HashSet<string>(failedWorkItems.Select(wi => wi.Name), StringComparer.OrdinalIgnoreCase);
             var filteredEntries = new JArray(
                 originalEntries
                     .OfType<JObject>()

@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// </summary>
         Task<HelixJobInfo> ResubmitWorkItemsAsync(
             string originalJobName,
-            IReadOnlyCollection<string> failedWorkItemNames,
+            IReadOnlyCollection<WorkItemSummary> failedWorkItems,
             CancellationToken cancellationToken);
     }
 }

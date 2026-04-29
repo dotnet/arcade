@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
 
         public Task<HelixJobInfo> ResubmitWorkItemsAsync(
             string originalJobName,
-            IReadOnlyCollection<string> failedWorkItemNames,
+            IReadOnlyCollection<WorkItemSummary> failedWorkItems,
             CancellationToken cancellationToken)
         {
             if (!_resubmissionNewJobNames.TryGetValue(originalJobName, out string newJobName))
@@ -140,8 +140,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
                 newJobName = $"{originalJobName}-resubmit";
             }
 
-            Resubmissions.Add((originalJobName, failedWorkItemNames, newJobName));
-            return Task.FromResult<HelixJobInfo>(new HelixJobInfo(newJobName, "running"));
+            Resubmissions.Add((originalJobName, [..failedWorkItems.Select(wi => wi.Name)], newJobName));
+            return Task.FromResult(new HelixJobInfo(newJobName, "running"));
         }
 
         private sealed record HelixSnapshot(
