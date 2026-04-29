@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         public List<(string OriginalJob, IReadOnlyCollection<string> FailedItems, string NewJob)> Resubmissions { get; } = [];
 
         /// <summary>
-        /// Configures the result of a resubmission. When <see cref="ResubmitFailedWorkItemsAsync"/>
+        /// Configures the result of a resubmission. When <see cref="ResubmitWorkItemsAsync"/>
         /// is called for <paramref name="originalJobName"/>, a new <see cref="HelixJobInfo"/> with
         /// <paramref name="newJobName"/> is returned. The new job will appear in subsequent
         /// <see cref="GetJobsAsync"/> calls via the responses already configured.
@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             return this;
         }
 
-        public Task<HelixJobInfo> ResubmitFailedWorkItemsAsync(
+        public Task<HelixJobInfo> ResubmitWorkItemsAsync(
             string originalJobName,
             IReadOnlyCollection<string> failedWorkItemNames,
             CancellationToken cancellationToken)

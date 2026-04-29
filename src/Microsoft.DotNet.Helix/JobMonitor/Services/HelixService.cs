@@ -176,7 +176,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return await RetryHelper.RetryAsync(() => _helixApi.WorkItem.ListAsync(jobName), cancellationToken);
         }
 
-        public Task<HelixJobInfo> ResubmitFailedWorkItemsAsync(
+        public Task<HelixJobInfo> ResubmitWorkItemsAsync(
             string originalJobName,
             IReadOnlyCollection<string> failedWorkItemNames,
             CancellationToken cancellationToken)

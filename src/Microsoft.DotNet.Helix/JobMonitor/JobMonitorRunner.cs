@@ -22,6 +22,26 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly Func<TimeSpan, CancellationToken, Task> _delayFunc;
 
         /// <summary>
+        /// Tracks the latest outcome for each logical work item, keyed by work item name.
+        /// When a resubmission passes a previously-failed item, the outcome is updated.
+        /// </summary>
+        private readonly Dictionary<string, bool> _workItemOutcomes = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Tracks which work item names belong to which Helix job, so resubmission only
+        /// resubmits items from the specific source job.
+        /// </summary>
+        private readonly Dictionary<string, HashSet<string>> _workItemsByJob = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Tracks which original Helix jobs have already had their failed work items resubmitted,
+        /// so we don't resubmit twice for the same source job.
+        /// </summary>
+        private readonly HashSet<string> _resubmittedSourceJobs = new(StringComparer.OrdinalIgnoreCase);
+
+        private bool IsRetryAttempt => _options.Attempt.GetValueOrDefault(1) > 1;
+
+        /// <summary>
         /// Constructor for production use with real services.
         /// </summary>
         public JobMonitorRunner(JobMonitorOptions options, ILogger logger)
@@ -89,26 +109,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
         }
 
-        /// <summary>
-        /// Tracks the latest outcome for each logical work item, keyed by work item name.
-        /// When a resubmission passes a previously-failed item, the outcome is updated.
-        /// </summary>
-        private readonly Dictionary<string, bool> _workItemOutcomes = new(StringComparer.OrdinalIgnoreCase);
-
-        /// <summary>
-        /// Tracks which work item names belong to which Helix job, so resubmission only
-        /// resubmits items from the specific source job.
-        /// </summary>
-        private readonly Dictionary<string, HashSet<string>> _workItemsByJob = new(StringComparer.OrdinalIgnoreCase);
-
-        /// <summary>
-        /// Tracks which original Helix jobs have already had their failed work items resubmitted,
-        /// so we don't resubmit twice for the same source job.
-        /// </summary>
-        private readonly HashSet<string> _resubmittedSourceJobs = new(StringComparer.OrdinalIgnoreCase);
-
-        private bool IsRetryAttempt => _options.Attempt.GetValueOrDefault(1) > 1;
-
         private async Task<int> RunLoopAsync(
             HashSet<string> processedHelixJobs,
             Action<IReadOnlyList<HelixJobInfo>> reportLatestJobs,
@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     // On retry attempts, resubmit failed work items from this job
                     if (IsRetryAttempt)
                     {
-                        resubmittedThisIteration |= await TryResubmitFailedWorkItemsAsync(job.JobName, cancellationToken);
+                        resubmittedThisIteration |= await TryResubmitWorkItemsAsync(job.JobName, cancellationToken);
                     }
                 }
 
@@ -268,11 +268,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// <summary>
         /// Returns true if a resubmission was issued.
         /// </summary>
-        private async Task<bool> TryResubmitFailedWorkItemsAsync(string jobName, CancellationToken cancellationToken)
+        private async Task<bool> TryResubmitWorkItemsAsync(string jobName, CancellationToken cancellationToken)
         {
             // Don't resubmit from the same source job twice
             if (!_resubmittedSourceJobs.Add(jobName))
             {
+                _logger.LogDebug("Not resubmitting failed work items from job '{JobName}' because they have already been resubmitted.", jobName);
                 return false;
             }
 
@@ -296,7 +297,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             try
             {
-                HelixJobInfo newJob = await _helix.ResubmitFailedWorkItemsAsync(jobName, failedWorkItems, cancellationToken);
+                HelixJobInfo newJob = await _helix.ResubmitWorkItemsAsync(jobName, failedWorkItems, cancellationToken);
                 if (newJob != null)
                 {
                     _logger.LogInformation("Resubmitted as new Helix job '{NewJobName}'.", newJob.JobName);
