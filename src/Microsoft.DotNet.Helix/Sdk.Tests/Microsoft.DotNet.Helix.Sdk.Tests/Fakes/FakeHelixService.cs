@@ -14,16 +14,22 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
 {
     internal sealed class FakeHelixService : IHelixService
     {
-        private readonly List<HelixSnapshot> _snapshots = [];
+        private readonly List<HelixSnapshot> _responses = [];
         private readonly HashSet<string> _downloadFailureJobs = new(StringComparer.OrdinalIgnoreCase);
-        private int _currentSnapshotIndex;
+        private int _getJobsCallCount;
 
-        public FakeHelixService AddSnapshot(
+        /// <summary>
+        /// Adds a Helix response. Each call to <see cref="GetJobsAsync"/> returns the next
+        /// response in order. Once all responses are consumed, the last one is repeated.
+        /// <see cref="ListWorkItemsAsync"/> and <see cref="DownloadTestResultsAsync"/> use
+        /// the same current response for pass/fail and result data.
+        /// </summary>
+        public FakeHelixService AddResponse(
             HelixJobInfo[] jobs,
             Dictionary<string, HelixJobPassFail> passFailByJob = null,
             Dictionary<string, List<WorkItemTestResults>> testResultsByJob = null)
         {
-            _snapshots.Add(new HelixSnapshot(
+            _responses.Add(new HelixSnapshot(
                 jobs,
                 passFailByJob ?? new Dictionary<string, HelixJobPassFail>(StringComparer.OrdinalIgnoreCase),
                 testResultsByJob ?? new Dictionary<string, List<WorkItemTestResults>>(StringComparer.OrdinalIgnoreCase)));
@@ -33,21 +39,29 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         public FakeHelixService FailDownloadForJob(string jobName) { _downloadFailureJobs.Add(jobName); return this; }
         public void ClearDownloadFailures() { _downloadFailureJobs.Clear(); }
 
-        public void AdvanceSnapshot()
-        {
-            if (_currentSnapshotIndex < _snapshots.Count - 1) _currentSnapshotIndex++;
-        }
+        /// <summary>Number of times <see cref="GetJobsAsync"/> has been called.</summary>
+        public int GetJobsCallCount => _getJobsCallCount;
 
-        private HelixSnapshot CurrentSnapshot => _snapshots[Math.Min(_currentSnapshotIndex, _snapshots.Count - 1)];
+        private HelixSnapshot CurrentSnapshot
+        {
+            get
+            {
+                int index = Math.Min(Math.Max(_getJobsCallCount - 1, 0), _responses.Count - 1);
+                return _responses[index];
+            }
+        }
 
         public Task<IReadOnlyList<HelixJobInfo>> GetJobsAsync(CancellationToken cancellationToken)
         {
-            if (_snapshots.Count == 0)
+            if (_responses.Count == 0)
             {
+                _getJobsCallCount++;
                 return Task.FromResult<IReadOnlyList<HelixJobInfo>>([]);
             }
 
-            return Task.FromResult<IReadOnlyList<HelixJobInfo>>(CurrentSnapshot.Jobs);
+            int index = Math.Min(_getJobsCallCount, _responses.Count - 1);
+            _getJobsCallCount++;
+            return Task.FromResult<IReadOnlyList<HelixJobInfo>>(_responses[index].Jobs);
         }
 
         public Task<IReadOnlyList<WorkItemTestResults>> DownloadTestResultsAsync(

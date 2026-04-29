@@ -27,6 +27,24 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         [JsonProperty("result")]
         public string Result { get; set; }
+
+        [JsonProperty("attempt")]
+        public int Attempt { get; set; } = 1;
+
+        [JsonProperty("previousAttempts")]
+        public PreviousAttemptReference[] PreviousAttempts { get; set; }
+    }
+
+    public sealed class PreviousAttemptReference
+    {
+        [JsonProperty("attempt")]
+        public int Attempt { get; set; }
+
+        [JsonProperty("timelineId")]
+        public string TimelineId { get; set; }
+
+        [JsonProperty("recordId")]
+        public string RecordId { get; set; }
     }
 
     public static class HelixJobMonitorUtilities

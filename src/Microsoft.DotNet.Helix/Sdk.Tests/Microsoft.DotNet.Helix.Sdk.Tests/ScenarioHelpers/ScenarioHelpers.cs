@@ -10,14 +10,43 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.ScenarioHelpers
     {
         public const string DefaultMonitorName = "Helix Job Monitor";
 
-        public static AzureDevOpsTimelineRecord PipelineJob(string name, string state, string result = null)
-            => new() { Type = "Job", Name = name, State = state, Result = result };
+        public static AzureDevOpsTimelineRecord StageRecord(string name, string id, string state, string result = null)
+            => new() { Type = "Stage", Name = name, Id = id, State = state, Result = result };
 
-        public static AzureDevOpsTimelineRecord MonitorJob(string name = DefaultMonitorName)
-            => new() { Type = "Job", Name = name, State = "inProgress" };
+        public static AzureDevOpsTimelineRecord PipelineJob(
+            string name, string state, string result = null, int attempt = 1,
+            PreviousAttemptReference[] previousAttempts = null, string parentId = null, string id = null)
+            => new()
+            {
+                Type = "Job",
+                Name = name,
+                State = state,
+                Result = result,
+                Attempt = attempt,
+                PreviousAttempts = previousAttempts,
+                ParentId = parentId,
+                Id = id ?? name,
+            };
 
-        public static HelixJobInfo HelixJob(string jobName, string status)
-            => new(jobName, status);
+        public static AzureDevOpsTimelineRecord MonitorJob(
+            string name = DefaultMonitorName, int attempt = 1,
+            PreviousAttemptReference[] previousAttempts = null, string parentId = null)
+            => new()
+            {
+                Type = "Job",
+                Name = name,
+                State = "inProgress",
+                Attempt = attempt,
+                PreviousAttempts = previousAttempts,
+                ParentId = parentId,
+                Id = name,
+            };
+
+        public static PreviousAttemptReference PreviousAttempt(int attempt, string timelineId = null, string recordId = null)
+            => new() { Attempt = attempt, TimelineId = timelineId ?? $"timeline-attempt-{attempt}", RecordId = recordId ?? $"record-attempt-{attempt}" };
+
+        public static HelixJobInfo HelixJob(string jobName, string status, string stageName = null)
+            => new(jobName, status, stageName: stageName);
 
         public static HelixJobPassFail PassFail(string[] passed = null, string[] failed = null)
             => new(passed ?? [], failed ?? []);

@@ -12,10 +12,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
 {
     internal sealed class FakeAzureDevOpsService : IAzureDevOpsService
     {
-        private readonly List<AzureDevOpsTimelineRecord[]> _timelineSnapshots = [];
+        private readonly List<AzureDevOpsTimelineRecord[]> _timelineResponses = [];
         private readonly HashSet<string> _previouslyProcessedJobs = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, int> _inProgressRunsByJobName = new(StringComparer.OrdinalIgnoreCase);
-        private int _currentTimelineIndex;
+        private int _timelineCallCount;
         private int _nextTestRunId;
 
         // Observable state for test assertions
@@ -25,10 +25,22 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         public List<string> UploadedJobNames { get; } = [];
         public int CreateTestRunCallCount { get; private set; }
 
+        /// <summary>
+        /// Number of times <see cref="GetTimelineRecordsAsync"/> has been called.
+        /// This equals the number of poll iterations the runner has completed.
+        /// </summary>
+        public int TimelineCallCount => _timelineCallCount;
+
         // Configuration
-        public FakeAzureDevOpsService AddTimelineSnapshot(AzureDevOpsTimelineRecord[] records)
+
+        /// <summary>
+        /// Adds a timeline response. Each call to <see cref="GetTimelineRecordsAsync"/>
+        /// returns the next response in order. Once all responses are consumed, the last
+        /// one is repeated indefinitely.
+        /// </summary>
+        public FakeAzureDevOpsService AddTimelineResponse(params AzureDevOpsTimelineRecord[] records)
         {
-            _timelineSnapshots.Add(records);
+            _timelineResponses.Add(records);
             return this;
         }
 
@@ -38,24 +50,18 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             return this;
         }
 
-        public void AdvanceTimeline()
-        {
-            if (_currentTimelineIndex < _timelineSnapshots.Count - 1)
-            {
-                _currentTimelineIndex++;
-            }
-        }
-
         // IAzureDevOpsService implementation
         public Task<IReadOnlyList<AzureDevOpsTimelineRecord>> GetTimelineRecordsAsync(CancellationToken cancellationToken)
         {
-            if (_timelineSnapshots.Count == 0)
+            if (_timelineResponses.Count == 0)
             {
+                _timelineCallCount++;
                 return Task.FromResult<IReadOnlyList<AzureDevOpsTimelineRecord>>(Array.Empty<AzureDevOpsTimelineRecord>());
             }
 
-            AzureDevOpsTimelineRecord[] snapshot = _timelineSnapshots[Math.Min(_currentTimelineIndex, _timelineSnapshots.Count - 1)];
-            return Task.FromResult<IReadOnlyList<AzureDevOpsTimelineRecord>>(snapshot);
+            int index = Math.Min(_timelineCallCount, _timelineResponses.Count - 1);
+            _timelineCallCount++;
+            return Task.FromResult<IReadOnlyList<AzureDevOpsTimelineRecord>>(_timelineResponses[index]);
         }
 
         public Task<IReadOnlySet<string>> GetProcessedHelixJobNamesAsync(CancellationToken cancellationToken)
