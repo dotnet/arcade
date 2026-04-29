@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.JobMonitor
 {
@@ -249,20 +250,24 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _logger.LogInformation("Job '{JobName}' completed ({PassedCount} passed, {FailedCount} failed).", helixJob.JobName, successfulWorkItemCount, failedWorkItemCount);
         }
 
-        private async Task ResubmitFailedJobsAsync(HashSet<string> processedHelixJobs, CancellationToken cancellationToken)
+        private async Task ResubmitFailedJobsAsync(HashSet<string> processedHelixJobNames, CancellationToken cancellationToken)
         {
-            // TODO: Only retry jobs from the last iteration
+            // Only consider resubmitting jobs from the previous attempt
+            List<HelixJobInfo> processedHelixJobs = (await _helix.GetJobsAsync(cancellationToken))
+                .Where(j => processedHelixJobNames.Contains(j.JobName))
+                .Where(j => j.Properties["System.JobAttempt"].Value<string>() == (_options.Attempt - 1).ToString())
+                .ToList();
 
-            foreach (string jobName in processedHelixJobs)
+            foreach (HelixJobInfo processedJob in processedHelixJobs)
             {
-                IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(jobName, cancellationToken);
+                IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(processedJob.JobName, cancellationToken);
                 IReadOnlyCollection<WorkItemSummary> failedWorkItems = [..workItems.Where(wi => wi.IsFailed)];
 
                 if (failedWorkItems.Count > 0)
                 {
                     _logger.LogInformation("Resubmitting {Count} failed work item(s) for job {JobName}: {WorkItems}",
-                        failedWorkItems.Count, jobName, string.Join(Environment.NewLine + "- ", failedWorkItems.Select(wi => wi.Name)));
-                    await _helix.ResubmitWorkItemsAsync(jobName, failedWorkItems, cancellationToken);
+                        failedWorkItems.Count, processedJob.JobName, string.Join(Environment.NewLine + "- ", failedWorkItems.Select(wi => wi.Name)));
+                    await _helix.ResubmitWorkItemsAsync(processedJob.JobName, failedWorkItems, cancellationToken);
                 }
             }
         }

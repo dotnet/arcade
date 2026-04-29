@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             Status = helixJob.Finished != null ? "finished" : "running";
             TestRunName = GetTestRunNameFromJob(helixJob);
             StageName = GetStringPropertyFromJob(helixJob, "System.StageName");
+            Properties = helixJob.Properties;
         }
 
         public HelixJobInfo(string jobName, string status, string testRunName = null, string stageName = null)
@@ -45,6 +46,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
         /// null if the property is not present.
         /// </summary>
         public string StageName { get; }
+
+        public JToken Properties { get; }
 
         public bool IsCompleted => Status.Equals("finished", StringComparison.OrdinalIgnoreCase)
             || Status.Equals("failed", StringComparison.OrdinalIgnoreCase);
