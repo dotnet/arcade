@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.ScenarioHelpers
         public const string DefaultMonitorName = "Helix Job Monitor";
 
         public static AzureDevOpsTimelineRecord StageRecord(string name, string id, string state, string result = null)
-            => new() { Type = "Stage", Name = name, Id = id, State = state, Result = result };
+            => new() { Type = "Stage", ReferenceName = name, Id = id, State = state, Result = result };
 
         public static AzureDevOpsTimelineRecord PipelineJob(
             string name, string state, string result = null, int attempt = 1,
@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.ScenarioHelpers
             => new()
             {
                 Type = "Job",
-                Name = name,
+                ReferenceName = name,
                 State = state,
                 Result = result,
                 Attempt = attempt,
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.ScenarioHelpers
             => new()
             {
                 Type = "Job",
-                Name = name,
+                ReferenceName = name,
                 State = "inProgress",
                 Attempt = attempt,
                 PreviousAttempts = previousAttempts,

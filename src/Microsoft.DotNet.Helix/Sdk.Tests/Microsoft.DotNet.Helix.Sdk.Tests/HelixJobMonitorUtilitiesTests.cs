@@ -13,8 +13,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         {
             var records = new[]
             {
-                new AzureDevOpsTimelineRecord { Type = "Job", Name = "Build Linux", State = "completed", Result = "succeeded" },
-                new AzureDevOpsTimelineRecord { Type = "Job", Name = "Helix Job Monitor", State = "inProgress", Result = null },
+                new AzureDevOpsTimelineRecord { Type = "Job", ReferenceName = "Build Linux", State = "completed", Result = "succeeded" },
+                new AzureDevOpsTimelineRecord { Type = "Job", ReferenceName = "Helix Job Monitor", State = "inProgress", Result = null },
             };
 
             Assert.True(HelixJobMonitorUtilities.AreNonMonitorJobsComplete(records, "Helix Job Monitor"));
@@ -25,8 +25,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         {
             var records = new[]
             {
-                new AzureDevOpsTimelineRecord { Type = "Job", Name = "Build Linux", State = "completed", Result = "failed" },
-                new AzureDevOpsTimelineRecord { Type = "Job", Name = "Helix Job Monitor", State = "inProgress", Result = null },
+                new AzureDevOpsTimelineRecord { Type = "Job", ReferenceName = "Build Linux", State = "completed", Result = "failed" },
+                new AzureDevOpsTimelineRecord { Type = "Job", ReferenceName = "Helix Job Monitor", State = "inProgress", Result = null },
             };
 
             Assert.True(HelixJobMonitorUtilities.HasFailedNonMonitorJobs(records, "Helix Job Monitor"));

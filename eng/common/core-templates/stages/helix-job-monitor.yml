@@ -59,11 +59,6 @@ parameters:
   type: number
   default: 360
 
-# JobMonitorOptions: --job-monitor-name.
-- name: jobMonitorName
-  type: string
-  default: Helix Job Monitor
-
 # JobMonitorOptions: --organization (owner segment of the source repository).
 - name: organization
   type: string
@@ -118,7 +113,6 @@ stages:
       helixAccessToken: ${{ parameters.helixAccessToken }}
       pollingIntervalSeconds: ${{ parameters.pollingIntervalSeconds }}
       timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
-      jobMonitorName: ${{ parameters.jobMonitorName }}
       organization: ${{ parameters.organization }}
       repository: ${{ parameters.repository }}
       prNumber: ${{ parameters.prNumber }}

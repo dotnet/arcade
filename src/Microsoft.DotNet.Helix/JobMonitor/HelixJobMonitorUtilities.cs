@@ -19,8 +19,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         [JsonProperty("type")]
         public string Type { get; set; }
 
-        [JsonProperty("name")]
-        public string Name { get; set; }
+        [JsonProperty("refName")]
+        public string ReferenceName { get; set; }
 
         [JsonProperty("state")]
         public string State { get; set; }
@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             string jobMonitorName,
             IReadOnlySet<string> ignoredJobNames)
             => GetRelevantJobRecords(records, jobMonitorName)
-                .Where(r => ignoredJobNames == null || !ignoredJobNames.Contains(r.Name))
+                .Where(r => ignoredJobNames == null || !ignoredJobNames.Contains(r.ReferenceName))
                 .Any(r =>
                     string.Equals(r.Result, "failed", StringComparison.OrdinalIgnoreCase)
                     || string.Equals(r.Result, "canceled", StringComparison.OrdinalIgnoreCase));
@@ -77,13 +77,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             if (string.IsNullOrEmpty(stageName))
             {
-                return (records ?? []).ToList();
+                return [.. records];
             }
 
-            var all = (records ?? []).ToList();
-            var stageRoot = all.FirstOrDefault(r =>
+            List<AzureDevOpsTimelineRecord> all = records.ToList();
+            AzureDevOpsTimelineRecord stageRoot = all.FirstOrDefault(r =>
                 string.Equals(r.Type, "Stage", StringComparison.OrdinalIgnoreCase)
-                && string.Equals(r.Name, stageName, StringComparison.OrdinalIgnoreCase));
+                && string.Equals(r.ReferenceName, stageName, StringComparison.OrdinalIgnoreCase));
 
             if (stageRoot == null)
             {
@@ -118,7 +118,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             return (records ?? [])
                 .Where(r => string.Equals(r.Type, "Job", StringComparison.OrdinalIgnoreCase))
-                .Where(r => !string.Equals(r.Name, jobMonitorName, StringComparison.OrdinalIgnoreCase));
+                .Where(r => !string.Equals(r.ReferenceName, jobMonitorName, StringComparison.OrdinalIgnoreCase));
         }
 
         private static bool IsTerminal(AzureDevOpsTimelineRecord record)

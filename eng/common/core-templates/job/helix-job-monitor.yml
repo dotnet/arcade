@@ -52,11 +52,6 @@ parameters:
   type: number
   default: 360
 
-# Display name reported by the tool to Azure DevOps (--job-monitor-name).
-- name: jobMonitorName
-  type: string
-  default: Helix Job Monitor
-
 # Owner segment of the source repository (e.g. 'dotnet' for 'dotnet/runtime') passed via --organization.
 # Defaults to the owner segment of BUILD_REPOSITORY_NAME when empty.
 - name: organization
@@ -206,7 +201,7 @@ jobs:
         --helix-base-uri           '${{ parameters.helixBaseUri }}'
         --polling-interval-seconds '${{ parameters.pollingIntervalSeconds }}'
         --max-wait-minutes         "$((${{ parameters.timeoutInMinutes }} - 2))" # Set the tool's timeout slightly lower than the Azure DevOps job timeout to allow it to exit gracefully.
-        --job-monitor-name         '${{ parameters.jobMonitorName }}'
+        --job-monitor-name         '${{ parameters.jobName }}'
         --attempt                  '$(System.JobAttempt)'
         --stage-name               '$(System.StageName)'
       )

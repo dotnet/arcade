@@ -46,8 +46,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         [Option("max-wait-minutes", HelpText = "Maximum run time in minutes.", Default = 360)]
         public int MaximumWaitMinutes { get; set; } = 360;
 
-        [Option("job-monitor-name", HelpText = "Display name of the Helix Job Monitor job in Azure DevOps.")]
-        public string JobMonitorName { get; set; } = "Helix Job Monitor";
+        [Option("job-monitor-name", HelpText = "Name of the Helix Job Monitor job in Azure DevOps.")]
+        public string JobMonitorName { get; set; } = "HelixJobMonitor";
 
         [Option("working-directory", HelpText = "Directory used to stage downloaded test results.")]
         public string WorkingDirectory { get; set; }
