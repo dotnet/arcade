@@ -53,12 +53,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             [
                 ..jobs
                     .Where(j => ((JObject)j.Properties).TryGetValue("BuildId", out JToken buildId) && buildId?.ToString() == _options.BuildId)
-                    // TODO: .Where(j => j.JobName is not in anyone's previous job property)
-                    .Select(j => new HelixJobInfo(
-                        j.Name,
-                        j.Finished != null ? "finished" : "running",
-                        GetTestRunNameFromJob(j),
-                        GetStringPropertyFromJob(j, "System.StageName")))
+                    .Select(j => new HelixJobInfo(j))
              ];
         }
 
@@ -279,7 +274,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 Source = details.Source,
                 Creator = details.Creator,
-                Properties = ConvertPropertiesToImmutableDictionary(details.Properties), // TODO: INsert originalJobName as the previous job
+                Properties = ConvertPropertiesToImmutableDictionary(details.Properties)
+                    .SetItem(HelixJobInfo.PreviousHelixJobNamePropertyName, originalJobName),
             };
 
             string idempotencyKey = Guid.NewGuid().ToString("N");
@@ -293,8 +289,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             string testRunName = GetStringPropertyFromProperties(details.Properties, "TestRunName") ?? newJob.Name;
             string stageName = GetStringPropertyFromProperties(details.Properties, "System.StageName");
+            string submitterJobName = GetStringPropertyFromProperties(details.Properties, "System.JobName");
 
-            return new HelixJobInfo(newJob.Name, "running", testRunName, stageName);
+            return new HelixJobInfo(newJob.Name, "running", testRunName, stageName, submitterJobName, originalJobName);
         }
 
         private static IImmutableDictionary<string, string> ConvertPropertiesToImmutableDictionary(JToken properties)

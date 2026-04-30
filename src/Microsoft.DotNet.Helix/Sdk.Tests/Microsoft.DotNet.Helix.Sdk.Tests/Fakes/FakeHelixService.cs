@@ -135,13 +135,22 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             IReadOnlyCollection<WorkItemSummary> failedWorkItems,
             CancellationToken cancellationToken)
         {
+            HelixJobInfo originalJob = CurrentSnapshot.Jobs.FirstOrDefault(j =>
+                string.Equals(j.JobName, originalJobName, StringComparison.OrdinalIgnoreCase));
+
             if (!_resubmissionNewJobNames.TryGetValue(originalJobName, out string newJobName))
             {
                 newJobName = $"{originalJobName}-resubmit";
             }
 
             Resubmissions.Add((originalJobName, [..failedWorkItems.Select(wi => wi.Name)], newJobName));
-            return Task.FromResult(new HelixJobInfo(newJobName, "running"));
+            return Task.FromResult(new HelixJobInfo(
+                newJobName,
+                "running",
+                originalJob?.TestRunName,
+                originalJob?.StageName,
+                originalJob?.SubmitterJobName,
+                originalJobName));
         }
 
         private sealed record HelixSnapshot(

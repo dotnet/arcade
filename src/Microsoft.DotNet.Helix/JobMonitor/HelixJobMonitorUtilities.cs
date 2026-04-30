@@ -53,9 +53,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             => GetRelevantJobRecords(records, jobMonitorName).All(IsTerminal);
 
         public static bool HasFailedNonMonitorJobs(IEnumerable<AzureDevOpsTimelineRecord> records, string jobMonitorName)
-            => GetRelevantJobRecords(records, jobMonitorName).Any(r =>
-                string.Equals(r.Result, "failed", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(r.Result, "canceled", StringComparison.OrdinalIgnoreCase));
+            => HasFailedNonMonitorJobs(records, jobMonitorName, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+
+        public static bool HasFailedNonMonitorJobs(
+            IEnumerable<AzureDevOpsTimelineRecord> records,
+            string jobMonitorName,
+            IReadOnlySet<string> ignoredJobNames)
+            => GetRelevantJobRecords(records, jobMonitorName)
+                .Where(r => ignoredJobNames == null || !ignoredJobNames.Contains(r.Name))
+                .Any(r =>
+                    string.Equals(r.Result, "failed", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(r.Result, "canceled", StringComparison.OrdinalIgnoreCase));
 
         /// <summary>
         /// Returns the subset of <paramref name="records"/> that belongs to the pipeline stage

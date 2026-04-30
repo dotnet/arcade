@@ -13,6 +13,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
     /// </summary>
     public sealed class HelixJobInfo
     {
+        public const string PreviousHelixJobNamePropertyName = "PreviousHelixJobName";
+
         public HelixJobInfo(JobSummary helixJob)
         {
             JobName = helixJob.Name;
@@ -22,12 +24,19 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             Properties = helixJob.Properties;
         }
 
-        public HelixJobInfo(string jobName, string status, string testRunName = null, string stageName = null)
+        public HelixJobInfo(
+            string jobName,
+            string status,
+            string testRunName = null,
+            string stageName = null,
+            string submitterJobName = null,
+            string previousHelixJobName = null)
         {
             JobName = jobName ?? throw new ArgumentNullException(nameof(jobName));
             Status = status ?? throw new ArgumentNullException(nameof(status));
             TestRunName = testRunName;
             StageName = stageName;
+            Properties = CreateProperties(testRunName, stageName, submitterJobName, previousHelixJobName);
         }
 
         public string JobName { get; }
@@ -46,6 +55,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
         /// null if the property is not present.
         /// </summary>
         public string StageName { get; }
+
+        public string SubmitterJobName => GetStringProperty(Properties, "System.JobName");
+
+        public string PreviousHelixJobName => GetStringProperty(Properties, PreviousHelixJobNamePropertyName);
 
         public JToken Properties { get; }
 
@@ -78,8 +91,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
         }
 
         private static string GetStringPropertyFromJob(JobSummary helixJob, string propertyName)
+            => GetStringProperty(helixJob.Properties, propertyName);
+
+        private static string GetStringProperty(JToken propertiesToken, string propertyName)
         {
-            if (helixJob.Properties is JObject properties
+            if (propertiesToken is JObject properties
                 && properties.TryGetValue(propertyName, out JToken token))
             {
                 string value = token?.ToString();
@@ -90,6 +106,37 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             }
 
             return null;
+        }
+
+        private static JObject CreateProperties(
+            string testRunName,
+            string stageName,
+            string submitterJobName,
+            string previousHelixJobName)
+        {
+            var properties = new JObject();
+
+            if (!string.IsNullOrEmpty(testRunName))
+            {
+                properties["TestRunName"] = testRunName;
+            }
+
+            if (!string.IsNullOrEmpty(stageName))
+            {
+                properties["System.StageName"] = stageName;
+            }
+
+            if (!string.IsNullOrEmpty(submitterJobName))
+            {
+                properties["System.JobName"] = submitterJobName;
+            }
+
+            if (!string.IsNullOrEmpty(previousHelixJobName))
+            {
+                properties[PreviousHelixJobNamePropertyName] = previousHelixJobName;
+            }
+
+            return properties;
         }
     }
 }

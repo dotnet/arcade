@@ -27,6 +27,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// When a resubmission passes a previously-failed item, the outcome is updated.
         /// </summary>
         private readonly Dictionary<string, bool> _workItemOutcomes = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _workItemOutcomeJobs = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Tracks which work item names belong to which Helix job, so resubmission only
@@ -93,14 +94,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             try
             {
-                if (_options.Attempt.GetValueOrDefault(1) > 1)
-                {
-                    _logger.LogInformation("This is attempt #{Attempt}. Will retry failed jobs from previous attempts...", _options.Attempt);
+                _logger.LogInformation("Checking for failed Helix work items to resubmit on monitor entry...");
+                EntryResubmissionResult entryResubmission = await ResubmitFailedJobsAsync(cancellationToken);
 
-                    await ResubmitFailedJobsAsync(processedHelixJobs, cancellationToken);
-                }
-
-                return await RunLoopAsync(processedHelixJobs, associatedJobs, cancellationToken);
+                return await RunLoopAsync(
+                    processedHelixJobs,
+                    associatedJobs,
+                    entryResubmission.RetryingHelixSubmitterJobs,
+                    entryResubmission.JobsForFirstPoll,
+                    cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -112,6 +114,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private async Task<int> RunLoopAsync(
             HashSet<string> processedHelixJobs,
             HashSet<HelixJobInfo> associatedJobs,
+            HashSet<string> retryingHelixSubmitterJobs,
+            IReadOnlyList<HelixJobInfo> jobsForFirstPoll,
             CancellationToken cancellationToken)
         {
             bool anyNonMonitorJobFailures = false;
@@ -124,7 +128,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 cancellationToken.ThrowIfCancellationRequested();
 
                 IReadOnlyList<AzureDevOpsTimelineRecord> timelineRecords = await _azdo.GetTimelineRecordsAsync(cancellationToken);
-                IReadOnlyList<HelixJobInfo> associatedJobsWithBuild = await _helix.GetLatestJobsAsync(cancellationToken);
+                IReadOnlyList<HelixJobInfo> associatedJobsWithBuild = jobsForFirstPoll ?? await _helix.GetLatestJobsAsync(cancellationToken);
+                jobsForFirstPoll = null;
 
                 // When the monitor is scoped to a single stage, drop timeline records and Helix jobs
                 // that belong to other stages so they don't gate completion or contribute failures.
@@ -144,9 +149,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 // Filter jobs to completed ones belonging to this build
                 IReadOnlyCollection<HelixJobInfo> completedJobs =
                 [
-                    ..associatedJobsWithBuild
-                        .Where(j => j.IsCompleted)
-                        .OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
+                    ..OrderHelixJobsOldToNew(associatedJobsWithBuild.Where(j => j.IsCompleted))
                 ];
 
                 if (allHelixJobCount != associatedJobsWithBuild.Count || completedJobsCount != completedJobs.Count)
@@ -158,12 +161,20 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 foreach (HelixJobInfo job in completedJobs.Where(j => !processedHelixJobs.Contains(j.JobName)))
                 {
-                    await ProcessCompletedJobAsync(job, cancellationToken);
+                    await ProcessCompletedJobAsync(job, uploadTestResults: true, cancellationToken);
                     processedHelixJobs.Add(job.JobName);
                     processedHelixJobCount++;
                 }
 
-                anyNonMonitorJobFailures = HelixJobMonitorUtilities.HasFailedNonMonitorJobs(timelineRecords, _options.JobMonitorName);
+                foreach (HelixJobInfo job in OrderHelixJobsOldToNew(GetLatestHelixJobAttempts(associatedJobsWithBuild).Where(j => j.IsCompleted)))
+                {
+                    await ProcessCompletedJobAsync(job, uploadTestResults: false, cancellationToken);
+                }
+
+                anyNonMonitorJobFailures = HelixJobMonitorUtilities.HasFailedNonMonitorJobs(
+                    timelineRecords,
+                    _options.JobMonitorName,
+                    retryingHelixSubmitterJobs);
                 bool allPipelineJobsComplete = HelixJobMonitorUtilities.AreNonMonitorJobsComplete(timelineRecords, _options.JobMonitorName);
                 bool allHelixJobsComplete = associatedJobsWithBuild.Count == 0 || associatedJobsWithBuild.All(j => j.IsCompleted);
 
@@ -207,69 +218,142 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task ProcessCompletedJobAsync(
             HelixJobInfo helixJob,
+            bool uploadTestResults,
             CancellationToken cancellationToken)
         {
             _logger.LogInformation("Processing completed job {jobName}...", helixJob.JobName);
 
+            if (!uploadTestResults && _workItemOutcomeJobs.Contains(helixJob.JobName))
+            {
+                return;
+            }
+
             IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(helixJob.JobName, cancellationToken);
 
             // Update per-work-item outcome tracking
-            var jobWorkItems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (WorkItemSummary wi in workItems)
+            if (_workItemOutcomeJobs.Add(helixJob.JobName))
             {
-                // A resubmission result overwrites a prior failure for the same work item name
-                _workItemOutcomes[wi.Name] = !wi.IsFailed;
-                jobWorkItems.Add(wi.Name);
-            }
+                var jobWorkItems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (WorkItemSummary wi in workItems)
+                {
+                    // A resubmission result overwrites a prior failure for the same work item name
+                    _workItemOutcomes[wi.Name] = !wi.IsFailed;
+                    jobWorkItems.Add(wi.Name);
+                }
 
-            _workItemsByJob[helixJob.JobName] = jobWorkItems;
+                _workItemsByJob[helixJob.JobName] = jobWorkItems;
+            }
 
             int failedWorkItemCount = workItems.Count(wi => wi.IsFailed);
             int successfulWorkItemCount = workItems.Count - failedWorkItemCount;
 
-            int testRunId = await _azdo.CreateTestRunAsync(helixJob.TestRunName, helixJob.JobName, cancellationToken);
-
-            try
+            if (uploadTestResults)
             {
-                IReadOnlyList<WorkItemTestResults> downloadedFiles = await _helix.DownloadTestResultsAsync(
-                    helixJob.JobName,
-                    [..workItems.Select(w => w.Name)],
-                    cancellationToken);
+                int testRunId = await _azdo.CreateTestRunAsync(helixJob.TestRunName, helixJob.JobName, cancellationToken);
 
-                await _azdo.UploadTestResultsAsync(testRunId, downloadedFiles, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to upload test results for job {JobName} to Azure DevOps. Test run ID was {TestRunId}.", helixJob.JobName, testRunId);
-            }
-            finally
-            {   
-                await _azdo.CompleteTestRunAsync(testRunId, cancellationToken);
+                try
+                {
+                    IReadOnlyList<WorkItemTestResults> downloadedFiles = await _helix.DownloadTestResultsAsync(
+                        helixJob.JobName,
+                        [..workItems.Select(w => w.Name)],
+                        cancellationToken);
+
+                    await _azdo.UploadTestResultsAsync(testRunId, downloadedFiles, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to upload test results for job {JobName} to Azure DevOps. Test run ID was {TestRunId}.", helixJob.JobName, testRunId);
+                }
+                finally
+                {   
+                    await _azdo.CompleteTestRunAsync(testRunId, cancellationToken);
+                }
             }
 
             _logger.LogInformation("Job '{JobName}' completed ({PassedCount} passed, {FailedCount} failed).", helixJob.JobName, successfulWorkItemCount, failedWorkItemCount);
         }
 
-        private async Task ResubmitFailedJobsAsync(HashSet<string> processedHelixJobNames, CancellationToken cancellationToken)
+        private async Task<EntryResubmissionResult> ResubmitFailedJobsAsync(CancellationToken cancellationToken)
         {
-            // Only consider resubmitting jobs from the previous attempt
-            List<HelixJobInfo> processedHelixJobs = (await _helix.GetLatestJobsAsync(cancellationToken))
-                .Where(j => processedHelixJobNames.Contains(j.JobName))
-                .ToList();
+            var retryingHelixSubmitterJobs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var resubmittedJobs = new List<HelixJobInfo>();
 
-            foreach (HelixJobInfo processedJob in processedHelixJobs)
+            // This snapshot is taken when the monitor starts. Failed latest work items here are
+            // not retried again until the monitor starts again, even if they fail during this run.
+            IReadOnlyList<HelixJobInfo> allJobs = await _helix.GetLatestJobsAsync(cancellationToken);
+            IReadOnlyList<HelixJobInfo> latestJobs = GetLatestHelixJobAttempts(allJobs);
+            List<HelixJobInfo> completedHelixJobs = [..latestJobs.Where(j => j.IsCompleted)];
+
+            foreach (HelixJobInfo completedJob in completedHelixJobs)
             {
-                IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(processedJob.JobName, cancellationToken);
+                IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(completedJob.JobName, cancellationToken);
                 IReadOnlyCollection<WorkItemSummary> failedWorkItems = [..workItems.Where(wi => wi.IsFailed)];
 
                 if (failedWorkItems.Count > 0)
                 {
                     _logger.LogInformation("Resubmitting {Count} failed work item(s) for job {JobName}: {WorkItems}",
-                        failedWorkItems.Count, processedJob.JobName, string.Join(Environment.NewLine + "- ", failedWorkItems.Select(wi => wi.Name)));
-                    await _helix.ResubmitWorkItemsAsync(processedJob.JobName, failedWorkItems, cancellationToken);
+                        failedWorkItems.Count, completedJob.JobName, string.Join(Environment.NewLine + "- ", failedWorkItems.Select(wi => wi.Name)));
+                    HelixJobInfo resubmittedJob = await _helix.ResubmitWorkItemsAsync(completedJob.JobName, failedWorkItems, cancellationToken);
+                    if (resubmittedJob != null)
+                    {
+                        resubmittedJobs.Add(resubmittedJob);
+
+                        if (!string.IsNullOrEmpty(completedJob.SubmitterJobName))
+                        {
+                            retryingHelixSubmitterJobs.Add(completedJob.SubmitterJobName);
+                        }
+                    }
                 }
             }
+
+            return new EntryResubmissionResult(
+                retryingHelixSubmitterJobs,
+                [..allJobs, ..resubmittedJobs]);
         }
+
+        private static IReadOnlyList<HelixJobInfo> GetLatestHelixJobAttempts(IEnumerable<HelixJobInfo> jobs)
+        {
+            var supersededJobNames = new HashSet<string>(
+                jobs
+                    .Select(j => j.PreviousHelixJobName)
+                    .Where(previousJobName => !string.IsNullOrEmpty(previousJobName)),
+                StringComparer.OrdinalIgnoreCase);
+
+            return
+            [
+                ..jobs.Where(j => !supersededJobNames.Contains(j.JobName))
+            ];
+        }
+
+        private static IReadOnlyList<HelixJobInfo> OrderHelixJobsOldToNew(IEnumerable<HelixJobInfo> jobs)
+        {
+            var jobByName = jobs.ToDictionary(j => j.JobName, StringComparer.OrdinalIgnoreCase);
+            return
+            [
+                ..jobs
+                    .OrderBy(j => GetHelixJobLineageDepth(j, jobByName))
+                    .ThenBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
+            ];
+        }
+
+        private static int GetHelixJobLineageDepth(HelixJobInfo job, IReadOnlyDictionary<string, HelixJobInfo> jobByName)
+        {
+            int depth = 0;
+            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            while (!string.IsNullOrEmpty(job.PreviousHelixJobName)
+                && visited.Add(job.PreviousHelixJobName)
+                && jobByName.TryGetValue(job.PreviousHelixJobName, out job))
+            {
+                depth++;
+            }
+
+            return depth;
+        }
+
+        private sealed record EntryResubmissionResult(
+            HashSet<string> RetryingHelixSubmitterJobs,
+            IReadOnlyList<HelixJobInfo> JobsForFirstPoll);
 
         private void ReportTimeout(
             IEnumerable<HelixJobInfo> latestAssociatedJobs,

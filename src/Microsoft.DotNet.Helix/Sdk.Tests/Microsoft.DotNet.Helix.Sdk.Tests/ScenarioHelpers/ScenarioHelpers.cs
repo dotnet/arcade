@@ -45,8 +45,18 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.ScenarioHelpers
         public static PreviousAttemptReference PreviousAttempt(int attempt, string timelineId = null, string recordId = null)
             => new() { Attempt = attempt, TimelineId = timelineId ?? $"timeline-attempt-{attempt}", RecordId = recordId ?? $"record-attempt-{attempt}" };
 
-        public static HelixJobInfo HelixJob(string jobName, string status, string stageName = null)
-            => new(jobName, status, stageName: stageName);
+        public static HelixJobInfo HelixJob(
+            string jobName,
+            string status,
+            string stageName = null,
+            string submitterJobName = null,
+            string previousHelixJobName = null)
+            => new(
+                jobName,
+                status,
+                stageName: stageName,
+                submitterJobName: submitterJobName,
+                previousHelixJobName: previousHelixJobName);
 
         public static HelixJobPassFail PassFail(string[] passed = null, string[] failed = null)
             => new(passed ?? [], failed ?? []);
