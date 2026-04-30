@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
     internal sealed class AzureDevOpsService : IAzureDevOpsService, IDisposable
     {
         // Tag prefix used to identify Azure DevOps test runs created by this monitor for a
-        // particular Helix job. The full tag value is "MonitoredJob:{helixJobName}" and is
+        // particular Helix job. The full tag value is "MonitoredJob-{helixJobName}" and is
         // attached to the test run when it is created. This lets us look up which Helix jobs
         // we have already processed without encoding the Helix job name into the run name.
         private const string MonitoredJobTagPrefix = "MonitoredJob-";
@@ -35,7 +35,20 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _options = options;
             _logger = logger;
             _azdoClient = new HttpClient();
-            string encodedToken = Convert.ToBase64String(Encoding.UTF8.GetBytes("unused:" + options.SystemAccessToken));
+            InitializeClient();
+        }
+
+        internal AzureDevOpsService(JobMonitorOptions options, ILogger logger, HttpClient azdoClient)
+        {
+            _options = options;
+            _logger = logger;
+            _azdoClient = azdoClient ?? throw new ArgumentNullException(nameof(azdoClient));
+            InitializeClient();
+        }
+
+        private void InitializeClient()
+        {
+            string encodedToken = Convert.ToBase64String(Encoding.UTF8.GetBytes("unused:" + _options.SystemAccessToken));
             _azdoClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", encodedToken);
             _azdoClient.DefaultRequestHeaders.UserAgent.ParseAdd("dotnet-helix-job-monitor");
         }
@@ -94,7 +107,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public async Task<int> CreateTestRunAsync(string name, string helixJobName, CancellationToken cancellationToken)
         {
             JObject result = await SendAsync(HttpMethod.Post,
-                $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs?api-version=5.0",
+                $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs?api-version=7.1",
                 new JObject
                 {
                     ["automated"] = true,
