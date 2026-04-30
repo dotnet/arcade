@@ -208,7 +208,6 @@ jobs:
         --max-wait-minutes         "$((${{ parameters.timeoutInMinutes }} - 2))" # Set the tool's timeout slightly lower than the Azure DevOps job timeout to allow it to exit gracefully.
         --job-monitor-name         '${{ parameters.jobMonitorName }}'
         --attempt                  '$(System.JobAttempt)'
-        --monitor-all-stages       '${{ parameters.monitorAllStages }}'
         --stage-name               '$(System.StageName)'
       )
 
@@ -236,6 +235,7 @@ jobs:
       if [ -n "$organization" ]; then toolArgs+=( --organization "$organization" ); fi
       if [ -n "$repository" ];   then toolArgs+=( --repository   "$repository" );   fi
       if [ -n "$prNumber" ];     then toolArgs+=( --pr-number    "$prNumber" );     fi
+      if [ '${{ parameters.monitorAllStages }}' = 'true' ]; then toolArgs+=( --monitor-all-stages ); fi
 
       if [ -n '${{ parameters.toolNupkgArtifactName }}' ]; then
         # Tool was installed from a local nupkg; run the DLL via the repo-local dotnet.
