@@ -82,9 +82,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
                     }
                 }
 
-                properties.TryGetValue("System.PhaseName", out JToken phaseName);
+                properties.TryGetValue("System.StageName", out JToken stageName);
                 properties.TryGetValue("System.JobName", out JToken jobName);
-                return $"{phaseName} {jobName} run on {helixJob.QueueId}".Trim();
+                return $"{stageName} {jobName} run on {helixJob.QueueId}".Trim();
             }
 
             return helixJob.Name;

@@ -75,12 +75,12 @@ parameters:
   type: string
   default: ''
 
-# When true (default), the monitor tracks Helix jobs and pipeline jobs across every stage of the
+# When true, the monitor tracks Helix jobs and pipeline jobs across every stage of the
 # build. When false, the monitor only tracks jobs that belong to the same Azure DevOps stage as
 # the monitor job itself (the stage name is read from $(System.StageName) at runtime).
 - name: monitorAllStages
   type: boolean
-  default: true
+  default: false
 
 # Optional dependency list for the generated job.
 - name: dependsOn

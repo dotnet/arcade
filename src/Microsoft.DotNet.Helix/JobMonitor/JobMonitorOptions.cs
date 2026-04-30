@@ -55,8 +55,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         [Option("attempt", HelpText = "Azure DevOps attempt number for the current job.")]
         public int? Attempt { get; set; }
 
-        [Option("monitor-all-stages", HelpText = "When true (default) the monitor tracks Helix jobs and pipeline jobs across all stages of the build. When false the monitor only tracks jobs that belong to the same stage as the monitor itself (see --stage-name).", Default = true)]
-        public bool MonitorAllStages { get; set; } = true;
+        [Option("monitor-all-stages", HelpText = "When true the monitor tracks Helix jobs and pipeline jobs across all stages of the build. When false the monitor only tracks jobs that belong to the same stage as the monitor itself (see --stage-name).", Default = true)]
+        public bool MonitorAllStages { get; set; }
 
         [Option("stage-name", HelpText = "Name of the Azure DevOps pipeline stage the monitor is running in. Used to scope monitoring when --monitor-all-stages is false. Defaults to the SYSTEM_STAGENAME environment variable.")]
         public string StageName { get; set; }

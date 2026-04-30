@@ -321,6 +321,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
             }
 
+            if (resubmittedJobs.Count == 0)
+            {
+                _logger.LogInformation("No failed jobs found to resubmit");
+            }
+
             return new EntryResubmissionResult(
                 retryingHelixSubmitterJobs,
                 [..scopedJobs, ..resubmittedJobs]);

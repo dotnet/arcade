@@ -79,12 +79,12 @@ parameters:
   type: string
   default: ''
 
-# When true (default), the monitor tracks Helix jobs and pipeline jobs across every stage of the
+# When true, the monitor tracks Helix jobs and pipeline jobs across every stage of the
 # build. When false, the monitor only tracks jobs that belong to the same Azure DevOps stage as
 # the monitor job itself (i.e. this stage).
 - name: monitorAllStages
   type: boolean
-  default: true
+  default: false
 
 # Advanced: optional pipeline artifact (produced earlier in this run) that contains the tool
 # nupkg. When set, the artifact is downloaded and the directory containing the nupkg is added
