@@ -47,13 +47,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 : $"official/public/{organization}/{repositoryName}";
 
             IImmutableList<JobSummary> jobs = await RetryHelper.RetryAsync(
-                async () => await _helixApi.Job.ListAsync(source: source),
+                async () => await _helixApi.Job.ListAsync(source: source, count: 100_000),
                 cancellationToken);
 
             return
             [
                 ..jobs
-                    .Where(j => ((JObject)j.Properties).TryGetValue("BuildId", out JToken id) && buildId == id.ToString())
+                    .Where(j => ((JObject)j.Properties).TryGetValue("BuildId", out JToken id) && buildId == id.Value<string>())
                     .Select(j => new HelixJobInfo(j))
              ];
         }

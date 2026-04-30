@@ -97,7 +97,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             try
             {
-                _logger.LogInformation("Checking for failed Helix work items to resubmit on monitor entry...");
                 EntryResubmissionResult entryResubmission = await ResubmitFailedJobsAsync(cancellationToken);
 
                 return await RunLoopAsync(
@@ -290,6 +289,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task<EntryResubmissionResult> ResubmitFailedJobsAsync(CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Checking for failed Helix work items to resubmit on monitor entry...");
+
             var retryingHelixSubmitterJobs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var resubmittedJobs = new List<HelixJobInfo>();
 
