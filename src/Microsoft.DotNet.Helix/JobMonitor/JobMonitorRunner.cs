@@ -282,7 +282,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             // not retried again until the monitor starts again, even if they fail during this run.
             IReadOnlyList<HelixJobInfo> allJobs = await _helix.GetLatestJobsAsync(cancellationToken);
             IReadOnlyList<HelixJobInfo> latestJobs = GetLatestHelixJobAttempts(allJobs);
-            List<HelixJobInfo> completedHelixJobs = [..latestJobs.Where(j => j.IsCompleted)];
+            List<HelixJobInfo> completedHelixJobs =
+            [
+                ..latestJobs.Where(j => j.IsCompleted && IsHelixJobInScope(j))
+            ];
 
             foreach (HelixJobInfo completedJob in completedHelixJobs)
             {
@@ -309,6 +312,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return new EntryResubmissionResult(
                 retryingHelixSubmitterJobs,
                 [..allJobs, ..resubmittedJobs]);
+        }
+
+        private bool IsHelixJobInScope(HelixJobInfo job)
+        {
+            return _options.MonitorAllStages
+                || string.IsNullOrEmpty(_options.StageName)
+                || string.IsNullOrEmpty(job.StageName)
+                || string.Equals(job.StageName, _options.StageName, StringComparison.OrdinalIgnoreCase);
         }
 
         private static IReadOnlyList<HelixJobInfo> GetLatestHelixJobAttempts(IEnumerable<HelixJobInfo> jobs)

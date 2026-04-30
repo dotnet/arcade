@@ -11,6 +11,20 @@ restart can only be reconstructed from durable external state:
 The monitor should not rely on in-memory state to make decisions that must remain
 correct across restarts.
 
+## Stage scope
+
+Each monitor invocation owns exactly one Azure DevOps stage unless it is
+explicitly configured to monitor all stages. In the normal stage-scoped mode, the
+monitor must only look at:
+
+- Azure DevOps timeline jobs that belong to the monitor's stage.
+- Helix jobs whose `System.StageName` property is empty or matches the monitor's
+  stage.
+
+Stage scope applies to retry, test-result upload, and pass/fail calculation. A
+failed job or failed Helix work item from another stage must not be retried,
+uploaded, or used to fail this monitor invocation.
+
 ## Durable state
 
 ### Azure DevOps test run tags
