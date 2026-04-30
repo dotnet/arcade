@@ -315,7 +315,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             return new EntryResubmissionResult(
                 retryingHelixSubmitterJobs,
-                [..allJobs, ..resubmittedJobs]);
+                [..scopedJobs, ..resubmittedJobs]);
         }
 
         private bool IsHelixJobInScope(HelixJobInfo job)
