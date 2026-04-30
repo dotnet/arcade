@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             IReadOnlySet<string> alreadyProcessed = await _azdo.GetProcessedHelixJobNamesAsync(cancellationToken);
             HashSet<string> processedHelixJobs = new(alreadyProcessed, StringComparer.OrdinalIgnoreCase);
-            HashSet<HelixJobInfo> associatedJobs = [];
+            HashSet<HelixJobInfo> associatedJobs = new(HelixJobInfo.ByJobNameComparer);
 
             try
             {

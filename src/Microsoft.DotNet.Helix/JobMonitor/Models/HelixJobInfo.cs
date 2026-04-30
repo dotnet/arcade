@@ -2,7 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Generic;
 using Microsoft.DotNet.Helix.Client.Models;
+using Microsoft.DotNet.Helix.JobMonitor.Models;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.JobMonitor.Models
@@ -66,6 +68,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             || Status.Equals("failed", StringComparison.OrdinalIgnoreCase);
 
         public string DetailsUri => $"https://helix.dot.net/api/2019-06-17/jobs/{JobName}/details";
+
+        /// <summary>
+        /// Comparer that considers two <see cref="HelixJobInfo"/> instances equal when their
+        /// <see cref="JobName"/> values match (case-insensitive).
+        /// </summary>
+        public static IEqualityComparer<HelixJobInfo> ByJobNameComparer { get; } = new JobNameEqualityComparer();
 
         private static string GetTestRunNameFromJob(JobSummary helixJob)
         {
@@ -141,4 +149,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             return properties;
         }
     }
+}
+
+file class JobNameEqualityComparer : IEqualityComparer<HelixJobInfo>
+{
+    public bool Equals(HelixJobInfo x, HelixJobInfo y)
+    {
+        if (ReferenceEquals(x, y)) return true;
+        if (x is null || y is null) return false;
+        return string.Equals(x.JobName, y.JobName, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public int GetHashCode(HelixJobInfo obj)
+        => obj?.JobName == null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(obj.JobName);
 }
