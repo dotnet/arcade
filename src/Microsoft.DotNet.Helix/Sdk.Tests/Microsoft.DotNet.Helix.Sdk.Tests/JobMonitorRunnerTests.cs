@@ -513,6 +513,52 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         /// <summary>
+        /// A rerun of an AzDO stage can submit brand-new Helix jobs. If Helix exposes all work
+        /// items with terminal exit codes before the job summary gets a Finished timestamp, the
+        /// monitor should process those new jobs immediately rather than waiting for timeout.
+        /// </summary>
+        [Fact]
+        public async Task StageRerun_NewHelixJobsWithTerminalWorkItems_AreProcessed()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            azdo.WithPreviouslyProcessedJob("old-helix-linux");
+            azdo.WithPreviouslyProcessedJob("old-helix-windows");
+
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "inProgress"),
+                MonitorJob(parentId: "stage-test"),
+                PipelineJob("Linux Build_Debug", "completed", "succeededWithIssues", attempt: 2, parentId: "stage-test"),
+                PipelineJob("Windows_NT Build_Release", "completed", "succeededWithIssues", attempt: 2, parentId: "stage-test"));
+
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("old-helix-linux", "finished", stageName: "Test"),
+                    HelixJob("old-helix-windows", "finished", stageName: "Test"),
+                    HelixJob("new-helix-linux", "running", stageName: "Test", initialWorkItemCount: 2),
+                    HelixJob("new-helix-windows", "running", stageName: "Test", initialWorkItemCount: 2),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["old-helix-linux"] = PassFail(passed: ["old-linux-wi"]),
+                    ["old-helix-windows"] = PassFail(passed: ["old-windows-wi"]),
+                    ["new-helix-linux"] = PassFail(passed: ["new-linux-pass"], failed: ["new-linux-fail"]),
+                    ["new-helix-windows"] = PassFail(passed: ["new-windows-pass-1", "new-windows-pass-2"]),
+                });
+
+            var runner = CreateRunner(azdo, helix, stageName: "Test", attempt: 2);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(1, exitCode);
+            Assert.Equal(["new-helix-linux", "new-helix-windows"], azdo.UploadedJobNames);
+            Assert.Equal(2, azdo.CreatedTestRuns.Count);
+            Assert.Equal(2, azdo.CompletedTestRunIds.Count);
+            Assert.Equal(1, azdo.TimelineCallCount);
+        }
+
+        /// <summary>
         /// Stage-scoped monitoring. A job in another stage runs — the monitor should
         /// ignore it entirely. Only the job in the monitor's own stage matters.
         /// </summary>

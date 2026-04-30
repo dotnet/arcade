@@ -151,11 +151,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 associatedJobs.UnionWith(associatedJobsWithBuild);
 
-                // Filter jobs to completed ones belonging to this build
+                // Filter jobs to completed ones belonging to this build. Helix job summaries can
+                // omit Finished for failed jobs even after all work items have terminal exit codes.
                 IReadOnlyCollection<HelixJobInfo> completedJobs =
-                [
-                    ..OrderHelixJobsOldToNew(associatedJobsWithBuild.Where(j => j.IsCompleted))
-                ];
+                    await GetCompletedHelixJobsAsync(associatedJobsWithBuild, cancellationToken);
+                var completedJobNames = new HashSet<string>(
+                    completedJobs.Select(j => j.JobName),
+                    StringComparer.OrdinalIgnoreCase);
 
                 if (allHelixJobCount != associatedJobsWithBuild.Count
                     || completedJobsCount != completedJobs.Count
@@ -177,7 +179,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     processedHelixJobCount++;
                 }
 
-                foreach (HelixJobInfo job in OrderHelixJobsOldToNew(GetLatestHelixJobAttempts(associatedJobsWithBuild).Where(j => j.IsCompleted)))
+                foreach (HelixJobInfo job in OrderHelixJobsOldToNew(GetLatestHelixJobAttempts(associatedJobsWithBuild).Where(j => completedJobNames.Contains(j.JobName))))
                 {
                     await ProcessCompletedJobAsync(job, uploadTestResults: false, cancellationToken);
                 }
@@ -187,7 +189,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     _options.JobMonitorName,
                     retryingHelixSubmitterJobs);
                 bool allPipelineJobsComplete = HelixJobMonitorUtilities.AreNonMonitorJobsComplete(timelineRecords, _options.JobMonitorName);
-                bool allHelixJobsComplete = associatedJobsWithBuild.Count == 0 || associatedJobsWithBuild.All(j => j.IsCompleted);
+                bool allHelixJobsComplete = associatedJobsWithBuild.Count == 0 || associatedJobsWithBuild.All(j => completedJobNames.Contains(j.JobName));
 
                 if (allPipelineJobsComplete && allHelixJobsComplete)
                 {
@@ -217,6 +219,37 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 await Delay(cancellationToken);
             }
+        }
+
+        private async Task<IReadOnlyCollection<HelixJobInfo>> GetCompletedHelixJobsAsync(
+            IReadOnlyList<HelixJobInfo> jobs,
+            CancellationToken cancellationToken)
+        {
+            var completedJobs = new List<HelixJobInfo>();
+
+            foreach (HelixJobInfo job in jobs)
+            {
+                if (job.IsCompleted || await AreAllWorkItemsTerminalAsync(job, cancellationToken))
+                {
+                    completedJobs.Add(job);
+                }
+            }
+
+            return OrderHelixJobsOldToNew(completedJobs);
+        }
+
+        private async Task<bool> AreAllWorkItemsTerminalAsync(
+            HelixJobInfo job,
+            CancellationToken cancellationToken)
+        {
+            if (job.InitialWorkItemCount is not > 0)
+            {
+                return false;
+            }
+
+            IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(job.JobName, cancellationToken);
+            return workItems.Count >= job.InitialWorkItemCount.Value
+                && workItems.All(wi => wi.ExitCode.HasValue);
         }
 
         private async Task ProcessCompletedJobAsync(

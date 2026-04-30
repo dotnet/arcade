@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             Status = helixJob.Finished != null ? "finished" : "running";
             TestRunName = GetTestRunNameFromJob(helixJob);
             StageName = GetStringPropertyFromJob(helixJob, "System.StageName");
+            InitialWorkItemCount = helixJob.InitialWorkItemCount;
             Properties = helixJob.Properties;
         }
 
@@ -32,12 +33,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             string testRunName = null,
             string stageName = null,
             string submitterJobName = null,
-            string previousHelixJobName = null)
+            string previousHelixJobName = null,
+            int? initialWorkItemCount = null)
         {
             JobName = jobName ?? throw new ArgumentNullException(nameof(jobName));
             Status = status ?? throw new ArgumentNullException(nameof(status));
             TestRunName = testRunName;
             StageName = stageName;
+            InitialWorkItemCount = initialWorkItemCount;
             Properties = CreateProperties(testRunName, stageName, submitterJobName, previousHelixJobName);
         }
 
@@ -61,6 +64,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
         public string SubmitterJobName => GetStringProperty(Properties, "System.JobName");
 
         public string PreviousHelixJobName => GetStringProperty(Properties, PreviousHelixJobNamePropertyName);
+
+        public int? InitialWorkItemCount { get; }
 
         public JToken Properties { get; }
 

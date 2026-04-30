@@ -50,13 +50,15 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.ScenarioHelpers
             string status,
             string stageName = null,
             string submitterJobName = null,
-            string previousHelixJobName = null)
+            string previousHelixJobName = null,
+            int? initialWorkItemCount = null)
             => new(
                 jobName,
                 status,
                 stageName: stageName,
                 submitterJobName: submitterJobName,
-                previousHelixJobName: previousHelixJobName);
+                previousHelixJobName: previousHelixJobName,
+                initialWorkItemCount: initialWorkItemCount);
 
         public static HelixJobPassFail PassFail(string[] passed = null, string[] failed = null)
             => new(passed ?? [], failed ?? []);
