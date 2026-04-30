@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
 using Microsoft.DotNet.Helix.Sdk.Tests.Fakes;
@@ -1589,6 +1590,424 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal("helix-linux", helix.Resubmissions[0].OriginalJob);
             Assert.Equal(["wi-fail"], helix.Resubmissions[0].FailedItems);
             Assert.Single(azdo.UploadedJobNames); // only original
+        }
+
+        /// <summary>
+        /// A failed AzDO submitter is ignored only when the Helix job that is being retried is
+        /// durably linked to it through System.JobName. Retrying unrelated Helix work must not mask
+        /// the pipeline job failure.
+        /// </summary>
+        [Fact]
+        public async Task FailedAzdoSubmitter_WithoutSystemJobNameLink_IsNotIgnored()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("A", "completed", "failed"));
+
+            helix.AddResponse(
+                jobs: [HelixJob("helix-a", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-a"] = PassFail(failed: ["a-fail"]),
+                });
+            helix.ConfigureResubmission("helix-a", "helix-a-resub");
+
+            var runner = CreateRunner(azdo, helix);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(1, exitCode);
+            Assert.Single(helix.Resubmissions);
+            Assert.Equal("helix-a", helix.Resubmissions[0].OriginalJob);
+            Assert.Equal(["a-fail"], helix.Resubmissions[0].FailedItems);
+            Assert.Equal(["helix-a"], azdo.UploadedJobNames);
+        }
+
+        /// <summary>
+        /// A failed AzDO submitter is ignored only after a replacement Helix job is actually
+        /// created. If resubmission returns null, the original AzDO failure still fails the monitor.
+        /// </summary>
+        [Fact]
+        public async Task ResubmitReturnsNull_FailedSubmitterIsNotIgnored()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("A", "completed", "failed"));
+
+            helix.AddResponse(
+                jobs: [HelixJob("helix-a", "finished", submitterJobName: "A")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-a"] = PassFail(failed: ["a-fail"]),
+                });
+            helix.ConfigureNullResubmission("helix-a");
+
+            var runner = CreateRunner(azdo, helix);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(1, exitCode);
+            Assert.Single(helix.Resubmissions);
+            Assert.Equal("helix-a", helix.Resubmissions[0].OriginalJob);
+            Assert.Null(helix.Resubmissions[0].NewJob);
+            Assert.Equal(["helix-a"], azdo.UploadedJobNames);
+        }
+
+        /// <summary>
+        /// A latest running or waiting incarnation suppresses retry even after multiple completed
+        /// failed ancestors. Older failed attempts are not resubmitted while a newer incarnation is
+        /// still active.
+        /// </summary>
+        [Fact]
+        public async Task LatestRunningAfterMultipleCompletedFailures_DoesNotResubmitOlderFailures()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-linux", "finished"),
+                    HelixJob("helix-linux-r1", "finished", previousHelixJobName: "helix-linux"),
+                    HelixJob("helix-linux-r2", "waiting", previousHelixJobName: "helix-linux-r1"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(failed: ["wi-fail"]),
+                    ["helix-linux-r1"] = PassFail(failed: ["wi-fail"]),
+                });
+            helix.ConfigureResubmission("helix-linux-r1", "helix-linux-r3");
+
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-linux", "finished"),
+                    HelixJob("helix-linux-r1", "finished", previousHelixJobName: "helix-linux"),
+                    HelixJob("helix-linux-r2", "finished", previousHelixJobName: "helix-linux-r1"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(failed: ["wi-fail"]),
+                    ["helix-linux-r1"] = PassFail(failed: ["wi-fail"]),
+                    ["helix-linux-r2"] = PassFail(passed: ["wi-fail"]),
+                });
+
+            var runner = CreateRunner(azdo, helix);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(0, exitCode);
+            Assert.Empty(helix.Resubmissions);
+            Assert.Equal(["helix-linux", "helix-linux-r1", "helix-linux-r2"], azdo.UploadedJobNames);
+        }
+
+        /// <summary>
+        /// The default monitor-all-stages mode includes timeline and Helix jobs from stages other
+        /// than the monitor's stage.
+        /// </summary>
+        [Fact]
+        public async Task MonitorAllStages_IncludesOtherStageJobsAndHelixJobs()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "completed", "succeeded"),
+                MonitorJob(parentId: "stage-test"),
+                PipelineJob("Test Linux", "completed", "succeeded", parentId: "stage-test"),
+                StageRecord("Build", "stage-build", "completed", "succeeded"),
+                PipelineJob("Build Windows", "completed", "succeeded", parentId: "stage-build"));
+            azdo.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "completed", "succeeded"),
+                MonitorJob(parentId: "stage-test"),
+                PipelineJob("Test Linux", "completed", "succeeded", parentId: "stage-test"),
+                StageRecord("Build", "stage-build", "completed", "succeeded"),
+                PipelineJob("Build Windows", "completed", "succeeded", parentId: "stage-build"));
+
+            helix.AddResponse(
+                jobs: [HelixJob("helix-build", "finished", stageName: "Build")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-build"] = PassFail(failed: ["build-fail"]),
+                });
+            helix.ConfigureResubmission("helix-build", "helix-build-resub");
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-build", "finished", stageName: "Build"),
+                    HelixJob("helix-build-resub", "finished", stageName: "Build", previousHelixJobName: "helix-build"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-build"] = PassFail(failed: ["build-fail"]),
+                    ["helix-build-resub"] = PassFail(passed: ["build-fail"]),
+                });
+
+            var runner = CreateRunner(azdo, helix);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(0, exitCode);
+            Assert.Single(helix.Resubmissions);
+            Assert.Equal("helix-build", helix.Resubmissions[0].OriginalJob);
+            Assert.Equal(["helix-build", "helix-build-resub"], azdo.UploadedJobNames);
+        }
+
+        /// <summary>
+        /// Canceled non-monitor AzDO jobs fail the monitor even when no Helix work is present.
+        /// </summary>
+        [Fact]
+        public async Task CanceledAzdoJob_FailsMonitor()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "canceled"));
+            helix.AddResponse(jobs: []);
+
+            var runner = CreateRunner(azdo, helix);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(1, exitCode);
+            Assert.Empty(azdo.UploadedJobNames);
+        }
+
+        /// <summary>
+        /// The same completed Helix job may appear in multiple polling snapshots. It should only
+        /// create one AzDO test run and one upload in a single monitor invocation.
+        /// </summary>
+        [Fact]
+        public async Task SameCompletedHelixJobSeenAcrossPolls_UploadsOnce()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "inProgress"));
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["wi-pass"]),
+                });
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["wi-pass"]),
+                });
+
+            var runner = CreateRunner(azdo, helix);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(0, exitCode);
+            Assert.Equal(["helix-linux"], azdo.UploadedJobNames);
+            Assert.Single(azdo.CreatedTestRuns);
+            Assert.Single(azdo.CompletedTestRunIds);
+        }
+
+        /// <summary>
+        /// Uploaded/processed state controls only duplicate result upload. A previously uploaded
+        /// failed Helix job still contributes to retry and pass/fail on a later monitor entry.
+        /// </summary>
+        [Fact]
+        public async Task PreviouslyProcessedFailedJob_StillContributesToRetryAndPassFail()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            azdo.WithPreviouslyProcessedJob("helix-linux");
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(failed: ["wi-fail"]),
+                });
+            helix.ConfigureResubmission("helix-linux", "helix-linux-resub");
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-linux", "finished"),
+                    HelixJob("helix-linux-resub", "finished", previousHelixJobName: "helix-linux"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux-resub"] = PassFail(passed: ["wi-fail"]),
+                });
+
+            var runner = CreateRunner(azdo, helix);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(0, exitCode);
+            Assert.Single(helix.Resubmissions);
+            Assert.Equal("helix-linux", helix.Resubmissions[0].OriginalJob);
+            Assert.Equal(["helix-linux-resub"], azdo.UploadedJobNames);
+        }
+
+        /// <summary>
+        /// If the beginning of a lineage was already uploaded, upload skips it but still publishes
+        /// every unprocessed completed successor in old-to-new order.
+        /// </summary>
+        [Fact]
+        public async Task PartiallyProcessedLineage_UploadsOnlyUnprocessedOldToNew()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            azdo.WithPreviouslyProcessedJob("helix-linux");
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-linux-r2", "finished", previousHelixJobName: "helix-linux-r1"),
+                    HelixJob("helix-linux", "finished"),
+                    HelixJob("helix-linux-r1", "finished", previousHelixJobName: "helix-linux"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(failed: ["wi-fail"]),
+                    ["helix-linux-r1"] = PassFail(failed: ["wi-fail"]),
+                    ["helix-linux-r2"] = PassFail(passed: ["wi-fail"]),
+                });
+
+            var runner = CreateRunner(azdo, helix);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(0, exitCode);
+            Assert.Empty(helix.Resubmissions);
+            Assert.Equal(["helix-linux-r1", "helix-linux-r2"], azdo.UploadedJobNames);
+        }
+
+        /// <summary>
+        /// Stage scope is applied before lineage supersession. A retry from another stage must not
+        /// suppress a failed in-stage job from being retried by this monitor.
+        /// </summary>
+        [Fact]
+        public async Task StageScopedMonitor_LineageCrossesStageBoundary_IgnoresOutOfStageIncarnation()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "inProgress"),
+                MonitorJob(parentId: "stage-test"),
+                PipelineJob("Test Linux", "completed", "succeeded", parentId: "stage-test"),
+                StageRecord("Build", "stage-build", "inProgress"),
+                PipelineJob("Build Windows", "inProgress", parentId: "stage-build"));
+            azdo.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "inProgress"),
+                MonitorJob(parentId: "stage-test"),
+                PipelineJob("Test Linux", "completed", "succeeded", parentId: "stage-test"),
+                StageRecord("Build", "stage-build", "inProgress"),
+                PipelineJob("Build Windows", "inProgress", parentId: "stage-build"));
+
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-test", "finished", stageName: "Test"),
+                    HelixJob("helix-build-retry", "running", stageName: "Build", previousHelixJobName: "helix-test"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-test"] = PassFail(failed: ["test-fail"]),
+                });
+            helix.ConfigureResubmission("helix-test", "helix-test-resub");
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-test", "finished", stageName: "Test"),
+                    HelixJob("helix-test-resub", "finished", stageName: "Test", previousHelixJobName: "helix-test"),
+                    HelixJob("helix-build-retry", "running", stageName: "Build", previousHelixJobName: "helix-test"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-test"] = PassFail(failed: ["test-fail"]),
+                    ["helix-test-resub"] = PassFail(passed: ["test-fail"]),
+                });
+
+            var runner = CreateRunner(azdo, helix, stageName: "Test");
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(0, exitCode);
+            Assert.Single(helix.Resubmissions);
+            Assert.Equal("helix-test", helix.Resubmissions[0].OriginalJob);
+            Assert.Equal(["helix-test", "helix-test-resub"], azdo.UploadedJobNames);
+        }
+
+        /// <summary>
+        /// Helix status "failed" is terminal for monitor purposes and should be processed like a
+        /// completed job.
+        /// </summary>
+        [Fact]
+        public async Task HelixJobStatusFailed_IsTreatedAsCompleted()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "failed")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["wi-pass"]),
+                });
+
+            var runner = CreateRunner(azdo, helix);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(0, exitCode);
+            Assert.Equal(["helix-linux"], azdo.UploadedJobNames);
+        }
+
+        /// <summary>
+        /// A work item with exit code 0 but a non-Finished state is still failed and should be
+        /// resubmitted on monitor entry.
+        /// </summary>
+        [Fact]
+        public async Task FinishedHelixJob_WithNonFinishedWorkItemState_IsFailure()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+
+            helix.AddResponse(jobs: [HelixJob("helix-linux", "finished")]);
+            helix.WithWorkItems(
+                "helix-linux",
+                [new WorkItemSummary("helix-linux/wi-timeout", "helix-linux", "wi-timeout", "TimedOut") { ExitCode = 0 }]);
+            helix.ConfigureResubmission("helix-linux", "helix-linux-resub");
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-linux", "finished"),
+                    HelixJob("helix-linux-resub", "finished", previousHelixJobName: "helix-linux"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux-resub"] = PassFail(passed: ["wi-timeout"]),
+                });
+
+            var runner = CreateRunner(azdo, helix);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(0, exitCode);
+            Assert.Single(helix.Resubmissions);
+            Assert.Equal(["wi-timeout"], helix.Resubmissions[0].FailedItems);
+            Assert.Equal(["helix-linux", "helix-linux-resub"], azdo.UploadedJobNames);
         }
 
         // -----------------------------------------------------------------------

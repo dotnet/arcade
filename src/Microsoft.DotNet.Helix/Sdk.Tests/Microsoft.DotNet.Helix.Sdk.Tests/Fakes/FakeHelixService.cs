@@ -16,6 +16,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
     {
         private readonly List<HelixSnapshot> _responses = [];
         private readonly HashSet<string> _downloadFailureJobs = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, IReadOnlyCollection<WorkItemSummary>> _customWorkItems = new(StringComparer.OrdinalIgnoreCase);
         private int _getJobsCallCount;
 
         /// <summary>
@@ -38,6 +39,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
 
         public FakeHelixService FailDownloadForJob(string jobName) { _downloadFailureJobs.Add(jobName); return this; }
         public void ClearDownloadFailures() { _downloadFailureJobs.Clear(); }
+
+        public FakeHelixService WithWorkItems(string jobName, IReadOnlyCollection<WorkItemSummary> workItems)
+        {
+            _customWorkItems[jobName] = workItems;
+            return this;
+        }
 
         /// <summary>Number of times <see cref="GetLatestJobsAsync"/> has been called.</summary>
         public int GetJobsCallCount => _getJobsCallCount;
@@ -93,6 +100,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             string jobName,
             CancellationToken _)
         {
+            if (_customWorkItems.TryGetValue(jobName, out IReadOnlyCollection<WorkItemSummary> customWorkItems))
+            {
+                return Task.FromResult(customWorkItems);
+            }
+
             var items = new List<WorkItemSummary>();
 
             foreach (string w in CurrentSnapshot.PassFailByJob[jobName].PassedWorkItems)
@@ -123,10 +135,17 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         /// <see cref="GetLatestJobsAsync"/> calls via the responses already configured.
         /// </summary>
         private readonly Dictionary<string, string> _resubmissionNewJobNames = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _nullResubmissions = new(StringComparer.OrdinalIgnoreCase);
 
         public FakeHelixService ConfigureResubmission(string originalJobName, string newJobName)
         {
             _resubmissionNewJobNames[originalJobName] = newJobName;
+            return this;
+        }
+
+        public FakeHelixService ConfigureNullResubmission(string originalJobName)
+        {
+            _nullResubmissions.Add(originalJobName);
             return this;
         }
 
@@ -143,7 +162,14 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
                 newJobName = $"{originalJobName}-resubmit";
             }
 
-            Resubmissions.Add((originalJobName, [..failedWorkItems.Select(wi => wi.Name)], newJobName));
+            IReadOnlyCollection<string> failedItemNames = [..failedWorkItems.Select(wi => wi.Name)];
+            if (_nullResubmissions.Contains(originalJobName))
+            {
+                Resubmissions.Add((originalJobName, failedItemNames, null));
+                return Task.FromResult<HelixJobInfo>(null);
+            }
+
+            Resubmissions.Add((originalJobName, failedItemNames, newJobName));
             return Task.FromResult(new HelixJobInfo(
                 newJobName,
                 "running",

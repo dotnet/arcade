@@ -281,7 +281,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             // This snapshot is taken when the monitor starts. Failed latest work items here are
             // not retried again until the monitor starts again, even if they fail during this run.
             IReadOnlyList<HelixJobInfo> allJobs = await _helix.GetLatestJobsAsync(cancellationToken);
-            IReadOnlyList<HelixJobInfo> latestJobs = GetLatestHelixJobAttempts(allJobs);
+            IReadOnlyList<HelixJobInfo> scopedJobs =
+            [
+                ..allJobs.Where(IsHelixJobInScope)
+            ];
+            IReadOnlyList<HelixJobInfo> latestJobs = GetLatestHelixJobAttempts(scopedJobs);
             List<HelixJobInfo> completedHelixJobs =
             [
                 ..latestJobs.Where(j => j.IsCompleted && IsHelixJobInScope(j))
