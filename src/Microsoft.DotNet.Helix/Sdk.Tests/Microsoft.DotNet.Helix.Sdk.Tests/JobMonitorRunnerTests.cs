@@ -1275,6 +1275,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 PipelineJob("A", "completed", "succeeded"),
                 PipelineJob("B", "completed", "failed"),
                 PipelineJob("C", "completed", "failed"));
+            azdo1.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("A", "completed", "succeeded"),
+                PipelineJob("B", "completed", "failed"),
+                PipelineJob("C", "completed", "failed"));
 
             helix1.AddResponse(jobs: []);
             helix1.AddResponse(jobs: []);
@@ -1291,13 +1296,19 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 passFailByJob: new(StringComparer.OrdinalIgnoreCase)
                 {
                     ["helix-a"] = PassFail(failed: ["a-fail"]),
+                });
+            helix1.AddResponse(
+                jobs: [HelixJob("helix-a", "finished", submitterJobName: "A"), HelixJob("helix-b", "finished", submitterJobName: "B")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-b"] = PassFail(passed: ["b-pass"]),
                 });
 
             var runner1 = CreateRunner(azdo1, helix1);
             int exitCode1 = await runner1.RunAsync(CancellationToken.None);
 
             Assert.Equal(1, exitCode1);
-            Assert.Equal(["helix-a"], azdo1.UploadedJobNames);
+            Assert.Equal(["helix-a", "helix-b"], azdo1.UploadedJobNames);
             Assert.Empty(helix1.Resubmissions);
 
             var azdo2 = new FakeAzureDevOpsService();

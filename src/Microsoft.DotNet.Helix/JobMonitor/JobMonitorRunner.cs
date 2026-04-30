@@ -215,14 +215,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     return 0;
                 }
 
-                // If all pipeline jobs are dead and Helix jobs are still running,
-                // those jobs are orphaned — no point waiting.
-                if (allPipelineJobsComplete && anyNonMonitorJobFailures && !allHelixJobsComplete)
-                {
-                    _logger.LogError("All non-monitor pipeline jobs failed/canceled while Helix jobs are still running. Exiting.");
-                    return 1;
-                }
-
                 await Delay(cancellationToken);
             }
         }
