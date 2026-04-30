@@ -22,6 +22,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         [JsonProperty("refName")]
         public string ReferenceName { get; set; }
 
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        [JsonProperty("identifier")]
+        public string Identifier { get; set; }
+
         [JsonProperty("state")]
         public string State { get; set; }
 
@@ -116,12 +122,60 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private static IEnumerable<AzureDevOpsTimelineRecord> GetRelevantJobRecords(IEnumerable<AzureDevOpsTimelineRecord> records, string jobMonitorName)
         {
-            return (records ?? [])
+            List<AzureDevOpsTimelineRecord> allRecords = (records ?? []).ToList();
+            HashSet<string> monitorRecordIds =
+            [
+                ..allRecords
+                    .Where(r => IsMonitorRecord(r, jobMonitorName))
+                    .Select(r => r.Id)
+                    .Where(id => !string.IsNullOrEmpty(id))
+            ];
+
+            Dictionary<string, AzureDevOpsTimelineRecord> recordsById = allRecords
+                .Where(r => !string.IsNullOrEmpty(r.Id))
+                .GroupBy(r => r.Id, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+            return allRecords
                 .Where(r => string.Equals(r.Type, "Job", StringComparison.OrdinalIgnoreCase))
-                .Where(r => !string.Equals(r.ReferenceName, jobMonitorName, StringComparison.OrdinalIgnoreCase));
+                .Where(r => !IsMonitorRecord(r, jobMonitorName))
+                .Where(r => !HasMonitorAncestor(r, recordsById, monitorRecordIds));
         }
 
         private static bool IsTerminal(AzureDevOpsTimelineRecord record)
             => string.Equals(record?.State, "completed", StringComparison.OrdinalIgnoreCase);
+
+        private static bool IsMonitorRecord(AzureDevOpsTimelineRecord record, string jobMonitorName)
+        {
+            return !string.IsNullOrEmpty(jobMonitorName)
+                && (string.Equals(record.ReferenceName, jobMonitorName, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(record.Name, jobMonitorName, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(record.Identifier, jobMonitorName, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static bool HasMonitorAncestor(
+            AzureDevOpsTimelineRecord record,
+            IReadOnlyDictionary<string, AzureDevOpsTimelineRecord> recordsById,
+            IReadOnlySet<string> monitorRecordIds)
+        {
+            string parentId = record.ParentId;
+            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            while (!string.IsNullOrEmpty(parentId) && visited.Add(parentId))
+            {
+                if (monitorRecordIds.Contains(parentId))
+                {
+                    return true;
+                }
+
+                if (!recordsById.TryGetValue(parentId, out AzureDevOpsTimelineRecord parent))
+                {
+                    return false;
+                }
+
+                parentId = parent.ParentId;
+            }
+
+            return false;
+        }
     }
 }

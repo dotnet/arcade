@@ -620,6 +620,305 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         /// <summary>
+        /// Two stage-scoped monitors in the same build should each exit as soon as the
+        /// pipeline and Helix work from their own stage is complete, even when another stage
+        /// still has unfinished pipeline or Helix work.
+        /// </summary>
+        [Fact]
+        public async Task StageScopedMonitors_ShutDownWhenTheirOwnStageWorkCompletes()
+        {
+            var testAzdo = new FakeAzureDevOpsService();
+            var testHelix = new FakeHelixService();
+            AddStageTimelineFrames(testAzdo);
+            AddHelixFrames(testHelix);
+
+            var buildAzdo = new FakeAzureDevOpsService();
+            var buildHelix = new FakeHelixService();
+            AddStageTimelineFrames(buildAzdo);
+            AddHelixFrames(buildHelix);
+
+            var testRunner = CreateRunner(testAzdo, testHelix, stageName: "Test");
+            var buildRunner = CreateRunner(buildAzdo, buildHelix, stageName: "Build");
+
+            int testExitCode = await testRunner.RunAsync(CancellationToken.None);
+            int buildExitCode = await buildRunner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(0, testExitCode);
+            Assert.Equal(0, buildExitCode);
+
+            // Test stage finishes in frame 2 while Build stage and its Helix job are still running.
+            Assert.Equal(2, testAzdo.TimelineCallCount);
+            Assert.Equal(["helix-test-linux"], testAzdo.UploadedJobNames);
+
+            // Build stage pipeline work finishes in frame 3, but its Helix job finishes in frame 4.
+            Assert.Equal(4, buildAzdo.TimelineCallCount);
+            Assert.Equal(["helix-build-windows"], buildAzdo.UploadedJobNames);
+
+            static void AddStageTimelineFrames(FakeAzureDevOpsService azdo)
+            {
+                azdo.AddTimelineResponse(
+                    StageRecord("Test", "stage-test", "inProgress"),
+                    MonitorJob(parentId: "stage-test"),
+                    PipelineJob("Test Linux", "inProgress", parentId: "stage-test"),
+                    StageRecord("Build", "stage-build", "inProgress"),
+                    MonitorJob(parentId: "stage-build"),
+                    PipelineJob("Build Windows", "inProgress", parentId: "stage-build"));
+
+                azdo.AddTimelineResponse(
+                    StageRecord("Test", "stage-test", "inProgress"),
+                    MonitorJob(parentId: "stage-test"),
+                    PipelineJob("Test Linux", "completed", "succeeded", parentId: "stage-test"),
+                    StageRecord("Build", "stage-build", "inProgress"),
+                    MonitorJob(parentId: "stage-build"),
+                    PipelineJob("Build Windows", "inProgress", parentId: "stage-build"));
+
+                azdo.AddTimelineResponse(
+                    StageRecord("Test", "stage-test", "inProgress"),
+                    MonitorJob(parentId: "stage-test"),
+                    PipelineJob("Test Linux", "completed", "succeeded", parentId: "stage-test"),
+                    StageRecord("Build", "stage-build", "inProgress"),
+                    MonitorJob(parentId: "stage-build"),
+                    PipelineJob("Build Windows", "completed", "succeeded", parentId: "stage-build"));
+
+                azdo.AddTimelineResponse(
+                    StageRecord("Test", "stage-test", "inProgress"),
+                    MonitorJob(parentId: "stage-test"),
+                    PipelineJob("Test Linux", "completed", "succeeded", parentId: "stage-test"),
+                    StageRecord("Build", "stage-build", "inProgress"),
+                    MonitorJob(parentId: "stage-build"),
+                    PipelineJob("Build Windows", "completed", "succeeded", parentId: "stage-build"));
+            }
+
+            static void AddHelixFrames(FakeHelixService helix)
+            {
+                helix.AddResponse(
+                    jobs:
+                    [
+                        HelixJob("helix-test-linux", "running", stageName: "Test"),
+                        HelixJob("helix-build-windows", "running", stageName: "Build"),
+                    ]);
+
+                helix.AddResponse(
+                    jobs:
+                    [
+                        HelixJob("helix-test-linux", "finished", stageName: "Test"),
+                        HelixJob("helix-build-windows", "running", stageName: "Build"),
+                    ],
+                    passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["helix-test-linux"] = PassFail(passed: ["test-linux-wi"]),
+                    });
+
+                helix.AddResponse(
+                    jobs:
+                    [
+                        HelixJob("helix-test-linux", "finished", stageName: "Test"),
+                        HelixJob("helix-build-windows", "running", stageName: "Build"),
+                    ],
+                    passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["helix-test-linux"] = PassFail(passed: ["test-linux-wi"]),
+                    });
+
+                helix.AddResponse(
+                    jobs:
+                    [
+                        HelixJob("helix-test-linux", "finished", stageName: "Test"),
+                        HelixJob("helix-build-windows", "finished", stageName: "Build"),
+                    ],
+                    passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["helix-test-linux"] = PassFail(passed: ["test-linux-wi"]),
+                        ["helix-build-windows"] = PassFail(passed: ["build-windows-wi"]),
+                });
+            }
+        }
+
+        /// <summary>
+        /// When only one stage has a job monitor, retry-on-entry should resubmit only failed Helix
+        /// work from that stage. Failed Helix work from a different stage without a monitor is not
+        /// in scope for this runner.
+        /// </summary>
+        [Fact]
+        public async Task StageScopedMonitor_OnStageRetry_OnlyRetriesFailedHelixWorkFromItsStage()
+        {
+            var azdo1 = new FakeAzureDevOpsService();
+            var helix1 = new FakeHelixService();
+
+            AddSingleMonitorStageTimeline(azdo1, attempt: 1);
+            AddSingleMonitorStageTimeline(azdo1, attempt: 1);
+
+            helix1.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-test-linux", "running", stageName: "Test", submitterJobName: "Test Linux"),
+                    HelixJob("helix-build-windows", "running", stageName: "Build", submitterJobName: "Build Windows"),
+                ]);
+            helix1.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-test-linux", "finished", stageName: "Test", submitterJobName: "Test Linux"),
+                    HelixJob("helix-build-windows", "finished", stageName: "Build", submitterJobName: "Build Windows"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-test-linux"] = PassFail(failed: ["test-fail"]),
+                    ["helix-build-windows"] = PassFail(failed: ["build-fail"]),
+                });
+
+            var runner1 = CreateRunner(azdo1, helix1, stageName: "Test");
+            int exitCode1 = await runner1.RunAsync(CancellationToken.None);
+
+            Assert.Equal(1, exitCode1);
+            Assert.Empty(helix1.Resubmissions);
+            Assert.Equal(["helix-test-linux"], azdo1.UploadedJobNames);
+
+            var azdo2 = new FakeAzureDevOpsService();
+            azdo2.WithPreviouslyProcessedJob("helix-test-linux");
+            var helix2 = new FakeHelixService();
+
+            AddSingleMonitorStageTimeline(azdo2, attempt: 2);
+            AddSingleMonitorStageTimeline(azdo2, attempt: 2);
+
+            helix2.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-test-linux", "finished", stageName: "Test", submitterJobName: "Test Linux"),
+                    HelixJob("helix-build-windows", "finished", stageName: "Build", submitterJobName: "Build Windows"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-test-linux"] = PassFail(failed: ["test-fail"]),
+                    ["helix-build-windows"] = PassFail(failed: ["build-fail"]),
+                });
+            helix2.ConfigureResubmission("helix-test-linux", "helix-test-linux-resub");
+            helix2.ConfigureResubmission("helix-build-windows", "helix-build-windows-resub");
+            helix2.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-test-linux", "finished", stageName: "Test", submitterJobName: "Test Linux"),
+                    HelixJob("helix-test-linux-resub", "finished", stageName: "Test", submitterJobName: "Test Linux", previousHelixJobName: "helix-test-linux"),
+                    HelixJob("helix-build-windows", "finished", stageName: "Build", submitterJobName: "Build Windows"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-test-linux"] = PassFail(failed: ["test-fail"]),
+                    ["helix-test-linux-resub"] = PassFail(passed: ["test-fail"]),
+                    ["helix-build-windows"] = PassFail(failed: ["build-fail"]),
+                });
+
+            var runner2 = CreateRunner(azdo2, helix2, stageName: "Test", attempt: 2);
+            int exitCode2 = await runner2.RunAsync(CancellationToken.None);
+
+            Assert.Equal(0, exitCode2);
+            Assert.Single(helix2.Resubmissions);
+            Assert.Equal("helix-test-linux", helix2.Resubmissions[0].OriginalJob);
+            Assert.Equal(["test-fail"], helix2.Resubmissions[0].FailedItems);
+            Assert.DoesNotContain(helix2.Resubmissions, r => r.OriginalJob == "helix-build-windows");
+            Assert.Equal(["helix-test-linux-resub"], azdo2.UploadedJobNames);
+
+            static void AddSingleMonitorStageTimeline(FakeAzureDevOpsService azdo, int attempt)
+            {
+                PreviousAttemptReference[] previousAttempts = attempt == 1 ? null : [PreviousAttempt(1)];
+
+                azdo.AddTimelineResponse(
+                    StageRecord("Test", "stage-test", "inProgress"),
+                    MonitorJob(attempt: attempt, previousAttempts: previousAttempts, parentId: "stage-test"),
+                    PipelineJob("Test Linux", "completed", "succeeded", attempt: attempt, previousAttempts: previousAttempts, parentId: "stage-test"),
+                    StageRecord("Build", "stage-build", "completed", "succeeded"),
+                    PipelineJob("Build Windows", "completed", "succeeded", parentId: "stage-build"));
+            }
+        }
+
+        /// <summary>
+        /// In real AzDO timelines, the monitor phase has refName "HelixJobMonitor", but the
+        /// monitor job underneath it has refName "__default". A retried monitor must still ignore
+        /// that in-progress job when deciding whether its stage's pipeline work is complete.
+        /// </summary>
+        [Fact]
+        public async Task StageScopedMonitor_OnRetry_IgnoresDefaultRefNameMonitorJobUnderMonitorPhase()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            AddRetriedStageTimeline(azdo);
+            AddRetriedStageTimeline(azdo);
+
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished", stageName: "Test", submitterJobName: "Build_Debug")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(failed: ["linux-fail"]),
+                });
+            helix.ConfigureResubmission("helix-linux", "helix-linux-resub");
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-linux", "finished", stageName: "Test", submitterJobName: "Build_Debug"),
+                    HelixJob("helix-linux-resub", "finished", stageName: "Test", submitterJobName: "Build_Debug", previousHelixJobName: "helix-linux"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(failed: ["linux-fail"]),
+                    ["helix-linux-resub"] = PassFail(failed: ["linux-fail"]),
+                });
+
+            int delayCount = 0;
+            var options = DefaultOptions(attempt: 2);
+            options.MonitorAllStages = false;
+            options.StageName = "Test";
+            options.JobMonitorName = "HelixJobMonitor";
+            var runner = new JobMonitorRunner(options, NullLogger.Instance, azdo, helix,
+                (_, _) =>
+                {
+                    delayCount++;
+                    if (delayCount > 1)
+                    {
+                        throw new InvalidOperationException("The monitor should exit after the retried Helix job completes.");
+                    }
+
+                    return Task.CompletedTask;
+                });
+
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(1, exitCode);
+            Assert.Equal(1, delayCount);
+            Assert.Single(helix.Resubmissions);
+            Assert.Equal("helix-linux", helix.Resubmissions[0].OriginalJob);
+            Assert.Equal(["linux-fail"], helix.Resubmissions[0].FailedItems);
+            Assert.Equal(["helix-linux", "helix-linux-resub"], azdo.UploadedJobNames);
+
+            static void AddRetriedStageTimeline(FakeAzureDevOpsService azdo)
+            {
+                azdo.AddTimelineResponse(
+                    StageRecord("Test", "stage-test", "inProgress"),
+                    new AzureDevOpsTimelineRecord
+                    {
+                        Id = "monitor-phase",
+                        ParentId = "stage-test",
+                        Type = "Phase",
+                        ReferenceName = "HelixJobMonitor",
+                        Name = "Monitor Helix Jobs",
+                        State = "inProgress",
+                    },
+                    new AzureDevOpsTimelineRecord
+                    {
+                        Id = "monitor-job",
+                        ParentId = "monitor-phase",
+                        Type = "Job",
+                        ReferenceName = "__default",
+                        Name = "Monitor Helix Jobs",
+                        Identifier = "Test.HelixJobMonitor.__default",
+                        State = "inProgress",
+                        Attempt = 2,
+                        PreviousAttempts = [PreviousAttempt(1, recordId: "previous-monitor-job")],
+                    },
+                    PipelineJob("Linux Build_Debug", "completed", "succeeded", parentId: "stage-test"));
+            }
+        }
+
+        /// <summary>
         /// The monitor times out while Helix tests are in progress.
         /// On relaunch, it should pick up where it left off: skip already-processed
         /// Helix jobs and upload results for newly-completed ones.
