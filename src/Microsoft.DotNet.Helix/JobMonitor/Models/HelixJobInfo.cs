@@ -65,6 +65,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
         public bool IsCompleted => Status.Equals("finished", StringComparison.OrdinalIgnoreCase)
             || Status.Equals("failed", StringComparison.OrdinalIgnoreCase);
 
+        public string DetailsUri => $"https://helix.dot.net/api/2019-06-17/jobs/{JobName}/details";
+
         private static string GetTestRunNameFromJob(JobSummary helixJob)
         {
             // The Helix SDK stamps the desired Azure DevOps test run name onto the job as a

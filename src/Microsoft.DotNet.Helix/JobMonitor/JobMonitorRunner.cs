@@ -82,14 +82,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task<int> RunCoreAsync(CancellationToken cancellationToken)
         {
-            if (_options.MonitorAllStages || string.IsNullOrEmpty(_options.StageName))
-            {
-                _logger.LogInformation("Monitoring Helix jobs for the pipeline");
-            }
-            else
-            {
-                _logger.LogInformation("Monitoring Helix jobs sent from stage '{StageName}'", _options.StageName);
-            }
+            _logger.LogInformation("Monitoring Helix jobs for {stage} of build {BuildId}:{nl}https://dev.azure.com/dnceng-public/public/_build/results?buildId={BuildId}",
+                _options.MonitorAllStages || string.IsNullOrEmpty(_options.StageName) ? "all stages" : $"stage '{_options.StageName}'",
+                _options.BuildId,
+                Environment.NewLine,
+                _options.BuildId);
 
             IReadOnlySet<string> alreadyProcessed = await _azdo.GetProcessedHelixJobNamesAsync(cancellationToken);
             HashSet<string> processedHelixJobs = new(alreadyProcessed, StringComparer.OrdinalIgnoreCase);
@@ -240,7 +237,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return;
             }
 
-            _logger.LogInformation("Job {jobName} completed. Processing test results...", helixJob.JobName);
+            _logger.LogInformation("Job {jobName} completed. Processing test results...{nl}{JobUri}", helixJob.JobName, Environment.NewLine, helixJob.DetailsUri);
 
             IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(helixJob.JobName, cancellationToken);
 
@@ -284,7 +281,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
             }
 
-            _logger.LogInformation("Job '{JobName}' completed ({PassedCount} passed, {FailedCount} failed).", helixJob.JobName, successfulWorkItemCount, failedWorkItemCount);
+            _logger.LogInformation("Job '{JobName}' completed ({PassedCount} passed, {FailedCount} failed){nl}{JobUri}",
+                helixJob.JobName,
+                successfulWorkItemCount,
+                failedWorkItemCount,
+                Environment.NewLine, helixJob.DetailsUri);
         }
 
         private async Task<EntryResubmissionResult> ResubmitFailedJobsAsync(CancellationToken cancellationToken)
