@@ -115,7 +115,8 @@ parameters:
 jobs:
 - job: ${{ parameters.jobName }}
   displayName: Monitor Helix Jobs
-  timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+  ${{ if gt(parameters.timeoutInMinutes, 0) }}:
+    timeoutInMinutes: $[ add(parameters.timeoutInMinutes, 3) ]
   ${{ if ne(length(parameters.dependsOn), 0) }}:
     dependsOn: ${{ parameters.dependsOn }}
   ${{ if ne(parameters.condition, '') }}:
