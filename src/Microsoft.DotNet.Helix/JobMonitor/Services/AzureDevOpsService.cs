@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public async Task<IReadOnlySet<string>> GetProcessedHelixJobNamesAsync(CancellationToken cancellationToken)
         {
             string buildUri = Uri.EscapeDataString($"vstfs:///Build/Build/{_options.BuildId}");
-            JObject data = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs?buildUri={buildUri}&api-version=7.1", cancellationToken: cancellationToken);
+            JObject data = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs?buildUri={buildUri}&includeRunDetails=true&$top=1000&api-version=7.1", cancellationToken: cancellationToken);
             var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (JObject run in (data?["value"] as JArray ?? []).Cast<JObject>())
@@ -74,14 +74,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     continue;
                 }
 
-                string helixJobName = await GetMonitoredHelixJobNameAsync(runId.Value, cancellationToken);
+                string helixJobName = GetMonitoredHelixJobName(run);
                 if (!string.IsNullOrEmpty(helixJobName))
                 {
                     processed.Add(helixJobName);
                     continue;
                 }
 
-                helixJobName = await GetMonitoredHelixJobNameFromResultsAsync(runId.Value, cancellationToken);
+                helixJobName = await GetMonitoredHelixJobNameAsync(runId.Value, cancellationToken);
                 if (!string.IsNullOrEmpty(helixJobName))
                 {
                     processed.Add(helixJobName);
@@ -93,7 +93,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task<string> GetMonitoredHelixJobNameAsync(int testRunId, CancellationToken cancellationToken)
         {
-            JObject run = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}?api-version=7.1", cancellationToken: cancellationToken);
+            JObject run = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}?includeDetails=true&api-version=7.1", cancellationToken: cancellationToken);
+            return GetMonitoredHelixJobName(run);
+        }
+
+        private static string GetMonitoredHelixJobName(JObject run)
+        {
             if (run?["tags"] is JArray tags)
             {
                 foreach (JToken tag in tags)
@@ -107,30 +112,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             return null;
-        }
-
-        private async Task<string> GetMonitoredHelixJobNameFromResultsAsync(int testRunId, CancellationToken cancellationToken)
-        {
-            JObject results = await SendAsync(
-                HttpMethod.Get,
-                $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}/results?$top=1&api-version=7.1-preview.6",
-                cancellationToken: cancellationToken);
-
-            JObject result = (results?["value"] as JArray)?.OfType<JObject>().FirstOrDefault();
-            string comment = result?.Value<string>("comment");
-            if (string.IsNullOrEmpty(comment))
-            {
-                return null;
-            }
-
-            try
-            {
-                return JObject.Parse(comment).Value<string>("HelixJobId");
-            }
-            catch (JsonException)
-            {
-                return null;
-            }
         }
 
         public async Task<int> CreateTestRunAsync(string name, string helixJobName, CancellationToken cancellationToken)

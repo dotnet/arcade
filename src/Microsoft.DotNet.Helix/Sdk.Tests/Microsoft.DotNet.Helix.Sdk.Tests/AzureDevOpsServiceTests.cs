@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -45,7 +46,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         public async Task GetProcessedHelixJobNamesAsync_ReadsCompletedRunsByMonitoredJobTag()
         {
             var responses = new Queue<string>([
-                @"{""value"":[{""id"":10,""state"":""Completed""},{""id"":11,""state"":""InProgress""}]}",
+                @"{""value"":[{""id"":10,""state"":""Completed""},{""id"":11,""state"":""InProgress""},{""id"":12,""state"":""Completed"",""tags"":[{""name"":""MonitoredJob-helix-job-2""}]}]}",
                 @"{""id"":10,""tags"":[{""name"":""MonitoredJob-helix-job-1""}]}"
             ]);
             var handler = new RecordingHttpMessageHandler(_ =>
@@ -57,21 +58,18 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             IReadOnlySet<string> processed = await service.GetProcessedHelixJobNamesAsync(CancellationToken.None);
 
-            Assert.Equal(["helix-job-1"], processed);
+            Assert.Equal(["helix-job-1", "helix-job-2"], processed.OrderBy(static name => name));
             Assert.Equal(2, handler.Requests.Count);
-            Assert.EndsWith("/_apis/test/runs?buildUri=vstfs%3A%2F%2F%2FBuild%2FBuild%2F1403994&api-version=7.1", handler.Requests[0].RequestUri.ToString());
-            Assert.EndsWith("/_apis/test/runs/10?api-version=7.1", handler.Requests[1].RequestUri.ToString());
+            Assert.EndsWith("/_apis/test/runs?buildUri=vstfs%3A%2F%2F%2FBuild%2FBuild%2F1403994&includeRunDetails=true&$top=1000&api-version=7.1", handler.Requests[0].RequestUri.ToString());
+            Assert.EndsWith("/_apis/test/runs/10?includeDetails=true&api-version=7.1", handler.Requests[1].RequestUri.ToString());
         }
 
         [Fact]
-        public async Task GetProcessedHelixJobNamesAsync_ReadsCompletedRunsByUploadedResultMetadata()
+        public async Task GetProcessedHelixJobNamesAsync_DoesNotUseResultMetadataAsFallback()
         {
             var responses = new Queue<string>([
-                @"{""value"":[{""id"":10,""state"":""Completed""},{""id"":11,""state"":""Completed""}]}",
-                @"{""id"":10}",
-                "{\"value\":[{\"comment\":\"{\\\"HelixJobId\\\":\\\"helix-job-from-result\\\",\\\"HelixWorkItemName\\\":\\\"work-item\\\"}\"}]}",
-                @"{""id"":11}",
-                @"{""value"":[{""comment"":""not json""}]}"
+                @"{""value"":[{""id"":10,""state"":""Completed""}]}",
+                "{\"id\":10,\"comment\":\"{\\\"HelixJobId\\\":\\\"helix-job-from-result\\\",\\\"HelixWorkItemName\\\":\\\"work-item\\\"}\"}"
             ]);
             var handler = new RecordingHttpMessageHandler(_ =>
                 new HttpResponseMessage(HttpStatusCode.OK)
@@ -82,12 +80,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             IReadOnlySet<string> processed = await service.GetProcessedHelixJobNamesAsync(CancellationToken.None);
 
-            Assert.Equal(["helix-job-from-result"], processed);
-            Assert.Equal(5, handler.Requests.Count);
-            Assert.EndsWith("/_apis/test/runs/10?api-version=7.1", handler.Requests[1].RequestUri.ToString());
-            Assert.EndsWith("/_apis/test/runs/10/results?$top=1&api-version=7.1-preview.6", handler.Requests[2].RequestUri.ToString());
-            Assert.EndsWith("/_apis/test/runs/11?api-version=7.1", handler.Requests[3].RequestUri.ToString());
-            Assert.EndsWith("/_apis/test/runs/11/results?$top=1&api-version=7.1-preview.6", handler.Requests[4].RequestUri.ToString());
+            Assert.Empty(processed);
+            Assert.Equal(2, handler.Requests.Count);
+            Assert.EndsWith("/_apis/test/runs/10?includeDetails=true&api-version=7.1", handler.Requests[1].RequestUri.ToString());
         }
 
         [Fact]
