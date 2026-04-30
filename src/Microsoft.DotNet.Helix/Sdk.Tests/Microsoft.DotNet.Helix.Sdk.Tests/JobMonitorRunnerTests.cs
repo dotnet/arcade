@@ -512,19 +512,32 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Contains("helix-windows", azdo.UploadedJobNames);
         }
 
-        /// <summary>
-        /// A rerun of an AzDO stage can submit brand-new Helix jobs. If Helix exposes all work
-        /// items with terminal exit codes before the job summary gets a Finished timestamp, the
-        /// monitor should process those new jobs immediately rather than waiting for timeout.
-        /// </summary>
         [Fact]
-        public async Task StageRerun_NewHelixJobsWithTerminalWorkItems_AreProcessed()
+        public async Task StageRerun_UploadsNewHelixWorkItemsWithoutReuploadingPreviousWorkItems()
         {
             var azdo = new FakeAzureDevOpsService();
-            azdo.WithPreviouslyProcessedJob("old-helix-linux");
-            azdo.WithPreviouslyProcessedJob("old-helix-windows");
 
-            var helix = new FakeHelixService();
+            azdo.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "inProgress"),
+                MonitorJob(parentId: "stage-test"),
+                PipelineJob("Linux Build_Debug", "completed", "succeeded", parentId: "stage-test"),
+                PipelineJob("Windows_NT Build_Release", "completed", "succeeded", parentId: "stage-test"));
+
+            var helix1 = new FakeHelixService();
+            helix1.AddResponse(
+                jobs:
+                [
+                    HelixJob("old-helix-linux", "finished", stageName: "Test"),
+                    HelixJob("old-helix-windows", "finished", stageName: "Test"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["old-helix-linux"] = PassFail(passed: ["common-work-item"]),
+                    ["old-helix-windows"] = PassFail(passed: ["common-work-item"]),
+                });
+
+            var runner1 = CreateRunner(azdo, helix1, stageName: "Test");
+            int exitCode1 = await runner1.RunAsync(CancellationToken.None);
 
             azdo.AddTimelineResponse(
                 StageRecord("Test", "stage-test", "inProgress"),
@@ -532,7 +545,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 PipelineJob("Linux Build_Debug", "completed", "succeededWithIssues", attempt: 2, parentId: "stage-test"),
                 PipelineJob("Windows_NT Build_Release", "completed", "succeededWithIssues", attempt: 2, parentId: "stage-test"));
 
-            helix.AddResponse(
+            var helix2 = new FakeHelixService();
+            helix2.AddResponse(
                 jobs:
                 [
                     HelixJob("old-helix-linux", "finished", stageName: "Test"),
@@ -542,20 +556,34 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 ],
                 passFailByJob: new(StringComparer.OrdinalIgnoreCase)
                 {
-                    ["old-helix-linux"] = PassFail(passed: ["old-linux-wi"]),
-                    ["old-helix-windows"] = PassFail(passed: ["old-windows-wi"]),
-                    ["new-helix-linux"] = PassFail(passed: ["new-linux-pass"], failed: ["new-linux-fail"]),
-                    ["new-helix-windows"] = PassFail(passed: ["new-windows-pass-1", "new-windows-pass-2"]),
+                    ["old-helix-linux"] = PassFail(passed: ["common-work-item"]),
+                    ["old-helix-windows"] = PassFail(passed: ["common-work-item"]),
+                    ["new-helix-linux"] = PassFail(passed: ["common-work-item", "linux-only-work-item"]),
+                    ["new-helix-windows"] = PassFail(passed: ["common-work-item", "windows-only-work-item"]),
                 });
 
-            var runner = CreateRunner(azdo, helix, stageName: "Test", attempt: 2);
-            int exitCode = await runner.RunAsync(CancellationToken.None);
+            var runner2 = CreateRunner(azdo, helix2, stageName: "Test", attempt: 2);
+            int exitCode2 = await runner2.RunAsync(CancellationToken.None);
 
-            Assert.Equal(1, exitCode);
-            Assert.Equal(["new-helix-linux", "new-helix-windows"], azdo.UploadedJobNames);
-            Assert.Equal(2, azdo.CreatedTestRuns.Count);
-            Assert.Equal(2, azdo.CompletedTestRunIds.Count);
-            Assert.Equal(1, azdo.TimelineCallCount);
+            Assert.Equal(0, exitCode1);
+            Assert.Equal(0, exitCode2);
+            Assert.Equal(
+                ["old-helix-linux", "old-helix-windows", "new-helix-linux", "new-helix-windows"],
+                azdo.UploadedJobNames);
+
+            var uploadedWorkItems = azdo.UploadedResultsByRunId
+                .Values
+                .SelectMany(results => results)
+                .Select(result => $"{result.JobName}/{result.WorkItemName}")
+                .ToList();
+
+            Assert.Equal(uploadedWorkItems.Count, uploadedWorkItems.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+            Assert.Contains("old-helix-linux/common-work-item", uploadedWorkItems);
+            Assert.Contains("old-helix-windows/common-work-item", uploadedWorkItems);
+            Assert.Contains("new-helix-linux/common-work-item", uploadedWorkItems);
+            Assert.Contains("new-helix-linux/linux-only-work-item", uploadedWorkItems);
+            Assert.Contains("new-helix-windows/common-work-item", uploadedWorkItems);
+            Assert.Contains("new-helix-windows/windows-only-work-item", uploadedWorkItems);
         }
 
         /// <summary>
