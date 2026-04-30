@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         private int _getJobsCallCount;
 
         /// <summary>
-        /// Adds a Helix response. Each call to <see cref="GetLatestJobsAsync"/> returns the next
+        /// Adds a Helix response. Each call to <see cref="GetJobsForBuildAsync"/> returns the next
         /// response in order. Once all responses are consumed, the last one is repeated.
         /// <see cref="ListWorkItemsAsync"/> and <see cref="DownloadTestResultsAsync"/> use
         /// the same current response for pass/fail and result data.
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             return this;
         }
 
-        /// <summary>Number of times <see cref="GetLatestJobsAsync"/> has been called.</summary>
+        /// <summary>Number of times <see cref="GetJobsForBuildAsync"/> has been called.</summary>
         public int GetJobsCallCount => _getJobsCallCount;
 
         private HelixSnapshot CurrentSnapshot
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             }
         }
 
-        public Task<IReadOnlyList<HelixJobInfo>> GetLatestJobsAsync(CancellationToken cancellationToken)
+        public Task<IReadOnlyList<HelixJobInfo>> GetJobsForBuildAsync(string organization, string repositoryName, int? prNumber, string buildId, CancellationToken cancellationToken)
         {
             if (_responses.Count == 0)
             {
@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         }
 
         public Task<IReadOnlyList<WorkItemTestResults>> DownloadTestResultsAsync(
-            string jobName, IReadOnlyCollection<string> workItemNames, CancellationToken cancellationToken)
+            string jobName, IReadOnlyCollection<string> workItemNames, string workingDirectory, CancellationToken cancellationToken)
         {
             if (_downloadFailureJobs.Contains(jobName))
             {
@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         /// Configures the result of a resubmission. When <see cref="ResubmitWorkItemsAsync"/>
         /// is called for <paramref name="originalJobName"/>, a new <see cref="HelixJobInfo"/> with
         /// <paramref name="newJobName"/> is returned. The new job will appear in subsequent
-        /// <see cref="GetLatestJobsAsync"/> calls via the responses already configured.
+        /// <see cref="GetJobsForBuildAsync"/> calls via the responses already configured.
         /// </summary>
         private readonly Dictionary<string, string> _resubmissionNewJobNames = new(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _nullResubmissions = new(StringComparer.OrdinalIgnoreCase);

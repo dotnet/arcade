@@ -17,7 +17,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// <summary>
         /// Returns Helix jobs associated with the current build/stage.
         /// </summary>
-        Task<IReadOnlyList<HelixJobInfo>> GetLatestJobsAsync(CancellationToken cancellationToken);
+        Task<IReadOnlyList<HelixJobInfo>> GetJobsForBuildAsync(
+            string organization,
+            string repositoryName,
+            int? prNumber,
+            string buildId,
+            CancellationToken cancellationToken);
 
         /// <summary>
         /// Downloads test result files for a completed Helix job's work items
@@ -26,7 +31,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         Task<IReadOnlyList<WorkItemTestResults>> DownloadTestResultsAsync(
             string jobName,
             IReadOnlyCollection<string> workItemNames,
-            CancellationToken cancellationToken);
+            string workingDirectory, CancellationToken cancellationToken);
 
         Task<IReadOnlyCollection<WorkItemSummary>> ListWorkItemsAsync(
             string jobName,

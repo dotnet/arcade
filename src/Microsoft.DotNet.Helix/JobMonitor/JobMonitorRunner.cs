@@ -7,10 +7,10 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Helix.Client;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.JobMonitor
 {
@@ -42,8 +42,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             : this(options,
                   logger,
                   new AzureDevOpsService(options, logger),
-                  new HelixService(options, logger),
-                  null)
+                  new HelixService(string.IsNullOrEmpty(options.HelixAccessToken)
+                      ? ApiFactory.GetAnonymous(options.HelixBaseUri)
+                      : ApiFactory.GetAuthenticated(options.HelixBaseUri, options.HelixAccessToken),
+                  logger),
+                  delayFunc: null)
         {
         }
 
@@ -128,7 +131,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 cancellationToken.ThrowIfCancellationRequested();
 
                 IReadOnlyList<AzureDevOpsTimelineRecord> timelineRecords = await _azdo.GetTimelineRecordsAsync(cancellationToken);
-                IReadOnlyList<HelixJobInfo> associatedJobsWithBuild = jobsForFirstPoll ?? await _helix.GetLatestJobsAsync(cancellationToken);
+                IReadOnlyList<HelixJobInfo> associatedJobsWithBuild = jobsForFirstPoll ?? await _helix.GetJobsForBuildAsync(
+                    _options.Organization,
+                    _options.RepositoryName,
+                    _options.PrNumber,
+                    _options.BuildId,
+                    cancellationToken);
                 jobsForFirstPoll = null;
 
                 // When the monitor is scoped to a single stage, drop timeline records and Helix jobs
@@ -255,8 +263,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 {
                     IReadOnlyList<WorkItemTestResults> downloadedFiles = await _helix.DownloadTestResultsAsync(
                         helixJob.JobName,
-                        [..workItems.Select(w => w.Name)],
-                        cancellationToken);
+                        [.. workItems.Select(w => w.Name)],
+                        _options.WorkingDirectory, cancellationToken);
 
                     await _azdo.UploadTestResultsAsync(testRunId, downloadedFiles, cancellationToken);
                 }
@@ -280,7 +288,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             // This snapshot is taken when the monitor starts. Failed latest work items here are
             // not retried again until the monitor starts again, even if they fail during this run.
-            IReadOnlyList<HelixJobInfo> allJobs = await _helix.GetLatestJobsAsync(cancellationToken);
+            IReadOnlyList<HelixJobInfo> allJobs = await _helix.GetJobsForBuildAsync(_options.Organization, _options.RepositoryName, _options.PrNumber, _options.BuildId, cancellationToken);
             IReadOnlyList<HelixJobInfo> scopedJobs =
             [
                 ..allJobs.Where(IsHelixJobInScope)

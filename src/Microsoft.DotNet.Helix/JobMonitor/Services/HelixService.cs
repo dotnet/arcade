@@ -24,26 +24,27 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 {
     internal sealed class HelixService : IHelixService
     {
-        private readonly JobMonitorOptions _options;
         private readonly ILogger _logger;
         private readonly IHelixApi _helixApi;
 
-        public HelixService(JobMonitorOptions options, ILogger logger)
+        public HelixService(IHelixApi helixApi, ILogger logger)
         {
-            _options = options;
             _logger = logger;
-            _helixApi = string.IsNullOrEmpty(options.HelixAccessToken)
-                ? ApiFactory.GetAnonymous(options.HelixBaseUri)
-                : ApiFactory.GetAuthenticated(options.HelixBaseUri, options.HelixAccessToken);
+            _helixApi = helixApi;
         }
 
-        public async Task<IReadOnlyList<HelixJobInfo>> GetLatestJobsAsync(CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<HelixJobInfo>> GetJobsForBuildAsync(
+            string organization,
+            string repositoryName,
+            int? prNumber,
+            string buildId,
+            CancellationToken cancellationToken)
         {
             // Build the Helix source filter. For PR builds, use the PR merge ref.
             // For CI builds without a PR, use the branch-based source.
-            string source = _options.PrNumber.HasValue
-                ? $"pr/public/{_options.Organization}/{_options.RepositoryName}/refs/pull/{_options.PrNumber}/merge"
-                : $"official/public/{_options.Organization}/{_options.RepositoryName}";
+            string source = prNumber.HasValue
+                ? $"pr/public/{organization}/{repositoryName}/refs/pull/{prNumber}/merge"
+                : $"official/public/{organization}/{repositoryName}";
 
             IImmutableList<JobSummary> jobs = await RetryHelper.RetryAsync(
                 async () => await _helixApi.Job.ListAsync(source: source),
@@ -52,7 +53,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return
             [
                 ..jobs
-                    .Where(j => ((JObject)j.Properties).TryGetValue("BuildId", out JToken buildId) && buildId?.ToString() == _options.BuildId)
+                    .Where(j => ((JObject)j.Properties).TryGetValue("BuildId", out JToken id) && buildId == id.ToString())
                     .Select(j => new HelixJobInfo(j))
              ];
         }
@@ -60,10 +61,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public async Task<IReadOnlyList<WorkItemTestResults>> DownloadTestResultsAsync(
             string jobName,
             IReadOnlyCollection<string> workItemNames,
+            string workingDirectory,
             CancellationToken cancellationToken)
         {
             List<WorkItemTestResults> downloadedFiles = [];
-            string outputDirectory = Path.Combine(_options.WorkingDirectory, SanitizeDirName(jobName));
+            string outputDirectory = Path.Combine(workingDirectory, SanitizeDirName(jobName));
             Directory.CreateDirectory(outputDirectory);
 
             JobResultsUri resultsUri = await RetryHelper.RetryAsync(() => _helixApi.Job.ResultsAsync(jobName), cancellationToken);
@@ -110,36 +112,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             return downloadedFiles;
-        }
-
-        private static string GetTestRunNameFromJob(JobSummary helixJob)
-        {
-            if (helixJob.Properties is JObject properties
-                && properties.TryGetValue("TestRunName", out JToken testRunName))
-            {
-                string value = testRunName?.ToString();
-                if (!string.IsNullOrEmpty(value))
-                {
-                    return value;
-                }
-            }
-
-            return helixJob.Name;
-        }
-
-        private static string GetStringPropertyFromJob(JobSummary helixJob, string propertyName)
-        {
-            if (helixJob.Properties is JObject properties
-                && properties.TryGetValue(propertyName, out JToken token))
-            {
-                string value = token?.ToString();
-                if (!string.IsNullOrEmpty(value))
-                {
-                    return value;
-                }
-            }
-
-            return null;
         }
 
         private static BlobClient CreateBlobClient(string fileLink, string resultsSas)
