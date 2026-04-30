@@ -229,12 +229,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             bool uploadTestResults,
             CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Processing completed job {jobName}...", helixJob.JobName);
-
             if (!uploadTestResults && _workItemOutcomeJobs.Contains(helixJob.JobName))
             {
                 return;
             }
+
+            _logger.LogInformation("Job {jobName} completed. Processing test results...", helixJob.JobName);
 
             IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(helixJob.JobName, cancellationToken);
 
@@ -359,7 +359,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             ];
         }
 
-        private static int GetHelixJobLineageDepth(HelixJobInfo job, IReadOnlyDictionary<string, HelixJobInfo> jobByName)
+        private static int GetHelixJobLineageDepth(HelixJobInfo job, Dictionary<string, HelixJobInfo> jobByName)
         {
             int depth = 0;
             var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
