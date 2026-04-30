@@ -25,7 +25,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         // attached to the test run when it is created. This lets us look up which Helix jobs
         // we have already processed without encoding the Helix job name into the run name.
         private const string MonitoredJobTagPrefix = "MonitoredJob-";
-        private const string MonitoredJobCommentPrefix = "HelixJobMonitor:MonitoredJob=";
 
         private readonly JobMonitorOptions _options;
         private readonly ILogger _logger;
@@ -79,6 +78,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 if (!string.IsNullOrEmpty(helixJobName))
                 {
                     processed.Add(helixJobName);
+                    continue;
+                }
+
+                helixJobName = await GetMonitoredHelixJobNameFromResultsAsync(runId.Value, cancellationToken);
+                if (!string.IsNullOrEmpty(helixJobName))
+                {
+                    processed.Add(helixJobName);
                 }
             }
 
@@ -100,10 +106,31 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
             }
 
-            string comment = run.Value<string>("comment");
-            return !string.IsNullOrEmpty(comment) && comment.StartsWith(MonitoredJobCommentPrefix, StringComparison.OrdinalIgnoreCase)
-                ? comment.Substring(MonitoredJobCommentPrefix.Length)
-                : null;
+            return null;
+        }
+
+        private async Task<string> GetMonitoredHelixJobNameFromResultsAsync(int testRunId, CancellationToken cancellationToken)
+        {
+            JObject results = await SendAsync(
+                HttpMethod.Get,
+                $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}/results?$top=1&api-version=7.1-preview.6",
+                cancellationToken: cancellationToken);
+
+            JObject result = (results?["value"] as JArray)?.OfType<JObject>().FirstOrDefault();
+            string comment = result?.Value<string>("comment");
+            if (string.IsNullOrEmpty(comment))
+            {
+                return null;
+            }
+
+            try
+            {
+                return JObject.Parse(comment).Value<string>("HelixJobId");
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
         }
 
         public async Task<int> CreateTestRunAsync(string name, string helixJobName, CancellationToken cancellationToken)
@@ -114,7 +141,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 {
                     ["automated"] = true,
                     ["build"] = new JObject { ["id"] = _options.BuildId },
-                    ["comment"] = MonitoredJobCommentPrefix + helixJobName,
                     ["name"] = name,
                     ["state"] = "InProgress",
                     ["tags"] = new JArray { new JObject { ["name"] = MonitoredJobTagPrefix + helixJobName } },
@@ -126,7 +152,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public async Task CompleteTestRunAsync(int testRunId, CancellationToken cancellationToken)
         {
             await SendAsync(new HttpMethod("PATCH"),
-                $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}?api-version=5.0",
+                $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}?api-version=7.1",
                 new JObject { ["state"] = "Completed" },
                 cancellationToken: cancellationToken);
         }

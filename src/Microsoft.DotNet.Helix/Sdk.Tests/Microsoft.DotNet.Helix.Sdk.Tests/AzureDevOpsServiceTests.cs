@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
     public class AzureDevOpsServiceTests
     {
         [Fact]
-        public async Task CreateTestRunAsync_PersistsHelixJobMarker()
+        public async Task CreateTestRunAsync_PersistsHelixJobTag()
         {
             var handler = new RecordingHttpMessageHandler(_ =>
                 new HttpResponseMessage(HttpStatusCode.OK)
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal("Test Run", body.Value<string>("name"));
             Assert.Equal("InProgress", body.Value<string>("state"));
             Assert.Equal("1403994", body["build"]?.Value<string>("id"));
-            Assert.Equal("HelixJobMonitor:MonitoredJob=helix-job-1", body.Value<string>("comment"));
+            Assert.Null(body.Value<string>("comment"));
             Assert.Equal("MonitoredJob-helix-job-1", body["tags"]?[0]?.Value<string>("name"));
         }
 
@@ -45,9 +45,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         public async Task GetProcessedHelixJobNamesAsync_ReadsCompletedRunsByMonitoredJobTag()
         {
             var responses = new Queue<string>([
-                @"{""value"":[{""id"":10,""state"":""Completed""},{""id"":11,""state"":""InProgress""},{""id"":12,""state"":""Completed""}]}",
-                @"{""id"":10,""tags"":[{""name"":""MonitoredJob-helix-job-1""}]}",
-                @"{""id"":12,""tags"":[{""name"":""Other""}]}"
+                @"{""value"":[{""id"":10,""state"":""Completed""},{""id"":11,""state"":""InProgress""}]}",
+                @"{""id"":10,""tags"":[{""name"":""MonitoredJob-helix-job-1""}]}"
             ]);
             var handler = new RecordingHttpMessageHandler(_ =>
                 new HttpResponseMessage(HttpStatusCode.OK)
@@ -59,19 +58,20 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             IReadOnlySet<string> processed = await service.GetProcessedHelixJobNamesAsync(CancellationToken.None);
 
             Assert.Equal(["helix-job-1"], processed);
-            Assert.Equal(3, handler.Requests.Count);
+            Assert.Equal(2, handler.Requests.Count);
             Assert.EndsWith("/_apis/test/runs?buildUri=vstfs%3A%2F%2F%2FBuild%2FBuild%2F1403994&api-version=7.1", handler.Requests[0].RequestUri.ToString());
             Assert.EndsWith("/_apis/test/runs/10?api-version=7.1", handler.Requests[1].RequestUri.ToString());
-            Assert.EndsWith("/_apis/test/runs/12?api-version=7.1", handler.Requests[2].RequestUri.ToString());
         }
 
         [Fact]
-        public async Task GetProcessedHelixJobNamesAsync_ReadsCompletedRunsByMonitoredJobComment()
+        public async Task GetProcessedHelixJobNamesAsync_ReadsCompletedRunsByUploadedResultMetadata()
         {
             var responses = new Queue<string>([
                 @"{""value"":[{""id"":10,""state"":""Completed""},{""id"":11,""state"":""Completed""}]}",
-                @"{""id"":10,""comment"":""HelixJobMonitor:MonitoredJob=helix-job-from-comment""}",
-                @"{""id"":11,""comment"":""not a monitor run""}"
+                @"{""id"":10}",
+                "{\"value\":[{\"comment\":\"{\\\"HelixJobId\\\":\\\"helix-job-from-result\\\",\\\"HelixWorkItemName\\\":\\\"work-item\\\"}\"}]}",
+                @"{""id"":11}",
+                @"{""value"":[{""comment"":""not json""}]}"
             ]);
             var handler = new RecordingHttpMessageHandler(_ =>
                 new HttpResponseMessage(HttpStatusCode.OK)
@@ -82,7 +82,32 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             IReadOnlySet<string> processed = await service.GetProcessedHelixJobNamesAsync(CancellationToken.None);
 
-            Assert.Equal(["helix-job-from-comment"], processed);
+            Assert.Equal(["helix-job-from-result"], processed);
+            Assert.Equal(5, handler.Requests.Count);
+            Assert.EndsWith("/_apis/test/runs/10?api-version=7.1", handler.Requests[1].RequestUri.ToString());
+            Assert.EndsWith("/_apis/test/runs/10/results?$top=1&api-version=7.1-preview.6", handler.Requests[2].RequestUri.ToString());
+            Assert.EndsWith("/_apis/test/runs/11?api-version=7.1", handler.Requests[3].RequestUri.ToString());
+            Assert.EndsWith("/_apis/test/runs/11/results?$top=1&api-version=7.1-preview.6", handler.Requests[4].RequestUri.ToString());
+        }
+
+        [Fact]
+        public async Task CompleteTestRunAsync_UsesTestRunsApiVersionThatSupportsTags()
+        {
+            var handler = new RecordingHttpMessageHandler(_ =>
+                new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{}")
+                });
+            using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
+
+            await service.CompleteTestRunAsync(123, CancellationToken.None);
+
+            HttpRequestMessage request = Assert.Single(handler.Requests);
+            Assert.Equal(new HttpMethod("PATCH"), request.Method);
+            Assert.Equal("https://dev.azure.com/dnceng-public/public/_apis/test/runs/123?api-version=7.1", request.RequestUri.ToString());
+
+            JObject body = JObject.Parse(Assert.Single(handler.Bodies));
+            Assert.Equal("Completed", body.Value<string>("state"));
         }
 
         private static JobMonitorOptions CreateOptions()
