@@ -115,8 +115,7 @@ parameters:
 jobs:
 - job: ${{ parameters.jobName }}
   displayName: Monitor Helix Jobs
-  ${{ if gt(parameters.timeoutInMinutes, 0) }}:
-    timeoutInMinutes: $[ add(parameters.timeoutInMinutes, 3) ]
+  timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
   ${{ if ne(length(parameters.dependsOn), 0) }}:
     dependsOn: ${{ parameters.dependsOn }}
   ${{ if ne(parameters.condition, '') }}:
@@ -206,7 +205,7 @@ jobs:
       toolArgs=(
         --helix-base-uri           '${{ parameters.helixBaseUri }}'
         --polling-interval-seconds '${{ parameters.pollingIntervalSeconds }}'
-        --max-wait-minutes         '${{ parameters.timeoutInMinutes }}'
+        --max-wait-minutes         "$((${{ parameters.timeoutInMinutes }} - 2))" # Set the tool's timeout slightly lower than the Azure DevOps job timeout to allow it to exit gracefully.
         --job-monitor-name         '${{ parameters.jobMonitorName }}'
         --attempt                  '$(System.JobAttempt)'
         --monitor-all-stages       '${{ parameters.monitorAllStages }}'
