@@ -125,6 +125,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             int processedHelixJobCount = 0;
             int allHelixJobCount = 0;
             int completedJobsCount = -1;
+            DateTime lastPrintTime = DateTime.UtcNow;
 
             while (true)
             {
@@ -160,11 +161,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     ..OrderHelixJobsOldToNew(associatedJobsWithBuild.Where(j => j.IsCompleted))
                 ];
 
-                if (allHelixJobCount != associatedJobsWithBuild.Count || completedJobsCount != completedJobs.Count)
+                if (allHelixJobCount != associatedJobsWithBuild.Count
+                    || completedJobsCount != completedJobs.Count
+                    || (DateTime.UtcNow - lastPrintTime) >= TimeSpan.FromMinutes(5))
                 {
-                    _logger.LogInformation("{CompletedCount}/{TotalCount} Helix jobs finished", completedJobs.Count, associatedJobsWithBuild.Count);
+                    _logger.LogInformation("Processed {ProcessedCount} / Completed {CompletedCount} / Total {TotalCount} Helix jobs",
+                        processedHelixJobCount,
+                        completedJobs.Count,
+                        associatedJobsWithBuild.Count);
                     allHelixJobCount = associatedJobsWithBuild.Count;
                     completedJobsCount = completedJobs.Count;
+                    lastPrintTime = DateTime.UtcNow;
                 }
 
                 foreach (HelixJobInfo job in completedJobs.Where(j => !processedHelixJobs.Contains(j.JobName)))
