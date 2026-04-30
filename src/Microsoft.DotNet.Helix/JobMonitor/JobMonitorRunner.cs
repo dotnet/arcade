@@ -161,10 +161,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     || completedJobsCount != completedJobs.Count
                     || (DateTime.UtcNow - lastPrintTime) >= TimeSpan.FromMinutes(5))
                 {
-                    _logger.LogInformation("ℹ️ Helix jobs: {ProcessedCount} processed / {CompletedCount} completed / {TotalCount} total",
+                    _logger.LogInformation("ℹ️ Helix jobs: {ProcessedCount} processed / {CompletedCount} completed / {Running} running",
                         processedHelixJobCount,
                         completedJobs.Count,
-                        associatedJobsWithBuild.Count);
+                        associatedJobsWithBuild.Count - completedJobs.Count);
                     allHelixJobCount = associatedJobsWithBuild.Count;
                     completedJobsCount = completedJobs.Count;
                     lastPrintTime = DateTime.UtcNow;
@@ -310,10 +310,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 if (failedWorkItems.Count > 0)
                 {
+                    var workItemsToLog = failedWorkItems.Select(wi => wi.Name);
+                    
+                    if (failedWorkItems.Count > 20)
+                    {
+                        workItemsToLog = workItemsToLog.Take(19).Append((failedWorkItems.Count - 19) + " more ...");
+                    }
+
                     _logger.LogInformation("Resubmitting {Count} failed work item(s) for job {JobName}: {WorkItems}",
                         failedWorkItems.Count,
                         completedJob.JobName,
-                        string.Join(separator, failedWorkItems.Select(wi => wi.Name)));
+                        string.Join(separator, workItemsToLog));
 
                     HelixJobInfo resubmittedJob = await _helix.ResubmitWorkItemsAsync(completedJob.JobName, failedWorkItems, cancellationToken);
                     if (resubmittedJob != null)
@@ -409,11 +416,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             _logger.LogError(
-                "Helix Job Monitor timed out after {TimeoutMinutes} minute(s) ({Timeout}). {UnfinishedCount} Helix job(s) had not finished: {UnfinishedJobs}",
+                "Helix Job Monitor timed out after {TimeoutMinutes} minute(s) ({Timeout}). {UnfinishedCount} Helix job(s) had not finished: {UnfinishedJobs}" + Environment.NewLine,
                 timeout.TotalMinutes,
                 timeout,
                 unfinishedJobs.Count,
-                string.Join(", ", unfinishedJobs.Select(j => $"{j.JobName} (status: {j.Status})")));
+                string.Join(Environment.NewLine + "- ", unfinishedJobs.Select(j => j.DetailsUri)));
         }
 
         public void Dispose()
