@@ -4,13 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure;
-using Azure.Storage.Blobs;
+using Microsoft.Arcade.Common;
 using Microsoft.DotNet.Helix.Client;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
@@ -18,7 +15,6 @@ using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Azure.Storage.Blobs.Models;
 
 namespace Microsoft.DotNet.Helix.JobMonitor
 {
@@ -26,11 +22,24 @@ namespace Microsoft.DotNet.Helix.JobMonitor
     {
         private readonly ILogger _logger;
         private readonly IHelixApi _helixApi;
+        private readonly IBlobClientFactory _blobClientFactory;
+        private readonly IFileSystem _fileSystem;
 
         public HelixService(IHelixApi helixApi, ILogger logger)
+            : this(helixApi, logger, new AzureBlobClientFactory(), new FileSystem())
         {
-            _logger = logger;
-            _helixApi = helixApi;
+        }
+
+        internal HelixService(
+            IHelixApi helixApi,
+            ILogger logger,
+            IBlobClientFactory blobClientFactory,
+            IFileSystem fileSystem)
+        {
+            _helixApi = helixApi ?? throw new ArgumentNullException(nameof(helixApi));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _blobClientFactory = blobClientFactory ?? throw new ArgumentNullException(nameof(blobClientFactory));
+            _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
         }
 
         public async Task<IReadOnlyList<HelixJobInfo>> GetJobsForBuildAsync(
@@ -53,7 +62,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return
             [
                 ..jobs
-                    .Where(j => ((JObject)j.Properties).TryGetValue("BuildId", out JToken id) && buildId == id.Value<string>())
+                    .Where(j => j.Properties is JObject properties
+                        && properties.TryGetValue("BuildId", out JToken id)
+                        && buildId == id.Value<string>())
                     .Select(j => new HelixJobInfo(j))
              ];
         }
@@ -65,8 +76,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             CancellationToken cancellationToken)
         {
             List<WorkItemTestResults> downloadedFiles = [];
-            string outputDirectory = Path.Combine(workingDirectory, SanitizeDirName(jobName));
-            Directory.CreateDirectory(outputDirectory);
+            string outputDirectory = _fileSystem.PathCombine(workingDirectory, SanitizeDirName(jobName));
+            _fileSystem.CreateDirectory(outputDirectory);
 
             JobResultsUri resultsUri = await RetryHelper.RetryAsync(() => _helixApi.Job.ResultsAsync(jobName), cancellationToken);
 
@@ -82,23 +93,23 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     continue;
                 }
 
-                string workItemDirectory = Path.Combine(outputDirectory, SanitizeDirName(workItemName));
-                Directory.CreateDirectory(workItemDirectory);
+                string workItemDirectory = _fileSystem.PathCombine(outputDirectory, SanitizeDirName(workItemName));
+                _fileSystem.CreateDirectory(workItemDirectory);
 
                 List<string> workItemFiles = [];
                 foreach (UploadedFile file in availableFiles)
                 {
-                    string relativePath = file.Name.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
-                    string destinationFile = Path.Combine(workItemDirectory, relativePath);
-                    string directory = Path.GetDirectoryName(destinationFile);
+                    string relativePath = NormalizeUploadedFilePath(file.Name);
+                    string destinationFile = _fileSystem.PathCombine(workItemDirectory, relativePath);
+                    string directory = _fileSystem.GetDirectoryName(destinationFile);
                     if (!string.IsNullOrEmpty(directory))
                     {
-                        Directory.CreateDirectory(directory);
+                        _fileSystem.CreateDirectory(directory);
                     }
 
                     try
                     {
-                        BlobClient blobClient = CreateBlobClient(file.Link, resultsUri.ResultsUriRSAS);
+                        IBlobClient blobClient = _blobClientFactory.CreateBlobClient(file.Link, resultsUri.ResultsUriRSAS);
                         await blobClient.DownloadToAsync(destinationFile, cancellationToken);
                         workItemFiles.Add(destinationFile);
                     }
@@ -114,25 +125,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return downloadedFiles;
         }
 
-        private static BlobClient CreateBlobClient(string fileLink, string resultsSas)
-        {
-            var options = new BlobClientOptions();
-            options.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);
-            if (string.IsNullOrEmpty(resultsSas))
-            {
-                return new BlobClient(new Uri(fileLink), options);
-            }
-
-            string strippedUri = fileLink.Contains('?') ? fileLink.Substring(0, fileLink.LastIndexOf('?', StringComparison.Ordinal)) : fileLink;
-            return new BlobClient(new Uri(strippedUri), new AzureSasCredential(resultsSas), options);
-        }
-
         private static bool LooksLikeTestResultFile(string path)
             => LocalTestResultsReader.LooksLikeTestResultFile(path);
 
+        private static string NormalizeUploadedFilePath(string path)
+            => path.Replace('\\', System.IO.Path.DirectorySeparatorChar).Replace('/', System.IO.Path.DirectorySeparatorChar);
+
         private static string SanitizeDirName(string value)
         {
-            foreach (char invalidChar in Path.GetInvalidFileNameChars())
+            foreach (char invalidChar in System.IO.Path.GetInvalidFileNameChars())
             {
                 value = value.Replace(invalidChar, '-');
             }
@@ -178,11 +179,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             string originalJobListJson;
             try
             {
-                BlobClient jobListBlob = CreateBlobClient(details.JobList, resultsSas: null);
-                Response<BlobDownloadResult> download = await RetryHelper.RetryAsync(
-                    () => jobListBlob.DownloadContentAsync(cancellationToken),
+                originalJobListJson = await RetryHelper.RetryAsync(
+                    async () =>
+                    {
+                        IBlobClient jobListBlob = _blobClientFactory.CreateBlobClient(details.JobList);
+                        BinaryData content = await jobListBlob.DownloadContentAsync(cancellationToken);
+                        return content.ToString();
+                    },
                     cancellationToken);
-                originalJobListJson = download.Value.Content.ToString();
             }
             catch (Exception ex)
             {
@@ -231,11 +235,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             string blobName = $"job-list-{Guid.NewGuid():N}.json";
             var containerUri = new Uri($"https://{container.StorageAccountName}.blob.core.windows.net/{container.ContainerName}");
-            var containerClient = new BlobContainerClient(containerUri, new AzureSasCredential(container.WriteToken));
-            BlobClient jobListBlobClient = containerClient.GetBlobClient(blobName);
+            IBlobClient jobListBlobClient = _blobClientFactory.CreateBlobClient(containerUri, blobName, container.WriteToken);
 
             await RetryHelper.RetryAsync(
-                () => jobListBlobClient.UploadAsync(BinaryData.FromString(filteredJobListJson), overwrite: true, cancellationToken),
+                async () =>
+                {
+                    await jobListBlobClient.UploadAsync(BinaryData.FromString(filteredJobListJson), overwrite: true, cancellationToken);
+                    return true;
+                },
                 cancellationToken);
 
             string newJobListUri = AppendSasIfPresent(jobListBlobClient.Uri, container.ReadToken);
