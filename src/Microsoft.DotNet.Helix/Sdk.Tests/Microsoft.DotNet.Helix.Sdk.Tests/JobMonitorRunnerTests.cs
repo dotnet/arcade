@@ -2396,7 +2396,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public async Task CompletedHelixJob_LogsWorkItemConsoleLinks()
+        public async Task CompletedHelixJob_LogsFailedWorkItemConsoleLinks()
         {
             var azdo = new FakeAzureDevOpsService();
             var helix = new FakeHelixService();
@@ -2423,10 +2423,16 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             int exitCode = await runner.RunAsync(CancellationToken.None);
 
             Assert.Equal(1, exitCode);
+            Assert.DoesNotContain(logger.Messages, message =>
+                message.Contains("wi-pass", StringComparison.Ordinal)
+                && message.Contains("https://helix.example/wi-pass/console", StringComparison.Ordinal));
             Assert.Contains(logger.Messages, message =>
-                message.Contains("Work item 'wi-pass' in job 'helix-linux' completed (Finished, exit code 0). Console: https://helix.example/wi-pass/console", StringComparison.Ordinal));
+                message.Contains("Work item 'wi-fail' in job 'helix-linux' failed (Finished, exit code 1). Console: https://helix.example/wi-fail/console", StringComparison.Ordinal));
             Assert.Contains(logger.Messages, message =>
-                message.Contains("Work item 'wi-fail' in job 'helix-linux' completed (Finished, exit code 1). Console: https://helix.example/wi-fail/console", StringComparison.Ordinal));
+                message.Contains("Failed work item console logs:", StringComparison.Ordinal)
+                && message.Contains("└─ wi-fail (Finished, exit code 1)", StringComparison.Ordinal)
+                && message.Contains("├─ Helix job: helix-linux", StringComparison.Ordinal)
+                && message.Contains("└─ Console: https://helix.example/wi-fail/console", StringComparison.Ordinal));
         }
 
         [Fact]
@@ -2443,7 +2449,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 "helix-linux",
                 [
                     new WorkItemSummary("details/wi-1", "helix-linux", "wi-1", "Running"),
-                    new WorkItemSummary("details/wi-2", "helix-linux", "wi-2", "Queued"),
+                    new WorkItemSummary("details/wi-2", "helix-linux", "wi-2", "Finished")
+                    {
+                        ConsoleOutputUri = "https://helix.example/wi-2/console",
+                        ExitCode = 1,
+                    },
                 ]);
 
             var runner = new JobMonitorRunner(DefaultOptions(), logger, azdo, helix,
@@ -2458,7 +2468,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal(1, exitCode);
             Assert.Contains(logger.Messages, message =>
                 message.Contains("Outstanding Helix jobs:", StringComparison.Ordinal)
-                && message.Contains("- helix-linux: wi-1 (Running), wi-2 (Queued)", StringComparison.Ordinal));
+                && message.Contains("└─ 🧪 Helix job helix-linux", StringComparison.Ordinal)
+                && message.Contains("   ├─ wi-1 (Running)", StringComparison.Ordinal)
+                && message.Contains("   └─ wi-2 (Finished, exit code 1)", StringComparison.Ordinal));
+            Assert.Contains(logger.Messages, message =>
+                message.Contains("Work item 'wi-2' in job 'helix-linux' failed (Finished, exit code 1). Console: https://helix.example/wi-2/console", StringComparison.Ordinal));
         }
 
         [Fact]
@@ -2485,7 +2499,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal(1, exitCode);
             Assert.Contains(logger.Messages, message =>
                 message.Contains("Outstanding Helix jobs:", StringComparison.Ordinal)
-                && message.Contains("- helix-linux: no work items reported yet", StringComparison.Ordinal));
+                && message.Contains("└─ 🧪 Helix job helix-linux", StringComparison.Ordinal)
+                && message.Contains("   └─ no work items reported yet", StringComparison.Ordinal));
         }
 
         // -----------------------------------------------------------------------

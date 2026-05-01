@@ -34,6 +34,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// resubmits items from the specific source job.
         /// </summary>
         private readonly Dictionary<string, HashSet<string>> _workItemsByJob = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, FailedWorkItemConsoleInfo> _failedWorkItemConsoleInfo = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _reportedFailedWorkItemConsoleLinks = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Constructor for production use with real services.
@@ -197,6 +199,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     bool anyWorkItemFailed = _workItemOutcomes.Values.Any(passed => !passed);
                     _logger.LogInformation("Final summary: processed {ProcessedCount} Helix job(s); {FailedWorkItems} work item(s) failed.",
                         processedHelixJobCount, _workItemOutcomes.Values.Count(passed => !passed));
+                    LogFinalFailedWorkItemConsoleInfo();
 
                     if (anyNonMonitorJobFailures || anyWorkItemFailed)
                     {
@@ -257,27 +260,47 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             var lines = new List<string>();
-            foreach (HelixJobInfo job in outstandingJobs)
+            for (int jobIndex = 0; jobIndex < outstandingJobs.Count; jobIndex++)
             {
+                HelixJobInfo job = outstandingJobs[jobIndex];
                 IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(job.JobName, cancellationToken);
-                lines.Add($"- {job.JobName}: {FormatOutstandingWorkItems(workItems)}");
+                LogFailedWorkItemConsoleLinks(job, [..workItems.Where(IsTerminalFailedWorkItem)]);
+                AddOutstandingJobLines(lines, job, workItems, isLastJob: jobIndex == outstandingJobs.Count - 1);
             }
 
-            _logger.LogInformation("Outstanding Helix jobs:{nl}{OutstandingJobs}",
+            _logger.LogInformation("⏳ Outstanding Helix jobs:{nl}{OutstandingJobs}",
                 Environment.NewLine,
                 string.Join(Environment.NewLine, lines));
         }
 
-        private static string FormatOutstandingWorkItems(IReadOnlyCollection<WorkItemSummary> workItems)
+        private static void AddOutstandingJobLines(
+            List<string> lines,
+            HelixJobInfo job,
+            IReadOnlyCollection<WorkItemSummary> workItems,
+            bool isLastJob)
         {
+            string jobConnector = isLastJob ? "└─" : "├─";
+            string childPrefix = isLastJob ? "   " : "│  ";
+            lines.Add($"{jobConnector} 🧪 Helix job {job.JobName}");
+
             if (workItems.Count == 0)
             {
-                return "no work items reported yet";
+                lines.Add($"{childPrefix}└─ no work items reported yet");
+                return;
             }
 
-            return string.Join(", ", workItems
+            List<WorkItemSummary> orderedWorkItems =
+            [
+                ..workItems
                 .OrderBy(wi => wi.Name, StringComparer.OrdinalIgnoreCase)
-                .Select(wi => $"{wi.Name} ({FormatWorkItemState(wi)})"));
+            ];
+
+            for (int workItemIndex = 0; workItemIndex < orderedWorkItems.Count; workItemIndex++)
+            {
+                WorkItemSummary workItem = orderedWorkItems[workItemIndex];
+                string workItemConnector = workItemIndex == orderedWorkItems.Count - 1 ? "└─" : "├─";
+                lines.Add($"{childPrefix}{workItemConnector} {workItem.Name} ({FormatWorkItemState(workItem)})");
+            }
         }
 
         private static string FormatWorkItemState(WorkItemSummary workItem)
@@ -313,7 +336,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _logger.LogInformation("Job {jobName} completed. Processing test results...{nl}{JobUri}", helixJob.JobName, Environment.NewLine, helixJob.DetailsUri);
 
             IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(helixJob.JobName, cancellationToken);
-            LogWorkItemConsoleLinks(helixJob, workItems);
+            LogFailedWorkItemConsoleLinks(helixJob, [..workItems.Where(wi => wi.IsFailed)]);
 
             // Update per-work-item outcome tracking
             if (_workItemOutcomeJobs.Add(helixJob.JobName))
@@ -323,6 +346,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 {
                     // A resubmission result overwrites a prior failure for the same work item name
                     _workItemOutcomes[wi.Name] = !wi.IsFailed;
+                    TrackFailedWorkItemConsoleInfo(helixJob, wi);
                     jobWorkItems.Add(wi.Name);
                 }
 
@@ -364,21 +388,75 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 Environment.NewLine, helixJob.DetailsUri);
         }
 
-        private void LogWorkItemConsoleLinks(HelixJobInfo helixJob, IReadOnlyCollection<WorkItemSummary> workItems)
+        private void LogFailedWorkItemConsoleLinks(HelixJobInfo helixJob, IReadOnlyCollection<WorkItemSummary> workItems)
         {
             foreach (WorkItemSummary workItem in workItems.OrderBy(wi => wi.Name, StringComparer.OrdinalIgnoreCase))
             {
-                string consoleLink = string.IsNullOrEmpty(workItem.ConsoleOutputUri)
-                    ? "no console link available"
-                    : workItem.ConsoleOutputUri;
+                if (!_reportedFailedWorkItemConsoleLinks.Add(GetWorkItemKey(helixJob.JobName, workItem.Name)))
+                {
+                    continue;
+                }
 
-                _logger.LogInformation("Work item '{WorkItemName}' in job '{JobName}' completed ({State}). Console: {ConsoleOutputUri}",
+                _logger.LogInformation("❌ Work item '{WorkItemName}' in job '{JobName}' failed ({State}). Console: {ConsoleOutputUri}",
                     workItem.Name,
                     helixJob.JobName,
                     FormatWorkItemState(workItem),
-                    consoleLink);
+                    GetConsoleOutputText(workItem.ConsoleOutputUri));
             }
         }
+
+        private static bool IsTerminalFailedWorkItem(WorkItemSummary workItem)
+            => workItem.ExitCode.HasValue && workItem.IsFailed;
+
+        private static string GetWorkItemKey(string jobName, string workItemName)
+            => $"{jobName}/{workItemName}";
+
+        private void TrackFailedWorkItemConsoleInfo(HelixJobInfo helixJob, WorkItemSummary workItem)
+        {
+            if (workItem.IsFailed)
+            {
+                _failedWorkItemConsoleInfo[workItem.Name] = new FailedWorkItemConsoleInfo(
+                    helixJob.JobName,
+                    workItem.Name,
+                    FormatWorkItemState(workItem),
+                    GetConsoleOutputText(workItem.ConsoleOutputUri));
+            }
+            else
+            {
+                _failedWorkItemConsoleInfo.Remove(workItem.Name);
+            }
+        }
+
+        private void LogFinalFailedWorkItemConsoleInfo()
+        {
+            if (_failedWorkItemConsoleInfo.Count == 0)
+            {
+                return;
+            }
+
+            List<FailedWorkItemConsoleInfo> failures =
+            [
+                .._failedWorkItemConsoleInfo.Values
+                    .OrderBy(failure => failure.WorkItemName, StringComparer.OrdinalIgnoreCase)
+            ];
+
+            var lines = new List<string>();
+            for (int i = 0; i < failures.Count; i++)
+            {
+                FailedWorkItemConsoleInfo failure = failures[i];
+                string connector = i == failures.Count - 1 ? "└─" : "├─";
+                lines.Add($"{connector} {failure.WorkItemName} ({failure.State})");
+                lines.Add($"{(i == failures.Count - 1 ? "   " : "│  ")}├─ Helix job: {failure.JobName}");
+                lines.Add($"{(i == failures.Count - 1 ? "   " : "│  ")}└─ Console: {failure.ConsoleOutput}");
+            }
+
+            _logger.LogError("❌ Failed work item console logs:{nl}{FailedWorkItemConsoleLogs}",
+                Environment.NewLine,
+                string.Join(Environment.NewLine, lines));
+        }
+
+        private static string GetConsoleOutputText(string consoleOutputUri)
+            => string.IsNullOrEmpty(consoleOutputUri) ? "no console link available" : consoleOutputUri;
 
         private async Task<EntryResubmissionResult> ResubmitFailedJobsAsync(CancellationToken cancellationToken)
         {
@@ -494,6 +572,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private sealed record EntryResubmissionResult(
             HashSet<string> RetryingHelixSubmitterJobs,
             IReadOnlyList<HelixJobInfo> JobsForFirstPoll);
+
+        private sealed record FailedWorkItemConsoleInfo(
+            string JobName,
+            string WorkItemName,
+            string State,
+            string ConsoleOutput);
 
         private void ReportTimeout(
             IEnumerable<HelixJobInfo> latestAssociatedJobs,

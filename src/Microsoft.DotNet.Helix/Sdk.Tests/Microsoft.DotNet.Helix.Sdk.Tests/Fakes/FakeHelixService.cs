@@ -106,14 +106,18 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             }
 
             var items = new List<WorkItemSummary>();
+            if (!CurrentSnapshot.PassFailByJob.TryGetValue(jobName, out HelixJobPassFail passFail))
+            {
+                return Task.FromResult<IReadOnlyCollection<WorkItemSummary>>(items);
+            }
 
-            foreach (string w in CurrentSnapshot.PassFailByJob[jobName].PassedWorkItems)
+            foreach (string w in passFail.PassedWorkItems)
             {
                 var wi = new WorkItemSummary($"{jobName}/{w}", jobName, w, "Finished") { ExitCode = 0 };
                 items.Add(wi);
             }
 
-            foreach (string w in CurrentSnapshot.PassFailByJob[jobName].FailedWorkItems)
+            foreach (string w in passFail.FailedWorkItems)
             {
                 var wi = new WorkItemSummary($"{jobName}/{w}", jobName, w, "Finished") { ExitCode = 1 };
                 items.Add(wi);
