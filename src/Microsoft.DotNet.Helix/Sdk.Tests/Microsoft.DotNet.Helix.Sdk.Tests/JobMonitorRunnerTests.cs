@@ -10,6 +10,7 @@ using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
 using Microsoft.DotNet.Helix.Sdk.Tests.Fakes;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using static Microsoft.DotNet.Helix.Sdk.Tests.ScenarioHelpers.ScenarioHelpers;
@@ -2394,6 +2395,99 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal(["helix-linux", "helix-linux-resub"], azdo.UploadedJobNames);
         }
 
+        [Fact]
+        public async Task CompletedHelixJob_LogsWorkItemConsoleLinks()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+            helix.AddResponse(jobs: [HelixJob("helix-linux", "finished")]);
+            helix.WithWorkItems(
+                "helix-linux",
+                [
+                    new WorkItemSummary("details/wi-pass", "helix-linux", "wi-pass", "Finished")
+                    {
+                        ConsoleOutputUri = "https://helix.example/wi-pass/console",
+                        ExitCode = 0,
+                    },
+                    new WorkItemSummary("details/wi-fail", "helix-linux", "wi-fail", "Finished")
+                    {
+                        ConsoleOutputUri = "https://helix.example/wi-fail/console",
+                        ExitCode = 1,
+                    },
+                ]);
+
+            var runner = CreateRunner(azdo, helix, logger: logger);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(1, exitCode);
+            Assert.Contains(logger.Messages, message =>
+                message.Contains("Work item 'wi-pass' in job 'helix-linux' completed (Finished, exit code 0). Console: https://helix.example/wi-pass/console", StringComparison.Ordinal));
+            Assert.Contains(logger.Messages, message =>
+                message.Contains("Work item 'wi-fail' in job 'helix-linux' completed (Finished, exit code 1). Console: https://helix.example/wi-fail/console", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public async Task LoopStatus_LogsOutstandingHelixJobWorkItems()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+            using var cts = new CancellationTokenSource();
+
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "inProgress"));
+            helix.AddResponse(jobs: [HelixJob("helix-linux", "running")]);
+            helix.WithWorkItems(
+                "helix-linux",
+                [
+                    new WorkItemSummary("details/wi-1", "helix-linux", "wi-1", "Running"),
+                    new WorkItemSummary("details/wi-2", "helix-linux", "wi-2", "Queued"),
+                ]);
+
+            var runner = new JobMonitorRunner(DefaultOptions(), logger, azdo, helix,
+                (_, _) =>
+                {
+                    cts.Cancel();
+                    return Task.CompletedTask;
+                });
+
+            int exitCode = await runner.RunAsync(cts.Token);
+
+            Assert.Equal(1, exitCode);
+            Assert.Contains(logger.Messages, message =>
+                message.Contains("Outstanding Helix jobs:", StringComparison.Ordinal)
+                && message.Contains("- helix-linux: wi-1 (Running), wi-2 (Queued)", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public async Task LoopStatus_LogsOutstandingHelixJobWithoutKnownWorkItems()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+            using var cts = new CancellationTokenSource();
+
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "inProgress"));
+            helix.AddResponse(jobs: [HelixJob("helix-linux", "running")]);
+            helix.WithWorkItems("helix-linux", []);
+
+            var runner = new JobMonitorRunner(DefaultOptions(), logger, azdo, helix,
+                (_, _) =>
+                {
+                    cts.Cancel();
+                    return Task.CompletedTask;
+                });
+
+            int exitCode = await runner.RunAsync(cts.Token);
+
+            Assert.Equal(1, exitCode);
+            Assert.Contains(logger.Messages, message =>
+                message.Contains("Outstanding Helix jobs:", StringComparison.Ordinal)
+                && message.Contains("- helix-linux: no work items reported yet", StringComparison.Ordinal));
+        }
+
         // -----------------------------------------------------------------------
         // Helpers
         // -----------------------------------------------------------------------
@@ -2416,7 +2510,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
         private static readonly Func<TimeSpan, CancellationToken, Task> NoDelay = (_, _) => Task.CompletedTask;
 
-        private static JobMonitorRunner CreateRunner(FakeAzureDevOpsService azdo, FakeHelixService helix, string stageName = null, int attempt = 1)
+        private static JobMonitorRunner CreateRunner(
+            FakeAzureDevOpsService azdo,
+            FakeHelixService helix,
+            string stageName = null,
+            int attempt = 1,
+            ILogger logger = null)
         {
             var options = DefaultOptions(attempt);
             if (stageName != null)
@@ -2425,7 +2524,35 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 options.StageName = stageName;
             }
 
-            return new(options, NullLogger.Instance, azdo, helix, NoDelay);
+            return new(options, logger ?? NullLogger.Instance, azdo, helix, NoDelay);
+        }
+
+        private sealed class RecordingLogger : ILogger
+        {
+            public List<string> Messages { get; } = [];
+
+            public IDisposable BeginScope<TState>(TState state) => NullScope.Instance;
+
+            public bool IsEnabled(LogLevel logLevel) => true;
+
+            public void Log<TState>(
+                LogLevel logLevel,
+                EventId eventId,
+                TState state,
+                Exception exception,
+                Func<TState, Exception, string> formatter)
+            {
+                Messages.Add(formatter(state, exception));
+            }
+
+            private sealed class NullScope : IDisposable
+            {
+                public static NullScope Instance { get; } = new();
+
+                public void Dispose()
+                {
+                }
+            }
         }
     }
 }

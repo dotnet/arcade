@@ -167,6 +167,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         processedHelixJobCount,
                         completedJobs.Count,
                         associatedJobsWithBuild.Count - completedJobs.Count);
+                    await LogOutstandingHelixJobsAsync(associatedJobsWithBuild, completedJobNames, cancellationToken);
                     allHelixJobCount = associatedJobsWithBuild.Count;
                     completedJobsCount = completedJobs.Count;
                     lastPrintTime = DateTime.UtcNow;
@@ -238,6 +239,53 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return OrderHelixJobsOldToNew(completedJobs);
         }
 
+        private async Task LogOutstandingHelixJobsAsync(
+            IReadOnlyList<HelixJobInfo> jobs,
+            HashSet<string> completedJobNames,
+            CancellationToken cancellationToken)
+        {
+            List<HelixJobInfo> outstandingJobs =
+            [
+                ..jobs
+                    .Where(job => !completedJobNames.Contains(job.JobName))
+                    .OrderBy(job => job.JobName, StringComparer.OrdinalIgnoreCase)
+            ];
+
+            if (outstandingJobs.Count == 0)
+            {
+                return;
+            }
+
+            var lines = new List<string>();
+            foreach (HelixJobInfo job in outstandingJobs)
+            {
+                IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(job.JobName, cancellationToken);
+                lines.Add($"- {job.JobName}: {FormatOutstandingWorkItems(workItems)}");
+            }
+
+            _logger.LogInformation("Outstanding Helix jobs:{nl}{OutstandingJobs}",
+                Environment.NewLine,
+                string.Join(Environment.NewLine, lines));
+        }
+
+        private static string FormatOutstandingWorkItems(IReadOnlyCollection<WorkItemSummary> workItems)
+        {
+            if (workItems.Count == 0)
+            {
+                return "no work items reported yet";
+            }
+
+            return string.Join(", ", workItems
+                .OrderBy(wi => wi.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(wi => $"{wi.Name} ({FormatWorkItemState(wi)})"));
+        }
+
+        private static string FormatWorkItemState(WorkItemSummary workItem)
+        {
+            string exitCode = workItem.ExitCode.HasValue ? $", exit code {workItem.ExitCode.Value}" : string.Empty;
+            return $"{workItem.State}{exitCode}";
+        }
+
         private async Task<bool> AreAllWorkItemsTerminalAsync(
             HelixJobInfo job,
             CancellationToken cancellationToken)
@@ -265,6 +313,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _logger.LogInformation("Job {jobName} completed. Processing test results...{nl}{JobUri}", helixJob.JobName, Environment.NewLine, helixJob.DetailsUri);
 
             IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(helixJob.JobName, cancellationToken);
+            LogWorkItemConsoleLinks(helixJob, workItems);
 
             // Update per-work-item outcome tracking
             if (_workItemOutcomeJobs.Add(helixJob.JobName))
@@ -313,6 +362,22 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 successfulWorkItemCount,
                 failedWorkItemCount,
                 Environment.NewLine, helixJob.DetailsUri);
+        }
+
+        private void LogWorkItemConsoleLinks(HelixJobInfo helixJob, IReadOnlyCollection<WorkItemSummary> workItems)
+        {
+            foreach (WorkItemSummary workItem in workItems.OrderBy(wi => wi.Name, StringComparer.OrdinalIgnoreCase))
+            {
+                string consoleLink = string.IsNullOrEmpty(workItem.ConsoleOutputUri)
+                    ? "no console link available"
+                    : workItem.ConsoleOutputUri;
+
+                _logger.LogInformation("Work item '{WorkItemName}' in job '{JobName}' completed ({State}). Console: {ConsoleOutputUri}",
+                    workItem.Name,
+                    helixJob.JobName,
+                    FormatWorkItemState(workItem),
+                    consoleLink);
+            }
         }
 
         private async Task<EntryResubmissionResult> ResubmitFailedJobsAsync(CancellationToken cancellationToken)
