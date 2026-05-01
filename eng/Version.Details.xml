@@ -24,13 +24,13 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>8a7b2d3d39078db20f33067c7929b88fdff4ee63</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.ProductConstructionService.Client" Version="1.1.0-beta.26222.1">
+    <Dependency Name="Microsoft.DotNet.ProductConstructionService.Client" Version="1.1.0-beta.26214.2">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>c6c2b88a15ff0bddf33824eb2402969d9b9f3f4c</Sha>
+      <Sha>5756a107b56d41141c3119f29c943695296d6108</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.DarcLib" Version="1.1.0-beta.26222.1">
+    <Dependency Name="Microsoft.DotNet.DarcLib" Version="1.1.0-beta.26214.2">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>c6c2b88a15ff0bddf33824eb2402969d9b9f3f4c</Sha>
+      <Sha>5756a107b56d41141c3119f29c943695296d6108</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="11.0.0-prerelease.26181.1">
       <Uri>https://github.com/dotnet/xharness</Uri>
