@@ -153,11 +153,18 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             IReadOnlyCollection<WorkItemSummary> failedWorkItems,
             CancellationToken cancellationToken)
         {
-            if (failedWorkItems.Count == 0)
+            IEnumerable<string> workItemsToLog = failedWorkItems.Select(wi => wi.Name);
+
+            if (failedWorkItems.Count > 20)
             {
-                _logger.LogDebug("No failed work items provided for resubmission of job '{JobName}'.", originalJobName);
-                return null;
+                workItemsToLog = workItemsToLog.Take(19).Append(failedWorkItems.Count - 19 + " more ...");
             }
+
+            _logger.LogInformation("Resubmitting {Count} failed work item(s) for job {JobName}:{nl}{WorkItems}",
+                failedWorkItems.Count,
+                originalJobName,
+                Environment.NewLine,
+                string.Join(Environment.NewLine + "- ", workItemsToLog));
 
             // 1. Read the original job's metadata so we can clone its queue, type, source, and properties.
             JobDetails details = await RetryHelper.RetryAsync(
@@ -262,9 +269,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 () => _helixApi.Job.NewAsync(creationRequest, idempotencyKey, cancellationToken: cancellationToken),
                 cancellationToken);
 
-            _logger.LogInformation(
-                "Resubmitted {Count} failed work item(s) from '{OriginalJobName}' as new job '{NewJobName}'.",
-                filteredEntries.Count, originalJobName, newJob.Name);
+            _logger.LogInformation("Resubmitted {Count} failed work item(s) from '{OriginalJobName}' as new job '{NewJobName}'{nl}{JobUri}",
+                filteredEntries.Count,
+                originalJobName,
+                newJob.Name,
+                Environment.NewLine,
+                HelixJobInfo.GetDetailsUri(newJob.Name));
 
             string testRunName = GetStringPropertyFromProperties(details.Properties, "TestRunName") ?? newJob.Name;
             string stageName = GetStringPropertyFromProperties(details.Properties, "System.StageName");
@@ -273,11 +283,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return new HelixJobInfo(newJob.Name, "running", testRunName, stageName, submitterJobName, originalJobName);
         }
 
-        private static IImmutableDictionary<string, string> ConvertPropertiesToImmutableDictionary(JToken properties)
+        private static ImmutableDictionary<string, string> ConvertPropertiesToImmutableDictionary(JToken properties)
         {
             if (properties is not JObject obj)
             {
-                return ImmutableDictionary<string, string>.Empty;
+                return [];
             }
 
             ImmutableDictionary<string, string>.Builder builder = ImmutableDictionary.CreateBuilder<string, string>();

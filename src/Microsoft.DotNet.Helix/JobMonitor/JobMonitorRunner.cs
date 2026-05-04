@@ -478,7 +478,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 ..latestJobs.Where(j => j.IsCompleted && IsHelixJobInScope(j))
             ];
 
-            string separator = Environment.NewLine + "- ";
             foreach (HelixJobInfo completedJob in completedHelixJobs)
             {
                 IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(completedJob.JobName, cancellationToken);
@@ -486,18 +485,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 if (failedWorkItems.Count > 0)
                 {
-                    var workItemsToLog = failedWorkItems.Select(wi => wi.Name);
-                    
-                    if (failedWorkItems.Count > 20)
-                    {
-                        workItemsToLog = workItemsToLog.Take(19).Append((failedWorkItems.Count - 19) + " more ...");
-                    }
-
-                    _logger.LogInformation("Resubmitting {Count} failed work item(s) for job {JobName}: {WorkItems}",
-                        failedWorkItems.Count,
-                        completedJob.JobName,
-                        string.Join(separator, workItemsToLog));
-
                     HelixJobInfo resubmittedJob = await _helix.ResubmitWorkItemsAsync(completedJob.JobName, failedWorkItems, cancellationToken);
                     if (resubmittedJob != null)
                     {

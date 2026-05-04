@@ -72,7 +72,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
         public bool IsCompleted => Status.Equals("finished", StringComparison.OrdinalIgnoreCase)
             || Status.Equals("failed", StringComparison.OrdinalIgnoreCase);
 
-        public string DetailsUri => $"https://helix.dot.net/api/2019-06-17/jobs/{JobName}/details";
+        public string DetailsUri => GetDetailsUri(JobName);
+
+        public static string GetDetailsUri(string jobName)
+        {
+            return $"https://helix.dot.net/api/2019-06-17/jobs/{jobName}/details";
+        }
 
         /// <summary>
         /// Comparer that considers two <see cref="HelixJobInfo"/> instances equal when their
