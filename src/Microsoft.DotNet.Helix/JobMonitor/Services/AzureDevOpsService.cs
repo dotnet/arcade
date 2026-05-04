@@ -179,11 +179,58 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 string content = response.Content != null ? await response.Content.ReadAsStringAsync(cancellationToken) : null;
                 if (!response.IsSuccessStatusCode)
                 {
+                    await HonorRateLimitAsync(response, requestUri, cancellationToken);
                     throw new HttpRequestException($"Request to {requestUri} failed with {(int)response.StatusCode} {response.ReasonPhrase}. {content}");
                 }
 
+                await HonorRateLimitAsync(response, requestUri, cancellationToken);
                 return string.IsNullOrWhiteSpace(content) ? [] : JObject.Parse(content);
             }, cancellationToken);
+        }
+
+        // Honors Azure DevOps rate limiting guidance:
+        // https://learn.microsoft.com/azure/devops/integrate/concepts/rate-limits#api-client-experience
+        // If the response carries a Retry-After header (RFC 6585) we wait the specified amount of
+        // time before allowing the next request to be issued. We also log when the service reports
+        // a non-zero X-RateLimit-Delay so callers have visibility into throttling behavior.
+        private async Task HonorRateLimitAsync(HttpResponseMessage response, string requestUri, CancellationToken cancellationToken)
+        {
+            TimeSpan? retryAfter = null;
+            RetryConditionHeaderValue retryAfterHeader = response.Headers.RetryAfter;
+            if (retryAfterHeader != null)
+            {
+                if (retryAfterHeader.Delta.HasValue)
+                {
+                    retryAfter = retryAfterHeader.Delta.Value;
+                }
+                else if (retryAfterHeader.Date.HasValue)
+                {
+                    TimeSpan delta = retryAfterHeader.Date.Value - DateTimeOffset.UtcNow;
+                    if (delta > TimeSpan.Zero)
+                    {
+                        retryAfter = delta;
+                    }
+                }
+            }
+
+            if (response.Headers.TryGetValues("X-RateLimit-Delay", out IEnumerable<string> delayValues) &&
+                double.TryParse(delayValues.FirstOrDefault(), NumberStyles.Float, CultureInfo.InvariantCulture, out double delaySeconds) &&
+                delaySeconds > 0)
+            {
+                _logger.LogWarning(
+                    "Azure DevOps reported X-RateLimit-Delay of {DelaySeconds:0.###}s on request to {RequestUri}.",
+                    delaySeconds,
+                    requestUri);
+            }
+
+            if (retryAfter.HasValue && retryAfter.Value > TimeSpan.Zero)
+            {
+                _logger.LogWarning(
+                    "Azure DevOps requested rate limit back-off via Retry-After. Delaying next request by {DelaySeconds:0.###}s (request: {RequestUri}).",
+                    retryAfter.Value.TotalSeconds,
+                    requestUri);
+                await Task.Delay(retryAfter.Value, cancellationToken);
+            }
         }
 
         public void Dispose() => _azdoClient.Dispose();
