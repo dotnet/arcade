@@ -16,6 +16,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 {
     internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
     {
+        private const int MaxOutstandingWorkItemsToLog = 10;
+
         private readonly JobMonitorOptions _options;
         private readonly ILogger _logger;
         private readonly IAzureDevOpsService _azdo;
@@ -264,7 +266,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 HelixJobInfo job = outstandingJobs[jobIndex];
                 IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(job.JobName, cancellationToken);
-                LogFailedWorkItemConsoleLinks(job, [..workItems.Where(IsTerminalFailedWorkItem)]);
+                LogFailedWorkItemConsoleLinks(job, [..workItems.Where(IsFailedWorkItem)]);
                 AddOutstandingJobLines(lines, job, workItems, isLastJob: jobIndex == outstandingJobs.Count - 1);
             }
 
@@ -283,23 +285,35 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             string childPrefix = isLastJob ? "   " : "│  ";
             lines.Add($"{jobConnector} 🧪 Helix job {job.JobName}");
 
-            if (workItems.Count == 0)
-            {
-                lines.Add($"{childPrefix}└─ no work items reported yet");
-                return;
-            }
-
             List<WorkItemSummary> orderedWorkItems =
             [
                 ..workItems
-                .OrderBy(wi => wi.Name, StringComparer.OrdinalIgnoreCase)
+                    .Where(IsUnfinishedOrFailedWorkItem)
+                    .OrderBy(wi => wi.Name, StringComparer.OrdinalIgnoreCase)
             ];
 
-            for (int workItemIndex = 0; workItemIndex < orderedWorkItems.Count; workItemIndex++)
+            if (orderedWorkItems.Count == 0)
+            {
+                lines.Add($"{childPrefix}└─ no unfinished or failed work items reported yet");
+                return;
+            }
+
+            int workItemsToLog = Math.Min(orderedWorkItems.Count, MaxOutstandingWorkItemsToLog);
+            int additionalWorkItems = orderedWorkItems.Count - workItemsToLog;
+
+            for (int workItemIndex = 0; workItemIndex < workItemsToLog; workItemIndex++)
             {
                 WorkItemSummary workItem = orderedWorkItems[workItemIndex];
-                string workItemConnector = workItemIndex == orderedWorkItems.Count - 1 ? "└─" : "├─";
-                lines.Add($"{childPrefix}{workItemConnector} {workItem.Name} ({FormatWorkItemState(workItem)})");
+                string workItemConnector = workItemIndex == workItemsToLog - 1 && additionalWorkItems == 0 ? "└─" : "├─";
+                string console = IsFailedWorkItem(workItem)
+                    ? $" | Console: {GetConsoleOutputText(workItem.ConsoleOutputUri)}"
+                    : string.Empty;
+                lines.Add($"{childPrefix}{workItemConnector} {workItem.Name} ({FormatWorkItemState(workItem)}){console}");
+            }
+
+            if (additionalWorkItems > 0)
+            {
+                lines.Add($"{childPrefix}└─ ...{additionalWorkItems} additional");
             }
         }
 
@@ -405,8 +419,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
         }
 
-        private static bool IsTerminalFailedWorkItem(WorkItemSummary workItem)
-            => workItem.ExitCode.HasValue && workItem.IsFailed;
+        private static bool IsUnfinishedOrFailedWorkItem(WorkItemSummary workItem)
+            => IsUnfinishedWorkItem(workItem) || IsFailedWorkItem(workItem);
+
+        private static bool IsUnfinishedWorkItem(WorkItemSummary workItem)
+            => !workItem.ExitCode.HasValue
+                && !string.Equals(workItem.State, "Finished", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(workItem.State, "Failed", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(workItem.State, "TimedOut", StringComparison.OrdinalIgnoreCase);
+
+        private static bool IsFailedWorkItem(WorkItemSummary workItem)
+            => workItem.IsFailed && !IsUnfinishedWorkItem(workItem);
 
         private static string GetWorkItemKey(string jobName, string workItemName)
             => $"{jobName}/{workItemName}";

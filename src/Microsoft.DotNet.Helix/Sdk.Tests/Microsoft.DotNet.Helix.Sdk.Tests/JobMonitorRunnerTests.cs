@@ -2449,6 +2449,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 "helix-linux",
                 [
                     new WorkItemSummary("details/wi-1", "helix-linux", "wi-1", "Running"),
+                    new WorkItemSummary("details/wi-pass", "helix-linux", "wi-pass", "Finished")
+                    {
+                        ConsoleOutputUri = "https://helix.example/wi-pass/console",
+                        ExitCode = 0,
+                    },
                     new WorkItemSummary("details/wi-2", "helix-linux", "wi-2", "Finished")
                     {
                         ConsoleOutputUri = "https://helix.example/wi-2/console",
@@ -2470,7 +2475,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 message.Contains("Outstanding Helix jobs:", StringComparison.Ordinal)
                 && message.Contains("└─ 🧪 Helix job helix-linux", StringComparison.Ordinal)
                 && message.Contains("   ├─ wi-1 (Running)", StringComparison.Ordinal)
-                && message.Contains("   └─ wi-2 (Finished, exit code 1)", StringComparison.Ordinal));
+                && message.Contains("   └─ wi-2 (Finished, exit code 1) | Console: https://helix.example/wi-2/console", StringComparison.Ordinal));
+            Assert.DoesNotContain(logger.Messages, message =>
+                message.Contains("Outstanding Helix jobs:", StringComparison.Ordinal)
+                && message.Contains("wi-pass", StringComparison.Ordinal));
             Assert.Contains(logger.Messages, message =>
                 message.Contains("Work item 'wi-2' in job 'helix-linux' failed (Finished, exit code 1). Console: https://helix.example/wi-2/console", StringComparison.Ordinal));
         }
@@ -2500,7 +2508,49 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Contains(logger.Messages, message =>
                 message.Contains("Outstanding Helix jobs:", StringComparison.Ordinal)
                 && message.Contains("└─ 🧪 Helix job helix-linux", StringComparison.Ordinal)
-                && message.Contains("   └─ no work items reported yet", StringComparison.Ordinal));
+                && message.Contains("   └─ no unfinished or failed work items reported yet", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public async Task LoopStatus_TruncatesLongOutstandingHelixJobWorkItemList()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+            using var cts = new CancellationTokenSource();
+
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "inProgress"));
+            helix.AddResponse(jobs: [HelixJob("helix-linux", "running")]);
+            helix.WithWorkItems(
+                "helix-linux",
+                [
+                    ..Enumerable.Range(1, 12)
+                        .Select(index => new WorkItemSummary(
+                            $"details/wi-{index:00}",
+                            "helix-linux",
+                            $"wi-{index:00}",
+                            "Running")),
+                ]);
+
+            var runner = new JobMonitorRunner(DefaultOptions(), logger, azdo, helix,
+                (_, _) =>
+                {
+                    cts.Cancel();
+                    return Task.CompletedTask;
+                });
+
+            int exitCode = await runner.RunAsync(cts.Token);
+
+            Assert.Equal(1, exitCode);
+            Assert.Contains(logger.Messages, message =>
+                message.Contains("Outstanding Helix jobs:", StringComparison.Ordinal)
+                && message.Contains("   ├─ wi-01 (Running)", StringComparison.Ordinal)
+                && message.Contains("   ├─ wi-10 (Running)", StringComparison.Ordinal)
+                && message.Contains("   └─ ...2 additional", StringComparison.Ordinal));
+            Assert.DoesNotContain(logger.Messages, message =>
+                message.Contains("Outstanding Helix jobs:", StringComparison.Ordinal)
+                && (message.Contains("wi-11", StringComparison.Ordinal)
+                    || message.Contains("wi-12", StringComparison.Ordinal)));
         }
 
         // -----------------------------------------------------------------------
