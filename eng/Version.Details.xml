@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
-  <ProductDependencies></ProductDependencies>
+  <ProductDependencies>
+  </ProductDependencies>
   <ToolsetDependencies>
     <!-- Needed for when this dependency gets updated in 
          https://github.com/dotnet/source-build-externals, otherwise
@@ -25,13 +26,13 @@
       <Uri>https://github.com/dotnet/templating</Uri>
       <Sha>e07a90b4df2f1b41a83064cfa3164611756c3746</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.26180.1">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.26223.2">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>57da0818c9c45c5b637d8534c4227eaae45dd6c0</Sha>
+      <Sha>33235aeaaa886866a388926dc6d5d0e8b789aaaa</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="9.0.0-beta.26180.1">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="9.0.0-beta.26223.2">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>57da0818c9c45c5b637d8534c4227eaae45dd6c0</Sha>
+      <Sha>33235aeaaa886866a388926dc6d5d0e8b789aaaa</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.24422.1">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
@@ -123,9 +124,9 @@
       <Sha>ef4c24166691977558e5312758df4313ab310dc0</Sha>
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="9.0.0-beta.26180.1">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="9.0.0-beta.26223.2">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>57da0818c9c45c5b637d8534c4227eaae45dd6c0</Sha>
+      <Sha>33235aeaaa886866a388926dc6d5d0e8b789aaaa</Sha>
       <SourceBuild RepoName="arcade" ManagedOnly="true" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
