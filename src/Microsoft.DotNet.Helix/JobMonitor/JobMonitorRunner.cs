@@ -620,15 +620,19 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 FailedWorkItemConsoleInfo failure = failures[i];
                 string connector = i == failures.Count - 1 ? "└─" : "├─";
-                lines.Add($"{connector} {failure.WorkItemName} ({failure.State})");
-                lines.Add($"{(i == failures.Count - 1 ? "   " : "│  ")}├─ Helix job: {failure.JobName}");
+                lines.Add($"{connector} {failure.WorkItemName} (Job: {failure.JobName}) ({failure.State})");
                 lines.Add($"{(i == failures.Count - 1 ? "   " : "│  ")}└─ Console: {failure.ConsoleOutput}");
             }
 
-            _logger.LogError("❌ Failed work item console logs:{nl}{FailedWorkItemConsoleLogs}",
+            _logger.LogError("❌ Failed work item console logs:{nl}Test results: {TestResultsUri}{nl}{FailedWorkItemConsoleLogs}",
+                Environment.NewLine,
+                GetTestResultsUri(),
                 Environment.NewLine,
                 string.Join(Environment.NewLine, lines));
         }
+
+        private string GetTestResultsUri()
+            => $"{_options.CollectionUri}{_options.TeamProject}/_build/results?buildId={_options.BuildId}&view=ms.vss-test-web.build-test-results-tab";
 
         private static string GetConsoleOutputText(string consoleOutputUri)
             => string.IsNullOrEmpty(consoleOutputUri) ? "no console link available" : consoleOutputUri;

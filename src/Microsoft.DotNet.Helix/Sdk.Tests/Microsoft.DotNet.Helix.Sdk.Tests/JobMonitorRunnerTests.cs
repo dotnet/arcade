@@ -2424,9 +2424,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 message.Contains("Work item 'wi-fail' in job 'helix-linux' failed (Finished, exit code 1). Console: https://helix.example/wi-fail/console", StringComparison.Ordinal));
             Assert.Contains(logger.Messages, message =>
                 message.Contains("Failed work item console logs:", StringComparison.Ordinal)
-                && message.Contains("└─ wi-fail (Finished, exit code 1)", StringComparison.Ordinal)
-                && message.Contains("├─ Helix job: helix-linux", StringComparison.Ordinal)
+                && message.Contains("Test results: https://dev.azure.com/dnceng/public/_build/results?buildId=123&view=ms.vss-test-web.build-test-results-tab", StringComparison.Ordinal)
+                && message.Contains("└─ wi-fail (Job: helix-linux) (Finished, exit code 1)", StringComparison.Ordinal)
                 && message.Contains("└─ Console: https://helix.example/wi-fail/console", StringComparison.Ordinal));
+            Assert.DoesNotContain(logger.Messages, message =>
+                message.Contains("Helix job: helix-linux", StringComparison.Ordinal));
         }
 
         [Fact]
