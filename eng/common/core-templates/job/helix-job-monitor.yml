@@ -1,8 +1,36 @@
 parameters:
-# Pool override. When empty the template selects a default azurelinux pool based on the team project.
-- name: pool
+# Maximum run time of the monitor job in minutes. Also used for --max-wait-minutes.
+- name: timeoutInMinutes
+  type: number
+  default: 360
+
+# Owner segment of the source repository (e.g. 'dotnet' for 'dotnet/runtime') passed via --organization.
+# Defaults to the owner segment of BUILD_REPOSITORY_NAME when empty.
+- name: organization
+  type: string
+  default: ''
+
+# Name of the source repository (e.g. 'runtime' for 'dotnet/runtime') passed via --repository.
+# Defaults to the repo segment of BUILD_REPOSITORY_NAME when empty.
+- name: repository
+  type: string
+  default: ''
+
+# Pull request number being built (--pr-number). Defaults to SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
+# when empty.
+- name: prNumber
+  type: string
+  default: ''
+
+# Optional dependency list for the generated job.
+- name: dependsOn
   type: object
-  default: {}
+  default: []
+
+# Optional condition for the generated job.
+- name: condition
+  type: string
+  default: ''
 
 # NuGet package id of the Helix job monitor tool.
 - name: toolPackageId
@@ -41,39 +69,6 @@ parameters:
 - name: pollingIntervalSeconds
   type: number
   default: 30
-
-# Maximum run time of the monitor job in minutes. Also used for --max-wait-minutes.
-- name: timeoutInMinutes
-  type: number
-  default: 360
-
-# Owner segment of the source repository (e.g. 'dotnet' for 'dotnet/runtime') passed via --organization.
-# Defaults to the owner segment of BUILD_REPOSITORY_NAME when empty.
-- name: organization
-  type: string
-  default: ''
-
-# Name of the source repository (e.g. 'runtime' for 'dotnet/runtime') passed via --repository.
-# Defaults to the repo segment of BUILD_REPOSITORY_NAME when empty.
-- name: repository
-  type: string
-  default: ''
-
-# Pull request number being built (--pr-number). Defaults to SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
-# when empty.
-- name: prNumber
-  type: string
-  default: ''
-
-# Optional dependency list for the generated job.
-- name: dependsOn
-  type: object
-  default: []
-
-# Optional condition for the generated job.
-- name: condition
-  type: string
-  default: ''
 
 # Advanced: optional pipeline artifact (produced earlier in this run) that contains the tool
 # nupkg. When set, the artifact is downloaded and the tool is installed from the nupkg into

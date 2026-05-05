@@ -480,7 +480,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task<EntryResubmissionResult> ResubmitFailedJobsAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Checking for failed Helix jobs to resubmit the failed work items...");
+            _logger.LogInformation("🔁 Checking for failed Helix jobs to resubmit the failed work items...");
 
             var retryingHelixSubmitterJobs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var resubmittedJobs = new List<HelixJobInfo>();
