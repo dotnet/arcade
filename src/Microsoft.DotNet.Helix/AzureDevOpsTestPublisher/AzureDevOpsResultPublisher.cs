@@ -37,6 +37,12 @@ public sealed class AzureDevOpsResultPublisher
 
     public async Task<bool> UploadTestResultsAsync(List<string> testResultFiles, object resultMetadata, CancellationToken cancellationToken = default)
     {
+        TestResultUploadSummary summary = await UploadTestResultsWithSummaryAsync(testResultFiles, resultMetadata, cancellationToken);
+        return summary.AllPassed;
+    }
+
+    public async Task<TestResultUploadSummary> UploadTestResultsWithSummaryAsync(List<string> testResultFiles, object resultMetadata, CancellationToken cancellationToken = default)
+    {
         var testResultReader = new LocalTestResultsReader(_logger);
 
         Task<IReadOnlyList<TestResult>>[] parseTasks = [.. testResultFiles.Select(file => testResultReader.ReadResultFileAsync(file, cancellationToken))];
@@ -44,35 +50,44 @@ public sealed class AzureDevOpsResultPublisher
         if (parsedResults.Length == 0)
         {
             _logger.LogWarning("No test results were discovered under.");
-            return true;
+            return new TestResultUploadSummary(true, 0);
         }
 
         IReadOnlyList<AggregatedResult> aggregatedResults = new ResultAggregator().Aggregate(parsedResults);
         if (aggregatedResults.Count == 0)
         {
             _logger.LogWarning("Test results were discovered but none could be aggregated.");
-            return true;
+            return new TestResultUploadSummary(true, 0);
         }
 
-        await UploadTestResultsAsync(aggregatedResults, resultMetadata, cancellationToken);
-        return aggregatedResults.All(result => result.Result != "Failed"); // TODO: maybe there's a better way to find out if a test failed? Is this extensive enough?
+        long uploadedCount = await UploadTestResultsWithCountAsync(aggregatedResults, resultMetadata, cancellationToken);
+        return new TestResultUploadSummary(
+            aggregatedResults.All(result => result.Result != "Failed"), // TODO: maybe there's a better way to find out if a test failed? Is this extensive enough?
+            uploadedCount);
     }
 
     public async Task UploadTestResultsAsync(IEnumerable<AggregatedResult> results, object resultMetadata, CancellationToken cancellationToken = default)
     {
+        await UploadTestResultsWithCountAsync(results, resultMetadata, cancellationToken);
+    }
+
+    public async Task<long> UploadTestResultsWithCountAsync(IEnumerable<AggregatedResult> results, object resultMetadata, CancellationToken cancellationToken = default)
+    {
         try
         {
             long publishedTestCount = 0;
-            var converted = ConvertResults(results, resultMetadata).ToList();
+            IReadOnlyList<AggregatedResult> resultList = results as IReadOnlyList<AggregatedResult> ?? results.ToList();
+            var converted = ConvertResults(resultList, resultMetadata).ToList();
             foreach (List<ConvertedResult> batch in Batch(converted, 1000, static t => Size(t.Converted)))
             {
                 IReadOnlyList<PublishedTestCase> publishedTests = await PublishResultsAsync(batch, cancellationToken);
                 publishedTestCount += publishedTests.Count;
             }
 
-            _logger.LogInformation("Uploaded {Count} results", publishedTestCount);
+            _logger.LogDebug("Uploaded {Count} results", publishedTestCount);
 
-            await SendMetadataAsync(results, cancellationToken);
+            await SendMetadataAsync(resultList, cancellationToken);
+            return publishedTestCount;
         }
         catch (TerminalError ex)
         {

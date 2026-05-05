@@ -12,19 +12,24 @@ namespace Microsoft.DotNet.Helix.JobMonitor
     {
         public static async Task<int> Main(string[] args)
         {
-            using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+            JobMonitorOptions options = null;
+            try
             {
-                builder
-                    .SetMinimumLevel(LogLevel.Information)
-                    .AddConsole(o => o.FormatterName = CompactConsoleLoggerFormatter.FormatterName)
-                    .AddConsoleFormatter<CompactConsoleLoggerFormatter, SimpleConsoleFormatterOptions>();
-            });
+                options = JobMonitorOptions.Parse(args);
+            }
+            catch (Exception ex)
+            {
+                using ILoggerFactory errorLoggerFactory = CreateLoggerFactory(verbose: false);
+                ILogger errorLogger = errorLoggerFactory.CreateLogger<JobMonitorRunner>();
+                errorLogger.LogError(ex, "Helix Job Monitor terminated with an unhandled exception.");
+                return 1;
+            }
 
+            using ILoggerFactory loggerFactory = CreateLoggerFactory(options.Verbose);
             ILogger<JobMonitorRunner> logger = loggerFactory.CreateLogger<JobMonitorRunner>();
 
             try
             {
-                JobMonitorOptions options = JobMonitorOptions.Parse(args);
                 if (options.ShowHelp)
                 {
                     return 0;
@@ -38,6 +43,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 logger.LogError(ex, "Helix Job Monitor terminated with an unhandled exception.");
                 return 1;
             }
+        }
+
+        private static ILoggerFactory CreateLoggerFactory(bool verbose)
+        {
+            return LoggerFactory.Create(builder =>
+            {
+                builder
+                    .SetMinimumLevel(verbose ? LogLevel.Debug : LogLevel.Information)
+                    .AddConsole(o => o.FormatterName = CompactConsoleLoggerFormatter.FormatterName)
+                    .AddConsoleFormatter<CompactConsoleLoggerFormatter, SimpleConsoleFormatterOptions>();
+            });
         }
     }
 }

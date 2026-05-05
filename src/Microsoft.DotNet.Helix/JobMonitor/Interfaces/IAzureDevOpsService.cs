@@ -38,8 +38,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         /// <summary>
         /// Uploads test results for the specified work items into an existing test run.
-        /// Returns true if all test results passed, false otherwise.
+        /// Returns the number of test results uploaded.
         /// </summary>
-        Task<bool> UploadTestResultsAsync(int testRunId, IReadOnlyList<WorkItemTestResults> results, CancellationToken cancellationToken);
+        Task<int> UploadTestResultsAsync(int testRunId, IReadOnlyList<WorkItemTestResults> results, CancellationToken cancellationToken);
     }
 }

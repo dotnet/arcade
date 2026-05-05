@@ -58,6 +58,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         [Option("stage-name", HelpText = "Name of the Azure DevOps pipeline stage the monitor is running in. Used to scope monitoring to that stage. Defaults to the SYSTEM_STAGENAME environment variable.")]
         public string StageName { get; set; }
 
+        [Option("test-result-upload-parallelism", HelpText = "Maximum number of work items whose test results can be uploaded to Azure DevOps in parallel.", Default = 4)]
+        public int TestResultUploadParallelism { get; set; } = 4;
+
+        [Option("verbose", HelpText = "Enable verbose job monitor logging.")]
+        public bool Verbose { get; set; }
+
         public static JobMonitorOptions Parse(string[] args)
         {
             JobMonitorOptions parsed = null;
@@ -123,6 +129,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             if (string.IsNullOrWhiteSpace(StageName))
             {
                 throw new InvalidOperationException("--stage-name (or the SYSTEM_STAGENAME environment variable) must be set.");
+            }
+
+            if (TestResultUploadParallelism <= 0)
+            {
+                throw new InvalidOperationException("--test-result-upload-parallelism must be greater than zero.");
             }
         }
 

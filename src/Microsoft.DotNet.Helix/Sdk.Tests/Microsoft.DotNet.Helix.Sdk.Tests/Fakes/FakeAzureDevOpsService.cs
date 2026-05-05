@@ -24,6 +24,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         public Dictionary<int, List<WorkItemTestResults>> UploadedResultsByRunId { get; } = [];
         public List<string> UploadedJobNames { get; } = [];
         public int CreateTestRunCallCount { get; private set; }
+        public TaskCompletionSource UploadStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource UploadCompleted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Task UploadBlocker { get; set; } = Task.CompletedTask;
 
         /// <summary>
         /// Number of times <see cref="GetTimelineRecordsAsync"/> has been called.
@@ -100,8 +103,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             return Task.CompletedTask;
         }
 
-        public Task<bool> UploadTestResultsAsync(int testRunId, IReadOnlyList<WorkItemTestResults> results, CancellationToken cancellationToken)
+        public async Task<int> UploadTestResultsAsync(int testRunId, IReadOnlyList<WorkItemTestResults> results, CancellationToken cancellationToken)
         {
+            UploadStarted.TrySetResult();
+            await UploadBlocker.WaitAsync(cancellationToken);
+
             if (!UploadedResultsByRunId.TryGetValue(testRunId, out List<WorkItemTestResults> existing))
             {
                 existing = [];
@@ -116,7 +122,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
                 _previouslyProcessedJobs.Add(jobName);
             }
 
-            return Task.FromResult(true);
+            UploadCompleted.TrySetResult();
+            return results.Sum(static result => result.TestResultFiles.Count);
         }
     }
 }

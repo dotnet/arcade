@@ -366,6 +366,52 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal(["helix-linux-tests"], azdo.UploadedJobNames);
         }
 
+        [Fact]
+        public async Task CompletedHelixJob_QueuesTestResultUploadWithoutBlockingNextPoll()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+            var uploadRelease = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            bool delayedBeforeUploadCompleted = false;
+
+            azdo.UploadBlocker = uploadRelease.Task;
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "inProgress"));
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["workitem-1"]),
+                },
+                testResultsByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] =
+                    [
+                        new WorkItemTestResults("helix-linux", "workitem-1", ["a.trx", "b.trx"])
+                    ],
+                });
+
+            var runner = new JobMonitorRunner(DefaultOptions(), logger, azdo, helix,
+                async (_, _) =>
+                {
+                    Task completed = await Task.WhenAny(azdo.UploadStarted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+                    Assert.Same(azdo.UploadStarted.Task, completed);
+                    delayedBeforeUploadCompleted = !azdo.UploadCompleted.Task.IsCompleted;
+                    uploadRelease.SetResult();
+                });
+
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(0, exitCode);
+            Assert.True(delayedBeforeUploadCompleted);
+            Assert.Equal(2, azdo.TimelineCallCount);
+            Assert.Equal(["helix-linux"], azdo.UploadedJobNames);
+            Assert.Single(azdo.CompletedTestRunIds);
+            Assert.Contains(logger.Messages, message =>
+                message.Contains("2 test results for job 'helix-linux' processed after upload.", StringComparison.Ordinal));
+        }
+
         /// <summary>
         /// Test result publishing is separate from pass/fail calculation. If the Helix work item
         /// passed but its test result files fail to upload, the monitor still exits 0.

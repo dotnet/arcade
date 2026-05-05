@@ -138,31 +138,43 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 cancellationToken: cancellationToken);
         }
 
-        public async Task<bool> UploadTestResultsAsync(int testRunId, IReadOnlyList<WorkItemTestResults> results, CancellationToken cancellationToken)
+        public async Task<int> UploadTestResultsAsync(int testRunId, IReadOnlyList<WorkItemTestResults> results, CancellationToken cancellationToken)
         {
-            var publisher = new AzureDevOpsResultPublisher(
-                new AzureDevOpsReportingParameters(
-                    new Uri(_options.CollectionUri, UriKind.Absolute),
-                    _options.TeamProject,
-                    testRunId.ToString(CultureInfo.InvariantCulture),
-                    _options.SystemAccessToken),
-                _logger);
+            int uploadedCount = 0;
+            using var semaphore = new SemaphoreSlim(_options.TestResultUploadParallelism);
 
-            bool allPassed = true;
-            foreach (WorkItemTestResults workItem in results)
+            async Task UploadWorkItemAsync(WorkItemTestResults workItem)
             {
-                _logger.LogInformation("Publishing test results for work item '{WorkItemName}' in job '{JobName}'...", workItem.WorkItemName, workItem.JobName);
-                allPassed &= await publisher.UploadTestResultsAsync(
-                    workItem.TestResultFiles,
-                    new
-                    {
-                        HelixJobId = workItem.JobName,
-                        HelixWorkItemName = workItem.WorkItemName
-                    },
-                    cancellationToken);
+                await semaphore.WaitAsync(cancellationToken);
+                try
+                {
+                    _logger.LogDebug("Publishing test results for work item '{WorkItemName}' in job '{JobName}'...", workItem.WorkItemName, workItem.JobName);
+                    var publisher = new AzureDevOpsResultPublisher(
+                        new AzureDevOpsReportingParameters(
+                            new Uri(_options.CollectionUri, UriKind.Absolute),
+                            _options.TeamProject,
+                            testRunId.ToString(CultureInfo.InvariantCulture),
+                            _options.SystemAccessToken),
+                        _logger);
+
+                    TestResultUploadSummary summary = await publisher.UploadTestResultsWithSummaryAsync(
+                        workItem.TestResultFiles,
+                        new
+                        {
+                            HelixJobId = workItem.JobName,
+                            HelixWorkItemName = workItem.WorkItemName
+                        },
+                        cancellationToken);
+                    Interlocked.Add(ref uploadedCount, checked((int)summary.UploadedCount));
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
             }
 
-            return allPassed;
+            await Task.WhenAll(results.Select(UploadWorkItemAsync));
+            return uploadedCount;
         }
 
         private async Task<JObject> SendAsync(HttpMethod method, string requestUri, JToken body = null, CancellationToken cancellationToken = default)

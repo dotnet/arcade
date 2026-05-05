@@ -38,6 +38,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly Dictionary<string, HashSet<string>> _workItemsByJob = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, FailedWorkItemConsoleInfo> _failedWorkItemConsoleInfo = new(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _reportedFailedWorkItemConsoleLinks = new(StringComparer.OrdinalIgnoreCase);
+        private readonly List<Task> _pendingTestResultUploads = [];
 
         /// <summary>
         /// Constructor for production use with real services.
@@ -186,6 +187,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     await ProcessCompletedJobAsync(job, uploadTestResults: false, cancellationToken);
                 }
 
+                PruneCompletedTestResultUploads();
+
                 anyNonMonitorJobFailures = HelixJobMonitorUtilities.HasFailedNonMonitorJobs(
                     timelineRecords,
                     _options.JobMonitorName,
@@ -195,6 +198,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 if (allPipelineJobsComplete && allHelixJobsComplete)
                 {
+                    await WaitForPendingTestResultUploadsAsync(cancellationToken);
                     bool anyWorkItemFailed = _workItemOutcomes.Values.Any(passed => !passed);
                     _logger.LogInformation("Final summary: processed {ProcessedCount} Helix job(s); {FailedWorkItems} work item(s) failed.",
                         processedHelixJobCount, _workItemOutcomes.Values.Count(passed => !passed));
@@ -369,25 +373,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             if (uploadTestResults)
             {
-                int testRunId = await _azdo.CreateTestRunAsync(helixJob.TestRunName, helixJob.JobName, cancellationToken);
-
-                try
-                {
-                    IReadOnlyList<WorkItemTestResults> downloadedFiles = await _helix.DownloadTestResultsAsync(
-                        helixJob.JobName,
-                        [.. workItems.Select(w => w.Name)],
-                        _options.WorkingDirectory, cancellationToken);
-
-                    await _azdo.UploadTestResultsAsync(testRunId, downloadedFiles, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to upload test results for job {JobName} to Azure DevOps. Test run ID was {TestRunId}.", helixJob.JobName, testRunId);
-                }
-                finally
-                {   
-                    await _azdo.CompleteTestRunAsync(testRunId, cancellationToken);
-                }
+                QueueTestResultUpload(helixJob, workItems, cancellationToken);
             }
 
             _logger.LogInformation("{Icon} Job '{JobName}' {Status} ({PassedCount} passed, {FailedCount} failed){nl}{JobUri}",
@@ -397,6 +383,77 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 successfulWorkItemCount,
                 failedWorkItemCount,
                 Environment.NewLine, helixJob.DetailsUri);
+        }
+
+        private void QueueTestResultUpload(
+            HelixJobInfo helixJob,
+            IReadOnlyCollection<WorkItemSummary> workItems,
+            CancellationToken cancellationToken)
+        {
+            IReadOnlyList<string> workItemNames = [.. workItems.Select(w => w.Name)];
+            Task uploadTask = Task.Run(
+                () => UploadTestResultsForJobAsync(helixJob, workItemNames, cancellationToken),
+                CancellationToken.None);
+            _pendingTestResultUploads.Add(uploadTask);
+        }
+
+        private async Task UploadTestResultsForJobAsync(
+            HelixJobInfo helixJob,
+            IReadOnlyCollection<string> workItemNames,
+            CancellationToken cancellationToken)
+        {
+            int testRunId = 0;
+
+            try
+            {
+                testRunId = await _azdo.CreateTestRunAsync(helixJob.TestRunName, helixJob.JobName, cancellationToken);
+                IReadOnlyList<WorkItemTestResults> downloadedFiles = await _helix.DownloadTestResultsAsync(
+                    helixJob.JobName,
+                    workItemNames,
+                    _options.WorkingDirectory,
+                    cancellationToken);
+
+                int uploadedCount = await _azdo.UploadTestResultsAsync(testRunId, downloadedFiles, cancellationToken);
+                _logger.LogInformation("{UploadedCount} test results for job '{JobName}' processed after upload.",
+                    uploadedCount,
+                    helixJob.JobName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to upload test results for job {JobName} to Azure DevOps. Test run ID was {TestRunId}.", helixJob.JobName, testRunId);
+            }
+            finally
+            {
+                if (testRunId != 0)
+                {
+                    try
+                    {
+                        await _azdo.CompleteTestRunAsync(testRunId, cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to complete Azure DevOps test run {TestRunId} for job {JobName}.", testRunId, helixJob.JobName);
+                    }
+                }
+            }
+        }
+
+        private void PruneCompletedTestResultUploads()
+        {
+            _pendingTestResultUploads.RemoveAll(static task => task.IsCompleted);
+        }
+
+        private async Task WaitForPendingTestResultUploadsAsync(CancellationToken cancellationToken)
+        {
+            PruneCompletedTestResultUploads();
+            if (_pendingTestResultUploads.Count == 0)
+            {
+                return;
+            }
+
+            _logger.LogInformation("Waiting for {Count} pending test result upload(s) to complete.", _pendingTestResultUploads.Count);
+            await Task.WhenAll(_pendingTestResultUploads);
+            PruneCompletedTestResultUploads();
         }
 
         private void LogFailedWorkItemConsoleLinks(HelixJobInfo helixJob, IReadOnlyCollection<WorkItemSummary> workItems)
