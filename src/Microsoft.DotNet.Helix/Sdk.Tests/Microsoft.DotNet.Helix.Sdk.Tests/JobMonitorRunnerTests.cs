@@ -940,7 +940,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             int delayCount = 0;
             var options = DefaultOptions(attempt: 2);
-            options.MonitorAllStages = false;
             options.StageName = "Test";
             options.JobMonitorName = "HelixJobMonitor";
             var runner = new JobMonitorRunner(options, NullLogger.Instance, azdo, helix,
@@ -2093,57 +2092,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         /// <summary>
-        /// The default monitor-all-stages mode includes timeline and Helix jobs from stages other
-        /// than the monitor's stage.
-        /// </summary>
-        [Fact]
-        public async Task MonitorAllStages_IncludesOtherStageJobsAndHelixJobs()
-        {
-            var azdo = new FakeAzureDevOpsService();
-            var helix = new FakeHelixService();
-
-            azdo.AddTimelineResponse(
-                StageRecord("Test", "stage-test", "completed", "succeeded"),
-                MonitorJob(parentId: "stage-test"),
-                PipelineJob("Test Linux", "completed", "succeeded", parentId: "stage-test"),
-                StageRecord("Build", "stage-build", "completed", "succeeded"),
-                PipelineJob("Build Windows", "completed", "succeeded", parentId: "stage-build"));
-            azdo.AddTimelineResponse(
-                StageRecord("Test", "stage-test", "completed", "succeeded"),
-                MonitorJob(parentId: "stage-test"),
-                PipelineJob("Test Linux", "completed", "succeeded", parentId: "stage-test"),
-                StageRecord("Build", "stage-build", "completed", "succeeded"),
-                PipelineJob("Build Windows", "completed", "succeeded", parentId: "stage-build"));
-
-            helix.AddResponse(
-                jobs: [HelixJob("helix-build", "finished", stageName: "Build")],
-                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
-                {
-                    ["helix-build"] = PassFail(failed: ["build-fail"]),
-                });
-            helix.ConfigureResubmission("helix-build", "helix-build-resub");
-            helix.AddResponse(
-                jobs:
-                [
-                    HelixJob("helix-build", "finished", stageName: "Build"),
-                    HelixJob("helix-build-resub", "finished", stageName: "Build", previousHelixJobName: "helix-build"),
-                ],
-                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
-                {
-                    ["helix-build"] = PassFail(failed: ["build-fail"]),
-                    ["helix-build-resub"] = PassFail(passed: ["build-fail"]),
-                });
-
-            var runner = CreateRunner(azdo, helix);
-            int exitCode = await runner.RunAsync(CancellationToken.None);
-
-            Assert.Equal(0, exitCode);
-            Assert.Single(helix.Resubmissions);
-            Assert.Equal("helix-build", helix.Resubmissions[0].OriginalJob);
-            Assert.Equal(["helix-build", "helix-build-resub"], azdo.UploadedJobNames);
-        }
-
-        /// <summary>
         /// Canceled non-monitor AzDO jobs fail the monitor even when no Helix work is present.
         /// </summary>
         [Fact]
@@ -2567,6 +2515,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Organization = "dotnet",
             RepositoryName = "arcade",
             PrNumber = 99999,
+            StageName = "Test",
             SystemAccessToken = "token",
             TeamProject = "public",
             WorkingDirectory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "job-monitor-test"),
@@ -2578,16 +2527,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         private static JobMonitorRunner CreateRunner(
             FakeAzureDevOpsService azdo,
             FakeHelixService helix,
-            string stageName = null,
+            string stageName = "Test",
             int attempt = 1,
             ILogger logger = null)
         {
             var options = DefaultOptions(attempt);
-            if (stageName != null)
-            {
-                options.MonitorAllStages = false;
-                options.StageName = stageName;
-            }
+            options.StageName = stageName;
 
             return new(options, logger ?? NullLogger.Instance, azdo, helix, NoDelay);
         }

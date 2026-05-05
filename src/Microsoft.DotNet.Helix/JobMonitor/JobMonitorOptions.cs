@@ -55,10 +55,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         [Option("attempt", HelpText = "Azure DevOps attempt number for the current job.")]
         public int? Attempt { get; set; }
 
-        [Option("monitor-all-stages", HelpText = "When set, the monitor tracks Helix jobs and pipeline jobs across all stages of the build. When not set, the monitor only tracks jobs that belong to the same stage as the monitor itself (see --stage-name).")]
-        public bool MonitorAllStages { get; set; }
-
-        [Option("stage-name", HelpText = "Name of the Azure DevOps pipeline stage the monitor is running in. Used to scope monitoring when --monitor-all-stages is false. Defaults to the SYSTEM_STAGENAME environment variable.")]
+        [Option("stage-name", HelpText = "Name of the Azure DevOps pipeline stage the monitor is running in. Used to scope monitoring to that stage. Defaults to the SYSTEM_STAGENAME environment variable.")]
         public string StageName { get; set; }
 
         public static JobMonitorOptions Parse(string[] args)
@@ -123,9 +120,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 throw new InvalidOperationException("Organization must be provided either by argument or pipeline environment.");
             }
 
-            if (!MonitorAllStages && string.IsNullOrWhiteSpace(StageName))
+            if (string.IsNullOrWhiteSpace(StageName))
             {
-                throw new InvalidOperationException("--stage-name (or the SYSTEM_STAGENAME environment variable) must be set when --monitor-all-stages is false.");
+                throw new InvalidOperationException("--stage-name (or the SYSTEM_STAGENAME environment variable) must be set.");
             }
         }
 

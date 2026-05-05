@@ -86,8 +86,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task<int> RunCoreAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Monitoring Helix jobs for {stage} of build {BuildId}:{nl}https://dev.azure.com/dnceng-public/public/_build/results?buildId={BuildId}",
-                _options.MonitorAllStages || string.IsNullOrEmpty(_options.StageName) ? "all stages" : $"stage '{_options.StageName}'",
+            _logger.LogInformation("Monitoring Helix jobs for stage {stage} of build {BuildId}:{nl}https://dev.azure.com/dnceng-public/public/_build/results?buildId={BuildId}",
+                _options.StageName,
                 _options.BuildId,
                 Environment.NewLine,
                 _options.BuildId);
@@ -140,18 +140,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     cancellationToken);
                 jobsForFirstPoll = null;
 
-                // When the monitor is scoped to a single stage, drop timeline records and Helix jobs
-                // that belong to other stages so they don't gate completion or contribute failures.
-                if (!_options.MonitorAllStages && !string.IsNullOrEmpty(_options.StageName))
-                {
-                    timelineRecords = HelixJobMonitorUtilities.FilterRecordsToStage(timelineRecords, _options.StageName);
-                    associatedJobsWithBuild =
-                    [
-                        ..associatedJobsWithBuild.Where(j =>
-                            string.IsNullOrEmpty(j.StageName)
-                            || string.Equals(j.StageName, _options.StageName, StringComparison.OrdinalIgnoreCase))
-                    ];
-                }
+                // Drop timeline records and Helix jobs that belong to other stages so they don't
+                // gate completion or contribute failures.
+                timelineRecords = HelixJobMonitorUtilities.FilterRecordsToStage(timelineRecords, _options.StageName);
+                associatedJobsWithBuild =
+                [
+                    ..associatedJobsWithBuild.Where(j =>
+                        string.IsNullOrEmpty(j.StageName)
+                        || string.Equals(j.StageName, _options.StageName, StringComparison.OrdinalIgnoreCase))
+                ];
 
                 associatedJobs.UnionWith(associatedJobsWithBuild);
 
@@ -533,9 +530,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private bool IsHelixJobInScope(HelixJobInfo job)
         {
-            return _options.MonitorAllStages
-                || string.IsNullOrEmpty(_options.StageName)
-                || string.IsNullOrEmpty(job.StageName)
+            return string.IsNullOrEmpty(job.StageName)
                 || string.Equals(job.StageName, _options.StageName, StringComparison.OrdinalIgnoreCase);
         }
 

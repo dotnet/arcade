@@ -66,8 +66,6 @@ Example:
 jobs:
 - template: /eng/common/core-templates/job/helix-job-monitor.yml@self
   parameters:
-    jobName: HelixJobMonitor
-    displayName: Helix Job Monitor
     pollingIntervalSeconds: 30
     timeoutInMinutes: 360
 ```
@@ -78,7 +76,6 @@ Useful parameters:
 - `helixAccessToken`: optional token for authenticated Helix access on internal builds.
 - `pollingIntervalSeconds`: how often the job monitor checks for new completed jobs.
 - `timeoutInMinutes`: overall timeout for the job monitor.
-- `jobMonitorName`: name used to identify and exclude the Helix Job Monitor job in the Azure DevOps timeline.
 
 Behavior notes:
 

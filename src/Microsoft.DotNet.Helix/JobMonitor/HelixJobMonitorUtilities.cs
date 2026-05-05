@@ -74,8 +74,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// <summary>
         /// Returns the subset of <paramref name="records"/> that belongs to the pipeline stage
         /// named <paramref name="stageName"/>, including the Stage record itself and any
-        /// descendant records (Phases, Jobs, Tasks). When the named Stage is not present in the
-        /// timeline an empty list is returned.
+        /// descendant records (Phases, Jobs, Tasks). When the timeline contains no Stage records
+        /// at all (single-stage build) every record is returned. When the timeline does contain
+        /// Stage records but none match <paramref name="stageName"/>, an empty list is returned.
         /// </summary>
         public static IReadOnlyList<AzureDevOpsTimelineRecord> FilterRecordsToStage(
             IEnumerable<AzureDevOpsTimelineRecord> records,
@@ -87,9 +88,20 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             List<AzureDevOpsTimelineRecord> all = records.ToList();
-            AzureDevOpsTimelineRecord stageRoot = all.FirstOrDefault(r =>
-                string.Equals(r.Type, "Stage", StringComparison.OrdinalIgnoreCase)
-                && string.Equals(r.ReferenceName, stageName, StringComparison.OrdinalIgnoreCase));
+            List<AzureDevOpsTimelineRecord> stageRecords =
+            [
+                ..all.Where(r => string.Equals(r.Type, "Stage", StringComparison.OrdinalIgnoreCase))
+            ];
+
+            if (stageRecords.Count == 0)
+            {
+                // No stage records present in the timeline; treat the whole timeline as the
+                // monitor's stage (single-stage build).
+                return all;
+            }
+
+            AzureDevOpsTimelineRecord stageRoot = stageRecords.FirstOrDefault(r =>
+                string.Equals(r.ReferenceName, stageName, StringComparison.OrdinalIgnoreCase));
 
             if (stageRoot == null)
             {
