@@ -2430,7 +2430,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public async Task LoopStatus_LogsOutstandingHelixJobWorkItems()
+        public async Task LoopStatus_LogsAggregateHelixJobWorkItemCounts()
         {
             var azdo = new FakeAzureDevOpsService();
             var helix = new FakeHelixService();
@@ -2466,19 +2466,15 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.Equal(1, exitCode);
             Assert.Contains(logger.Messages, message =>
-                message.Contains("Outstanding Helix jobs:", StringComparison.Ordinal)
-                && message.Contains("└─ 🧪 Helix job helix-linux", StringComparison.Ordinal)
-                && message.Contains("   ├─ wi-1 (Running)", StringComparison.Ordinal)
-                && message.Contains("   └─ wi-2 (Finished, exit code 1) | Console: https://helix.example/wi-2/console", StringComparison.Ordinal));
+                message.Contains("Jobs (Work Items) Status: 0 (0) processed / 0 (0) completed / 1 (3) running / 0 (0) waiting", StringComparison.Ordinal));
             Assert.DoesNotContain(logger.Messages, message =>
-                message.Contains("Outstanding Helix jobs:", StringComparison.Ordinal)
-                && message.Contains("wi-pass", StringComparison.Ordinal));
+                message.Contains("Helix job details:", StringComparison.Ordinal));
             Assert.Contains(logger.Messages, message =>
                 message.Contains("Work item 'wi-2' in job 'helix-linux' failed (Finished, exit code 1). Console: https://helix.example/wi-2/console", StringComparison.Ordinal));
         }
 
         [Fact]
-        public async Task LoopStatus_LogsOutstandingHelixJobWithoutKnownWorkItems()
+        public async Task LoopStatus_LogsWaitingHelixJobWorkItemCounts()
         {
             var azdo = new FakeAzureDevOpsService();
             var helix = new FakeHelixService();
@@ -2500,13 +2496,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.Equal(1, exitCode);
             Assert.Contains(logger.Messages, message =>
-                message.Contains("Outstanding Helix jobs:", StringComparison.Ordinal)
-                && message.Contains("└─ 🧪 Helix job helix-linux", StringComparison.Ordinal)
-                && message.Contains("   └─ no unfinished or failed work items reported yet", StringComparison.Ordinal));
+                message.Contains("Jobs (Work Items) Status: 0 (0) processed / 0 (0) completed / 0 (0) running / 1 (0) waiting", StringComparison.Ordinal));
+            Assert.DoesNotContain(logger.Messages, message =>
+                message.Contains("Helix job details:", StringComparison.Ordinal));
         }
 
         [Fact]
-        public async Task LoopStatus_TruncatesLongOutstandingHelixJobWorkItemList()
+        public async Task LoopStatus_VerboseLogsFullHelixJobWorkItemList()
         {
             var azdo = new FakeAzureDevOpsService();
             var helix = new FakeHelixService();
@@ -2526,7 +2522,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                             "Running")),
                 ]);
 
-            var runner = new JobMonitorRunner(DefaultOptions(), logger, azdo, helix,
+            JobMonitorOptions options = DefaultOptions();
+            options.Verbose = true;
+            var runner = new JobMonitorRunner(options, logger, azdo, helix,
                 (_, _) =>
                 {
                     cts.Cancel();
@@ -2537,14 +2535,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.Equal(1, exitCode);
             Assert.Contains(logger.Messages, message =>
-                message.Contains("Outstanding Helix jobs:", StringComparison.Ordinal)
+                message.Contains("Helix job details:", StringComparison.Ordinal)
+                && message.Contains("└─ 🧪 Helix job helix-linux [Running]", StringComparison.Ordinal)
                 && message.Contains("   ├─ wi-01 (Running)", StringComparison.Ordinal)
                 && message.Contains("   ├─ wi-10 (Running)", StringComparison.Ordinal)
-                && message.Contains("   └─ ...2 additional", StringComparison.Ordinal));
-            Assert.DoesNotContain(logger.Messages, message =>
-                message.Contains("Outstanding Helix jobs:", StringComparison.Ordinal)
-                && (message.Contains("wi-11", StringComparison.Ordinal)
-                    || message.Contains("wi-12", StringComparison.Ordinal)));
+                && message.Contains("   ├─ wi-11 (Running)", StringComparison.Ordinal)
+                && message.Contains("   └─ wi-12 (Running)", StringComparison.Ordinal));
         }
 
         // -----------------------------------------------------------------------
