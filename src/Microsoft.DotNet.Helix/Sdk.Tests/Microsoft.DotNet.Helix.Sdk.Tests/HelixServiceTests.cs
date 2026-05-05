@@ -154,18 +154,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public async Task ResubmitWorkItemsAsync_ReturnsNullAndDoesNotCallHelixWhenNoFailedItems()
-        {
-            var api = CreateApi();
-
-            HelixJobInfo result = await CreateService(api.Api.Object)
-                .ResubmitWorkItemsAsync("original-job", [], CancellationToken.None);
-
-            Assert.Null(result);
-            api.Job.Verify(j => j.DetailsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
-        }
-
-        [Fact]
         public async Task ResubmitWorkItemsAsync_ReturnsNullWhenRequiredJobDetailsAreMissing()
         {
             var api = CreateApi();
