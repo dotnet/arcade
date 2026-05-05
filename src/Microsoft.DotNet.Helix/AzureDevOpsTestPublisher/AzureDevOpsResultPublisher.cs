@@ -15,6 +15,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 public sealed class AzureDevOpsResultPublisher
 {
     private const int TestListBuckets = 32;
+    private static readonly TimeSpan s_httpClientTimeout = TimeSpan.FromMinutes(5);
     private static readonly JsonSerializerOptions s_serializerOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = false,
@@ -459,7 +460,10 @@ public sealed class AzureDevOpsResultPublisher
 
     private static HttpClient CreateHttpClient(string? accessToken)
     {
-        var client = new HttpClient();
+        var client = new HttpClient
+        {
+            Timeout = s_httpClientTimeout
+        };
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
         if (!string.IsNullOrWhiteSpace(accessToken))
