@@ -34,6 +34,8 @@
       <_TestRunnerCommand Condition="'$(TestCaptureOutput)' != 'false'">$(_TestRunnerCommand) >> "%(TestToRun.ResultsStdOutPath)" 2>&amp;1</_TestRunnerCommand>
     </PropertyGroup>
 
+    <Error Text="UseVSTestRunner property shouldn't be used when using Microsoft.Testing.Platform" Condition="'$(_IsMTP)' == 'true'" File="VSTest" />
+
     <ItemGroup>
       <_OutputFiles Include="%(TestToRun.ResultsTrxPath)" />
       <_OutputFiles Include="%(TestToRun.ResultsHtmlPath)" />
@@ -42,8 +44,6 @@
 
     <MakeDir Directories="@(_OutputFiles->'%(RootDir)%(Directory)')"/>
     <Delete Files="@(_OutputFiles)" />
-
-    <Error Text="UseVSTestRunner property shouldn't be used when using Microsoft.Testing.Platform" Condition="'$(_IsMTP)' == 'true'" File="VSTest" />
 
     <!--
       Add command line to the log.
