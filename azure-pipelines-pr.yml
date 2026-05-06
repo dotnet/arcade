@@ -64,7 +64,8 @@ stages:
       - job: Windows_NT
         timeoutInMinutes: 90
         pool:
-          vmImage: windows-latest # TODO: Testing only, revert
+          name: $(DncEngPublicBuildPool)
+          demands: ImageOverride -equals windows.vs2026.amd64.open
         strategy:
           matrix:
             Build_Release:
