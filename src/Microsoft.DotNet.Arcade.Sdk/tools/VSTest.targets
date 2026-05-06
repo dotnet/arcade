@@ -5,13 +5,12 @@
           Outputs="%(TestToRun.ResultsStdOutPath)"
           Condition="'$(SkipTests)' != 'true' and '@(TestToRun)' != ''">
 
-    <Error Text="UseVSTestRunner property shouldn't be used when using Microsoft.Testing.Platform" Condition="'$(IsTestingPlatformApplication)' == 'true'" File="VSTest" />
-
     <PropertyGroup>
       <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>
       <_TestAssembly>%(TestToRun.Identity)</_TestAssembly>
       <_TestRuntime>%(TestToRun.TestRuntime)</_TestRuntime>
       <_TestTimeout>%(TestToRun.TestTimeout)</_TestTimeout>
+      <_IsMTP>%(TestToRun.IsTestingPlatformApplication)</_IsMTP>
       <_TestRunnerAdditionalArguments>%(TestToRun.TestRunnerAdditionalArguments)</_TestRunnerAdditionalArguments>
 
       <!-- Always use net472 for desktop to enable displaying source location from Portable PDBs in stack traces -->
@@ -43,6 +42,8 @@
 
     <MakeDir Directories="@(_OutputFiles->'%(RootDir)%(Directory)')"/>
     <Delete Files="@(_OutputFiles)" />
+
+    <Error Text="UseVSTestRunner property shouldn't be used when using Microsoft.Testing.Platform" Condition="'$(_IsMTP)' == 'true'" File="VSTest" />
 
     <!--
       Add command line to the log.
