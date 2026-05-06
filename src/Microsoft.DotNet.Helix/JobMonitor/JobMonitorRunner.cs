@@ -556,10 +556,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     continue;
                 }
 
-                _logger.LogInformation("❌ Work item '{WorkItemName}' in job '{JobName}' failed ({State}). Console: {ConsoleOutputUri}",
+                _logger.LogInformation("❌ Work item '{WorkItemName}' in job '{JobName}' failed ({State}).{nl}Console: {ConsoleOutputUri}",
                     workItem.Name,
                     helixJob.JobName,
                     FormatWorkItemState(workItem),
+                    Environment.NewLine,
                     GetConsoleOutputText(workItem.ConsoleOutputUri));
             }
         }
