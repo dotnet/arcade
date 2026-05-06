@@ -101,17 +101,6 @@ secrets:
       organizations: devdiv
       scopes: code_write drop_write
 
-  dn-bot-devdiv-drop-r-code-r:
-    type: azure-devops-access-token
-    parameters:
-      domainAccountName: dn-bot
-      domainAccountSecret:
-          location: helixkv
-          name: dn-bot-account-redmond
-      name: dn-bot-devdiv-drop-r-code-r
-      organizations: devdiv
-      scopes: code drop
-
   #DotNet-Symbol-Server-Pats
   microsoft-symbol-server-pat:
     type: azure-devops-access-token
