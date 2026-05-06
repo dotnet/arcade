@@ -186,7 +186,7 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
             var options = new RemoteInvokeOptions
             {
                 RollForward = "Major",
-                DisableCrashDumpCollection = true
+                CrashDumpCollectionType = CrashDumpCollectionType.None
             };
             options.StartInfo.Environment["DOTNET_DbgEnableMiniDump"] = "1";
             options.StartInfo.Environment["DOTNET_DbgMiniDumpType"] = "4";

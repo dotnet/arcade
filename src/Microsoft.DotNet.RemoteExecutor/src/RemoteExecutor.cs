@@ -453,7 +453,7 @@ namespace Microsoft.DotNet.RemoteExecutor
                 psi.Environment.Remove("CoreClr_Enable_Profiling");
             }
 
-            if (options.DisableCrashDumpCollection)
+            if (options.CrashDumpCollectionType is CrashDumpCollectionType.None)
             {
                 psi.Environment.Remove("DOTNET_DbgEnableMiniDump");
                 psi.Environment.Remove("DOTNET_DbgMiniDumpType");

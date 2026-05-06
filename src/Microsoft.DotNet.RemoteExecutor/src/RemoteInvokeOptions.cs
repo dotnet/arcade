@@ -11,10 +11,15 @@ namespace Microsoft.DotNet.RemoteExecutor
 {
     /// <summary>
     /// The type of crash dump to collect. Maps to DOTNET_DbgMiniDumpType values
-    /// as documented in https://learn.microsoft.com/en-us/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps. Only applies to .NET Core subprocesses.
+    /// as documented in <see href="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps">the docs</see>. Only applies to .NET Core subprocesses.
     /// </summary>
     public enum CrashDumpCollectionType
     {
+        /// <summary>
+        /// Explicitly disables crash dump collection, removing any inherited DOTNET_DbgEnableMiniDump,
+        /// DOTNET_DbgMiniDumpType, and DOTNET_DbgMiniDumpName environment variables from the subprocess.
+        /// </summary>
+        None = 0,
         Mini = 1,
         Heap = 2,
         Triage = 3,
@@ -78,11 +83,13 @@ namespace Microsoft.DotNet.RemoteExecutor
         public string RollForward { get; set; }
 
         /// <summary>
-        /// Gets or sets whether to configure crash dump collection on the subprocess via
+        /// Gets or sets the type of crash dump to collect on the subprocess via
         /// DOTNET_DbgEnableMiniDump / DOTNET_DbgMiniDumpType / DOTNET_DbgMiniDumpName.
-        /// When set to a <see cref="CrashDumpCollectionType"/> value, crash dump collection is enabled
-        /// with that dump type. When set to null (default), the environment variables are left as-is.
-        /// To explicitly disable crash dumps (removing any inherited env vars), set <see cref="DisableCrashDumpCollection"/> to true.
+        /// When set to a value other than <see cref="CrashDumpCollectionType.None"/>,
+        /// crash dump collection is enabled with that dump type.
+        /// When set to <see cref="CrashDumpCollectionType.None"/>, crash dump collection is
+        /// explicitly disabled (removing any inherited env vars).
+        /// When null (default), the environment variables are left as-is.
         /// </summary>
         /// <remarks>
         /// Only applies to .NET Core subprocesses.
@@ -97,11 +104,5 @@ namespace Microsoft.DotNet.RemoteExecutor
         /// or the system temp directory otherwise.
         /// </summary>
         public string CrashDumpPath { get; set; }
-
-        /// <summary>
-        /// When true, explicitly removes the DOTNET_DbgEnableMiniDump, DOTNET_DbgMiniDumpType, and
-        /// DOTNET_DbgMiniDumpName environment variables from the subprocess, disabling any inherited crash dump configuration.
-        /// </summary>
-        public bool DisableCrashDumpCollection { get; set; }
     }
 }
