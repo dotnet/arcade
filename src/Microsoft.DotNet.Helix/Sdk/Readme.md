@@ -84,6 +84,41 @@ Behavior notes:
 - If no result files are found, the reporter creates synthetic work-item pass/fail results so that failures are still visible in Azure DevOps.
 - The reporter is safe to rerun because it checks for already-completed test runs and only processes new results.
 
+#### Adding the `microsoft.dotnet.helix.jobmonitor` package
+
+The Helix Job Monitor ships as a .NET tool in the `microsoft.dotnet.helix.jobmonitor` package, which
+must be added as a dependency to the repo and registered as a local tool.
+
+1. Look up the latest version of the package on the `.NET Eng - Latest` channel:
+
+    ```sh
+    darc get-asset --name microsoft.dotnet.helix.jobmonitor --channel '.NET Eng - Latest' --latest
+    ```
+
+2. Use the version, commit, and repo URI returned above to add the dependency via `darc`:
+
+    ```sh
+    darc add-dependency \
+      --name microsoft.dotnet.helix.jobmonitor \
+      --type toolset \
+      --version <version-from-get-asset> \
+      --commit <commit-from-get-asset> \
+      --repo <repo-uri-from-get-asset>
+    ```
+
+3. Add a matching entry under `tools` in `.config/dotnet-tools.json` so the tool is restored locally:
+
+    ```json
+    "microsoft.dotnet.helix.jobmonitor": {
+      "version": "11.0.0-beta.26255.6",
+      "commands": [
+        "dotnet-helix-job-monitor"
+      ]
+    }
+    ```
+
+    Use the same version that was added via `darc add-dependency`.
+
 #### Opting in from a Helix project
 
 Pair the monitor job with the `EnableHelixJobMonitor` MSBuild property in the Helix `.proj` that
