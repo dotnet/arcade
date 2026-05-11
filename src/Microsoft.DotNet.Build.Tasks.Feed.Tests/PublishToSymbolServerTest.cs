@@ -223,7 +223,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 BlobAssetsBasePath = symbolFilesDir,
                 TempSymbolsAzureDevOpsOrg = "dncengtest",
                 TempSymbolsAzureDevOpsOrgToken = "token",
-                SymbolRequestProject = "dotnettest"
+                SymbolRequestProject = "dotnettest",
+                ManagedIdentityClientId = "00000000-0000-0000-0000-000000000000"
             };
             task.FeedConfigs.Add(TargetFeedContentType.Symbols, feedConfigsForSymbols);
             task.BlobsByCategory.Add(TargetFeedContentType.Symbols, new HashSet<Manifest.BlobArtifactModel>()
