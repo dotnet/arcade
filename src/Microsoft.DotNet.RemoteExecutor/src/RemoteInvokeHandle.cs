@@ -1,7 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.Diagnostics.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,6 +9,10 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+#if NETCOREAPP
+using Microsoft.Diagnostics.NETCore.Client;
+#endif
+using Microsoft.Diagnostics.Runtime;
 
 namespace Microsoft.DotNet.RemoteExecutor
 {
@@ -146,87 +149,16 @@ namespace Microsoft.DotNet.RemoteExecutor
                             {
                                 description.AppendLine($"Timed out at {DateTime.Now} after {Options.TimeOut}ms waiting for remote process.");
 
-                                // Create a dump if possible
-                                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                                if (Options.EnableTimeoutDumpCollection)
                                 {
-                                    string uploadPath = Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT");
-                                    if (!string.IsNullOrWhiteSpace(uploadPath))
-                                    {
-                                        try
-                                        {
-                                            string miniDmpPath = Path.Combine(uploadPath, $"{Process.Id}.{Path.GetRandomFileName()}.dmp");
-                                            MiniDump.Create(Process, miniDmpPath);
-                                            description.AppendLine($"Wrote mini dump to: {miniDmpPath}");
-                                        }
-                                        catch (Exception exc)
-                                        {
-                                            description.AppendLine($"Failed to create mini dump: {exc.Message}");
-                                        }
-                                    }
+                                    CollectTimeoutDiagnostics(description);
                                 }
-
-                                // Gather additional details about the process if possible
-                                try
-                                {
-                                    description.AppendLine($"\tProcess ID: {Process.Id}");
-                                    description.AppendLine($"\tHandle: {Process.Handle}");
-                                    description.AppendLine($"\tName: {Process.ProcessName}");
-                                    description.AppendLine($"\tMainModule: {Process.MainModule?.FileName}");
-                                    description.AppendLine($"\tStartTime: {Process.StartTime}");
-                                    description.AppendLine($"\tTotalProcessorTime: {Process.TotalProcessorTime}");
-
-                                    // Attach ClrMD to gather some additional details.
-                                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && // As of Microsoft.Diagnostics.Runtime v1.0.5, process attach only works on Windows.
-                                        Interlocked.CompareExchange(ref s_clrMdLock, 1, 0) == 0) // Make sure we only attach to one process at a time.
-                                    {
-                                        try
-                                        {
-                                            using (DataTarget dt = DataTarget.AttachToProcess(Process.Id, msecTimeout: 20_000)) // arbitrary timeout
-                                            {
-                                                ClrRuntime runtime = dt.ClrVersions.FirstOrDefault()?.CreateRuntime();
-                                                if (runtime != null)
-                                                {
-                                                    // Dump the threads in the remote process.
-                                                    description.AppendLine("\tThreads:");
-                                                    foreach (ClrThread thread in runtime.Threads.Where(t => t.IsAlive))
-                                                    {
-                                                        string threadKind =
-                                                            thread.IsThreadpoolCompletionPort ? "[Thread pool completion port]" :
-                                                            thread.IsThreadpoolGate ? "[Thread pool gate]" :
-                                                            thread.IsThreadpoolTimer ? "[Thread pool timer]" :
-                                                            thread.IsThreadpoolWait ? "[Thread pool wait]" :
-                                                            thread.IsThreadpoolWorker ? "[Thread pool worker]" :
-                                                            thread.IsFinalizer ? "[Finalizer]" :
-                                                            thread.IsGC ? "[GC]" :
-                                                            "";
-
-                                                        string isBackground = thread.IsBackground ? "[Background]" : "";
-                                                        string apartmentModel = thread.IsMTA ? "[MTA]" :
-                                                                                thread.IsSTA ? "[STA]" :
-                                                                                "";
-
-                                                        description.AppendLine($"\t\tThread #{thread.ManagedThreadId} (OS 0x{thread.OSThreadId:X}) {threadKind} {isBackground} {apartmentModel}");
-                                                        foreach (ClrStackFrame frame in thread.StackTrace)
-                                                        {
-                                                            description.AppendLine($"\t\t\t{frame}");
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        finally
-                                        {
-                                            Interlocked.Exchange(ref s_clrMdLock, 0);
-                                        }
-                                    }
-                                }
-                                catch { }
 
                                 throw new RemoteExecutionException(description.ToString());
                             }
                         }
 
-                        FileInfo exceptionFileInfo = new FileInfo(Options.ExceptionFile);
+                        FileInfo exceptionFileInfo = new(Options.ExceptionFile);
                         if (exceptionFileInfo.Exists && exceptionFileInfo.Length != 0)
                         {
                             throw new RemoteExecutionException("Remote process failed with an unhandled exception.", File.ReadAllText(Options.ExceptionFile));
@@ -269,6 +201,82 @@ namespace Microsoft.DotNet.RemoteExecutor
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Collects diagnostic information (dump + thread stacks) from the timed-out remote process.
+        /// </summary>
+        private void CollectTimeoutDiagnostics(StringBuilder description)
+        {
+            string uploadPath = Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT");
+            if (!string.IsNullOrWhiteSpace(uploadPath))
+            {
+                try
+                {
+                    string dumpPath = Path.Combine(uploadPath, $"{Process.Id}.{Path.GetRandomFileName()}.dmp");
+#if NETCOREAPP
+                    // These define guards assume that harness running on .NET Framework implies test process runs on .NET Framework.
+                    var client = new DiagnosticsClient(Process.Id);
+                    client.WriteDump(DumpType.Full, dumpPath, logDumpGeneration: false);
+#else
+                    MiniDump.Create(Process, dumpPath);
+#endif
+                    description.AppendLine($"Wrote dump to: {dumpPath}");
+                }
+                catch (Exception exc)
+                {
+                    description.AppendLine($"Failed to create dump: {exc.Message}");
+                }
+            }
+
+            // Gather additional details about the process if possible
+            try
+            {
+                description.AppendLine($"\tProcess ID: {Process.Id}");
+                description.AppendLine($"\tHandle: {Process.Handle}");
+                description.AppendLine($"\tName: {Process.ProcessName}");
+                description.AppendLine($"\tMainModule: {Process.MainModule?.FileName}");
+                description.AppendLine($"\tStartTime: {Process.StartTime}");
+                description.AppendLine($"\tTotalProcessorTime: {Process.TotalProcessorTime}");
+
+                // Attach ClrMD to gather some additional details.
+                if (Interlocked.CompareExchange(ref s_clrMdLock, 1, 0) == 0) // Make sure we only attach to one process at a time.
+                {
+                    try
+                    {
+                        using DataTarget dt = DataTarget.CreateSnapshotAndAttach(Process.Id);
+                        ClrRuntime runtime = dt.ClrVersions.FirstOrDefault()?.CreateRuntime();
+                        if (runtime is not null)
+                        {
+                            // Dump the threads in the remote process.
+                            description.AppendLine("\tThreads:");
+                            foreach (ClrThread thread in runtime.Threads.Where(t => t.IsAlive))
+                            {
+                                string threadKind =
+                                    thread.IsGc ? "[Thread that started suspension]" :
+                                    thread.IsFinalizer ? "[Finalizer]" :
+                                    "Unknown";
+
+                                string isBackground = thread.State.HasFlag(ClrThreadState.TS_Background) ? "[Background]" : "";
+                                string apartmentModel = thread.State.HasFlag(ClrThreadState.TS_InMTA) ? "[MTA]" :
+                                                        thread.State.HasFlag(ClrThreadState.TS_InSTA) ? "[STA]" :
+                                                        "";
+
+                                description.AppendLine($"\t\tThread #{thread.ManagedThreadId} (OS 0x{thread.OSThreadId:X}) {threadKind} {isBackground} {apartmentModel}");
+                                foreach (ClrStackFrame frame in thread.EnumerateStackTrace())
+                                {
+                                    description.AppendLine($"\t\t\t{frame}");
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        Interlocked.Exchange(ref s_clrMdLock, 0);
+                    }
+                }
+            }
+            catch { }
         }
 
         ~RemoteInvokeHandle()
