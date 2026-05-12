@@ -14,6 +14,6 @@ updates:
       # Managed by the .NET product construction process
       - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
       - dependency-name: "Microsoft.DotNet.Helix.Sdk"
-      - dependency-name: "microsoft.dnceng.secretmanager"
+      - dependency-name: "Microsoft.DncEng.SecretManager"
       # Manually updated dependencies
       - dependency-name: "Microsoft.Build.NoTargets"
