@@ -11,8 +11,9 @@ updates:
     schedule:
       interval: "weekly"
     ignore:
-      # These msbuild-sdks in global.json are managed by the .NET product construction process
+      # Managed by the .NET product construction process
       - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
       - dependency-name: "Microsoft.DotNet.Helix.Sdk"
+      - dependency-name: "microsoft.dnceng.secretmanager"
       # Manually updated dependencies
       - dependency-name: "Microsoft.Build.NoTargets"
