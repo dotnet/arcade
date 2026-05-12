@@ -22,7 +22,6 @@ using System.Threading.Tasks;
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
-using Azure.Core;
 using Azure.Identity;
 using Microsoft.DotNet.ProductConstructionService.Client;
 using Microsoft.DotNet.ProductConstructionService.Client.Models;
@@ -721,12 +720,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Task<SymbolUploadHelper> CreatePublishSymbolHelper(string symbolPublishingExclusionsFile, bool publishSpecialClrFiles, bool dryRun)
             {
                 FrozenSet<string> exclusions = LoadExclusions(symbolPublishingExclusionsFile);
+                PATCredential creds = new(TempSymbolsAzureDevOpsOrgToken);
                 TaskTracer tracer = new(Log, verbose: true);
-                TokenCredential symbolUploadCredential = GetTemporarySymbolCredential();
 
                 SymbolPublisherOptions options = new(
                     TempSymbolsAzureDevOpsOrg,
-                    symbolUploadCredential,
+                    creds,
                     packageFileExcludeList: exclusions,
                     convertPortablePdbs: false,
                     treatPdbConversionIssuesAsInfo: false,
@@ -774,21 +773,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return excludeFiles;
                 }
             }
-        }
-
-        private TokenCredential GetTemporarySymbolCredential()
-        {
-            if (string.IsNullOrEmpty(TempSymbolsAzureDevOpsOrgToken))
-            {
-                Log.LogMessage(MessageImportance.High, "Using DefaultIdentityTokenCredential for temporary symbol publishing because no TempSymbolsAzureDevOpsOrgToken was provided.");
-                return new DefaultIdentityTokenCredential(
-                    new DefaultIdentityTokenCredentialOptions
-                    {
-                        ManagedIdentityClientId = ManagedIdentityClientId
-                    });
-            }
-
-            return new PATCredential(TempSymbolsAzureDevOpsOrgToken);
         }
 
         /// <summary>
