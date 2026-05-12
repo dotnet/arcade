@@ -18,7 +18,6 @@
 
     <ProjectReference Include="..\Microsoft.DotNet.MacOsPkg\Cli\Microsoft.DotNet.MacOsPkg.Cli.csproj"
                       ReferenceOutputAssembly="false"
-                      SkipGetTargetFrameworkProperties="true"
                       Private="false"
                       OutputItemType="_PkgToolPath" />
   </ItemGroup>
