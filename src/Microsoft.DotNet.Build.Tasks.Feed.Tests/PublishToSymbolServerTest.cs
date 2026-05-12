@@ -277,11 +277,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 BuildEngine = buildEngine,
                 ArtifactsBasePath = "testPath",
                 BlobAssetsBasePath = symbolFilesDir,
-                ManagedIdentityClientId = managedIdentityClientId,
+                ManagedIdentityClientId = managedIdentityClientId ?? "00000000-0000-0000-0000-000000000000",
                 TempSymbolsAzureDevOpsOrg = "dncengtest",
                 TempSymbolsAzureDevOpsOrgToken = tempSymbolsAzureDevOpsOrgToken,
-                SymbolRequestProject = "dotnettest",
-                ManagedIdentityClientId = "00000000-0000-0000-0000-000000000000"
+                SymbolRequestProject = "dotnettest"
             };
             task.FeedConfigs.Add(TargetFeedContentType.Symbols, feedConfigsForSymbols);
             task.BlobsByCategory.Add(TargetFeedContentType.Symbols, new HashSet<Manifest.BlobArtifactModel>()
