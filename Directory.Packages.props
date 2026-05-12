@@ -72,7 +72,6 @@
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="AwesomeAssertions" Version="9.0.0" />
     <PackageVersion Include="Handlebars.Net" Version="1.11.5" />
-    <PackageVersion Include="JetBrains.Annotations" Version="2018.2.1" />
     <PackageVersion Include="LZMA-SDK" Version="22.1.1" />
     <PackageVersion Include="McMaster.Extensions.CommandLineUtils" Version="2.3.0" />
     <PackageVersion Include="Microsoft.ApplicationInsights" Version="2.23.0" />
