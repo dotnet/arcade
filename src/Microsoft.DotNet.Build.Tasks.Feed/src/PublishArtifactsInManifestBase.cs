@@ -957,7 +957,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         ManagedIdentityClientId = ManagedIdentityClientId
                     });
-                var tokenRequestContext = new Azure.Core.TokenRequestContext(new[] { "499b84ac-1321-427f-aa17-267ca6975798/.default" });
+                var tokenRequestContext = new global::Azure.Core.TokenRequestContext(new[] { "499b84ac-1321-427f-aa17-267ca6975798/.default" });
                 var accessToken = credential.GetToken(tokenRequestContext, CancellationToken.None);
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
             }
