@@ -957,66 +957,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             var client = new HttpClient(handler);
             client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
-
-            string effectiveToken = tokenOverride ?? AzdoApiToken;
-            if (!string.IsNullOrEmpty(effectiveToken))
-            {
-                // Legacy PAT-based authentication
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                    "Basic",
-                    Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", effectiveToken))));
-            }
-            else
-            {
-                // Entra-based authentication using DefaultIdentityTokenCredential
-                // This supports AzurePipelinesCredential (from AzureCLI@2), ManagedIdentity, WorkloadIdentity, and AzureCLI
-                var credential = new DefaultIdentityTokenCredential(
-                    new DefaultIdentityTokenCredentialOptions
-                    {
-                        ManagedIdentityClientId = ManagedIdentityClientId
-                    });
-                var tokenRequestContext = new TokenRequestContext(["499b84ac-1321-427f-aa17-267ca6975798/.default"]);
-                AccessToken accessToken = credential.GetToken(tokenRequestContext, CancellationToken.None);
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
-            }
-
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                "Basic",
+                Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "",
+                    tokenOverride ?? AzdoApiToken))));
             return client;
-        }
-
-        /// <summary>
-        /// Checks whether Entra-based credentials are available in the current environment.
-        /// Returns true if running inside an AzureCLI@2 task (AzurePipelinesCredential),
-        /// or if a ManagedIdentityClientId is configured.
-        /// </summary>
-        private bool HasEntraCredentialsAvailable()
-        {
-            // AzurePipelinesCredential environment (set by AzureCLI@2 task with addSpnToEnvironment: true
-            // when the service connection is configured for Workload Identity Federation).
-            // Note: SYSTEM_OIDCREQUESTURI is NOT required - AzurePipelinesCredential obtains the OIDC
-            // token from Azure DevOps using SYSTEM_ACCESSTOKEN and the service connection ID.
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURESUBSCRIPTION_CLIENT_ID")) &&
-                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURESUBSCRIPTION_TENANT_ID")) &&
-                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURESUBSCRIPTION_SERVICE_CONNECTION_ID")) &&
-                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN")))
-            {
-                return true;
-            }
-
-            // WorkloadIdentityCredential environment
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("servicePrincipalId")) &&
-                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("idToken")) &&
-                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("tenantId")))
-            {
-                return true;
-            }
-
-            // Managed Identity is configured
-            if (!string.IsNullOrEmpty(ManagedIdentityClientId))
-            {
-                return true;
-            }
-
-            return false;
         }
 
         private SemaphoreSlim _createArtifactSemaphore = new SemaphoreSlim(1,1);
@@ -1997,9 +1942,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 Log.LogError($"The property {nameof(MaestroApiEndpoint)} is required but doesn't have a value set.");
             }
 
-            if (UseStreamingPublishing && string.IsNullOrEmpty(AzdoApiToken) && !HasEntraCredentialsAvailable())
+            if (UseStreamingPublishing && string.IsNullOrEmpty(AzdoApiToken))
             {
-                Log.LogError($"The property {nameof(AzdoApiToken)} is required when using streaming publishing (unless Entra credentials are available via AzureCLI@2 or Managed Identity), but doesn't have a value set.");
+                Log.LogError($"The property {nameof(AzdoApiToken)} is required when using streaming publishing, but doesn't have a value set.");
             }
 
             if (UseStreamingPublishing && string.IsNullOrEmpty(ArtifactsBasePath))
