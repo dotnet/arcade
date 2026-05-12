@@ -5,6 +5,6 @@
     <MicrosoftDotNetDeploymentTasksLinksTaskAssembly>$(MSBuildThisFileDirectory)..\tools\net\Microsoft.DotNet.Deployment.Tasks.Links.dll</MicrosoftDotNetDeploymentTasksLinksTaskAssembly>
   </PropertyGroup>
 
-  <UsingTask TaskName="CreateAkaMSLinks" AssemblyFile="$(MicrosoftDotNetDeploymentTasksLinksTaskAssembly)" Runtime="NET" />
-  <UsingTask TaskName="DeleteAkaMSLinks" AssemblyFile="$(MicrosoftDotNetDeploymentTasksLinksTaskAssembly)" Runtime="NET" />
+  <UsingTask TaskName="CreateAkaMSLinks" AssemblyFile="$(MicrosoftDotNetDeploymentTasksLinksTaskAssembly)" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="DeleteAkaMSLinks" AssemblyFile="$(MicrosoftDotNetDeploymentTasksLinksTaskAssembly)" Runtime="NET" Architecture="*" />
 </Project>

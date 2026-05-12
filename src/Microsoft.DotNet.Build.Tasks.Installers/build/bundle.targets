@@ -135,7 +135,7 @@
   <!--
     Create macOS pkg installer.
   -->
-  <UsingTask TaskName="GenerateMacOSDistributionFile" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" Runtime="NET" />
+  <UsingTask TaskName="GenerateMacOSDistributionFile" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" Runtime="NET" Architecture="*" />
   <Target Name="CreatePkgBundle"
           DependsOnTargets="
             _GetInstallerProperties;

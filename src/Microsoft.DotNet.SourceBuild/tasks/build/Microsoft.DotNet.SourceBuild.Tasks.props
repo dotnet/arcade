@@ -5,8 +5,8 @@
     <MicrosoftDotNetSourceBuildTasksAssembly>$(MSBuildThisFileDirectory)..\tools\net\$(MSBuildThisFileName).dll</MicrosoftDotNetSourceBuildTasksAssembly>
   </PropertyGroup>
 
-  <UsingTask TaskName="ReadNuGetPackageInfos" AssemblyFile="$(MicrosoftDotNetSourceBuildTasksAssembly)" Runtime="NET" />
-  <UsingTask TaskName="WritePackageUsageData" AssemblyFile="$(MicrosoftDotNetSourceBuildTasksAssembly)" Runtime="NET" />
-  <UsingTask TaskName="WriteUsageReports" AssemblyFile="$(MicrosoftDotNetSourceBuildTasksAssembly)" Runtime="NET" />
+  <UsingTask TaskName="ReadNuGetPackageInfos" AssemblyFile="$(MicrosoftDotNetSourceBuildTasksAssembly)" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="WritePackageUsageData" AssemblyFile="$(MicrosoftDotNetSourceBuildTasksAssembly)" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="WriteUsageReports" AssemblyFile="$(MicrosoftDotNetSourceBuildTasksAssembly)" Runtime="NET" Architecture="*" />
 
 </Project>

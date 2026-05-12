@@ -5,6 +5,6 @@
     <MicrosoftDotNetBuildTasksTemplatingAssembly>$(MSBuildThisFileDirectory)..\tools\net\Microsoft.DotNet.Build.Tasks.Templating.dll</MicrosoftDotNetBuildTasksTemplatingAssembly>
   </PropertyGroup>
 
-  <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.Templating.GenerateFileFromTemplate" AssemblyFile="$(MicrosoftDotNetBuildTasksTemplatingAssembly)" Runtime="NET" />
+  <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.Templating.GenerateFileFromTemplate" AssemblyFile="$(MicrosoftDotNetBuildTasksTemplatingAssembly)" Runtime="NET" Architecture="*" />
 
 </Project>

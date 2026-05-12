@@ -5,7 +5,7 @@
     <MicrosoftDotNetNuGetRepackTaskAssembly>$(MSBuildThisFileDirectory)..\tools\net\Microsoft.DotNet.NuGetRepack.Tasks.dll</MicrosoftDotNetNuGetRepackTaskAssembly>
   </PropertyGroup>
 
-  <UsingTask TaskName="Microsoft.DotNet.Tools.ReplacePackageParts" AssemblyFile="$(MicrosoftDotNetNuGetRepackTaskAssembly)" Runtime="NET" />
-  <UsingTask TaskName="Microsoft.DotNet.Tools.UpdatePackageVersionTask" AssemblyFile="$(MicrosoftDotNetNuGetRepackTaskAssembly)" Runtime="NET" />
+  <UsingTask TaskName="Microsoft.DotNet.Tools.ReplacePackageParts" AssemblyFile="$(MicrosoftDotNetNuGetRepackTaskAssembly)" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="Microsoft.DotNet.Tools.UpdatePackageVersionTask" AssemblyFile="$(MicrosoftDotNetNuGetRepackTaskAssembly)" Runtime="NET" Architecture="*" />
 
 </Project>

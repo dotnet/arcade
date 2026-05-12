@@ -5,6 +5,6 @@
     <MicrosoftDotNetSignCheckTaskAssembly>$(MSBuildThisFileDirectory)..\lib\net\Microsoft.DotNet.SignCheckTask.dll</MicrosoftDotNetSignCheckTaskAssembly>
   </PropertyGroup>
 
-  <UsingTask TaskName="Microsoft.DotNet.SignCheckTask.SignCheckTask" AssemblyFile="$(MicrosoftDotNetSignCheckTaskAssembly)" Runtime="NET" />
+  <UsingTask TaskName="Microsoft.DotNet.SignCheckTask.SignCheckTask" AssemblyFile="$(MicrosoftDotNetSignCheckTaskAssembly)" Runtime="NET" Architecture="*" />
 
 </Project>

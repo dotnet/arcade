@@ -4,7 +4,7 @@
     <_MicrosoftDotNetBaselinesTasksDir>$(MSBuildThisFileDirectory)../tools/net/</_MicrosoftDotNetBaselinesTasksDir>
   </PropertyGroup>
 
-  <UsingTask TaskName="CreateUpdatePR" AssemblyFile="$(_MicrosoftDotNetBaselinesTasksDir)Microsoft.DotNet.Baselines.Tasks.dll" Runtime="NET" />
+  <UsingTask TaskName="CreateUpdatePR" AssemblyFile="$(_MicrosoftDotNetBaselinesTasksDir)Microsoft.DotNet.Baselines.Tasks.dll" Runtime="NET" Architecture="*" />
 
   <Target Name="CreateUpdatePR">
     <!--

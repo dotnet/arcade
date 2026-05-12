@@ -5,7 +5,7 @@
     <MicrosoftDotNetBuildTasksWorkloadsAssembly>$(MSBuildThisFileDirectory)..\tools\net\Microsoft.DotNet.Build.Tasks.Workloads.dll</MicrosoftDotNetBuildTasksWorkloadsAssembly>
   </PropertyGroup>
 
-  <UsingTask TaskName="CreateVisualStudioWorkload" AssemblyFile="$(MicrosoftDotNetBuildTasksWorkloadsAssembly)" Runtime="NET" />
-  <UsingTask TaskName="CreateVisualStudioWorkloadSet" AssemblyFile="$(MicrosoftDotNetBuildTasksWorkloadsAssembly)" Runtime="NET" />
+  <UsingTask TaskName="CreateVisualStudioWorkload" AssemblyFile="$(MicrosoftDotNetBuildTasksWorkloadsAssembly)" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="CreateVisualStudioWorkloadSet" AssemblyFile="$(MicrosoftDotNetBuildTasksWorkloadsAssembly)" Runtime="NET" Architecture="*" />
 
 </Project>

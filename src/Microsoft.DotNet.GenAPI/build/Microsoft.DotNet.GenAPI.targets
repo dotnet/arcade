@@ -24,7 +24,7 @@
   <Target Name="GenerateReferenceSource"
           DependsOnTargets="GenerateReferenceAssemblySource" />
 
-  <UsingTask TaskName="Microsoft.DotNet.GenAPI.GenAPITask" AssemblyFile="$(GenAPIAssembly)" Runtime="NET" />
+  <UsingTask TaskName="Microsoft.DotNet.GenAPI.GenAPITask" AssemblyFile="$(GenAPIAssembly)" Runtime="NET" Architecture="*" />
 
   <Target Name="GenerateReferenceAssemblySource"
           DependsOnTargets="_DontBuildProjectReferences;ResolveAssemblyReferences">

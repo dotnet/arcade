@@ -5,6 +5,6 @@
     <MicrosoftDotNetSignToolTaskAssembly>$(MSBuildThisFileDirectory)..\lib\net\Microsoft.DotNet.SignTool.dll</MicrosoftDotNetSignToolTaskAssembly>
   </PropertyGroup>
 
-  <UsingTask TaskName="Microsoft.DotNet.SignTool.SignToolTask" AssemblyFile="$(MicrosoftDotNetSignToolTaskAssembly)" Runtime="NET" />
+  <UsingTask TaskName="Microsoft.DotNet.SignTool.SignToolTask" AssemblyFile="$(MicrosoftDotNetSignToolTaskAssembly)" Runtime="NET" Architecture="*" />
 
 </Project>
