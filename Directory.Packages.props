@@ -16,7 +16,7 @@
          Keep in sync with DefaultVersions.props. -->
     <XUnitVersion>2.9.3</XUnitVersion>
     <XUnitV3Version>4.0.0-pre.81</XUnitV3Version>
-    <XUnitAnalyzersVersion>1.27.0</XUnitAnalyzersVersion>
+    <XUnitAnalyzersVersion>2.0.0-pre.51</XUnitAnalyzersVersion>
     <XUnitRunnerConsoleVersion>$(XUnitVersion)</XUnitRunnerConsoleVersion>
     <XUnitRunnerVisualStudioVersion>4.0.0-pre.4</XUnitRunnerVisualStudioVersion>
     <MicrosoftTestingPlatformVersion>2.2.1</MicrosoftTestingPlatformVersion>
@@ -66,8 +66,8 @@
 
   <!-- external -->
   <ItemGroup>
-    <PackageVersion Include="Azure.Core" Version="1.51.1" />
-    <PackageVersion Include="Azure.Identity" Version="1.17.1" />
+    <PackageVersion Include="Azure.Core" Version="1.53.0" />
+    <PackageVersion Include="Azure.Identity" Version="1.21.0" />
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.19.1" />
     <PackageVersion Include="CommandLineParser" Version="2.5.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
@@ -80,7 +80,7 @@
     <PackageVersion Include="Microsoft.Data.OData" Version="5.8.4" />
     <PackageVersion Include="Microsoft.Data.Services.Client" Version="$(MicrosoftDataServicesClientVersion)" />
     <PackageVersion Include="Microsoft.Diagnostics.Runtime" Version="1.0.5" />
-    <PackageVersion Include="Microsoft.Identity.Client" Version="4.80.0" />
+    <PackageVersion Include="Microsoft.Identity.Client" Version="4.83.1" />
     <PackageVersion Include="Microsoft.OpenApi" Version="1.3.2" />
     <PackageVersion Include="Microsoft.OpenApi.Readers" Version="1.3.2" />
     <PackageVersion Include="Microsoft.Signed.Wix" Version="$(MicrosoftSignedWixVersion)" />
