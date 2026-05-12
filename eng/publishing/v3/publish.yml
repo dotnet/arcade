@@ -133,6 +133,7 @@ stages:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       inputs:
         azureSubscription: maestro-build-promotion
+        addSpnToEnvironment: true
         scriptType: ps
         scriptLocation: scriptPath
         scriptPath: $(System.DefaultWorkingDirectory)/eng/common/sdk-task.ps1
