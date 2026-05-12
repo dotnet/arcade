@@ -637,7 +637,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             );
             TaskTracer tracer = new(Log, verbose: true);
 
-            _ = await SymbolPromotionHelper.CheckRequestRegistration(tracer, creds, env, SymbolRequestProject, requestName);
+            _ = dryRun
+                ? null
+                : await SymbolPromotionHelper.CheckRequestRegistration(tracer, creds, env, SymbolRequestProject, requestName);
 
             // The general flow is:
             // 1. Create a request in the symbol servers that we are targeting.
