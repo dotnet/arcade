@@ -35,7 +35,7 @@ steps:
       '$(akams-client-id)'
       '$(microsoft-symbol-server-pat)'
       '$(symweb-symbol-server-pat)'
-      '$(dn-bot-all-orgs-build-rw-code-rw)'
+      '$(dnceng-symbol-server-pat)'
       '$(System.AccessToken)'
       ${{parameters.CustomSensitiveDataList}}
   continueOnError: true
