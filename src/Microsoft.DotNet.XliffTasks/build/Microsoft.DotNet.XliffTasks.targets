@@ -6,6 +6,7 @@
     <XliffTasksAssembly>$(XliffTasksDirectory)Microsoft.DotNet.XliffTasks.dll</XliffTasksAssembly>
   </PropertyGroup>
 
+  <!-- TODO: Remove Architecture="*" on Runtime="NET" UsingTask declarations below when https://github.com/dotnet/msbuild/issues/13739 is fixed and a new msbuild is consumed with the fix. -->
   <UsingTask TaskName="GatherXlf" AssemblyFile="$(XliffTasksAssembly)" Runtime="NET" Architecture="*" />
   <UsingTask TaskName="GatherTranslatedSource" AssemblyFile="$(XliffTasksAssembly)" Runtime="NET" Architecture="*" />
   <UsingTask TaskName="TransformTemplates" AssemblyFile="$(XliffTasksAssembly)" Runtime="NET" Architecture="*" />

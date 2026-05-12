@@ -4,6 +4,7 @@
     <_MicrosoftDotNetBaselinesTasksDir>$(MSBuildThisFileDirectory)../tools/net/</_MicrosoftDotNetBaselinesTasksDir>
   </PropertyGroup>
 
+  <!-- TODO: Remove Architecture="*" on Runtime="NET" UsingTask declarations below when https://github.com/dotnet/msbuild/issues/13739 is fixed and a new msbuild is consumed with the fix. -->
   <UsingTask TaskName="CreateUpdatePR" AssemblyFile="$(_MicrosoftDotNetBaselinesTasksDir)Microsoft.DotNet.Baselines.Tasks.dll" Runtime="NET" Architecture="*" />
 
   <Target Name="CreateUpdatePR">

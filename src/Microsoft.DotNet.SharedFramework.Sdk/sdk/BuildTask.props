@@ -9,6 +9,7 @@
     <DotNetSharedFrameworkTaskFile>$(DotNetSharedFrameworkTaskDir)Microsoft.DotNet.SharedFramework.Sdk.dll</DotNetSharedFrameworkTaskFile>
   </PropertyGroup>
 
+  <!-- TODO: Remove Architecture="*" on Runtime="NET" UsingTask declarations below when https://github.com/dotnet/msbuild/issues/13739 is fixed and a new msbuild is consumed with the fix. -->
   <UsingTask TaskName="GenerateSharedFrameworkDepsFile" AssemblyFile="$(DotNetSharedFrameworkTaskFile)" Runtime="NET" Architecture="*" />
   <UsingTask TaskName="GeneratePlatformManifestEntriesFromTemplate" AssemblyFile="$(DotNetSharedFrameworkTaskFile)" Runtime="NET" Architecture="*" />
   <UsingTask TaskName="GeneratePlatformManifestEntriesFromFileList" AssemblyFile="$(DotNetSharedFrameworkTaskFile)" Runtime="NET" Architecture="*" />

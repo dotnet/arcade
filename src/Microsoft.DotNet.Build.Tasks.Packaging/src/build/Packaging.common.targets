@@ -18,6 +18,7 @@
     <PackageTargetRuntime Condition="'$(PackageTargetRuntime)' == ''">$(PackageTargetRuntimeSuffix)</PackageTargetRuntime>
   </PropertyGroup>
 
+  <!-- TODO: Remove Architecture="*" on Runtime="NET" UsingTask declarations below when https://github.com/dotnet/msbuild/issues/13739 is fixed and a new msbuild is consumed with the fix. -->
   <UsingTask TaskName="ApplyBaseLine" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll" Runtime="NET" Architecture="*" />
   <UsingTask TaskName="ApplyMetaPackages" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll" Runtime="NET" Architecture="*" />
   <UsingTask TaskName="ApplyPreReleaseSuffix" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll" Runtime="NET" Architecture="*" />
