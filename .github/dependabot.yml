@@ -10,3 +10,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      # msbuild-sdks in global.json are managed by the .NET product construction process
+      - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
+      - dependency-name: "Microsoft.DotNet.Helix.Sdk"
+      - dependency-name: "Microsoft.Build.NoTargets"
