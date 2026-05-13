@@ -975,8 +975,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         ManagedIdentityClientId = ManagedIdentityClientId
                     });
-                var tokenRequestContext = new TokenRequestContext(["499b84ac-1321-427f-aa17-267ca6975798/.default"]);
-                AccessToken accessToken = credential.GetToken(tokenRequestContext, CancellationToken.None);
+                var tokenRequestContext = new global::Azure.Core.TokenRequestContext(new[] { "499b84ac-1321-427f-aa17-267ca6975798/.default" });
+                var accessToken = credential.GetToken(tokenRequestContext, CancellationToken.None);
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
             }
 
@@ -990,14 +990,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         private bool HasEntraCredentialsAvailable()
         {
-            // AzurePipelinesCredential environment (set by AzureCLI@2 task with addSpnToEnvironment: true
-            // when the service connection is configured for Workload Identity Federation).
-            // Note: SYSTEM_OIDCREQUESTURI is NOT required - AzurePipelinesCredential obtains the OIDC
-            // token from Azure DevOps using SYSTEM_ACCESSTOKEN and the service connection ID.
+            // AzurePipelinesCredential environment (set by AzureCLI@2 task with addSpnToEnvironment: true)
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURESUBSCRIPTION_CLIENT_ID")) &&
                 !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURESUBSCRIPTION_TENANT_ID")) &&
                 !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURESUBSCRIPTION_SERVICE_CONNECTION_ID")) &&
-                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN")))
+                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN")) &&
+                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SYSTEM_OIDCREQUESTURI")))
             {
                 return true;
             }
