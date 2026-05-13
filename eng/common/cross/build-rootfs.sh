@@ -161,6 +161,10 @@ while :; do
             __AlpineArch=armv7
             __QEMUArch=arm
             ;;
+        armel)
+            # this is only used for tizen-build-rootfs.sh
+            __BuildArch=armel
+            ;;
         arm64)
             __BuildArch=arm64
             __UbuntuArch=arm64
