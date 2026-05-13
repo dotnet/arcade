@@ -36,12 +36,6 @@ public sealed class AzureDevOpsResultPublisher
         _logger = logger;
     }
 
-    public async Task<bool> UploadTestResultsAsync(List<string> testResultFiles, object resultMetadata, CancellationToken cancellationToken = default)
-    {
-        TestResultUploadSummary summary = await UploadTestResultsWithSummaryAsync(testResultFiles, resultMetadata, cancellationToken);
-        return summary.AllPassed;
-    }
-
     public async Task<TestResultUploadSummary> UploadTestResultsWithSummaryAsync(List<string> testResultFiles, object resultMetadata, CancellationToken cancellationToken = default)
     {
         var testResultReader = new LocalTestResultsReader(_logger);
@@ -65,11 +59,6 @@ public sealed class AzureDevOpsResultPublisher
         return new TestResultUploadSummary(
             aggregatedResults.All(result => result.Result != "Failed"), // TODO: maybe there's a better way to find out if a test failed? Is this extensive enough?
             uploadedCount);
-    }
-
-    public async Task UploadTestResultsAsync(IEnumerable<AggregatedResult> results, object resultMetadata, CancellationToken cancellationToken = default)
-    {
-        await UploadTestResultsWithCountAsync(results, resultMetadata, cancellationToken);
     }
 
     public async Task<long> UploadTestResultsWithCountAsync(IEnumerable<AggregatedResult> results, object resultMetadata, CancellationToken cancellationToken = default)

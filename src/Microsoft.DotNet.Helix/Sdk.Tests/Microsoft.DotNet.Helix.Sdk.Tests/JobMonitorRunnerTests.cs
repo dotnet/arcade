@@ -255,21 +255,21 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             // Poll 1: Linux still passed (attempt 1), Windows queued (attempt 2)
             azdo2.AddTimelineResponse(
                 MonitorJob(attempt: 2, previousAttempts: [PreviousAttempt(1)]),
-                PipelineJob("Build Linux", "completed", "succeeded", attempt: 1),
+                PipelineJob("Build Linux", "completed", "succeeded"),
                 PipelineJob("Build Windows", "pending", attempt: 2,
                     previousAttempts: [PreviousAttempt(1)]));
 
             // Poll 2: Windows in progress
             azdo2.AddTimelineResponse(
                 MonitorJob(attempt: 2, previousAttempts: [PreviousAttempt(1)]),
-                PipelineJob("Build Linux", "completed", "succeeded", attempt: 1),
+                PipelineJob("Build Linux", "completed", "succeeded"),
                 PipelineJob("Build Windows", "inProgress", attempt: 2,
                     previousAttempts: [PreviousAttempt(1)]));
 
             // Poll 3: Windows completed (passed this time)
             azdo2.AddTimelineResponse(
                 MonitorJob(attempt: 2, previousAttempts: [PreviousAttempt(1)]),
-                PipelineJob("Build Linux", "completed", "succeeded", attempt: 1),
+                PipelineJob("Build Linux", "completed", "succeeded"),
                 PipelineJob("Build Windows", "completed", "succeeded", attempt: 2,
                     previousAttempts: [PreviousAttempt(1)]));
 
@@ -650,7 +650,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     ["new-helix-windows"] = PassFail(passed: ["common-work-item", "windows-only-work-item"]),
                 });
 
-            var runner2 = CreateRunner(azdo, helix2, stageName: "Test", attempt: 2);
+            var runner2 = CreateRunner(azdo, helix2, stageName: "Test");
             int exitCode2 = await runner2.RunAsync(CancellationToken.None);
 
             Assert.Equal(0, exitCode1);
@@ -969,7 +969,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     ["helix-build-windows"] = PassFail(failed: ["build-fail"]),
                 });
 
-            var runner2 = CreateRunner(azdo2, helix2, stageName: "Test", attempt: 2);
+            var runner2 = CreateRunner(azdo2, helix2, stageName: "Test");
             int exitCode2 = await runner2.RunAsync(CancellationToken.None);
 
             Assert.Equal(0, exitCode2);
@@ -1026,7 +1026,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 });
 
             int delayCount = 0;
-            var options = DefaultOptions(attempt: 2);
+            var options = DefaultOptions();
             options.StageName = "Test";
             options.JobMonitorName = "HelixJobMonitor";
             var runner = new JobMonitorRunner(options, NullLogger.Instance, azdo, helix,
@@ -1323,7 +1323,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     ["helix-linux-resub"] = PassFail(passed: ["wi-fail-1", "wi-fail-2"]),
                 });
 
-            var runner = CreateRunner(azdo, helix, attempt: 2);
+            var runner = CreateRunner(azdo, helix);
             int exitCode = await runner.RunAsync(CancellationToken.None);
 
             // Resubmission healed the failures → exit 0
@@ -1376,7 +1376,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     ["helix-linux-resub"] = PassFail(failed: ["wi-fail"]),
                 });
 
-            var runner = CreateRunner(azdo, helix, attempt: 2);
+            var runner = CreateRunner(azdo, helix);
             int exitCode = await runner.RunAsync(CancellationToken.None);
 
             // Resubmission also failed → exit 1
@@ -1450,7 +1450,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     ["helix-windows-resub"] = PassFail(passed: ["win-fail-1", "win-fail-2"]),
                 });
 
-            var runner = CreateRunner(azdo, helix, attempt: 2);
+            var runner = CreateRunner(azdo, helix);
             int exitCode = await runner.RunAsync(CancellationToken.None);
 
             Assert.Equal(0, exitCode);
@@ -1523,7 +1523,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     ["helix-linux-resub"] = PassFail(passed: ["wi-fail"]),
                 });
 
-            var runner2 = CreateRunner(azdo2, helix2, attempt: 2);
+            var runner2 = CreateRunner(azdo2, helix2);
             int exitCode2 = await runner2.RunAsync(CancellationToken.None);
 
             Assert.Equal(0, exitCode2);
@@ -1811,7 +1811,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     ["helix-b-resub"] = PassFail(failed: ["b-fail"]),
                 });
 
-            var runner2 = CreateRunner(azdo2, helix2, attempt: 2);
+            var runner2 = CreateRunner(azdo2, helix2);
             int exitCode2 = await runner2.RunAsync(CancellationToken.None);
 
             Assert.Equal(1, exitCode2);
@@ -1868,7 +1868,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     ["helix-b-resub-2"] = PassFail(passed: ["b-fail"]),
                 });
 
-            var runner3 = CreateRunner(azdo3, helix3, attempt: 3);
+            var runner3 = CreateRunner(azdo3, helix3);
             int exitCode3 = await runner3.RunAsync(CancellationToken.None);
 
             Assert.Equal(0, exitCode3);
@@ -1959,7 +1959,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 ]);
 
             using var cts2 = new CancellationTokenSource();
-            var runner2 = new JobMonitorRunner(DefaultOptions(attempt: 2), NullLogger.Instance, azdo2, helix2,
+            var runner2 = new JobMonitorRunner(DefaultOptions(), NullLogger.Instance, azdo2, helix2,
                 (_, _) =>
                 {
                     cts2.Cancel();
@@ -2024,7 +2024,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     ["helix-b-resub"] = PassFail(passed: ["b-fail"]),
                 });
 
-            var runner3 = CreateRunner(azdo3, helix3, attempt: 3);
+            var runner3 = CreateRunner(azdo3, helix3);
             int exitCode3 = await runner3.RunAsync(CancellationToken.None);
 
             Assert.Equal(0, exitCode3);
@@ -2592,7 +2592,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         // Helpers
         // -----------------------------------------------------------------------
 
-        private static JobMonitorOptions DefaultOptions(int attempt = 1) => new()
+        private static JobMonitorOptions DefaultOptions() => new()
         {
             BuildId = "123",
             CollectionUri = "https://dev.azure.com/dnceng/",
@@ -2607,7 +2607,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             SystemAccessToken = "token",
             TeamProject = "public",
             WorkingDirectory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "job-monitor-test"),
-            Attempt = attempt,
         };
 
         private static readonly Func<TimeSpan, CancellationToken, Task> NoDelay = (_, _) => Task.CompletedTask;
@@ -2616,10 +2615,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             FakeAzureDevOpsService azdo,
             FakeHelixService helix,
             string stageName = "Test",
-            int attempt = 1,
             ILogger logger = null)
         {
-            var options = DefaultOptions(attempt);
+            var options = DefaultOptions();
             options.StageName = stageName;
 
             return new(options, logger ?? NullLogger.Instance, azdo, helix, NoDelay);

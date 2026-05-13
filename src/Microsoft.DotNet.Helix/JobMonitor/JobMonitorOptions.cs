@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Globalization;
 using CommandLine;
 
 namespace Microsoft.DotNet.Helix.JobMonitor
@@ -55,10 +54,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         [Option("working-directory", HelpText = "Directory used to stage downloaded test results.")]
         public string WorkingDirectory { get; set; }
 
-        [Option("attempt", HelpText = "Azure DevOps attempt number for the current job.")]
-        public int? Attempt { get; set; }
-
-        [Option("stage-name", HelpText = "Name of the Azure DevOps pipeline stage the monitor is running in. Used to scope monitoring to that stage. Defaults to the SYSTEM_STAGENAME environment variable.")]
+        [Option("stage-name",HelpText = "Name of the Azure DevOps pipeline stage the monitor is running in. Used to scope monitoring to that stage. Defaults to the SYSTEM_STAGENAME environment variable.")]
         public string StageName { get; set; }
 
         [Option("test-result-upload-parallelism", HelpText = "Maximum number of work items whose test results can be uploaded to Azure DevOps in parallel.", Default = 4)]
@@ -109,7 +105,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             WorkingDirectory ??= System.IO.Path.Combine(System.IO.Path.GetTempPath(), "helix-job-monitor", BuildId ?? "unknown");
             BuildReason ??= Environment.GetEnvironmentVariable("BUILD_REASON");
             SourceBranch ??= Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH");
-            Attempt ??= GetEnvironmentInt("SYSTEM_JOBATTEMPT");
             StageName ??= Environment.GetEnvironmentVariable("SYSTEM_STAGENAME");
         }
 
@@ -159,17 +154,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             return value;
-        }
-
-        private static int? GetEnvironmentInt(string environmentName)
-        {
-            string value = Environment.GetEnvironmentVariable(environmentName);
-            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed))
-            {
-                return parsed;
-            }
-
-            return null;
         }
 
         private static string EnsureTrailingSlash(string uri)
