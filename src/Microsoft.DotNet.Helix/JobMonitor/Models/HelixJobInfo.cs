@@ -65,6 +65,16 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
 
         public string PreviousHelixJobName => GetStringProperty(Properties, PreviousHelixJobNamePropertyName);
 
+        /// <summary>
+        /// Human-readable identifier used in log messages. Combines the parent Azure DevOps
+        /// pipeline job name (when present) with the Helix job GUID, e.g. "Linux_Build_Debug
+        /// (36a0e6c8-1234-...)". Falls back to just the Helix job name when no submitter job
+        /// is associated with this Helix job.
+        /// </summary>
+        public string DisplayName => string.IsNullOrEmpty(SubmitterJobName)
+            ? JobName
+            : $"{SubmitterJobName} ({JobName})";
+
         public int? InitialWorkItemCount { get; }
 
         public JToken Properties { get; }

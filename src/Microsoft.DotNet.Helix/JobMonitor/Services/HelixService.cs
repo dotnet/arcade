@@ -149,10 +149,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         }
 
         public async Task<HelixJobInfo> ResubmitWorkItemsAsync(
-            string originalJobName,
+            HelixJobInfo originalJob,
             IReadOnlyCollection<WorkItemSummary> failedWorkItems,
             CancellationToken cancellationToken)
         {
+            string originalJobName = originalJob.JobName;
+            string originalDisplay = originalJob.DisplayName;
             IEnumerable<string> workItemsToLog = failedWorkItems.Select(wi => wi.Name);
 
             if (failedWorkItems.Count > 20)
@@ -162,7 +164,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             _logger.LogInformation("Resubmitting {Count} failed work item(s) for job {JobName}:{nl}{WorkItems}",
                 failedWorkItems.Count,
-                originalJobName,
+                originalDisplay,
                 Environment.NewLine,
                 string.Join(Environment.NewLine + "- ", workItemsToLog));
 
@@ -269,18 +271,20 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 () => _helixApi.Job.NewAsync(creationRequest, idempotencyKey, cancellationToken: cancellationToken),
                 cancellationToken);
 
-            _logger.LogInformation("Resubmitted {Count} failed work item(s) from '{OriginalJobName}' as new job '{NewJobName}'{nl}{JobUri}",
-                filteredEntries.Count,
-                originalJobName,
-                newJob.Name,
-                Environment.NewLine,
-                HelixJobInfo.GetDetailsUri(newJob.Name));
-
             string testRunName = GetStringPropertyFromProperties(details.Properties, "TestRunName") ?? newJob.Name;
             string stageName = GetStringPropertyFromProperties(details.Properties, "System.StageName");
             string submitterJobName = GetStringPropertyFromProperties(details.Properties, "System.JobName");
 
-            return new HelixJobInfo(newJob.Name, "running", testRunName, stageName, submitterJobName, originalJobName);
+            var newJobInfo = new HelixJobInfo(newJob.Name, "running", testRunName, stageName, submitterJobName, originalJobName);
+
+            _logger.LogInformation("Resubmitted {Count} failed work item(s) from '{OriginalJobName}' as new job '{NewJobName}'{nl}{JobUri}",
+                filteredEntries.Count,
+                originalDisplay,
+                newJobInfo.DisplayName,
+                Environment.NewLine,
+                HelixJobInfo.GetDetailsUri(newJob.Name));
+
+            return newJobInfo;
         }
 
         private static ImmutableDictionary<string, string> ConvertPropertiesToImmutableDictionary(JToken properties)

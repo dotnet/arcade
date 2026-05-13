@@ -154,12 +154,14 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         }
 
         public Task<HelixJobInfo> ResubmitWorkItemsAsync(
-            string originalJobName,
+            HelixJobInfo originalJob,
             IReadOnlyCollection<WorkItemSummary> failedWorkItems,
             CancellationToken cancellationToken)
         {
-            HelixJobInfo originalJob = CurrentSnapshot.Jobs.FirstOrDefault(j =>
-                string.Equals(j.JobName, originalJobName, StringComparison.OrdinalIgnoreCase));
+            string originalJobName = originalJob.JobName;
+            HelixJobInfo originalSnapshotJob = CurrentSnapshot.Jobs.FirstOrDefault(j =>
+                string.Equals(j.JobName, originalJobName, StringComparison.OrdinalIgnoreCase))
+                ?? originalJob;
 
             if (!_resubmissionNewJobNames.TryGetValue(originalJobName, out string newJobName))
             {
@@ -177,9 +179,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             return Task.FromResult(new HelixJobInfo(
                 newJobName,
                 "running",
-                originalJob?.TestRunName,
-                originalJob?.StageName,
-                originalJob?.SubmitterJobName,
+                originalSnapshotJob?.TestRunName,
+                originalSnapshotJob?.StageName,
+                originalSnapshotJob?.SubmitterJobName ?? originalJob.SubmitterJobName,
                 originalJobName));
         }
 

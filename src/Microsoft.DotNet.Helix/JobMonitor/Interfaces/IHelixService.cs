@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// The new job must preserve BuildId and StageName properties so it is discoverable by GetJobsAsync.
         /// </summary>
         Task<HelixJobInfo> ResubmitWorkItemsAsync(
-            string originalJobName,
+            HelixJobInfo originalJob,
             IReadOnlyCollection<WorkItemSummary> failedWorkItems,
             CancellationToken cancellationToken);
     }

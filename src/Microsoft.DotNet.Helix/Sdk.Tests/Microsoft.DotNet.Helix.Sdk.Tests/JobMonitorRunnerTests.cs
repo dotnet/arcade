@@ -559,6 +559,47 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Contains("helix-windows", azdo.UploadedJobNames);
         }
 
+        /// <summary>
+        /// Regression: two separate AzDO submitter jobs each submit a Helix job that contains
+        /// a work item with the same name (e.g. <c>Microsoft.DotNet.Helix.Sdk.Tests.dll</c>).
+        /// One job's work item fails; the other passes. The failure must NOT be overwritten
+        /// by the successful job processed afterwards. The monitor must exit non-zero.
+        /// </summary>
+        [Fact]
+        public async Task TwoAzDOJobs_SameWorkItemName_OneFails_OtherPasses_FailurePropagates()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Linux_Build_Debug", "completed", "succeeded"),
+                PipelineJob("Windows_Build_Release", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-linux", "finished", submitterJobName: "Linux_Build_Debug"),
+                    HelixJob("helix-windows", "finished", submitterJobName: "Windows_Build_Release"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(failed: ["Microsoft.DotNet.Helix.Sdk.Tests.dll"]),
+                    ["helix-windows"] = PassFail(passed: ["Microsoft.DotNet.Helix.Sdk.Tests.dll"]),
+                });
+
+            var runner = CreateRunner(azdo, helix, logger: logger);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            // The Linux work-item failure must not be overwritten by the same-named work item
+            // that passed on Windows. Final summary must report 1 failed work item and the
+            // monitor must exit non-zero.
+            Assert.Equal(1, exitCode);
+            Assert.Contains(logger.Messages, m =>
+                m.Contains("processed 2 Helix job(s); 1 work item(s) failed.", StringComparison.Ordinal));
+        }
+
         [Fact]
         public async Task StageRerun_UploadsNewHelixWorkItemsWithoutReuploadingPreviousWorkItems()
         {

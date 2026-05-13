@@ -165,7 +165,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 });
 
             HelixJobInfo result = await CreateService(api.Api.Object)
-                .ResubmitWorkItemsAsync("original-job", [WorkItem("missing")], CancellationToken.None);
+                .ResubmitWorkItemsAsync(new HelixJobInfo("original-job", "finished"), [WorkItem("missing")], CancellationToken.None);
 
             Assert.Null(result);
             api.Storage.Verify(s => s.NewAsync(It.IsAny<ContainerCreationRequest>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -184,7 +184,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             };
 
             HelixJobInfo result = await CreateService(api.Api.Object, blobClientFactory)
-                .ResubmitWorkItemsAsync("original-job", [WorkItem("work-a")], CancellationToken.None);
+                .ResubmitWorkItemsAsync(new HelixJobInfo("original-job", "finished"), [WorkItem("work-a")], CancellationToken.None);
 
             Assert.Null(result);
             api.Storage.Verify(s => s.NewAsync(It.IsAny<ContainerCreationRequest>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -236,7 +236,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             };
 
             HelixJobInfo result = await CreateService(api.Api.Object, blobClientFactory)
-                .ResubmitWorkItemsAsync("original-job", [WorkItem("WORK-A"), WorkItem("work-b")], CancellationToken.None);
+                .ResubmitWorkItemsAsync(new HelixJobInfo("original-job", "finished"), [WorkItem("WORK-A"), WorkItem("work-b")], CancellationToken.None);
 
             Assert.Equal("new-job", result.JobName);
             Assert.Equal("running", result.Status);

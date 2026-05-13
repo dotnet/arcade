@@ -23,18 +23,31 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly Func<TimeSpan, CancellationToken, Task> _delayFunc;
 
         /// <summary>
-        /// Tracks the latest outcome for each logical work item, keyed by work item name.
-        /// When a resubmission passes a previously-failed item, the outcome is updated.
+        /// Tracks the latest outcome for each logical work item, keyed by
+        /// (SubmitterChainKey, WorkItemName). Using the submitter chain key (rather than just
+        /// the work-item name) ensures that two different AzDO jobs which happen to run
+        /// identically-named Helix work items do not overwrite each other's outcomes. Within
+        /// a single AzDO submitter chain, a resubmission still overwrites a prior failure
+        /// for the same work-item name because resubmitted Helix jobs inherit
+        /// <c>System.JobName</c>.
         /// </summary>
-        private readonly Dictionary<string, bool> _workItemOutcomes = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<(string ChainKey, string WorkItemName), bool> _workItemOutcomes = new(WorkItemOutcomeKeyComparer.Instance);
         private readonly HashSet<string> _workItemOutcomeJobs = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Cache of every Helix job we have seen this run, indexed by job name, so that
+        /// <see cref="GetSubmitterChainKey"/> can walk back through <c>PreviousHelixJobName</c>
+        /// links when a submitter job name is not present on the job (e.g. unit-test
+        /// scenarios that submit Helix jobs without an AzDO submitter context).
+        /// </summary>
+        private readonly Dictionary<string, HelixJobInfo> _knownJobsByName = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Tracks which work item names belong to which Helix job, so resubmission only
         /// resubmits items from the specific source job.
         /// </summary>
         private readonly Dictionary<string, HashSet<string>> _workItemsByJob = new(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, FailedWorkItemConsoleInfo> _failedWorkItemConsoleInfo = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<(string ChainKey, string WorkItemName), FailedWorkItemConsoleInfo> _failedWorkItemConsoleInfo = new(WorkItemOutcomeKeyComparer.Instance);
         private readonly HashSet<string> _reportedFailedWorkItemConsoleLinks = new(StringComparer.OrdinalIgnoreCase);
         private readonly List<Task> _pendingTestResultUploads = [];
 
@@ -151,6 +164,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 associatedJobs.UnionWith(associatedJobsWithBuild);
 
+                // Cache every job we have seen so GetSubmitterChainKey can follow the
+                // PreviousHelixJobName chain back to a root, even across polls.
+                foreach (HelixJobInfo j in associatedJobsWithBuild)
+                {
+                    _knownJobsByName[j.JobName] = j;
+                }
+
                 // Filter jobs to completed ones belonging to this build. Helix job summaries can
                 // omit Finished for failed jobs even after all work items have terminal exit codes.
                 IReadOnlyCollection<HelixJobInfo> completedJobs =
@@ -210,7 +230,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                         if (anyWorkItemFailed)
                         {
-                            var failedItems = _workItemOutcomes.Where(kv => !kv.Value).Select(kv => kv.Key).ToList();
+                            var failedItems = _workItemOutcomes
+                                .Where(kv => !kv.Value)
+                                .Select(kv => $"{FormatChainKeyForDisplay(kv.Key.ChainKey)}/{kv.Key.WorkItemName}")
+                                .OrderBy(s => s, StringComparer.OrdinalIgnoreCase)
+                                .ToList();
                             _logger.LogError("The Helix Job Monitor detected {Count} failed work item(s): {Items}",
                                 failedItems.Count, string.Join(", ", failedItems));
                         }
@@ -366,7 +390,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             string jobConnector = isLastJob ? "└─" : "├─";
             string childPrefix = isLastJob ? "   " : "│  ";
-            lines.Add($"{jobConnector} 🧪 Helix job {job.JobName} [{jobStatus}]");
+            lines.Add($"{jobConnector} 🧪 Helix job {job.DisplayName} [{jobStatus}]");
 
             List<WorkItemSummary> orderedWorkItems =
             [
@@ -439,7 +463,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return;
             }
 
-            _logger.LogInformation("Job {jobName} completed. Processing test results...{nl}{JobUri}", helixJob.JobName, Environment.NewLine, helixJob.DetailsUri);
+            _logger.LogInformation("Job {JobName} completed. Processing test results...{nl}{JobUri}", helixJob.DisplayName, Environment.NewLine, helixJob.DetailsUri);
 
             IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(helixJob.JobName, cancellationToken);
             LogFailedWorkItemConsoleLinks(helixJob, [..workItems.Where(wi => wi.IsFailed)]);
@@ -447,12 +471,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             // Update per-work-item outcome tracking
             if (_workItemOutcomeJobs.Add(helixJob.JobName))
             {
+                string chainKey = GetSubmitterChainKey(helixJob);
                 var jobWorkItems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 foreach (WorkItemSummary wi in workItems)
                 {
-                    // A resubmission result overwrites a prior failure for the same work item name
-                    _workItemOutcomes[wi.Name] = !wi.IsFailed;
-                    TrackFailedWorkItemConsoleInfo(helixJob, wi);
+                    // Within the same AzDO submitter chain (i.e. resubmissions of the same
+                    // logical AzDO job), the latest result overwrites the prior one for the
+                    // same work item name. Across different submitter chains the key differs,
+                    // so identically-named work items in different AzDO jobs are tracked
+                    // independently.
+                    _workItemOutcomes[(chainKey, wi.Name)] = !wi.IsFailed;
+                    TrackFailedWorkItemConsoleInfo(helixJob, chainKey, wi);
                     jobWorkItems.Add(wi.Name);
                 }
 
@@ -469,7 +498,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             _logger.LogInformation("{Icon} Job '{JobName}' {Status} ({PassedCount} passed, {FailedCount} failed){nl}{JobUri}",
                 failedWorkItemCount == 0 ? "✅" : "❌",
-                helixJob.JobName,
+                helixJob.DisplayName,
                 failedWorkItemCount == 0 ? "succeeded" : "failed",
                 successfulWorkItemCount,
                 failedWorkItemCount,
@@ -507,11 +536,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 int uploadedCount = await _azdo.UploadTestResultsAsync(testRunId, downloadedFiles, cancellationToken);
                 _logger.LogInformation("{UploadedCount} test results for job '{JobName}' processed after upload.",
                     uploadedCount,
-                    helixJob.JobName);
+                    helixJob.DisplayName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to upload test results for job {JobName} to Azure DevOps. Test run ID was {TestRunId}.", helixJob.JobName, testRunId);
+                _logger.LogError(ex, "Failed to upload test results for job {JobName} to Azure DevOps. Test run ID was {TestRunId}.", helixJob.DisplayName, testRunId);
             }
             finally
             {
@@ -558,7 +587,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 _logger.LogInformation("❌ Work item '{WorkItemName}' in job '{JobName}' failed ({State}).{nl}Console: {ConsoleOutputUri}",
                     workItem.Name,
-                    helixJob.JobName,
+                    helixJob.DisplayName,
                     FormatWorkItemState(workItem),
                     Environment.NewLine,
                     GetConsoleOutputText(workItem.ConsoleOutputUri));
@@ -587,20 +616,60 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private static string GetWorkItemKey(string jobName, string workItemName)
             => $"{jobName}/{workItemName}";
 
-        private void TrackFailedWorkItemConsoleInfo(HelixJobInfo helixJob, WorkItemSummary workItem)
+        private void TrackFailedWorkItemConsoleInfo(HelixJobInfo helixJob, string chainKey, WorkItemSummary workItem)
         {
+            var key = (chainKey, workItem.Name);
             if (workItem.IsFailed)
             {
-                _failedWorkItemConsoleInfo[workItem.Name] = new FailedWorkItemConsoleInfo(
-                    helixJob.JobName,
+                _failedWorkItemConsoleInfo[key] = new FailedWorkItemConsoleInfo(
+                    helixJob.DisplayName,
                     workItem.Name,
                     FormatWorkItemState(workItem),
                     GetConsoleOutputText(workItem.ConsoleOutputUri));
             }
             else
             {
-                _failedWorkItemConsoleInfo.Remove(workItem.Name);
+                _failedWorkItemConsoleInfo.Remove(key);
             }
+        }
+
+        /// <summary>
+        /// Produces a key that rolls up work-item outcomes within a logical AzDO submitter
+        /// chain. When the job carries an AzDO <c>System.JobName</c>, the chain key is based
+        /// on that name (so resubmissions of the same AzDO job share the same key while two
+        /// independent AzDO jobs running identically-named work items stay distinct). When
+        /// there is no submitter name (test scenarios, manual Helix submissions), the chain
+        /// is followed back through <c>PreviousHelixJobName</c> links to the root and the
+        /// root Helix job name is used instead, so that retries still overwrite prior
+        /// failures correctly.
+        /// </summary>
+        private string GetSubmitterChainKey(HelixJobInfo job)
+        {
+            if (!string.IsNullOrEmpty(job.SubmitterJobName))
+            {
+                return $"submitter:{job.SubmitterJobName}";
+            }
+
+            HelixJobInfo current = job;
+            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            while (current is not null
+                && !string.IsNullOrEmpty(current.PreviousHelixJobName)
+                && visited.Add(current.JobName))
+            {
+                if (!_knownJobsByName.TryGetValue(current.PreviousHelixJobName, out HelixJobInfo previous))
+                {
+                    return $"helix:{current.PreviousHelixJobName}";
+                }
+
+                if (!string.IsNullOrEmpty(previous.SubmitterJobName))
+                {
+                    return $"submitter:{previous.SubmitterJobName}";
+                }
+
+                current = previous;
+            }
+
+            return $"helix:{(current?.JobName ?? job.JobName)}";
         }
 
         private void LogFinalFailedWorkItemConsoleInfo()
@@ -665,7 +734,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 if (failedWorkItems.Count > 0)
                 {
-                    HelixJobInfo resubmittedJob = await _helix.ResubmitWorkItemsAsync(completedJob.JobName, failedWorkItems, cancellationToken);
+                    HelixJobInfo resubmittedJob = await _helix.ResubmitWorkItemsAsync(completedJob, failedWorkItems, cancellationToken);
                     if (resubmittedJob != null)
                     {
                         resubmittedJobs.Add(resubmittedJob);
@@ -743,6 +812,38 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             string WorkItemName,
             string State,
             string ConsoleOutput);
+
+        private static string FormatChainKeyForDisplay(string chainKey)
+        {
+            const string submitterPrefix = "submitter:";
+            const string helixPrefix = "helix:";
+            if (chainKey is null) return string.Empty;
+            if (chainKey.StartsWith(submitterPrefix, StringComparison.Ordinal))
+            {
+                return chainKey.Substring(submitterPrefix.Length);
+            }
+
+            if (chainKey.StartsWith(helixPrefix, StringComparison.Ordinal))
+            {
+                return chainKey.Substring(helixPrefix.Length);
+            }
+
+            return chainKey;
+        }
+
+        private sealed class WorkItemOutcomeKeyComparer : IEqualityComparer<(string ChainKey, string WorkItemName)>
+        {
+            public static readonly WorkItemOutcomeKeyComparer Instance = new();
+
+            public bool Equals((string ChainKey, string WorkItemName) x, (string ChainKey, string WorkItemName) y)
+                => StringComparer.OrdinalIgnoreCase.Equals(x.ChainKey, y.ChainKey)
+                    && StringComparer.OrdinalIgnoreCase.Equals(x.WorkItemName, y.WorkItemName);
+
+            public int GetHashCode((string ChainKey, string WorkItemName) obj)
+                => HashCode.Combine(
+                    obj.ChainKey is null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(obj.ChainKey),
+                    obj.WorkItemName is null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(obj.WorkItemName));
+        }
 
         private void ReportTimeout(
             IEnumerable<HelixJobInfo> latestAssociatedJobs,
