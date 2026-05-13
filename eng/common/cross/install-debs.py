@@ -355,25 +355,16 @@ def finalize_setup(rootfsdir):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate rootfs for .NET runtime on Debian-like OS")
-    parser.add_argument("--distro", required=False, help="Distro name (e.g., debian, ubuntu, etc.)")
     parser.add_argument("--arch", required=True, help="Architecture (e.g., amd64, loong64, etc.)")
     parser.add_argument("--rootfsdir", required=True, help="Destination directory.")
     parser.add_argument('--suite', required=True, action='append', help='Specify one or more repository suites to collect index data.')
-    parser.add_argument("--mirror", required=False, help="Mirror (e.g., http://ftp.debian.org/debian-ports etc.)")
+    parser.add_argument("--mirror", required=True, help="Mirror (e.g., http://ftp.debian.org/debian-ports etc.)")
     parser.add_argument("--artool", required=False, default="ar", help="ar tool to extract debs (e.g., ar, llvm-ar etc.)")
     parser.add_argument("--force-check-gpg", required=False, action='store_true', help="Verify the packages against signatures in Release file.")
     parser.add_argument("--keyring", required=False, default='', help="Keyring file to check signature of Release file.")
     parser.add_argument("packages", nargs="+", help="List of package names to be installed.")
 
     args = parser.parse_args()
-
-    if args.mirror is None:
-        if args.distro == "ubuntu":
-            args.mirror = "http://archive.ubuntu.com/ubuntu" if args.arch in ["amd64", "i386"] else "http://ports.ubuntu.com/ubuntu-ports"
-        elif args.distro == "debian":
-            args.mirror = "http://ftp.debian.org/debian-ports"
-        else:
-            raise Exception("Unsupported distro")
 
     DESIRED_PACKAGES = args.packages + [ # base packages
         "dpkg",
@@ -384,7 +375,7 @@ if __name__ == "__main__":
         "debianutils"
     ]
 
-    print(f"Creating rootfs. rootfsdir: {args.rootfsdir}, distro: {args.distro}, arch: {args.arch}, suites: {args.suite}, mirror: {args.mirror}")
+    print(f"Creating rootfs. rootfsdir: {args.rootfsdir}, arch: {args.arch}, suites: {args.suite}, mirror: {args.mirror}")
 
     check_sig = args.force_check_gpg
     if check_sig and not args.keyring:
