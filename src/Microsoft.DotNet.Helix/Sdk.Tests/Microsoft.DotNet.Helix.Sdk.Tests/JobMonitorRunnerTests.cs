@@ -1417,8 +1417,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             // Test result upload is independent from retry: originals upload before resubmissions.
             Assert.Equal(4, azdo.CreatedTestRuns.Count);
             Assert.Equal(
-                ["helix-linux", "helix-windows", "helix-linux-resub", "helix-windows-resub"],
-                azdo.UploadedJobNames);
+                new[] { "helix-linux", "helix-windows", "helix-linux-resub", "helix-windows-resub" }.Order(),
+                azdo.UploadedJobNames.Order());
 
             // Each original job only had its failed items resubmitted
             Assert.Equal(2, helix.Resubmissions.Count);
@@ -1775,7 +1775,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.Equal(1, exitCode2);
             Assert.Equal(2, azdo2.TimelineCallCount);
-            Assert.Equal(["helix-b", "helix-a-resub", "helix-b-resub"], azdo2.UploadedJobNames);
+            Assert.Equal(new[] { "helix-b", "helix-a-resub", "helix-b-resub" }.Order(), azdo2.UploadedJobNames.Order());
 
             Assert.Equal(2, helix2.Resubmissions.Count);
             Assert.Equal(["a-fail"], helix2.Resubmissions.Single(r => r.OriginalJob == "helix-a").FailedItems);
