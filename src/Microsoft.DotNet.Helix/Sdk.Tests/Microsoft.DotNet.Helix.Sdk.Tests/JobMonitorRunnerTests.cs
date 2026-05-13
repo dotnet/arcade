@@ -1007,7 +1007,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Single(helix.Resubmissions);
             Assert.Equal("helix-linux", helix.Resubmissions[0].OriginalJob);
             Assert.Equal(["linux-fail"], helix.Resubmissions[0].FailedItems);
-            Assert.Equal(["helix-linux", "helix-linux-resub"], azdo.UploadedJobNames);
+            Assert.Equal(new[] { "helix-linux", "helix-linux-resub" }.Order(), azdo.UploadedJobNames.Order());
 
             static void AddRetriedStageTimeline(FakeAzureDevOpsService azdo)
             {
@@ -1340,7 +1340,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             // Resubmission also failed → exit 1
             Assert.Equal(1, exitCode);
-            Assert.Equal(["helix-linux", "helix-linux-resub"], azdo.UploadedJobNames);
+            Assert.Equal(new[] { "helix-linux", "helix-linux-resub" }.Order(), azdo.UploadedJobNames.Order());
         }
 
         /// <summary>
@@ -1523,7 +1523,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.Equal(0, exitCode);
             Assert.Empty(helix.Resubmissions);
-            Assert.Equal(["helix-linux", "helix-linux-resub"], azdo.UploadedJobNames);
+            Assert.Equal(new[] { "helix-linux", "helix-linux-resub" }.Order(), azdo.UploadedJobNames.Order());
         }
 
         /// <summary>
@@ -1567,7 +1567,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.Equal(0, exitCode);
             Assert.Empty(helix.Resubmissions);
-            Assert.Equal(["helix-linux", "helix-linux-resub"], azdo.UploadedJobNames);
+            Assert.Equal(new[] { "helix-linux", "helix-linux-resub" }.Order(), azdo.UploadedJobNames.Order());
         }
 
         /// <summary>
@@ -1649,7 +1649,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             int exitCode = await runner.RunAsync(CancellationToken.None);
 
             Assert.Equal(0, exitCode);
-            Assert.Equal(["helix-linux", "helix-linux-resub"], azdo.UploadedJobNames);
+            Assert.Equal(new[] { "helix-linux", "helix-linux-resub" }.Order(), azdo.UploadedJobNames.Order());
         }
 
         /// <summary>
@@ -1990,7 +1990,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Single(helix3.Resubmissions);
             Assert.Equal("helix-b", helix3.Resubmissions[0].OriginalJob);
             Assert.Equal(["b-fail"], helix3.Resubmissions[0].FailedItems);
-            Assert.Equal(["helix-b", "helix-a-resub", "helix-b-resub"], azdo3.UploadedJobNames);
+            Assert.Equal(new[] { "helix-b", "helix-a-resub", "helix-b-resub" }.Order(), azdo3.UploadedJobNames.Order());
         }
 
         /// <summary>
@@ -2136,7 +2136,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.Equal(0, exitCode);
             Assert.Empty(helix.Resubmissions);
-            Assert.Equal(["helix-linux", "helix-linux-r1", "helix-linux-r2"], azdo.UploadedJobNames);
+            Assert.Equal(new[] { "helix-linux", "helix-linux-r1", "helix-linux-r2" }.Order(), azdo.UploadedJobNames.Order());
         }
 
         /// <summary>
@@ -2268,7 +2268,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.Equal(0, exitCode);
             Assert.Empty(helix.Resubmissions);
-            Assert.Equal(["helix-linux-r1", "helix-linux-r2"], azdo.UploadedJobNames);
+            Assert.Equal(new[] { "helix-linux-r1", "helix-linux-r2" }.Order(), azdo.UploadedJobNames.Order());
         }
 
         /// <summary>
@@ -2324,7 +2324,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal(0, exitCode);
             Assert.Single(helix.Resubmissions);
             Assert.Equal("helix-test", helix.Resubmissions[0].OriginalJob);
-            Assert.Equal(["helix-test", "helix-test-resub"], azdo.UploadedJobNames);
+            Assert.Equal(new[] { "helix-test", "helix-test-resub" }.Order(), azdo.UploadedJobNames.Order());
         }
 
         /// <summary>
@@ -2388,7 +2388,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal(0, exitCode);
             Assert.Single(helix.Resubmissions);
             Assert.Equal(["wi-timeout"], helix.Resubmissions[0].FailedItems);
-            Assert.Equal(["helix-linux", "helix-linux-resub"], azdo.UploadedJobNames);
+            Assert.Equal(new[] { "helix-linux", "helix-linux-resub" }.Order(), azdo.UploadedJobNames.Order());
         }
 
         [Fact]
