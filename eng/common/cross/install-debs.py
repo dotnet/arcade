@@ -124,7 +124,7 @@ async def fetch_release_file(session, mirror, suite, keyring):
         await download_file(session, release_url, release_file.name)
         await download_file(session, release_gpg_url, release_gpg_file.name)
 
-        keyring_arg = f"--keyring {keyring}" if keyring != '' else ''
+        keyring_arg = f"--keyring {keyring}" if keyring else ''
 
         print("Verifying signature of Release with Release.gpg.")
         verify_command = f"gpg {keyring_arg} --verify {release_gpg_file.name} {release_file.name}"
@@ -135,7 +135,8 @@ async def fetch_release_file(session, mirror, suite, keyring):
 
         print("Signature verified successfully.")
 
-        with open(release_file.name) as f: return f.read()
+        with open(release_file.name) as f:
+            return f.read()
 
 def parse_release_file(content, path):
     """Parses the Release file and returns sha256 checksum of the specified path."""
@@ -387,7 +388,14 @@ if __name__ == "__main__":
 
     print(f"Creating rootfs. rootfsdir: {args.rootfsdir}, distro: {args.distro}, arch: {args.arch}, suites: {args.suite}, mirror: {args.mirror}")
 
-    package_index_content = asyncio.run(download_package_index_parallel(args.mirror, args.arch, args.suite, args.force_check_gpg, args.keyring))
+    check_sig = args.force_check_gpg
+    if check_sig and not args.keyring:
+        print("ERROR: --force-check-gpg requires --keyring to specify a keyring file for signature verification.")
+        print("Install the appropriate keyring package (e.g., debian-ports-archive-keyring, ubuntu-archive-keyring)")
+        print("or pass --skipsigcheck to build-rootfs.sh to disable signature checking.")
+        sys.exit(1)
+
+    package_index_content = asyncio.run(download_package_index_parallel(args.mirror, args.arch, args.suite, check_sig, args.keyring))
 
     packages_info, aliases = parse_package_index(package_index_content)
 

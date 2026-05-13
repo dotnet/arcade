@@ -5,7 +5,7 @@ set -e
 usage()
 {
     echo "Usage: $0 [BuildArch] [CodeName] [lldbx.y] [llvmx[.y]] [--skipunmount] --rootfsdir <directory>]"
-    echo "BuildArch can be: arm(default), arm64, armel, armv6, loongarch64, ppc64le, riscv64, s390x, x64, x86"
+    echo "BuildArch can be: arm(default), arm64, loongarch64, ppc64le, riscv64, s390x, x64, x86"
     echo "CodeName - optional, Code name for Linux, can be: xenial(default), zesty, bionic, alpine"
     echo "                               for alpine can be specified with version: alpineX.YY or alpineedge"
     echo "                               for FreeBSD can be: freebsd13, freebsd14"
@@ -171,27 +171,6 @@ while :; do
             __OpenBSDArch=arm64
             __OpenBSDMachineArch=aarch64
             ;;
-        armel)
-            __BuildArch=armel
-            __UbuntuArch=armel
-            __UbuntuRepo="http://archive.debian.org/debian/"
-            __CodeName=buster
-            __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
-            __LLDB_Package="liblldb-6.0-dev"
-            __UbuntuPackages="${__UbuntuPackages// libomp-dev/}"
-            __UbuntuPackages="${__UbuntuPackages// libomp5/}"
-            __UbuntuSuites=
-            ;;
-        armv6)
-            __BuildArch=armv6
-            __UbuntuArch=armhf
-            __QEMUArch=arm
-            __UbuntuRepo="http://raspbian.raspberrypi.org/raspbian/"
-            __CodeName=buster
-            __KeyringFile="/usr/share/keyrings/raspbian-archive-keyring.gpg"
-            __LLDB_Package="liblldb-6.0-dev"
-            __UbuntuSuites=
-            ;;
         loongarch64)
             __BuildArch=loongarch64
             __AlpineArch=loongarch64
@@ -199,10 +178,6 @@ while :; do
             __UbuntuArch=loong64
             __UbuntuSuites=unreleased
             __LLDB_Package="liblldb-19-dev"
-
-            if [[ "$__CodeName" == "sid" ]]; then
-                __UbuntuRepo="http://ftp.ports.debian.org/debian-ports/"
-            fi
             ;;
         riscv64)
             __BuildArch=riscv64
@@ -345,7 +320,7 @@ while :; do
 
             # Debian-Ports architectures need different values
             case "$__UbuntuArch" in
-            amd64|arm64|armel|armhf|i386|mips64el|ppc64el|riscv64|s390x)
+            amd64|arm64|armhf|i386|mips64el|ppc64el|riscv64|s390x)
                 __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
 
                 if [[ -z "$__UbuntuRepo" ]]; then
@@ -820,20 +795,14 @@ elif [[ "$__CodeName" == "haiku" ]]; then
     rm -rf "$__RootfsDir/tmp"
 elif [[ -n "$__CodeName" ]]; then
     __Suites="$__CodeName $(for suite in $__UbuntuSuites; do echo -n "$__CodeName-$suite "; done)"
-    __Keyring=
-    if [[ -e "$__KeyringFile" ]]; then
-        __Keyring="--keyring $__KeyringFile"
-    fi
 
-    __UpdateOptions=
+    __SigCheckArgs=
     if [[ "$__SkipSigCheck" == "0" ]]; then
-        __Keyring="$__Keyring --force-check-gpg"
-    else
-        __Keyring=
-        __UpdateOptions="--allow-unauthenticated --allow-insecure-repositories"
+        if [[ -e "$__KeyringFile" ]]; then
+            __SigCheckArgs="--keyring $__KeyringFile"
+        fi
+        __SigCheckArgs="$__SigCheckArgs --force-check-gpg"
     fi
-
-
 
     if [[ "$__SkipEmulation" == "1" ]]; then
         if [[ -z "$AR" ]]; then
@@ -850,12 +819,12 @@ elif [[ -n "$__CodeName" ]]; then
         PYTHON=${PYTHON_EXECUTABLE:-python3}
 
         # shellcheck disable=SC2086,SC2046
-        echo running "$PYTHON" "$__CrossDir/install-debs.py" --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
+        echo running "$PYTHON" "$__CrossDir/install-debs.py" $__SigCheckArgs --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
             $(for suite in $__Suites; do echo -n "--suite $suite "; done) \
             $__UbuntuPackages
 
         # shellcheck disable=SC2086,SC2046
-        "$PYTHON" "$__CrossDir/install-debs.py" --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
+        "$PYTHON" "$__CrossDir/install-debs.py" $__SigCheckArgs --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
             $(for suite in $__Suites; do echo -n "--suite $suite "; done) \
             $__UbuntuPackages
 
@@ -863,10 +832,10 @@ elif [[ -n "$__CodeName" ]]; then
     fi
 
     # shellcheck disable=SC2086
-    echo running debootstrap "--variant=minbase" $__Keyring --arch "$__UbuntuArch" "$__CodeName" "$__RootfsDir" "$__UbuntuRepo"
+    echo running debootstrap "--variant=minbase" $__SigCheckArgs --arch "$__UbuntuArch" "$__CodeName" "$__RootfsDir" "$__UbuntuRepo"
 
     # shellcheck disable=SC2086
-    if ! debootstrap "--variant=minbase" $__Keyring --arch "$__UbuntuArch" "$__CodeName" "$__RootfsDir" "$__UbuntuRepo"; then
+    if ! debootstrap "--variant=minbase" $__SigCheckArgs --arch "$__UbuntuArch" "$__CodeName" "$__RootfsDir" "$__UbuntuRepo"; then
         echo "debootstrap failed! dumping debootstrap.log"
         cat "$__RootfsDir/debootstrap/debootstrap.log"
         exit 1
@@ -883,6 +852,11 @@ Suites: $__Suites
 Components: main universe
 Signed-By: $__KeyringFile
 EOF
+
+    __UpdateOptions=
+    if [[ "$__SkipSigCheck" == "1" ]]; then
+        __UpdateOptions="--allow-unauthenticated --allow-insecure-repositories"
+    fi
 
     # shellcheck disable=SC2086
     chroot "$__RootfsDir" apt-get update $__UpdateOptions
