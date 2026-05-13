@@ -37,15 +37,14 @@ async def download_file(session, url, dest_path, max_retries=3, retry_delay=2, t
                     print(f"Downloaded {url} at {dest_path}")
                     return
                 else:
-                    print(f"Failed to download {url}, Status Code: {response.status}")
-                    break
+                    raise Exception(f"Failed to download {url}, Status Code: {response.status}")
         except (asyncio.CancelledError, asyncio.TimeoutError, aiohttp.ClientError) as e:
             print(f"Error downloading {url}: {type(e).__name__} - {e}. Retrying...")
 
         attempt += 1
         await asyncio.sleep(retry_delay)
 
-    print(f"Failed to download {url} after {max_retries} attempts.")
+    raise Exception(f"Failed to download {url} after {max_retries} attempts.")
 
 async def download_deb_files_parallel(mirror, packages, tmp_dir):
     """Download .deb files in parallel."""
@@ -90,29 +89,26 @@ async def fetch_and_decompress(session, mirror, arch, suite, component, check_si
     path = f"{component}/binary-{arch}/Packages.gz"
     url = f"{mirror}/dists/{suite}/{path}"
 
-    try:
-        async with session.get(url) as response:
-            if response.status == 200:
-                compressed_data = await response.read()
-                decompressed_data = gzip.decompress(compressed_data).decode('utf-8')
-                print(f"Downloaded index: {url}")
+    async with session.get(url) as response:
+        if response.status == 200:
+            compressed_data = await response.read()
+            decompressed_data = gzip.decompress(compressed_data).decode('utf-8')
+            print(f"Downloaded index: {url}")
 
-                if check_sig:
-                    # Verify the package index against the sha256 recorded in the Release file
-                    release_file_content = await fetch_release_file(session, mirror, suite, keyring)
-                    packages_sha = parse_release_file(release_file_content, path)
+            if check_sig:
+                # Verify the package index against the sha256 recorded in the Release file
+                release_file_content = await fetch_release_file(session, mirror, suite, keyring)
+                packages_sha = parse_release_file(release_file_content, path)
 
-                    sha256 = hashlib.sha256(compressed_data).hexdigest()
-                    if sha256 != packages_sha:
-                        raise Exception(f"SHA256 mismatch for {path}: expected {packages_sha}, got {sha256}")
-                    print(f"Checksum verified for {path}")
+                sha256 = hashlib.sha256(compressed_data).hexdigest()
+                if sha256 != packages_sha:
+                    raise Exception(f"SHA256 mismatch for {path}: expected {packages_sha}, got {sha256}")
+                print(f"Checksum verified for {path}")
 
-                return decompressed_data
-            else:
-                print(f"Skipped index: {url} (doesn't exist)")
-                return None
-    except Exception as e:
-        print(f"Error fetching {url}: {e}")
+            return decompressed_data
+        else:
+            print(f"Skipped index: {url} (doesn't exist)")
+            return None
 
 async def fetch_release_file(session, mirror, suite, keyring):
     """Fetch Release and Release.gpg files and verify the signature."""
@@ -124,11 +120,12 @@ async def fetch_release_file(session, mirror, suite, keyring):
         await download_file(session, release_url, release_file.name)
         await download_file(session, release_gpg_url, release_gpg_file.name)
 
-        keyring_arg = f"--keyring {keyring}" if keyring else ''
-
         print("Verifying signature of Release with Release.gpg.")
-        verify_command = f"gpg {keyring_arg} --verify {release_gpg_file.name} {release_file.name}"
-        result = subprocess.run(verify_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        verify_command = ["gpg"]
+        if keyring:
+            verify_command += ["--keyring", keyring]
+        verify_command += ["--verify", release_gpg_file.name, release_file.name]
+        result = subprocess.run(verify_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if result.returncode != 0:
             raise Exception(f"Signature verification failed: {result.stderr.decode('utf-8')}")
@@ -295,7 +292,7 @@ def extract_deb_file(deb_file, tmp_dir, extract_dir, ar_tool):
     os.makedirs(extract_dir, exist_ok=True)
 
     with tempfile.TemporaryDirectory(dir=tmp_dir) as tmp_subdir:
-        result = subprocess.run(f"{ar_tool} t {os.path.abspath(deb_file)}", cwd=tmp_subdir, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result = subprocess.run([ar_tool, "t", os.path.abspath(deb_file)], cwd=tmp_subdir, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         tar_filename = None
         for line in result.stdout.decode().splitlines():
@@ -309,7 +306,8 @@ def extract_deb_file(deb_file, tmp_dir, extract_dir, ar_tool):
         tar_file_path = os.path.join(tmp_subdir, tar_filename)
         print(f"Extracting {tar_filename} from {deb_file}..")
 
-        subprocess.run(f"{ar_tool} p {os.path.abspath(deb_file)} {tar_filename} > {tar_file_path}", check=True, shell=True)
+        with open(tar_file_path, "wb") as outfile:
+            subprocess.run([ar_tool, "p", os.path.abspath(deb_file), tar_filename], check=True, stdout=outfile, stderr=subprocess.PIPE)
 
         file_extension = os.path.splitext(tar_file_path)[1].lower()
 
