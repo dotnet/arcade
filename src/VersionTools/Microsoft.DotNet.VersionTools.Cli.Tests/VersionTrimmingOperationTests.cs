@@ -1,8 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using FluentAssertions;
-using Microsoft.DotNet.VersionTools.Automation;
+using AwesomeAssertions;
+using Microsoft.Arcade.Common;
 using Moq;
 using NuGet.Versioning;
 using System.IO;

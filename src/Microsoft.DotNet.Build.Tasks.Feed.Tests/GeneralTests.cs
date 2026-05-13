@@ -7,12 +7,12 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using FluentAssertions;
-using Microsoft.DotNet.Arcade.Test.Common;
+using AwesomeAssertions;
+using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
+using Microsoft.DotNet.Build.Manifest.Tests;
 using Xunit;
-using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
 using static Microsoft.DotNet.Build.CloudTestTasks.AzureStorageUtils;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
@@ -35,6 +35,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     channelConfig.TargetFeeds.Should().Contain(f => f.ContentTypes.Contains(type));
                 }
             }
+        }
+
+        [Theory]
+        [InlineData(8103)]
+        [InlineData(8104)]
+        [InlineData(8105)]
+        public void AspireChannelsAllowOnlyGetAspireCliInstallScripts(int channelId)
+        {
+            var channelConfig = PublishingConstants.ChannelInfos.Single(c => c.Id == channelId);
+
+            channelConfig.AkaMSCreateLinkPatterns.Any(pattern => pattern.IsMatch("assets/installers/foo.zip")).Should().BeTrue();
+            channelConfig.AkaMSCreateLinkPatterns.Any(pattern => pattern.IsMatch("assets/installers/get-aspire-cli.ps1")).Should().BeTrue();
+            channelConfig.AkaMSCreateLinkPatterns.Any(pattern => pattern.IsMatch("assets/installers/get-aspire-cli.ps1.sha512")).Should().BeTrue();
+            channelConfig.AkaMSCreateLinkPatterns.Any(pattern => pattern.IsMatch("assets/installers/get-aspire-cli.sh")).Should().BeTrue();
+            channelConfig.AkaMSCreateLinkPatterns.Any(pattern => pattern.IsMatch("assets/installers/get-aspire-cli.sh.sha512")).Should().BeTrue();
+            channelConfig.AkaMSCreateLinkPatterns.Any(pattern => pattern.IsMatch("assets/installers/install-other-tool.ps1")).Should().BeFalse();
+            channelConfig.AkaMSCreateLinkPatterns.Any(pattern => pattern.IsMatch("assets/installers/install-other-tool.sh")).Should().BeFalse();
         }
 
         [Theory]
@@ -204,12 +221,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 isInternal: default,
                 publishingInfraVersion: default,
                 akaMSChannelNames: default,
+                akaMSCreateLinkPatterns: default,
+                akaMSDoNotCreateLinkPatterns: default,
                 targetFeeds: new TargetFeedSpecification[]
                 {
                     new (new[] { TargetFeedContentType.Deb }, dummyFeedUrl, AssetSelection.ShippingOnly)  
                 },
                 symbolTargetType: default,
-                filenamesToExclude: default,
                 flatten: default);
 
             TargetChannelConfig right = new(
@@ -217,12 +235,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 isInternal: default,
                 publishingInfraVersion: default,
                 akaMSChannelNames: default,
+                akaMSCreateLinkPatterns: default,
+                akaMSDoNotCreateLinkPatterns: default,
                 targetFeeds: new TargetFeedSpecification[]
                 {
                     new (new[] { TargetFeedContentType.Deb }, dummyFeedUrl, AssetSelection.ShippingOnly) 
                 },
                 symbolTargetType: default,
-                filenamesToExclude: default,
                 flatten: default);
 
             bool actualResult = left.Equals(right);
@@ -238,12 +257,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 isInternal: default,
                 publishingInfraVersion: default,
                 akaMSChannelNames: default,
+                akaMSCreateLinkPatterns: default,
+                akaMSDoNotCreateLinkPatterns: default,
                 targetFeeds: new TargetFeedSpecification[]
                 {
                     new (new[] { TargetFeedContentType.Deb }, dummyFeedUrl, AssetSelection.ShippingOnly)
                 },
                 symbolTargetType: default,
-                filenamesToExclude: default,
                 flatten: default);
 
             TargetChannelConfig right = new(
@@ -251,14 +271,38 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 isInternal: default,
                 publishingInfraVersion: default,
                 akaMSChannelNames: default,
+                akaMSCreateLinkPatterns: default,
+                akaMSDoNotCreateLinkPatterns: default,
                 targetFeeds: Enumerable.Empty<TargetFeedSpecification>(),
                 symbolTargetType: default,
-                filenamesToExclude: default,
                 flatten: default);
 
             bool actualResult = left.Equals(right);
 
             actualResult.Should().BeFalse();
+        }
+
+        [Theory]
+        [InlineData("https://dotnetcli.blob.core.windows.net/test", "https://builds.dotnet.microsoft.com/test")]
+        [InlineData("https://dotnetbuilds.blob.core.windows.net/internal", "https://ci.dot.net/internal")]
+        [InlineData("https://dotnetbuilds.blob.core.windows.net/public?sv=token", "https://ci.dot.net/public")]
+        [InlineData("https://unknown.blob.core.windows.net/test", "https://unknown.blob.core.windows.net/test")]
+        [InlineData("https://pkgs.dev.azure.com/dnceng/public/_packaging/feed/nuget/v3/index.json", "https://pkgs.dev.azure.com/dnceng/public/_packaging/feed/nuget/v3/index.json")]
+        public void TargetFeedConfig_SafeTargetURL_AppliesCdnSubstitution(string targetUrl, string expectedSafeUrl)
+        {
+            // Arrange
+            var feedConfig = new TargetFeedConfig(
+                contentType: TargetFeedContentType.Installer,
+                targetURL: targetUrl,
+                type: FeedType.AzureStorageContainer,
+                token: "dummyToken"
+            );
+
+            // Act
+            var actualSafeUrl = feedConfig.SafeTargetURL;
+
+            // Assert
+            actualSafeUrl.Should().Be(expectedSafeUrl);
         }
     }
 }

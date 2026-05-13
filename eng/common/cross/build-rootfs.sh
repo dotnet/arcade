@@ -9,6 +9,7 @@ usage()
     echo "CodeName - optional, Code name for Linux, can be: xenial(default), zesty, bionic, alpine"
     echo "                               for alpine can be specified with version: alpineX.YY or alpineedge"
     echo "                               for FreeBSD can be: freebsd13, freebsd14"
+    echo "                               for OpenBSD can be: openbsd"
     echo "                               for illumos can be: illumos"
     echo "                               for Haiku can be: haiku."
     echo "lldbx.y - optional, LLDB version, can be: lldb3.9(default), lldb4.0, lldb5.0, lldb6.0 no-lldb. Ignored for alpine and FreeBSD"
@@ -27,13 +28,14 @@ __BuildArch=arm
 __AlpineArch=armv7
 __FreeBSDArch=arm
 __FreeBSDMachineArch=armv7
+__OpenBSDArch=arm
+__OpenBSDMachineArch=armv7
 __IllumosArch=arm7
 __HaikuArch=arm
 __QEMUArch=arm
 __UbuntuArch=armhf
 __UbuntuRepo=
 __UbuntuSuites="updates security backports"
-__DebianSuites=
 __LLDB_Package="liblldb-3.9-dev"
 __SkipUnmount=0
 
@@ -73,7 +75,7 @@ __AlpinePackages+=" krb5-dev"
 __AlpinePackages+=" openssl-dev"
 __AlpinePackages+=" zlib-dev"
 
-__FreeBSDBase="13.4-RELEASE"
+__FreeBSDBase="13.5-RELEASE"
 __FreeBSDPkg="1.21.3"
 __FreeBSDABI="13"
 __FreeBSDPackages="libunwind"
@@ -82,6 +84,12 @@ __FreeBSDPackages+=" libinotify"
 __FreeBSDPackages+=" openssl"
 __FreeBSDPackages+=" krb5"
 __FreeBSDPackages+=" terminfo-db"
+
+__OpenBSDVersion="7.8"
+__OpenBSDPackages="heimdal-libs"
+__OpenBSDPackages+=" icu4c"
+__OpenBSDPackages+=" inotify-tools"
+__OpenBSDPackages+=" openssl"
 
 __IllumosPackages="icu"
 __IllumosPackages+=" mit-krb5"
@@ -160,13 +168,19 @@ while :; do
             __QEMUArch=aarch64
             __FreeBSDArch=arm64
             __FreeBSDMachineArch=aarch64
+            __OpenBSDArch=arm64
+            __OpenBSDMachineArch=aarch64
             ;;
         armel)
             __BuildArch=armel
             __UbuntuArch=armel
-            __UbuntuRepo="http://ftp.debian.org/debian/"
-            __CodeName=jessie
+            __UbuntuRepo="http://archive.debian.org/debian/"
+            __CodeName=buster
             __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
+            __LLDB_Package="liblldb-6.0-dev"
+            __UbuntuPackages="${__UbuntuPackages// libomp-dev/}"
+            __UbuntuPackages="${__UbuntuPackages// libomp5/}"
+            __UbuntuSuites=
             ;;
         armv6)
             __BuildArch=armv6
@@ -183,8 +197,7 @@ while :; do
             __AlpineArch=loongarch64
             __QEMUArch=loongarch64
             __UbuntuArch=loong64
-            __UbuntuSuites=
-            __DebianSuites=unreleased
+            __UbuntuSuites=unreleased
             __LLDB_Package="liblldb-19-dev"
 
             if [[ "$__CodeName" == "sid" ]]; then
@@ -228,6 +241,8 @@ while :; do
             __UbuntuArch=amd64
             __FreeBSDArch=amd64
             __FreeBSDMachineArch=amd64
+            __OpenBSDArch=amd64
+            __OpenBSDMachineArch=amd64
             __illumosArch=x86_64
             __HaikuArch=x86_64
             __UbuntuRepo="http://archive.ubuntu.com/ubuntu/"
@@ -275,45 +290,20 @@ while :; do
 
             ;;
         xenial) # Ubuntu 16.04
-            if [[ "$__CodeName" != "jessie" ]]; then
-                __CodeName=xenial
-            fi
-            ;;
-        zesty) # Ubuntu 17.04
-            if [[ "$__CodeName" != "jessie" ]]; then
-                __CodeName=zesty
-            fi
+            __CodeName=xenial
             ;;
         bionic) # Ubuntu 18.04
-            if [[ "$__CodeName" != "jessie" ]]; then
-                __CodeName=bionic
-            fi
+            __CodeName=bionic
             ;;
         focal) # Ubuntu 20.04
-            if [[ "$__CodeName" != "jessie" ]]; then
-                __CodeName=focal
-            fi
+            __CodeName=focal
             ;;
         jammy) # Ubuntu 22.04
-            if [[ "$__CodeName" != "jessie" ]]; then
-                __CodeName=jammy
-            fi
+            __CodeName=jammy
             ;;
         noble) # Ubuntu 24.04
-            if [[ "$__CodeName" != "jessie" ]]; then
-                __CodeName=noble
-            fi
-            if [[ -n "$__LLDB_Package" ]]; then
-                __LLDB_Package="liblldb-18-dev"
-            fi
-            ;;
-        jessie) # Debian 8
-            __CodeName=jessie
-            __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
-
-            if [[ -z "$__UbuntuRepo" ]]; then
-                __UbuntuRepo="http://ftp.debian.org/debian/"
-            fi
+            __CodeName=noble
+            __LLDB_Package="liblldb-19-dev"
             ;;
         stretch) # Debian 9
             __CodeName=stretch
@@ -330,7 +320,7 @@ while :; do
             __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
 
             if [[ -z "$__UbuntuRepo" ]]; then
-                __UbuntuRepo="http://ftp.debian.org/debian/"
+                __UbuntuRepo="http://archive.debian.org/debian/"
             fi
             ;;
         bullseye) # Debian 11
@@ -395,8 +385,12 @@ while :; do
             ;;
         freebsd14)
             __CodeName=freebsd
-            __FreeBSDBase="14.2-RELEASE"
+            __FreeBSDBase="14.3-RELEASE"
             __FreeBSDABI="14"
+            __SkipUnmount=1
+            ;;
+        openbsd)
+            __CodeName=openbsd
             __SkipUnmount=1
             ;;
         illumos)
@@ -464,10 +458,6 @@ if [[ "$__AlpineVersion" =~ 3\.1[345] ]]; then
     # compiler-rt--static was merged in compiler-rt package in alpine 3.16
     # for older versions, we need compiler-rt--static, so replace the name
     __AlpinePackages="${__AlpinePackages/compiler-rt/compiler-rt-static}"
-fi
-
-if [[ "$__BuildArch" == "armel" ]]; then
-    __LLDB_Package="lldb-3.5-dev"
 fi
 
 __UbuntuPackages+=" ${__LLDB_Package:-}"
@@ -611,6 +601,62 @@ elif [[ "$__CodeName" == "freebsd" ]]; then
     INSTALL_AS_USER=$(whoami) "$__RootfsDir"/host/sbin/pkg -r "$__RootfsDir" -C "$__RootfsDir"/usr/local/etc/pkg.conf update
     # shellcheck disable=SC2086
     INSTALL_AS_USER=$(whoami) "$__RootfsDir"/host/sbin/pkg -r "$__RootfsDir" -C "$__RootfsDir"/usr/local/etc/pkg.conf install --yes $__FreeBSDPackages
+elif [[ "$__CodeName" == "openbsd" ]]; then
+    # determine mirrors
+    OPENBSD_MIRROR="https://cdn.openbsd.org/pub/OpenBSD/$__OpenBSDVersion/$__OpenBSDMachineArch"
+
+    # download base system sets
+    ensureDownloadTool
+
+    BASE_SETS=(base comp)
+    for set in "${BASE_SETS[@]}"; do
+        FILE="${set}${__OpenBSDVersion//./}.tgz"
+        echo "Downloading $FILE..."
+        if [[ "$__hasWget" == 1 ]]; then
+            wget -O- "$OPENBSD_MIRROR/$FILE" | tar -C "$__RootfsDir" -xzpf -
+        else
+            curl -SL "$OPENBSD_MIRROR/$FILE" | tar -C "$__RootfsDir" -xzpf -
+        fi
+    done
+
+    PKG_MIRROR="https://cdn.openbsd.org/pub/OpenBSD/${__OpenBSDVersion}/packages/${__OpenBSDMachineArch}"
+
+    echo "Installing packages into sysroot..."
+
+    # Fetch package index once
+    if [[ "$__hasWget" == 1 ]]; then
+        PKG_INDEX=$(wget -qO- "$PKG_MIRROR/")
+    else
+        PKG_INDEX=$(curl -s "$PKG_MIRROR/")
+    fi
+
+    for pkg in $__OpenBSDPackages; do
+        PKG_FILE=$(echo "$PKG_INDEX" | grep -Po ">\K${pkg}-[0-9][^\" ]*\.tgz" \
+            | sort -V | tail -n1)
+
+        echo "Resolved package filename for $pkg: $PKG_FILE"
+
+        [[ -z "$PKG_FILE" ]] && { echo "ERROR: Package $pkg not found"; exit 1; }
+
+        if [[ "$__hasWget" == 1 ]]; then
+            wget -O- "$PKG_MIRROR/$PKG_FILE" | tar -C "$__RootfsDir" -xzpf -
+        else
+            curl -SL "$PKG_MIRROR/$PKG_FILE" | tar -C "$__RootfsDir" -xzpf -
+        fi
+    done
+
+    echo "Creating versionless symlinks for shared libraries..."
+    # Find all versioned .so files and create the base .so symlink
+    for lib in "$__RootfsDir/usr/lib/libc++.so."* "$__RootfsDir/usr/lib/libc++abi.so."* "$__RootfsDir/usr/lib/libpthread.so."*; do
+        if [ -f "$lib" ]; then
+            # Extract the filename (e.g., libc++.so.12.0)
+            VERSIONED_NAME=$(basename "$lib")
+            # Remove the trailing version numbers (e.g., libc++.so)
+            BASE_NAME=${VERSIONED_NAME%.so.*}.so
+            # Create the symlink in the same directory
+            ln -sf "$VERSIONED_NAME" "$__RootfsDir/usr/lib/$BASE_NAME"
+        fi
+    done
 elif [[ "$__CodeName" == "illumos" ]]; then
     mkdir "$__RootfsDir/tmp"
     pushd "$__RootfsDir/tmp"
@@ -773,6 +819,7 @@ elif [[ "$__CodeName" == "haiku" ]]; then
     popd
     rm -rf "$__RootfsDir/tmp"
 elif [[ -n "$__CodeName" ]]; then
+    __Suites="$__CodeName $(for suite in $__UbuntuSuites; do echo -n "$__CodeName-$suite "; done)"
     __Keyring=
     if [[ -e "$__KeyringFile" ]]; then
         __Keyring="--keyring $__KeyringFile"
@@ -786,6 +833,8 @@ elif [[ -n "$__CodeName" ]]; then
         __UpdateOptions="--allow-unauthenticated --allow-insecure-repositories"
     fi
 
+
+
     if [[ "$__SkipEmulation" == "1" ]]; then
         if [[ -z "$AR" ]]; then
             if command -v ar &>/dev/null; then
@@ -798,19 +847,16 @@ elif [[ -n "$__CodeName" ]]; then
             fi
         fi
 
-        # shellcheck disable=SC2086
-        suites="$__CodeName $__DebianSuites $(echo $__UbuntuSuites | xargs -n 1 | xargs -I {} echo -n "$__CodeName-{} ")"
-
         PYTHON=${PYTHON_EXECUTABLE:-python3}
 
         # shellcheck disable=SC2086,SC2046
-        echo running "$PYTHON" "$__CrossDir/install-debs.py" $__Keyring --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
-            $(echo $suites | xargs -n 1 | xargs -I {} echo -n "--suite {} ") \
+        echo running "$PYTHON" "$__CrossDir/install-debs.py" --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
+            $(for suite in $__Suites; do echo -n "--suite $suite "; done) \
             $__UbuntuPackages
 
         # shellcheck disable=SC2086,SC2046
-        "$PYTHON" "$__CrossDir/install-debs.py" $__Keyring --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
-            $(echo $suites | xargs -n 1 | xargs -I {} echo -n "--suite {} ") \
+        "$PYTHON" "$__CrossDir/install-debs.py" --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
+            $(for suite in $__Suites; do echo -n "--suite $suite "; done) \
             $__UbuntuPackages
 
         exit 0
@@ -833,7 +879,7 @@ elif [[ -n "$__CodeName" ]]; then
     cat > "$__RootfsDir/etc/apt/sources.list.d/$__CodeName.sources" <<EOF
 Types: deb
 URIs: $__UbuntuRepo
-Suites: $__CodeName $__DebianSuites $(echo $__UbuntuSuites | xargs -n 1 | xargs -I {} echo -n "$__CodeName-{} ")
+Suites: $__Suites
 Components: main universe
 Signed-By: $__KeyringFile
 EOF
@@ -848,12 +894,6 @@ EOF
 
     if [[ "$__SkipUnmount" == "0" ]]; then
         umount "$__RootfsDir"/* || true
-    fi
-
-    if [[ "$__BuildArch" == "armel" && "$__CodeName" == "jessie" ]]; then
-        pushd "$__RootfsDir"
-        patch -p1 < "$__CrossDir/$__BuildArch/armel.jessie.patch"
-        popd
     fi
 elif [[ "$__Tizen" == "tizen" ]]; then
     ROOTFS_DIR="$__RootfsDir" "$__CrossDir/tizen-build-rootfs.sh" "$__BuildArch"

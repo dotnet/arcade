@@ -1,19 +1,21 @@
-﻿<Project Sdk="Microsoft.Build.NoTargets">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(NetToolCurrent)</TargetFramework>
+    <TargetFramework>$(BundledNETCoreAppTargetFramework)</TargetFramework>
     <IsPackable>true</IsPackable>
+    <IsBuildTaskProject>true</IsBuildTaskProject>
     <Description>Common toolset for calling into CMake from MSBuild and easily reference native assets from managed projects.</Description>
     <PackageType>MSBuildSdk</PackageType>
-    <NoWarn>$(NoWarn);NU5128</NoWarn>
-    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <NoWarn>$(NoWarn);NU5128;CS0649</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="**/*.props;**/*.targets"
-          Pack="true"
-          PackagePath="%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Include="$(RepoRoot)LICENSE.TXT;$(RepoRoot)THIRD-PARTY-NOTICES.TXT" Pack="true" PackagePath="%(Filename)%(Extension)" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" />
+    <PackageReference Include="Microsoft.Build.Framework" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Common\Internal\BuildTask.cs" />
   </ItemGroup>
 
 </Project>

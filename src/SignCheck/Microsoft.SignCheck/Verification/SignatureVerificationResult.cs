@@ -80,6 +80,24 @@ namespace Microsoft.SignCheck.Verification
         }
 
         /// <summary>
+        /// True if this file was marked as IGNORE-STRONG-NAME. This result can be used with IsStrongNameSigned
+        /// </summary>
+        public bool IsIgnoreStrongName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// True if this file was marked as DO-NOT-UNPACK.
+        /// </summary>
+        public bool IsDoNotUnpack
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// True if the file was excluded from verification, false otherwise.
         /// </summary>
         public bool IsExcluded
@@ -261,6 +279,19 @@ namespace Microsoft.SignCheck.Verification
         }
 
         /// <summary>
+        /// </summary>
+        /// <param name="detailKey"></param>
+        /// <returns></returns>
+        public string ToString(string detailKey)
+        {
+            if (Detail.TryGetValue(detailKey, out string value))
+            {
+                return value;
+            }
+            return String.Empty;
+        }
+
+        /// <summary>
         /// Creates a SignatureVerificationResult for an unsupported file type or file extension.
         /// </summary>
         /// <param name="path">The path to the file that is unsupported</param>
@@ -273,6 +304,23 @@ namespace Microsoft.SignCheck.Verification
             };
 
             signatureVerificationResult.AddDetail(DetailKeys.File, SignCheckResources.DetailSkippedUnsupportedFileType);
+
+            return signatureVerificationResult;
+        }
+
+        /// <summary>
+        /// Creates a SignatureVerificationResult for a file that failed verification due to an unexpected error.
+        /// </summary>
+        /// <param name="path">The path to the file that caused the error.</param>
+        /// <param name="parent">The parent container of the file, or null for top-level files.</param>
+        /// <param name="virtualPath">The virtual path of the file.</param>
+        /// <param name="exception">The exception that occurred during verification.</param>
+        public static SignatureVerificationResult ErrorResult(string path, string parent, string virtualPath, Exception exception)
+        {
+            var signatureVerificationResult = new SignatureVerificationResult(path, parent, virtualPath);
+
+            signatureVerificationResult.AddDetail(DetailKeys.Error,
+                String.Format(SignCheckResources.DetailVerificationError, exception.ToString()));
 
             return signatureVerificationResult;
         }

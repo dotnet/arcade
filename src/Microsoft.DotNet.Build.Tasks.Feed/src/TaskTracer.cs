@@ -1,7 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-#if NET
 using Microsoft.Build.Framework;
 using MsBuildUtils = Microsoft.Build.Utilities;
 
@@ -25,7 +24,7 @@ sealed internal class TaskTracer : Microsoft.SymbolStore.ITracer
 
     public void WriteLine(string format, params object[] arguments)
     {
-        _log.LogMessage(MessageImportance.High, format, arguments);
+        _log.LogMessage(MessageImportance.Low, format, arguments);
     }
 
     public void Information(string message)
@@ -68,4 +67,3 @@ sealed internal class TaskTracer : Microsoft.SymbolStore.ITracer
         _log.LogMessage(_verbose ? MessageImportance.Normal : MessageImportance.Low, format, arguments);
     }
 }
-#endif

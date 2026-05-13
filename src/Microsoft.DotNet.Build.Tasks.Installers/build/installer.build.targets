@@ -1,14 +1,10 @@
 <Project>
 
-  <Import Project="$(MSBuildThisFileDirectory)wix/wix.targets" />
-  
-  <PropertyGroup>
-    <_CreateRpmTargets Condition="'$(UseArcadeRpmTooling)' != 'true'">FindFPM;CreateRpmUsingFpm</_CreateRpmTargets>
-    <_CreateRpmTargets Condition="'$(UseArcadeRpmTooling)' == 'true'">CreateRpm</_CreateRpmTargets>
-  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)wix/wix.targets" Condition="'$(UseWix5)' == ''" />
+  <Import Project="$(MSBuildThisFileDirectory)wix5/wix.targets" Condition="'$(UseWix5)' != ''" />
 
   <Target Name="GenerateDeb" DependsOnTargets="CreateDeb" />
-  <Target Name="GenerateRpm" DependsOnTargets="$(_CreateRpmTargets)" />
+  <Target Name="GenerateRpm" DependsOnTargets="CreateRpm" />
   <Target Name="GenerateMsi" DependsOnTargets="CreateWixInstaller" />
   <Target Name="GenerateCrossArchMsi" DependsOnTargets="CreateCrossArchWixInstaller" />
   <Target Name="GeneratePkg" DependsOnTargets="CreatePkg" />
@@ -73,7 +69,7 @@
     
     <PropertyGroup Condition="'$(GenerateDeb)' == 'true' or '$(GenerateRpm)' == 'true'">
       <_InstallerArchSuffix>$(InstallerTargetArchitecture)</_InstallerArchSuffix>
-      <_InstallerArchSuffix Condition="'$(BuildRpmPackage)' == 'true' and '$(InstallerTargetArchitecture)' == 'arm64'">aarch64</_InstallerArchSuffix>
+      <_InstallerArchSuffix Condition="'$(GenerateRpm)' == 'true' and '$(InstallerTargetArchitecture)' == 'arm64'">aarch64</_InstallerArchSuffix>
       <InstallerBuildPart>$(Version)-$(_InstallerArchSuffix)</InstallerBuildPart>
       <InstallerBuildPart Condition="'$(PackageTargetOS)' != ''">$(Version)-$(PackageTargetOS)-$(_InstallerArchSuffix)</InstallerBuildPart>
     </PropertyGroup>
@@ -85,53 +81,23 @@
       <ExeBundleInstallerFile>$(PackageOutputPath)$(InstallerFileNameWithoutExtension).exe</ExeBundleInstallerFile>
       <ExeBundleInstallerEngineFile>$(PackageOutputPath)$(InstallerFileNameWithoutExtension)-engine.exe</ExeBundleInstallerEngineFile>
     </PropertyGroup>
-
-    <PropertyGroup Condition="'$(GenerateRpm)' == 'true'">
-      <CreateRPMForCblMariner>true</CreateRPMForCblMariner>
-      <!-- PackageTargetOS is a distro-specific version suffix, used for deps packages, including the one for CBL Mariner.
-          We do not want to create additional CBL Mariner named RPMs of those packages. -->
-      <CreateRPMForCblMariner Condition="'$(PackageTargetOS)' != ''">false</CreateRPMForCblMariner>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(CreateRPMForCblMariner)' == 'true'">
-      <!-- CBL-Mariner 1.0 -->
-      <_CblMarinerVersionSuffix>cm.1</_CblMarinerVersionSuffix>
-      <_InstallerBuildPartCblMariner>$(Version)-$(_CblMarinerVersionSuffix)-$(_InstallerArchSuffix)</_InstallerBuildPartCblMariner>
-      <_InstallerFileNameWithoutExtensionCblMariner>$(InstallerName)-$(_InstallerBuildPartCblMariner)$(CrossArchContentsBuildPart)</_InstallerFileNameWithoutExtensionCblMariner>
-      <_InstallerFileCblMariner>$(PackageOutputPath)$(_InstallerFileNameWithoutExtensionCblMariner)$(InstallerExtension)</_InstallerFileCblMariner>
-      <!-- CBL-Mariner 2.0 -->
-      <_CblMariner2VersionSuffix>cm.2</_CblMariner2VersionSuffix>
-      <_InstallerBuildPartCblMariner2>$(Version)-$(_CblMariner2VersionSuffix)-$(_InstallerArchSuffix)</_InstallerBuildPartCblMariner2>
-      <_InstallerFileNameWithoutExtensionCblMariner2>$(InstallerName)-$(_InstallerBuildPartCblMariner2)$(CrossArchContentsBuildPart)</_InstallerFileNameWithoutExtensionCblMariner2>
-      <_InstallerFileCblMariner2>$(PackageOutputPath)$(_InstallerFileNameWithoutExtensionCblMariner2)$(InstallerExtension)</_InstallerFileCblMariner2>
-    </PropertyGroup>
   </Target>
 
-  <!--
-    Check if the RPM package build tool prereq is available.
-  -->
-  <Target Name="FindFPM">
-    <!-- run FPM  -->
-    <Exec
-      Command="/usr/bin/env fpm -h > /dev/null 2>&amp;1"
-      ContinueOnError="true"
-      IgnoreExitCode="true"
-      IgnoreStandardErrorWarningFormat="true">
-      <Output TaskParameter="ExitCode" PropertyName="_FPMSearchExitCode" />
-    </Exec>
-
-    <!-- Check if it successfully showed us a help message. -->
+  <!-- This target is a hook for users to add package info in a target. -->
+  <Target Name="GetAdditionalLinuxInstallerProperties">
     <PropertyGroup>
-      <_FPMPresent>false</_FPMPresent>
-      <_FPMPresent Condition=" '$(_FPMSearchExitCode)' == '0' ">true</_FPMPresent>
+      <FullLicenseText>$([System.IO.File]::ReadAllText('$(LicenseFile)').Replace('%0A', '\n').Replace('"', '\"'))</FullLicenseText>
+      <LinuxPackageArchitecture>$(_InstallerArchSuffix)</LinuxPackageArchitecture>
+      <!-- Linux packaging requires 'amd64' for x64 packages -->
+      <LinuxPackageArchitecture Condition="'$(LinuxPackageArchitecture)' == 'x64'">amd64</LinuxPackageArchitecture>
+      <_PackageCopyright>2017 Microsoft</_PackageCopyright>
+      <_PackageLongDescription Condition="'$(InstallerPackageDescription)' != ''">$(InstallerPackageDescription)</_PackageLongDescription>
+      <_PackageLongDescription Condition="'$(_PackageLongDescription)' == ''">.NET is a development platform that you can use to build command-line applications, microservices and modern websites. It is open source, cross-platform and is supported by Microsoft. We hope you enjoy using it! If you do, please consider joining the active community of developers that are contributing to the project on GitHub (https://github.com/dotnet/core). We happily accept issues and PRs.</_PackageLongDescription>
+      <_ShortDescription Condition="'$(PackageSummary)' != ''">$(PackageSummary)</_ShortDescription>
+      <_ShortDescription Condition="'$(PackageSummary)' == ''">$(MSBuildProjectName) $(InstallerPackageVersion)</_ShortDescription>
+      <_ShortDescription Condition="'$(PackageSummary)' == '' and '$(UseBrandingNameInLinuxPackageDescription)' == 'true'">$(ProductBrandName)</_ShortDescription>
     </PropertyGroup>
-
-    <Error Condition=" '$(_FPMPresent)'  != 'true' "
-             Text="FPM tool Not found, RPM packages will not be built." />
   </Target>
-
-  <!-- This target is kept for back-compat for targets that would hook it to add package info. -->
-  <Target Name="GetDebInstallerJsonProperties" />
 
   <PropertyGroup>
     <_LinuxPackageType Condition="'$(GenerateDeb)' == 'true'">deb</_LinuxPackageType>
@@ -194,7 +160,7 @@
   </Target>
 
   <Target Name="CreateDeb"
-          DependsOnTargets="_GetInstallerProperties;_GetCommonJsonProperties;GetDebInstallerJsonProperties;_CreateLinuxPackagingLayout"
+          DependsOnTargets="_GetInstallerProperties;GetAdditionalLinuxInstallerProperties;_CreateLinuxPackagingLayout"
           Returns="$(_InstallerFile)">
     <ItemGroup>
       <_ChangelogFile Include="$(_LayoutDocs)/$(VersionedInstallerName)/changelog.Debian.gz" />
@@ -234,11 +200,11 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <_ConflictsProperty Condition="'@(LinuxPackageConflicts)' != ''">Conflicts: @(LinuxPackageConflicts->'%(Identity)',', ')</_ConflictsProperty>
+      <_ConflictsProperty Condition="'@(LinuxPackageConflicts)' != ''">@(LinuxPackageConflicts->'%(Identity)',', ')</_ConflictsProperty>
     </PropertyGroup>
 
-    <ItemGroup>
-      <_ConflictsControlProperty Include="$(_ConflictsProperty)" />
+    <ItemGroup Condition="'$(_ConflictsProperty)' != ''">
+      <_ConflictsControlProperty Include="Conflicts" Value="$(_ConflictsProperty)" />
     </ItemGroup>
 
     <CreateControlFile
@@ -305,7 +271,7 @@
   <Target Name="CreateRpm"
           DependsOnTargets="
             _GetInstallerProperties;
-            GetRpmInstallerJsonProperties;
+            GetAdditionalLinuxInstallerProperties;
             _CreateLinuxPackagingLayout"
           Returns="$(_InstallerFile)">
     <!--
@@ -359,95 +325,51 @@
     <Message Text="$(MSBuildProjectName) -> $(_InstallerFile)" Importance="high" />
   </Target>
 
-  <Target Name="CreateRpmUsingFpm"
-          DependsOnTargets="
-            _GetInstallerProperties;
-            _CreateInstallerLayout;
-            GetRpmInstallerJsonProperties"
-          Condition="'$(_FPMPresent)' == 'true'"
-          Returns="$(_InstallerFile)">
-    <PropertyGroup>
-      <_ConfigJsonFile>$(_LayoutDirectory)rpm_config.json</_ConfigJsonFile>
-      <_RpmIntermediatesDir>$(_InstallerIntermediatesDir)out-rpm</_RpmIntermediatesDir>
-
-      <!-- Copyright, Changelog -->
-      <_RpmTemplatesLayoutDir>$(_LayoutDirectory)templates/</_RpmTemplatesLayoutDir>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <_RpmTemplateFile Include="$(MSBuildThisFileDirectory)rpm_templates/**/*" />
-    </ItemGroup>
-
-    <Copy
-      SourceFiles="@(_RpmTemplateFile)"
-      DestinationFiles="@(_RpmTemplateFile->'$(_RpmTemplatesLayoutDir)%(RecursiveDir)%(Filename)%(Extension)')" />
-
-    <GenerateJsonObjectString
-      Properties="@(_CommonLinuxPackageProperty);@(_RpmJsonProperty)"
-      TargetFile="$(_ConfigJsonFile)" />
-
-    <MakeDir Directories="$(_RpmIntermediatesDir)" />
-
-    <!-- Call the task to build the pre-reqs (parameters, copyright, changelog) for calling the FPM tool -->
-    <BuildFPMToolPreReqs
-      InputDir="$(_LayoutDirectory)"
-      OutputDir="$(_RpmIntermediatesDir)"
-      PackageVersion="$(InstallerPackageVersion)"
-      ConfigJsonFile="$(_ConfigJsonFile)">
-      <Output TaskParameter="FPMParameters" PropertyName="FPMCmdParameters" />
-    </BuildFPMToolPreReqs>
-
-    <Exec Command="fpm $(FPMCmdParameters)" WorkingDirectory="$(_RpmIntermediatesDir)" />
-
-    <!-- Copy package to output -->
-    <ItemGroup>
-      <GeneratedRpmFiles Include="$(_RpmIntermediatesDir)/*.rpm" />
-    </ItemGroup>
-
-    <Error Text="@(GeneratedRpmFiles->Count()) .rpm files generated." Condition="'@(GeneratedRpmFiles->Count())' != 1" />
-
-    <Copy SourceFiles="@(GeneratedRpmFiles)"
-          DestinationFiles="$(_InstallerFile)"
-          OverwriteReadOnlyFiles="True"
-          SkipUnchangedFiles="False"
-          UseHardlinksIfPossible="False" />
-
-    <Message Text="$(MSBuildProjectName) -> $(_InstallerFile)" Importance="high" />
-  </Target>
-
-  <Target Name="_BuildMarinerRpms"
+  <!--
+    Packages produced for Azure Linux must be signed with a special certificate.
+    Additionally, some distros use old keys (SHA-1 based) so there's a different cert for new packages.
+    RPM v4 doesn't support multiple signatures, so we must have two separate copies of the RPM for us to sign.
+    To solve this, we make copies of the packages with special names (which the Arcade SDK will sign with the correct certificate).
+    PackageTargetOS is a distro-specific version suffix, used for deps packages, including the one for Azure Linux.
+    As a result, we don't need to create a separate copy of the package for Azure Linux, but we do need to create a copy with the new key (unless the target is Azure Linux).
+  -->
+  <Target Name="_BuildAzureLinuxRpm"
           AfterTargets="GenerateRpm"
-          Condition="'$(CreateRPMForCblMariner)' == 'true'">
-    <!-- CBL-Mariner 1.0 -->
+          Condition="'$(PackageTargetOS)' == ''">
+    <!-- AzureLinux -->
+    <PropertyGroup>
+      <_AzureLinuxVersionSuffix>azl</_AzureLinuxVersionSuffix>
+      <_InstallerBuildPartAzureLinux>$(Version)-$(_AzureLinuxVersionSuffix)-$(_InstallerArchSuffix)</_InstallerBuildPartAzureLinux>
+      <_InstallerFileNameWithoutExtensionAzureLinux>$(InstallerName)-$(_InstallerBuildPartAzureLinux)$(CrossArchContentsBuildPart)</_InstallerFileNameWithoutExtensionAzureLinux>
+      <_InstallerFileAzureLinux>$(PackageOutputPath)$(_InstallerFileNameWithoutExtensionAzureLinux)$(InstallerExtension)</_InstallerFileAzureLinux>
+    </PropertyGroup>
     <Copy SourceFiles="$(_InstallerFile)"
-          DestinationFiles="$(_InstallerFileCblMariner)"
+          DestinationFiles="$(_InstallerFileAzureLinux)"
           OverwriteReadOnlyFiles="True"
           SkipUnchangedFiles="False"
           UseHardlinksIfPossible="False" />
 
-    <Message Text="$(MSBuildProjectName) -> $(_InstallerFileCblMariner)" Importance="high" />
-
-    <!-- CBL-Mariner 2.0 -->
-    <Copy SourceFiles="$(_InstallerFile)"
-          DestinationFiles="$(_InstallerFileCblMariner2)"
-          OverwriteReadOnlyFiles="True"
-          SkipUnchangedFiles="False"
-          UseHardlinksIfPossible="False" />
-
-    <Message Text="$(MSBuildProjectName) -> $(_InstallerFileCblMariner2)" Importance="high" />
+    <Message Text="$(MSBuildProjectName) -> $(_InstallerFileAzureLinux)" Importance="high" />
   </Target>
 
-  <Target Name="GetRpmInstallerJsonProperties"
-          DependsOnTargets="_GetCommonJsonProperties">
-    <ItemGroup>
-      <_FpmDependenciesJsonEntry Include="@(LinuxPackageDependency->'{&quot;package_name&quot; : &quot;%(Identity)&quot;, &quot;package_version&quot; : &quot;%(Version)&quot;}')" />
-    </ItemGroup>
-    <ItemGroup>
-      <_RpmJsonProperty Include="vendor" String=".NET Foundation" />
-      <_RpmJsonProperty Include="install_doc" String="/usr/share/doc/$(VersionedInstallerName)/" />
-      <_RpmJsonProperty Include="rpm_dependencies" Object="[@(_FpmDependenciesJsonEntry,', ')]" />
-      <_RpmJsonProperty Include="@(RpmJsonProperty)" />
-    </ItemGroup>
+  <Target Name="_BuildNewKeyLinuxPackage"
+          AfterTargets="GenerateRpm;GenerateDeb"
+          Condition="!$(PackageTargetOS.Contains('azl'))">
+    <!-- Packages to be signed with the new key -->
+    <PropertyGroup>
+      <_NewKeyVersionSuffix>newkey</_NewKeyVersionSuffix>
+      <_InstallerBuildPartNewKey>$(Version)-$(_NewKeyVersionSuffix)-$(_InstallerArchSuffix)</_InstallerBuildPartNewKey>
+      <_InstallerBuildPartNewKey Condition="'$(PackageTargetOS)' != ''">$(Version)-$(PackageTargetOS)-$(_NewKeyVersionSuffix)-$(_InstallerArchSuffix)</_InstallerBuildPartNewKey>
+      <_InstallerFileNameWithoutExtensionNewKey>$(InstallerName)-$(_InstallerBuildPartNewKey)$(CrossArchContentsBuildPart)</_InstallerFileNameWithoutExtensionNewKey>
+      <_InstallerFileNewKey>$(PackageOutputPath)$(_InstallerFileNameWithoutExtensionNewKey)$(InstallerExtension)</_InstallerFileNewKey>
+    </PropertyGroup>
+    <Copy SourceFiles="$(_InstallerFile)"
+          DestinationFiles="$(_InstallerFileNewKey)"
+          OverwriteReadOnlyFiles="True"
+          SkipUnchangedFiles="False"
+          UseHardlinksIfPossible="False" />
+
+    <Message Text="$(MSBuildProjectName) -> $(_InstallerFileNewKey)" Importance="high" />
   </Target>
 
   <!--
@@ -559,64 +481,4 @@
       SourceFiles="@(Manpage)"
       DestinationFiles="@(Manpage->'$(_LayoutDocs)/%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
-
-  <!--
-    Get common JSON properties. Used in the configuration JSON for both RPM and Debian packages.
-  -->
-  <Target Name="_GetCommonJsonProperties">
-    <PropertyGroup>
-      <FullLicenseText>$([System.IO.File]::ReadAllText('$(LicenseFile)').Replace('%0A', '\n').Replace('"', '\"'))</FullLicenseText>
-      <LinuxPackageArchitecture>$(_InstallerArchSuffix)</LinuxPackageArchitecture>
-      <!-- Linux packaging requires 'amd64' for x64 packages -->
-      <LinuxPackageArchitecture Condition="'$(LinuxPackageArchitecture)' == 'x64'">amd64</LinuxPackageArchitecture>
-      <_PackageCopyright>2017 Microsoft</_PackageCopyright>
-      <_PackageLongDescription Condition="'$(InstallerPackageDescription)' != ''">$(InstallerPackageDescription)</_PackageLongDescription>
-      <_PackageLongDescription Condition="'$(_PackageLongDescription)' == ''">.NET is a development platform that you can use to build command-line applications, microservices and modern websites. It is open source, cross-platform and is supported by Microsoft. We hope you enjoy using it! If you do, please consider joining the active community of developers that are contributing to the project on GitHub (https://github.com/dotnet/core). We happily accept issues and PRs.</_PackageLongDescription>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <_LinuxPackageReleaseProperty Include="package_version" String="1.0.0.0" />
-      <_LinuxPackageReleaseProperty Include="package_revision" String="$(InstallerPackageRelease)" />
-      <_LinuxPackageReleaseProperty Include="urgency" String="low" />
-      <_LinuxPackageReleaseProperty Include="changelog_message" String="https://github.com/dotnet/core/tree/master/release-notes" />
-
-      <_LinuxPackageControlProperty Include="priority" String="standard" />
-      <_LinuxPackageControlProperty Include="section" String="libs" />
-      <_LinuxPackageControlProperty Include="architecture" String="$(LinuxPackageArchitecture)" />
-
-      <_LinuxPackageLicenseProperty Include="type" String="MIT and ASL 2.0 and BSD" />
-      <_LinuxPackageLicenseProperty Include="full_text" String="$(FullLicenseText)" />
-    </ItemGroup>
-
-    <GenerateJsonObjectString Properties="@(_LinuxPackageReleaseProperty)">
-      <Output TaskParameter="Json" PropertyName="_JsonReleaseObject" />
-    </GenerateJsonObjectString>
-    <GenerateJsonObjectString Properties="@(_LinuxPackageControlProperty)">
-      <Output TaskParameter="Json" PropertyName="_JsonControlObject" />
-    </GenerateJsonObjectString>
-    <GenerateJsonObjectString Properties="@(_LinuxPackageLicenseProperty)">
-      <Output TaskParameter="Json" PropertyName="_JsonLicenseObject" />
-    </GenerateJsonObjectString>
-
-    <PropertyGroup>
-      <_ShortDescription Condition="'$(PackageSummary)' != ''">$(PackageSummary)</_ShortDescription>
-      <_ShortDescription Condition="'$(PackageSummary)' == ''">$(MSBuildProjectName) $(InstallerPackageVersion)</_ShortDescription>
-      <_ShortDescription Condition="'$(PackageSummary)' == '' and '$(UseBrandingNameInLinuxPackageDescription)' == 'true'">$(ProductBrandName)</_ShortDescription>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <_CommonLinuxPackageProperty Include="package_name" String="$(VersionedInstallerName)" />
-      <_CommonLinuxPackageProperty Include="short_description" String="$(_ShortDescription)" />
-      <_CommonLinuxPackageProperty Include="maintainer_name" String=".NET Team" />
-      <_CommonLinuxPackageProperty Include="maintainer_email" String="dotnetpackages@dotnetfoundation.org" />
-      <_CommonLinuxPackageProperty Include="install_root" String="$(LinuxInstallRoot)" />
-      <_CommonLinuxPackageProperty Include="long_description" String="$(_PackageLongDescription)" />
-      <_CommonLinuxPackageProperty Include="homepage" String="https://github.com/dotnet/core" />
-      <_CommonLinuxPackageProperty Include="copyright" String="$(_PackageCopyright)" />
-      <_CommonLinuxPackageProperty Include="release" Object="$(_JsonReleaseObject)" />
-      <_CommonLinuxPackageProperty Include="control" Object="$(_JsonControlObject)" />
-      <_CommonLinuxPackageProperty Include="license" Object="$(_JsonLicenseObject)" />
-    </ItemGroup>
-  </Target>
-
 </Project>

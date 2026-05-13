@@ -33,7 +33,7 @@
     Specifying build output manifest values:
 
     ManifestName - The repository name, listed inside the manifest and used to name the file.
-      If $(GitHubRepositoryName) is defined, its value is used. Default: "anonymous"
+      If $(RepositoryName) is defined, its value is used. Default: "anonymous"
     ManifestBuildId - Build ID listed in the manifest. Default: "no build id provided"
     ManifestBranch - Branch listed in the manifest. Default: none
     ManifestCommit - Commit listed in the manifest. Default: none
@@ -43,14 +43,15 @@
   -->
   
   <PropertyGroup>
-    <_MicrosoftDotNetBuildTasksFeedTaskDir>$(MSBuildThisFileDirectory)../tools/netframework/</_MicrosoftDotNetBuildTasksFeedTaskDir>
-    <_MicrosoftDotNetBuildTasksFeedTaskDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../tools/net/</_MicrosoftDotNetBuildTasksFeedTaskDir>
+    <_MicrosoftDotNetBuildTasksFeedTaskDir>$(MSBuildThisFileDirectory)../tools/net/</_MicrosoftDotNetBuildTasksFeedTaskDir>
   </PropertyGroup>
 
-  <UsingTask TaskName="PushToBuildStorage" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
-  <UsingTask TaskName="PublishArtifactsInManifest" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
-  <UsingTask TaskName="CreateAzureDevOpsFeed" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" />
-  <UsingTask TaskName="PublishSignedAssets" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" />
-  <UsingTask TaskName="CreateNewAzureContainer" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" />
+  <!-- TODO: Remove Architecture="*" on Runtime="NET" UsingTask declarations below when https://github.com/dotnet/msbuild/issues/13739 is fixed and a new msbuild is consumed with the fix. -->
+  <UsingTask TaskName="PushToBuildStorage" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="PublishArtifactsInManifest" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="CreateAzureDevOpsFeed" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="PublishSignedAssets" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="CreateNewAzureContainer" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="PublishBuildToMaestro" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" Runtime="NET" Architecture="*" />
 
 </Project>

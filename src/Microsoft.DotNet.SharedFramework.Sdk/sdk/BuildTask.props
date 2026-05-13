@@ -4,13 +4,18 @@
   <!-- This file exists so that consumers can import only this part of the Shared Framework SDK infrastructure
        without importing all the props and targets definitions. This is useful when a task should be invoked.
        Example: <Import Project="BuildTask.props" Sdk="Microsoft.DotNet.SharedFramework.Sdk" />  -->
-  <PropertyGroup Condition="'$(DotNetSharedFrameworkTaskDir)' == ''">
-    <DotNetSharedFrameworkTaskDir Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)../tools/net/</DotNetSharedFrameworkTaskDir>
-    <DotNetSharedFrameworkTaskDir Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)../tools/netframework/</DotNetSharedFrameworkTaskDir>
-  </PropertyGroup>
-
   <PropertyGroup>
+    <DotNetSharedFrameworkTaskDir Condition="'$(DotNetSharedFrameworkTaskDir)' == ''">$(MSBuildThisFileDirectory)../tools/net/</DotNetSharedFrameworkTaskDir>
     <DotNetSharedFrameworkTaskFile>$(DotNetSharedFrameworkTaskDir)Microsoft.DotNet.SharedFramework.Sdk.dll</DotNetSharedFrameworkTaskFile>
   </PropertyGroup>
+
+  <!-- TODO: Remove Architecture="*" on Runtime="NET" UsingTask declarations below when https://github.com/dotnet/msbuild/issues/13739 is fixed and a new msbuild is consumed with the fix. -->
+  <UsingTask TaskName="GenerateSharedFrameworkDepsFile" AssemblyFile="$(DotNetSharedFrameworkTaskFile)" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="GeneratePlatformManifestEntriesFromTemplate" AssemblyFile="$(DotNetSharedFrameworkTaskFile)" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="GeneratePlatformManifestEntriesFromFileList" AssemblyFile="$(DotNetSharedFrameworkTaskFile)" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="CreateFrameworkListFile" AssemblyFile="$(DotNetSharedFrameworkTaskFile)" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="VerifyClosure" AssemblyFile="$(DotNetSharedFrameworkTaskFile)" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="VerifyTypes" AssemblyFile="$(DotNetSharedFrameworkTaskFile)" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="ValidateFileVersions" AssemblyFile="$(DotNetSharedFrameworkTaskFile)" Runtime="NET" Architecture="*" />
 
 </Project>

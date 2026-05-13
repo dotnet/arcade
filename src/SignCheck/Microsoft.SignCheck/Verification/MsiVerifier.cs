@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Versioning;
 using Microsoft.Deployment.WindowsInstaller;
 using Microsoft.Deployment.WindowsInstaller.Package;
 using Microsoft.SignCheck.Interop;
@@ -11,9 +12,10 @@ using Microsoft.SignCheck.Logging;
 
 namespace Microsoft.SignCheck.Verification
 {
+    [SupportedOSPlatform("windows")]
     public class MsiVerifier : AuthentiCodeVerifier
     {
-        public MsiVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options) : base(log, exclusions, options, ".msi")
+        public MsiVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options) : base(log, exclusions, options, ".msi", new OleStorageSecurityInfoProvider())
         {
 
         }
@@ -60,32 +62,40 @@ namespace Microsoft.SignCheck.Verification
                     catch (Exception e)
                     {
                         Log.WriteError(e.Message);
+                        svr.AddDetail(DetailKeys.Error, SignCheckResources.DetailVerificationError, e.Message);
                     }
                 }
 
                 // Extract files from the Binary table - this is where items such as custom actions are stored.
+                // Be aware if there is no Binary table.
                 try
                 {
                     using (var installDatabase = new Database(svr.FullPath, DatabaseOpenMode.ReadOnly))
-                    using (View view = installDatabase.OpenView("SELECT `Name`, `Data` FROM `Binary`"))
                     {
-                        view.Execute();
-
-                        foreach (Record record in view)
+                        if (installDatabase.Tables.Contains("Binary"))
                         {
-                            string binaryFile = (string)record["Name"];
-                            string binaryFilePath = Path.Combine(svr.TempPath, binaryFile);
-                            StructuredStorage.SaveStream(record, svr.TempPath);
-                            SignatureVerificationResult binaryStreamResult = VerifyFile(binaryFilePath, svr.Filename, Path.Combine(svr.VirtualPath, binaryFile), containerPath: null);
-                            binaryStreamResult.AddDetail(DetailKeys.Misc, SignCheckResources.FileExtractedFromBinaryTable);
-                            svr.NestedResults.Add(binaryStreamResult);
-                            record.Close();
+                            using (View view = installDatabase.OpenView("SELECT `Name`, `Data` FROM `Binary`"))
+                            {
+                                view.Execute();
+
+                                foreach (Record record in view)
+                                {
+                                    string binaryFile = (string)record["Name"];
+                                    string binaryFilePath = Path.Combine(svr.TempPath, binaryFile);
+                                    StructuredStorage.SaveStream(record, svr.TempPath);
+                                    SignatureVerificationResult binaryStreamResult = VerifyFile(binaryFilePath, svr.Filename, Path.Combine(svr.VirtualPath, binaryFile), containerPath: null);
+                                    binaryStreamResult.AddDetail(DetailKeys.Misc, SignCheckResources.FileExtractedFromBinaryTable);
+                                    svr.NestedResults.Add(binaryStreamResult);
+                                    record.Close();
+                                }
+                            }
                         }
                     }
                 }
                 catch (Exception e)
                 {
                     Log.WriteError(e.Message);
+                    svr.AddDetail(DetailKeys.Error, SignCheckResources.DetailVerificationError, e.Message);
                 }
 
                 DeleteDirectory(svr.TempPath);

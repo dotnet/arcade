@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.Arcade.Common;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Internal.DependencyInjection.Testing;
@@ -174,7 +174,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 "net6.0",
                 "--arch",
                 "arm64",
-                "--add-source",
+                "--source",
                 "https://dev.azure.com/some/feed",
                 ToolName,
             };

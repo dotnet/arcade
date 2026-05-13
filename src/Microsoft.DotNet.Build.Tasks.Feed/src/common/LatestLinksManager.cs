@@ -8,9 +8,9 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.Build.Manifest;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Deployment.Tasks.Links;
-using Microsoft.DotNet.VersionTools.BuildManifest;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -21,11 +21,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private string _akaMSOwners { get; }
         private string _akaMSCreatedBy { get; }
         private string _akaMSGroupOwner { get; }
-
-        private static HashSet<string> AccountsWithCdns { get; } = new()
-        {
-            "dotnetcli.blob.core.windows.net", "dotnetbuilds.blob.core.windows.net",
-        };
 
         public LatestLinksManager(
             string akaMSClientId,
@@ -43,10 +38,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             _linkManager = new AkaMSLinkManager(akaMSClientId, certificate, akaMSTenant, _logger);
         }
 
+
+
         public async System.Threading.Tasks.Task CreateOrUpdateLatestLinksAsync(
             HashSet<string> assetsToPublish,
-            TargetFeedConfig feedConfig,
-            int expectedSuffixLength)
+            TargetFeedConfig feedConfig)
         {
             // The link manager should only be used if there are actually links that could
             // be created.
@@ -55,45 +51,57 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 throw new ArgumentException("No link prefixes specified.");
             }
 
-            string feedBaseUrl = feedConfig.SafeTargetURL;
-            if (expectedSuffixLength != 0)
+            string feedBaseUrl = ComputeLatestLinkBase(feedConfig);
+
+            IEnumerable<AkaMSLink> linksToCreate = GetLatestLinksToCreate(assetsToPublish, feedConfig, feedBaseUrl);
+
+            if (linksToCreate.Any())
             {
-                // Strip away the feed expected suffix (index.json)
-                feedBaseUrl = feedBaseUrl.Substring(0, feedBaseUrl.Length - expectedSuffixLength);
+                _logger.LogMessage(MessageImportance.High, "\nThe following aka.ms links for blobs will be created:");
+
+                await _linkManager.CreateOrUpdateLinksAsync(linksToCreate, _akaMSOwners, _akaMSCreatedBy, _akaMSGroupOwner, true);
             }
+        }
+
+        public IEnumerable<AkaMSLink> GetLatestLinksToCreate(HashSet<string> assetsToPublish, TargetFeedConfig feedConfig, string feedBaseUrl)
+        {
+            IEnumerable<AkaMSLink> linksToCreate = assetsToPublish
+                .Where(asset => !feedConfig.AkaMSDoNotCreateLinkPatterns.Any(p => p.IsMatch(asset)) &&
+                                    feedConfig.AkaMSCreateLinkPatterns.Any(p => p.IsMatch(asset)))
+                .Select(asset =>
+                {
+
+                    // blob path.
+                    string actualTargetUrl = feedBaseUrl + asset;
+
+                    List<AkaMSLink> newLinks = new List<AkaMSLink>();
+                    foreach (string shortUrlPrefix in feedConfig.LatestLinkShortUrlPrefixes)
+                    {
+                        newLinks.Add(GetAkaMSLinkForAsset(shortUrlPrefix, feedBaseUrl, asset, feedConfig.Flatten));
+                    }
+
+                    return newLinks;
+                })
+                .SelectMany(links => links)
+                .ToList();
+            return linksToCreate;
+        }
+
+        /// <summary>
+        /// Internal for testing
+        /// </summary>
+        /// <param name="feedConfig"></param>
+        /// <param name="expectedSuffixLength"></param>
+        /// <returns></returns>
+        public static string ComputeLatestLinkBase(TargetFeedConfig feedConfig)
+        {
+            string feedBaseUrl = feedConfig.SafeTargetURL;
             if (!feedBaseUrl.EndsWith("/", StringComparison.OrdinalIgnoreCase))
             {
                 feedBaseUrl += "/";
             }
-            if (AccountsWithCdns.Any(account => feedBaseUrl.Contains(account)))
-            {
-                // The storage accounts are in a single datacenter in the US and thus download 
-                // times can be painful elsewhere. The CDN helps with this therefore we point the target 
-                // of the aka.ms links to the CDN.
-                feedBaseUrl = feedBaseUrl.Replace(".blob.core.windows.net", ".azureedge.net");
-            }
 
-            _logger.LogMessage(MessageImportance.High, "\nThe following aka.ms links for blobs will be created:");
-            IEnumerable<AkaMSLink> linksToCreate = assetsToPublish
-                .Where(asset => !feedConfig.FilenamesToExclude.Contains(Path.GetFileName(asset)))
-                .Select(asset =>
-                    {
-
-                        // blob path.
-                        string actualTargetUrl = feedBaseUrl + asset;
-
-                        List<AkaMSLink> newLinks = new List<AkaMSLink>();
-                        foreach (string shortUrlPrefix in feedConfig.LatestLinkShortUrlPrefixes)
-                        {
-                            newLinks.Add(GetAkaMSLinkForAsset(shortUrlPrefix, feedBaseUrl, asset, feedConfig.Flatten));
-                        }
-
-                        return newLinks;
-                    })
-                .SelectMany(links => links)
-                .ToList();
-
-            await _linkManager.CreateOrUpdateLinksAsync(linksToCreate, _akaMSOwners, _akaMSCreatedBy, _akaMSGroupOwner, true);
+            return feedBaseUrl;
         }
 
         /// <sunnary>
@@ -109,13 +117,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             // blob path.
             string actualTargetUrl = feedBaseUrl + asset;
 
-            AkaMSLink newLink = new AkaMSLink
-            {
-                ShortUrl = GetLatestShortUrlForBlob(shortUrlPrefix, asset, flatten),
-                TargetUrl = actualTargetUrl
-            };
-            _logger.LogMessage(MessageImportance.High, $"  {Path.GetFileName(asset)}");
-
+            AkaMSLink newLink = new AkaMSLink(GetLatestShortUrlForBlob(shortUrlPrefix, asset, flatten), actualTargetUrl);
             _logger.LogMessage(MessageImportance.High, $"  aka.ms/{newLink.ShortUrl} -> {newLink.TargetUrl}");
 
             return newLink;

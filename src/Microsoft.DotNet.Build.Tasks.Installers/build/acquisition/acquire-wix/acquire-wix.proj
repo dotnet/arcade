@@ -1,8 +1,6 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <UsingTask TaskName="DownloadFile" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
-
   <!--
     Acquire WiX tools, if not present.
 
@@ -13,7 +11,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <WixVersion>3.14.1-9323.2545153</WixVersion>
+    <WixVersion>3.14.1-11027.2914512</WixVersion>
     <WixToolsDir>$(BaseIntermediateOutputPath)WixTools.$(WixVersion)/</WixToolsDir>
 
     <WixDownloadFilename>Microsoft.Signed.Wix-$(WixVersion).zip</WixDownloadFilename>
@@ -21,6 +19,9 @@
     <WixDestinationPath>$(WixToolsDir)$(WixDownloadFilename)</WixDestinationPath>
     <WixDownloadSentinel>$(WixToolsDir)$(WixDownloadFilename).sentinel</WixDownloadSentinel>
   </PropertyGroup>
+
+  <!-- TODO: Remove Architecture="*" on Runtime="NET" UsingTask declarations below when https://github.com/dotnet/msbuild/issues/13739 is fixed and a new msbuild is consumed with the fix. -->
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.DownloadFile" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" Runtime="NET" Architecture="*" />
   <Target Name="AcquireWixCore"
           Inputs="$(WixDownloadSentinel)"
           Outputs="$(WixDestinationPath)"
@@ -33,7 +34,7 @@
       Overwrite="true"
       Encoding="Unicode" />
 
-    <DownloadFile
+    <Microsoft.DotNet.Arcade.Sdk.DownloadFile
       Uri="$(WixDownloadUrl)"
       DestinationPath="$(WixDestinationPath)"
       Overwrite="true"

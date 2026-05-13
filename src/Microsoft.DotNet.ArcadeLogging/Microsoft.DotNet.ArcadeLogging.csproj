@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
+    <!-- Logger assembly needs to keep supporting .NET Framework for framework msbuild. -->
+    <TargetFrameworks>$(BundledNETCoreAppTargetFramework);$(NetFrameworkToolCurrent)</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>

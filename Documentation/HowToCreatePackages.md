@@ -22,7 +22,7 @@ One of the goals of Arcade is to be a vehicle to provide code sharing. One of th
 
   `namespace Microsoft.DotNet.ProjectOne.Model`
 
-- Include the package on the `Arcade.sln` file. This way it will be compiled automatically when the solution is built.
+- Include the package on the `Arcade.slnx` file. This way it will be compiled automatically when the solution is built.
 
 - Make sure that library dependencies of the new package use the Arcade defined version of the library. The versions are defined in the [`..\eng\Versions.props`](../eng/Versions.props) file. For instance, if the project has a dependence on Newtonsoft.Json you must add it as follows:
 
@@ -32,9 +32,9 @@ One of the goals of Arcade is to be a vehicle to provide code sharing. One of th
 
 - If your package produces binaries that need to be signed, make sure to mark it as <IsPackable>true</IsPackable> or check the SignTool [documentation](../src/Microsoft.DotNet.SignTool/README.md) to see how to sign specific files.
 
-- If the package needs to target a version of .NET Framework we recommend you to use the Arcade defined version, which is stored in the $(NetFxTfm) property. For instance:
+- If the package needs to target a version of .NET Framework we recommend you to use the Arcade defined version, which is stored in the $(NetFrameworkMinimum), $(NetFrameworkCurrent) or $(NetFrameworkToolCurrent) properties. For instance:
 
-  `<TargetFrameworks>$(NetFxTfm);netcoreapp2.0</TargetFrameworks>`
+  `<TargetFrameworks>$(NetFrameworkMinimum);netcoreapp2.0</TargetFrameworks>`
 
 - There is no requirement to create a separate `.nuspec` file for the package. The package information will be automatically extracted from the `.csproj` file.
 

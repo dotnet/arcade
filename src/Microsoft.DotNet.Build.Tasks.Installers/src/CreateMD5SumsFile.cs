@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
         public override bool Execute()
         {
-            using FileStream outputFile = File.OpenWrite(OutputFile);
+            using FileStream outputFile = File.Create(OutputFile);
             using StreamWriter writer = new(outputFile, Encoding.ASCII);
             ulong installedSize = 0;
             foreach (ITaskItem file in Files)
@@ -40,14 +40,10 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 byte[] hash = md5.ComputeHash(fileStream);
                 string relativePath = file.ItemSpec.Substring(RootDirectory.Length).TrimStart(Path.DirectorySeparatorChar).Replace('\\', '/');
                 // Always use Linux line-endings
-#if NET
-                writer.Write($"{Convert.ToHexString(hash)} {relativePath}\n");
-#else
-                writer.Write($"{BitConverter.ToString(hash).Replace("-", "")} {relativePath}\n");
-#endif
+                writer.Write($"{Convert.ToHexStringLower(hash)}  {relativePath}\n");
             }
 
-            InstalledSize = installedSize.ToString();
+            InstalledSize = (installedSize / 1024).ToString();
 
             return true;
         }

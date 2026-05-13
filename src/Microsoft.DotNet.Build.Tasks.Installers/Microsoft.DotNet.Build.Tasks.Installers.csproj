@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
+    <TargetFramework>$(BundledNETCoreAppTargetFramework)</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsPackable>true</IsPackable>
     <IsBuildTaskProject>true</IsBuildTaskProject>
@@ -20,6 +20,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.DotNet.SignCheckLibrary" />
+    <InternalsVisibleTo Include="Microsoft.DotNet.SignTool" />
+    <InternalsVisibleTo Include="Microsoft.DotNet.SignTool.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="build/**/*.*"
           Pack="true"
           PackagePath="build" />
@@ -27,12 +33,10 @@
           Link="build\wix\product\dotnethome_x64.wxs"
           PackagePath="%(Link)"
           Pack="true" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
-    <Compile Include="..\Common\Internal\AssemblyResolver.cs" />
-    <Compile Include="..\Common\Internal\BuildTask.Desktop.cs" />
-    <Reference Include="WindowsBase" />
+    <None Include="..\Common\wix5\dotnethome_x64.wxs"
+          Link="build\wix5\product\dotnethome_x64.wxs"
+          PackagePath="%(Link)"
+          Pack="true" />
   </ItemGroup>
 
   <ItemGroup>

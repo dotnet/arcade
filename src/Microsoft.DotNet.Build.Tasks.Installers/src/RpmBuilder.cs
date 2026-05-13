@@ -64,13 +64,11 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 Architecture.X64 => 1,
                 Architecture.Arm => 12,
                 Architecture.Arm64 => 19,
-#if NET
                 Architecture.Armv6 => 12,
                 Architecture.S390x => 15,
                 Architecture.Ppc64le => 16,
                 Architecture.RiscV64 => 22,
                 Architecture.LoongArch64 => 23,
-#endif
                 _ => throw new ArgumentException("Unsupported architecture", nameof(architecture))
             };
         }
@@ -84,14 +82,29 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 Architecture.X64 => "x86_64",
                 Architecture.Arm => "armv7hl",
                 Architecture.Arm64 => "aarch64",
-#if NET
                 Architecture.Armv6 => "armv6hl",
                 Architecture.S390x => "s390x",
                 Architecture.Ppc64le => "ppc64le",
                 Architecture.RiscV64 => "riscv64",
                 Architecture.LoongArch64 => "loongarch64",
-#endif
                 _ => throw new ArgumentException("Unsupported architecture", nameof(architecture))
+            };
+        }
+
+        public static string GetDotNetArchitectureFromRpmHeaderArchitecture(string rpmPackageArchitecture)
+        {
+            return rpmPackageArchitecture switch
+            {
+                "noarch" => "any",
+                "i386" => "x86",
+                "i486" => "x86",
+                "i586" => "x86",
+                "i686" => "x86",
+                "x86_64" => "x64",
+                "armv6hl" => "arm",
+                "armv7hl" => "arm",
+                "aarch64" => "arm64",
+                _ => rpmPackageArchitecture
             };
         }
 
@@ -204,8 +217,8 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
             foreach (var script in _scripts)
             {
-                entries.Add(new((RpmHeaderTag)Enum.Parse(typeof(RpmHeaderTag), script.Key), RpmHeaderEntryType.String, "/bin/sh"));
-                entries.Add(new((RpmHeaderTag)Enum.Parse(typeof(RpmHeaderTag), $"{script.Key}prog"), RpmHeaderEntryType.String, script.Value));
+                entries.Add(new((RpmHeaderTag)Enum.Parse(typeof(RpmHeaderTag), script.Key), RpmHeaderEntryType.String, script.Value));
+                entries.Add(new((RpmHeaderTag)Enum.Parse(typeof(RpmHeaderTag), $"{script.Key}prog"), RpmHeaderEntryType.String, "/bin/sh"));
             }
 
             MemoryStream cpioArchive = new();

@@ -22,6 +22,11 @@ secrets:
     parameters:
       Name: dotnet-bot
 
+  BotAccount-dotnet-renovate-bot:
+    type: github-account
+    parameters:
+      Name: dotnet-renovate-bot
+
   #Publish-Build-Assets
   BotAccount-dotnet-maestro-bot-PAT:
     type: github-access-token
@@ -35,32 +40,10 @@ secrets:
       gitHubBotAccountSecret: BotAccount-dotnet-bot
       gitHubBotAccountName: dotnet-bot
 
-  dn-bot-dnceng-build-rw-code-rw:
-    type: azure-devops-access-token
-    parameters:
-      domainAccountName: dn-bot
-      domainAccountSecret:
-          location: helixkv
-          name: dn-bot-account-redmond
-      name: dn-bot-dnceng-build
-      organizations: dnceng
-      scopes: build_execute code_write
-
   akams-client-id:
     type: text
     parameters:
       description: Client id for akams app
-
-  dn-bot-dotnet-build-rw-code-rw:
-    type: azure-devops-access-token
-    parameters:
-      domainAccountName: dn-bot
-      domainAccountSecret:
-          location: helixkv
-          name: dn-bot-account-redmond
-      name: dn-bot-dotnet-build
-      organizations: dnceng
-      scopes: build_execute code_write 
 
   dn-bot-all-orgs-build-rw-code-rw:
     type: azure-devops-access-token
@@ -70,20 +53,8 @@ secrets:
           location: helixkv
           name: dn-bot-account-redmond
       name: dn-bot-all-orgs-build
-      organizations: dnceng devdiv microsoft dotnet-security-partners
+      organizations: dnceng devdiv dotnet-security-partners
       scopes: build_execute code_write
-
-  #DotNet-AllOrgs-Darc-Pats
-  dn-bot-devdiv-dnceng-rw-code-pat:
-    type: azure-devops-access-token
-    parameters:
-      domainAccountName: dn-bot
-      domainAccountSecret:
-          location: helixkv
-          name: dn-bot-account-redmond
-      name: dn-bot-devdiv-dnceng
-      organizations: dnceng devdiv
-      scopes: code_write
 
   #AzureDevOps-Artifact-Feeds-Pats
   dn-bot-dnceng-artifact-feeds-rw:
@@ -116,32 +87,32 @@ secrets:
           location: helixkv
           name: dn-bot-account-redmond
       name: dn-bot-all-orgs-artifact-feeds
-      organizations: dnceng devdiv microsoft dotnet-security-partners
-      scopes: packaging_write 
+      organizations: dnceng devdiv dotnet-security-partners
+      scopes: packaging_write
+  
+  dn-bot-devdiv-drop-rw-code-rw:
+    type: azure-devops-access-token
+    parameters:
+      domainAccountName: dn-bot
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: dn-bot-devdiv-drop-rw-code-rw
+      organizations: devdiv
+      scopes: code_write drop_write
+
+  dn-bot-devdiv-drop-r-code-r:
+    type: azure-devops-access-token
+    parameters:
+      domainAccountName: dn-bot
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: dn-bot-devdiv-drop-r-code-r
+      organizations: devdiv
+      scopes: code drop
 
   #DotNet-Symbol-Server-Pats
-  microsoft-symbol-server-pat:
-    type: azure-devops-access-token
-    parameters:
-      domainAccountName: dn-bot
-      domainAccountSecret:
-          location: helixkv
-          name: dn-bot-account-redmond
-      name: microsoft-symbol-server-pat
-      organizations: microsoftpublicsymbols
-      scopes: symbols_write  
-
-  symweb-symbol-server-pat:
-    type: azure-devops-access-token
-    parameters:
-      domainAccountName: dn-bot
-      domainAccountSecret:
-          location: helixkv
-          name: dn-bot-account-redmond
-      name: dn-symweb-symbol-server-pat
-      organizations: microsoft
-      scopes: symbols_write
-
   dnceng-symbol-server-pat:
     type: azure-devops-access-token
     parameters:

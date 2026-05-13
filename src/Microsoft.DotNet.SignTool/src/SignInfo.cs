@@ -19,6 +19,11 @@ namespace Microsoft.DotNet.SignTool
         public static readonly SignInfo AlreadySigned = new SignInfo(ignoreThisFile: false, alreadySigned: true, isAlreadyStrongNamed: false);
 
         /// <summary>
+        /// Used to flag that the file should generate a detached signature.
+        /// </summary>
+        public static readonly SignInfo DetachedSignature = new SignInfo(ignoreThisFile: false, alreadySigned: false, isAlreadyStrongNamed: false, generatesDetachedSignature: true);
+
+        /// <summary>
         /// The authenticode certificate which should be used to sign the binary. This can be null
         /// in cases where we have a zip container where the contents are signed but not the actual
         /// container itself. This is the case when dealing with nupkg files.
@@ -30,11 +35,22 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         internal string StrongName { get; }
 
+        /// <summary>
+        /// The app name com.microsoft.[APP NAME] that should be used to notarize the binary.
+        /// If empty, the binary is not notarized.
+        /// </summary>
+        internal string NotarizationAppName { get; }
+
         internal bool ShouldIgnore { get; }
 
         internal bool IsAlreadyStrongNamed { get; }
 
         internal bool IsAlreadySigned { get; }
+
+        /// <summary>
+        /// True if this file should generate a detached signature rather than being signed in-place.
+        /// </summary>
+        internal bool GeneratesDetachedSignature { get; }
 
         /// <summary>
         /// This is used to decide what SignInfos to use in the case of a collision. In case of a collision
@@ -43,13 +59,21 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         internal string CollisionPriorityId { get; }
 
+        /// <summary>
+        /// True if this container should not be unpacked during signing.
+        /// When set, only the container itself is signed without extracting and signing nested contents.
+        /// </summary>
+        internal bool DoNotUnpack { get; }
+
         public bool ShouldLocallyStrongNameSign => ShouldStrongName && StrongName.EndsWith(".snk", StringComparison.OrdinalIgnoreCase);
 
         public bool ShouldSign => !IsAlreadySigned && !ShouldIgnore;
 
         public bool ShouldStrongName => !IsAlreadyStrongNamed && !string.IsNullOrEmpty(StrongName);
 
-        public SignInfo(string certificate, string strongName, string collisionPriorityId, bool shouldIgnore, bool isAlreadySigned, bool isAlreadyStrongNamed)
+        public bool ShouldNotarize => !string.IsNullOrEmpty(NotarizationAppName) && !ShouldIgnore;
+
+        private SignInfo(string certificate, string strongName, string notarizationAppName, string collisionPriorityId, bool shouldIgnore, bool isAlreadySigned, bool isAlreadyStrongNamed, bool generatesDetachedSignature = false, bool doNotUnpack = false)
         {
             ShouldIgnore = shouldIgnore;
             IsAlreadySigned = isAlreadySigned;
@@ -57,30 +81,42 @@ namespace Microsoft.DotNet.SignTool
             StrongName = strongName;
             CollisionPriorityId = collisionPriorityId;
             IsAlreadyStrongNamed = isAlreadyStrongNamed;
+            NotarizationAppName = notarizationAppName;
+            GeneratesDetachedSignature = generatesDetachedSignature;
+            DoNotUnpack = doNotUnpack;
         }
 
-        private SignInfo(bool ignoreThisFile, bool alreadySigned, bool isAlreadyStrongNamed)
-            : this(certificate: null, strongName: null, collisionPriorityId: null, ignoreThisFile, alreadySigned, isAlreadyStrongNamed)
+        private SignInfo(bool ignoreThisFile, bool alreadySigned, bool isAlreadyStrongNamed, bool generatesDetachedSignature = false, bool doNotUnpack = false)
+            : this(certificate: null, strongName: null, notarizationAppName: null, collisionPriorityId: null, ignoreThisFile, alreadySigned, isAlreadyStrongNamed, generatesDetachedSignature, doNotUnpack)
         {
         }
 
-        internal SignInfo(string certificate, string strongName = null, string collisionPriorityId = null)
-            : this(certificate, strongName, collisionPriorityId, shouldIgnore: false, isAlreadySigned: false, isAlreadyStrongNamed: false)
+        internal SignInfo(string certificate, string strongName = null, string notarization = null, string collisionPriorityId = null, bool doNotUnpack = false)
+            : this(certificate, strongName, notarization, collisionPriorityId, shouldIgnore: false, isAlreadySigned: false, isAlreadyStrongNamed: false, generatesDetachedSignature: false, doNotUnpack: doNotUnpack)
         {
         }
 
         internal SignInfo WithCertificateName(string value, string collisionPriorityId)
-            => new SignInfo(value, StrongName, collisionPriorityId, ShouldIgnore, IsAlreadySigned, IsAlreadyStrongNamed);
+            => new SignInfo(value, StrongName, NotarizationAppName, collisionPriorityId, false, false, IsAlreadyStrongNamed, GeneratesDetachedSignature, DoNotUnpack);
+
+        internal SignInfo WithNotarization(string appName, string collisionPriorityId)
+            => new SignInfo(Certificate, StrongName, appName, collisionPriorityId, false, false, IsAlreadyStrongNamed, GeneratesDetachedSignature, DoNotUnpack);
 
         internal SignInfo WithCollisionPriorityId(string collisionPriorityId)
-            => new SignInfo(Certificate, StrongName, collisionPriorityId, ShouldIgnore, IsAlreadySigned, IsAlreadyStrongNamed);
+            => new SignInfo(Certificate, StrongName, NotarizationAppName, collisionPriorityId, ShouldIgnore, IsAlreadySigned, IsAlreadyStrongNamed, GeneratesDetachedSignature, DoNotUnpack);
 
         internal SignInfo WithIsAlreadySigned(bool value = false)
             => Certificate != null ? 
-              new SignInfo(Certificate, StrongName, CollisionPriorityId, value, value, IsAlreadyStrongNamed) :
-              new SignInfo(Certificate, StrongName, CollisionPriorityId, true, value, IsAlreadyStrongNamed);
+              new SignInfo(Certificate, StrongName, NotarizationAppName, CollisionPriorityId, value, value, IsAlreadyStrongNamed, GeneratesDetachedSignature, DoNotUnpack) :
+              new SignInfo(Certificate, StrongName, NotarizationAppName, CollisionPriorityId, true, value, IsAlreadyStrongNamed, GeneratesDetachedSignature, DoNotUnpack);
 
         internal SignInfo WithIsAlreadyStrongNamed(bool value = false) =>
-              new SignInfo(Certificate, StrongName, CollisionPriorityId, ShouldIgnore, IsAlreadySigned, value);
+              new SignInfo(Certificate, StrongName, NotarizationAppName, CollisionPriorityId, ShouldIgnore, IsAlreadySigned, value, GeneratesDetachedSignature, DoNotUnpack);
+
+        internal SignInfo WithDetachedSignature(string certificate)
+            => new SignInfo(certificate, StrongName, NotarizationAppName, CollisionPriorityId, false, false, IsAlreadyStrongNamed, true, DoNotUnpack);
+
+        internal SignInfo WithDoNotUnpack(bool doNotUnpack)
+            => new SignInfo(Certificate, StrongName, NotarizationAppName, CollisionPriorityId, ShouldIgnore, IsAlreadySigned, IsAlreadyStrongNamed, GeneratesDetachedSignature, doNotUnpack);
     }
 }

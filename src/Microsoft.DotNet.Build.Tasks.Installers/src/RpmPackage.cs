@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {
-    internal sealed class RpmPackage(RpmLead lead, RpmHeader<RpmSignatureTag> signature, RpmHeader<RpmHeaderTag> header, MemoryStream archiveStream) : IDisposable
+    public sealed class RpmPackage(RpmLead lead, RpmHeader<RpmSignatureTag> signature, RpmHeader<RpmHeaderTag> header, MemoryStream archiveStream) : IDisposable
     {
         public RpmLead Lead { get; set; } = lead;
         public RpmHeader<RpmSignatureTag> Signature { get; set; } = signature;
@@ -37,6 +37,21 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             gzipStream.CopyTo(archiveStream);
             archiveStream.Position = 0;
             return new RpmPackage(lead, signature, header, archiveStream);
+        }
+
+        public static unsafe MemoryStream GetSignableContent(Stream stream)
+        {
+            // We don't care about the lead and signature header
+            RpmLead.Read(stream);
+            RpmHeader<RpmSignatureTag>.Read(stream, RpmSignatureTag.HeaderSignatures);
+            stream.AlignReadTo(8);
+
+            // Remaining stream content is the signable content
+            // This includes all the magic and alignment bytes in both header and archive sections.
+            MemoryStream signableContentStream = new();
+            stream.CopyTo(signableContentStream);
+            signableContentStream.Position = 0;
+            return signableContentStream;
         }
 
         public void WriteTo(Stream stream)
