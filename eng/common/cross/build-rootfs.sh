@@ -131,7 +131,6 @@ __AlpineKeys='
 616db30d:MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAnpUpyWDWjlUk3smlWeA0\nlIMW+oJ38t92CRLHH3IqRhyECBRW0d0aRGtq7TY8PmxjjvBZrxTNDpJT6KUk4LRm\na6A6IuAI7QnNK8SJqM0DLzlpygd7GJf8ZL9SoHSH+gFsYF67Cpooz/YDqWrlN7Vw\ntO00s0B+eXy+PCXYU7VSfuWFGK8TGEv6HfGMALLjhqMManyvfp8hz3ubN1rK3c8C\nUS/ilRh1qckdbtPvoDPhSbTDmfU1g/EfRSIEXBrIMLg9ka/XB9PvWRrekrppnQzP\nhP9YE3x/wbFc5QqQWiRCYyQl/rgIMOXvIxhkfe8H5n1Et4VAorkpEAXdsfN8KSVv\nLSMazVlLp9GYq5SUpqYX3KnxdWBgN7BJoZ4sltsTpHQ/34SXWfu3UmyUveWj7wp0\nx9hwsPirVI00EEea9AbP7NM2rAyu6ukcm4m6ATd2DZJIViq2es6m60AE6SMCmrQF\nwmk4H/kdQgeAELVfGOm2VyJ3z69fQuywz7xu27S6zTKi05Qlnohxol4wVb6OB7qG\nLPRtK9ObgzRo/OPumyXqlzAi/Yvyd1ZQk8labZps3e16bQp8+pVPiumWioMFJDWV\nGZjCmyMSU8V6MB6njbgLHoyg2LCukCAeSjbPGGGYhnKLm1AKSoJh3IpZuqcKCk5C\n8CM1S15HxV78s9dFntEqIokCAwEAAQ==
 66ba20fe:MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAtfB12w4ZgqsXWZDfUAV/\n6Y4aHUKIu3q4SXrNZ7CXF9nXoAVYrS7NAxJdAodsY3vPCN0g5O8DFXR+390LdOuQ\n+HsGKCc1k5tX5ZXld37EZNTNSbR0k+NKhd9h6X3u6wqPOx7SIKxwAQR8qeeFq4pP\nrt9GAGlxtuYgzIIcKJPwE0dZlcBCg+GnptCUZXp/38BP1eYC+xTXSL6Muq1etYfg\nodXdb7Yl+2h1IHuOwo5rjgY5kpY7GcAs8AjGk3lDD/av60OTYccknH0NCVSmPoXK\nvrxDBOn0LQRNBLcAfnTKgHrzy0Q5h4TNkkyTgxkoQw5ObDk9nnabTxql732yy9BY\ns+hM9+dSFO1HKeVXreYSA2n1ndF18YAvAumzgyqzB7I4pMHXq1kC/8bONMJxwSkS\nYm6CoXKyavp7RqGMyeVpRC7tV+blkrrUml0BwNkxE+XnwDRB3xDV6hqgWe0XrifD\nYTfvd9ScZQP83ip0r4IKlq4GMv/R5shcCRJSkSZ6QSGshH40JYSoiwJf5FHbj9ND\n7do0UAqebWo4yNx63j/wb2ULorW3AClv0BCFSdPsIrCStiGdpgJDBR2P2NZOCob3\nG9uMj+wJD6JJg2nWqNJxkANXX37Qf8plgzssrhrgOvB0fjjS7GYhfkfmZTJ0wPOw\nA8+KzFseBh4UFGgue78KwgkCAwEAAQ==
 '
-__Keyring=
 __KeyringFile="/usr/share/keyrings/ubuntu-archive-keyring.gpg"
 __SkipSigCheck=0
 __SkipEmulation=0
@@ -178,10 +177,6 @@ while :; do
             __KeyringFile="/usr/share/keyrings/raspbian-archive-keyring.gpg"
             __LLDB_Package="liblldb-6.0-dev"
             __UbuntuSuites=
-
-            if [[ -e "$__KeyringFile" ]]; then
-                __Keyring="--keyring $__KeyringFile"
-            fi
             ;;
         loongarch64)
             __BuildArch=loongarch64
@@ -375,10 +370,6 @@ while :; do
                 fi
                 ;;
             esac
-
-            if [[ -e "$__KeyringFile" ]]; then
-                __Keyring="--keyring $__KeyringFile"
-            fi
             ;;
         tizen)
             __CodeName=
@@ -782,6 +773,11 @@ elif [[ "$__CodeName" == "haiku" ]]; then
     popd
     rm -rf "$__RootfsDir/tmp"
 elif [[ -n "$__CodeName" ]]; then
+    __Keyring=
+    if [[ -e "$__KeyringFile" ]]; then
+        __Keyring="--keyring $__KeyringFile"
+    fi
+
     __UpdateOptions=
     if [[ "$__SkipSigCheck" == "0" ]]; then
         __Keyring="$__Keyring --force-check-gpg"
