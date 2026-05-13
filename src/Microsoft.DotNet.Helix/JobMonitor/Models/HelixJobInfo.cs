@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             Status = helixJob.Finished != null ? "finished" : "running";
             TestRunName = GetTestRunNameFromJob(helixJob);
             StageName = GetStringPropertyFromJob(helixJob, "System.StageName");
+            QueueId = helixJob.QueueId;
             InitialWorkItemCount = helixJob.InitialWorkItemCount;
             Properties = helixJob.Properties;
         }
@@ -33,6 +34,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             string testRunName = null,
             string stageName = null,
             string submitterJobName = null,
+            string submitterJobDisplayName = null,
+            string queueId = null,
             string previousHelixJobName = null,
             int? initialWorkItemCount = null)
         {
@@ -40,8 +43,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             Status = status ?? throw new ArgumentNullException(nameof(status));
             TestRunName = testRunName;
             StageName = stageName;
+            QueueId = queueId;
             InitialWorkItemCount = initialWorkItemCount;
-            Properties = CreateProperties(testRunName, stageName, submitterJobName, previousHelixJobName);
+            Properties = CreateProperties(testRunName, stageName, submitterJobName, submitterJobDisplayName, previousHelixJobName);
         }
 
         public string JobName { get; }
@@ -61,19 +65,51 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
         /// </summary>
         public string StageName { get; }
 
+        /// <summary>
+        /// Helix target queue this job ran on (e.g. "Ubuntu.2204.Amd64.Open"). Comes from the
+        /// Helix <c>JobSummary.QueueId</c>. May be null on synthetic jobs.
+        /// </summary>
+        public string QueueId { get; }
+
         public string SubmitterJobName => GetStringProperty(Properties, "System.JobName");
+
+        /// <summary>
+        /// Matrix-expanded Azure DevOps job display name (e.g. "Windows_NT Build_Release"),
+        /// stamped onto the job from the <c>System.JobDisplayName</c> predefined variable.
+        /// May be null on older Helix jobs that pre-date this property being copied.
+        /// </summary>
+        public string SubmitterJobDisplayName => GetStringProperty(Properties, "System.JobDisplayName");
 
         public string PreviousHelixJobName => GetStringProperty(Properties, PreviousHelixJobNamePropertyName);
 
         /// <summary>
-        /// Human-readable identifier used in log messages. Combines the parent Azure DevOps
-        /// pipeline job name (when present) with the Helix job GUID, e.g. "Linux_Build_Debug
-        /// (36a0e6c8-1234-...)". Falls back to just the Helix job name when no submitter job
-        /// is associated with this Helix job.
+        /// Human-readable identifier used in log messages. Combines the matrix-expanded Azure
+        /// DevOps job name and the Helix queue with the Helix job GUID, e.g.
+        /// "Windows_NT Build_Release - Windows.10.Amd64.Open (47edfeae-...)". Falls back to
+        /// just the Helix job GUID when none of the AzDO job identifiers are available.
         /// </summary>
-        public string DisplayName => string.IsNullOrEmpty(SubmitterJobName)
-            ? JobName
-            : $"{SubmitterJobName} ({JobName})";
+        public string DisplayName => FormatDisplayName();
+
+        private string FormatDisplayName()
+        {
+            // Prefer the matrix-expanded display name (e.g. "Windows_NT Build_Release"), fall
+            // back to the bare AzDO job name (e.g. "Build_Release") when the display name is
+            // not present (older jobs / non-matrix builds).
+            string azdoJobLabel = !string.IsNullOrEmpty(SubmitterJobDisplayName)
+                ? SubmitterJobDisplayName
+                : SubmitterJobName;
+
+            if (string.IsNullOrEmpty(azdoJobLabel) && string.IsNullOrEmpty(QueueId))
+            {
+                return JobName;
+            }
+
+            string prefix = !string.IsNullOrEmpty(azdoJobLabel) && !string.IsNullOrEmpty(QueueId)
+                ? $"{azdoJobLabel} - {QueueId}"
+                : (azdoJobLabel ?? QueueId);
+
+            return $"{prefix} ({JobName})";
+        }
 
         public int? InitialWorkItemCount { get; }
 
@@ -142,6 +178,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             string testRunName,
             string stageName,
             string submitterJobName,
+            string submitterJobDisplayName,
             string previousHelixJobName)
         {
             var properties = new JObject();
@@ -159,6 +196,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             if (!string.IsNullOrEmpty(submitterJobName))
             {
                 properties["System.JobName"] = submitterJobName;
+            }
+
+            if (!string.IsNullOrEmpty(submitterJobDisplayName))
+            {
+                properties["System.JobDisplayName"] = submitterJobDisplayName;
             }
 
             if (!string.IsNullOrEmpty(previousHelixJobName))

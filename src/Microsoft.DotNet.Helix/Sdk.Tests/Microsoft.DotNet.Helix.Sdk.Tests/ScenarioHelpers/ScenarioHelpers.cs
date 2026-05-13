@@ -50,6 +50,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.ScenarioHelpers
             string status,
             string stageName = null,
             string submitterJobName = null,
+            string submitterJobDisplayName = null,
+            string queueId = null,
             string previousHelixJobName = null,
             int? initialWorkItemCount = null)
             => new(
@@ -57,6 +59,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.ScenarioHelpers
                 status,
                 stageName: stageName,
                 submitterJobName: submitterJobName,
+                submitterJobDisplayName: submitterJobDisplayName,
+                queueId: queueId,
                 previousHelixJobName: previousHelixJobName,
                 initialWorkItemCount: initialWorkItemCount);
 

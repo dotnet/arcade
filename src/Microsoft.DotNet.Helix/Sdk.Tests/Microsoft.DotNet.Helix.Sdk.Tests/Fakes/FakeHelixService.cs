@@ -182,6 +182,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
                 originalSnapshotJob?.TestRunName,
                 originalSnapshotJob?.StageName,
                 originalSnapshotJob?.SubmitterJobName ?? originalJob.SubmitterJobName,
+                originalSnapshotJob?.SubmitterJobDisplayName ?? originalJob.SubmitterJobDisplayName,
+                originalSnapshotJob?.QueueId ?? originalJob.QueueId,
                 originalJobName));
         }
 

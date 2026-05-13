@@ -274,8 +274,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             string testRunName = GetStringPropertyFromProperties(details.Properties, "TestRunName") ?? newJob.Name;
             string stageName = GetStringPropertyFromProperties(details.Properties, "System.StageName");
             string submitterJobName = GetStringPropertyFromProperties(details.Properties, "System.JobName");
+            string submitterJobDisplayName = GetStringPropertyFromProperties(details.Properties, "System.JobDisplayName");
 
-            var newJobInfo = new HelixJobInfo(newJob.Name, "running", testRunName, stageName, submitterJobName, originalJobName);
+            var newJobInfo = new HelixJobInfo(
+                newJob.Name,
+                "running",
+                testRunName,
+                stageName,
+                submitterJobName,
+                submitterJobDisplayName,
+                details.QueueId,
+                originalJobName);
 
             _logger.LogInformation("Resubmitted {Count} failed work item(s) from '{OriginalJobName}' as new job '{NewJobName}'{nl}{JobUri}",
                 filteredEntries.Count,
