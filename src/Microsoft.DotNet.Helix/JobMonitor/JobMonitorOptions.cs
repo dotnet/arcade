@@ -25,8 +25,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         [Option("repository", HelpText = "Repository name (e.g. 'runtime' for 'dotnet/runtime').")]
         public string RepositoryName { get; set; }
 
-        [Option("pr-number", HelpText = "Pull request number for the build, if applicable.")]
-        public int? PrNumber { get; set; }
+        [Option("build-reason", HelpText = "Azure DevOps Build.Reason value (PullRequest, Manual, Schedule, IndividualCI, BatchedCI, ...). Used to derive the Helix source prefix the same way the Helix SDK submitter does (PR -> 'pr', internal team project -> 'official', otherwise -> 'ci'). Defaults to the BUILD_REASON environment variable.")]
+        public string BuildReason { get; set; }
+
+        [Option("source-branch", HelpText = "Azure DevOps Build.SourceBranch value (e.g. 'refs/heads/main' or 'refs/pull/N/merge'). Used as the branch component of the Helix source filter. Defaults to the BUILD_SOURCEBRANCH environment variable.")]
+        public string SourceBranch { get; set; }
 
         [Option("build-id", HelpText = "Azure DevOps build ID.")]
         public string BuildId { get; set; }
@@ -104,7 +107,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             SystemAccessToken ??= Environment.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN");
             RepositoryName ??= Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME");
             WorkingDirectory ??= System.IO.Path.Combine(System.IO.Path.GetTempPath(), "helix-job-monitor", BuildId ?? "unknown");
-            PrNumber ??= GetEnvironmentInt("SYSTEM_PULLREQUEST_PULLREQUESTNUMBER");
+            BuildReason ??= Environment.GetEnvironmentVariable("BUILD_REASON");
+            SourceBranch ??= Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH");
             Attempt ??= GetEnvironmentInt("SYSTEM_JOBATTEMPT");
             StageName ??= Environment.GetEnvironmentVariable("SYSTEM_STAGENAME");
         }
@@ -125,6 +129,16 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 throw new InvalidOperationException("Organization must be provided either by argument or pipeline environment.");
             }
+
+            if (string.IsNullOrWhiteSpace(SourceBranch))
+            {
+                throw new InvalidOperationException("--source-branch (or the BUILD_SOURCEBRANCH environment variable) must be set.");
+            }
+
+            // BuildReason is allowed to be empty: when it is missing we still need a deterministic
+            // prefix and HelixJobSource.GetSourcePrefix falls back to 'official' for internal team
+            // projects and 'ci' otherwise, which matches the JobSender behavior when BUILD_REASON
+            // is not 'PullRequest'.
 
             if (string.IsNullOrWhiteSpace(StageName))
             {

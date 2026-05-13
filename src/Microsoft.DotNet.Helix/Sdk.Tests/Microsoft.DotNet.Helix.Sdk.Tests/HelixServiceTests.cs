@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
     public class HelixServiceTests
     {
         [Fact]
-        public async Task GetJobsForBuildAsync_UsesPrSourceFiltersByBuildIdAndMapsMetadata()
+        public async Task GetJobsForBuildAsync_PassesSourceThroughAndFiltersByBuildId()
         {
             var api = CreateApi();
             string capturedSource = null;
@@ -57,9 +57,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             HelixService service = CreateService(api.Api.Object);
 
             IReadOnlyList<HelixJobInfo> jobs = await service.GetJobsForBuildAsync(
-                "dotnet",
-                "runtime",
-                prNumber: 42,
+                source: "pr/public/dotnet/runtime/refs/pull/42/merge",
                 buildId: "123",
                 CancellationToken.None);
 
@@ -77,25 +75,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public async Task GetJobsForBuildAsync_UsesOfficialSourceForNonPrBuilds()
+        public async Task GetJobsForBuildAsync_RequiresNonEmptySource()
         {
-            var api = CreateApi();
-            string capturedSource = null;
-            api.Job
-                .Setup(j => j.ListAsync(null, It.IsAny<int?>(), null, null, It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
-                .Callback<string, int?, string, string, string, string, CancellationToken>((_, _, _, _, source, _, _) => capturedSource = source)
-                .ReturnsAsync(ImmutableList<JobSummary>.Empty);
+            HelixService service = CreateService(CreateApi().Api.Object);
 
-            HelixService service = CreateService(api.Api.Object);
-
-            await service.GetJobsForBuildAsync(
-                "dotnet",
-                "sdk",
-                prNumber: null,
-                buildId: "123",
-                CancellationToken.None);
-
-            Assert.Equal("official/public/dotnet/sdk", capturedSource);
+            await Assert.ThrowsAsync<ArgumentException>(() =>
+                service.GetJobsForBuildAsync(source: "", buildId: "123", CancellationToken.None));
         }
 
         [Fact]

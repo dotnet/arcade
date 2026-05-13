@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             }
         }
 
-        public Task<IReadOnlyList<HelixJobInfo>> GetJobsForBuildAsync(string organization, string repositoryName, int? prNumber, string buildId, CancellationToken cancellationToken)
+        public Task<IReadOnlyList<HelixJobInfo>> GetJobsForBuildAsync(string source, string buildId, CancellationToken cancellationToken)
         {
             if (_responses.Count == 0)
             {

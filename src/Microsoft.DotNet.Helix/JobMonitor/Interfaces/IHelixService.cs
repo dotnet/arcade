@@ -16,13 +16,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
     {
         /// <summary>
         /// Returns Helix jobs associated with the current build/stage.
-        /// Implementations should return only jobs discoverable by the configured repository source
-        /// and stamped with the current build ID.
+        /// Implementations should query Helix using the given <paramref name="source"/>
+        /// filter (which scopes the query to the repo/branch/PR the build is for, mirroring
+        /// what the Helix job submitter records on each submission) and then narrow the
+        /// result to jobs stamped with <paramref name="buildId"/>.
         /// </summary>
         Task<IReadOnlyList<HelixJobInfo>> GetJobsForBuildAsync(
-            string organization,
-            string repositoryName,
-            int? prNumber,
+            string source,
             string buildId,
             CancellationToken cancellationToken);
 

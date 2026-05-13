@@ -43,17 +43,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         }
 
         public async Task<IReadOnlyList<HelixJobInfo>> GetJobsForBuildAsync(
-            string organization,
-            string repositoryName,
-            int? prNumber,
+            string source,
             string buildId,
             CancellationToken cancellationToken)
         {
-            // Build the Helix source filter. For PR builds, use the PR merge ref.
-            // For CI builds without a PR, use the branch-based source.
-            string source = prNumber.HasValue
-                ? $"pr/public/{organization}/{repositoryName}/refs/pull/{prNumber}/merge"
-                : $"official/public/{organization}/{repositoryName}";
+            if (string.IsNullOrWhiteSpace(source))
+            {
+                throw new ArgumentException("A non-empty Helix source filter must be provided.", nameof(source));
+            }
 
             IImmutableList<JobSummary> jobs = await RetryHelper.RetryAsync(
                 async () => await _helixApi.Job.ListAsync(source: source, count: 100_000),

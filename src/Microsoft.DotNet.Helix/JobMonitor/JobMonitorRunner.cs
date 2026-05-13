@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly IAzureDevOpsService _azdo;
         private readonly IHelixService _helix;
         private readonly Func<TimeSpan, CancellationToken, Task> _delayFunc;
+        private readonly string _helixSource;
 
         /// <summary>
         /// Tracks the latest outcome for each logical work item, keyed by
@@ -82,6 +83,18 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _helix = helix ?? throw new ArgumentNullException(nameof(helix));
             _delayFunc = delayFunc ?? Task.Delay;
             Directory.CreateDirectory(_options.WorkingDirectory);
+
+            // The Helix submitter (JobSender) records each job's Source as
+            //   {prefix}/{teamProject}/{repository}/{branch}
+            // where prefix is derived from BUILD_REASON / SYSTEM_TEAMPROJECT. Mirror that
+            // derivation here so the monitor's Job.ListAsync query returns the same set of
+            // jobs regardless of whether the build is a PR, scheduled, manual, IndividualCI,
+            // BatchedCI, or internal official run.
+            _helixSource = HelixJobSource.Compute(
+                _options.BuildReason,
+                _options.TeamProject,
+                $"{_options.Organization}/{_options.RepositoryName}",
+                _options.SourceBranch);
         }
 
         public Task<int> RunAsync(CancellationToken cancellationToken)
@@ -145,9 +158,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 IReadOnlyList<AzureDevOpsTimelineRecord> timelineRecords = await _azdo.GetTimelineRecordsAsync(cancellationToken);
                 IReadOnlyList<HelixJobInfo> associatedJobsWithBuild = jobsForFirstPoll ?? await _helix.GetJobsForBuildAsync(
-                    _options.Organization,
-                    _options.RepositoryName,
-                    _options.PrNumber,
+                    _helixSource,
                     _options.BuildId,
                     cancellationToken);
                 jobsForFirstPoll = null;
@@ -716,7 +727,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             // This snapshot is taken when the monitor starts. Failed latest work items here are
             // not retried again until the monitor starts again, even if they fail during this run.
-            IReadOnlyList<HelixJobInfo> allJobs = await _helix.GetJobsForBuildAsync(_options.Organization, _options.RepositoryName, _options.PrNumber, _options.BuildId, cancellationToken);
+            IReadOnlyList<HelixJobInfo> allJobs = await _helix.GetJobsForBuildAsync(_helixSource, _options.BuildId, cancellationToken);
             IReadOnlyList<HelixJobInfo> scopedJobs =
             [
                 ..allJobs.Where(IsHelixJobInScope)

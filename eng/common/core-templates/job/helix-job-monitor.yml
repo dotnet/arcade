@@ -16,12 +16,6 @@ parameters:
   type: string
   default: ''
 
-# Pull request number being built (--pr-number). Defaults to SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
-# when empty.
-- name: prNumber
-  type: string
-  default: ''
-
 # Optional dependency list for the generated job.
 - name: dependsOn
   type: object
@@ -190,11 +184,10 @@ jobs:
 
       organization='${{ parameters.organization }}'
       repository='${{ parameters.repository }}'
-      prNumber='${{ parameters.prNumber }}'
 
       # Fall back to Azure DevOps-provided environment variables when the caller did not
-      # supply organization / repository / pr-number explicitly. BUILD_REPOSITORY_NAME is
-      # typically 'owner/repo' for GitHub-backed builds.
+      # supply organization / repository explicitly. BUILD_REPOSITORY_NAME is typically
+      # 'owner/repo' for GitHub-backed builds.
       if [ -z "$organization" ] || [ -z "$repository" ]; then
         buildRepoName="${BUILD_REPOSITORY_NAME:-}"
         if [ -n "$buildRepoName" ] && [[ "$buildRepoName" == */* ]]; then
@@ -205,13 +198,15 @@ jobs:
         fi
       fi
 
-      if [ -z "$prNumber" ]; then
-        prNumber="${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER:-}"
-      fi
-
       if [ -n "$organization" ]; then toolArgs+=( --organization "$organization" ); fi
       if [ -n "$repository" ];   then toolArgs+=( --repository   "$repository" );   fi
-      if [ -n "$prNumber" ];     then toolArgs+=( --pr-number    "$prNumber" );     fi
+
+      # Build.Reason and Build.SourceBranch are required to derive the Helix source filter
+      # the same way the Helix SDK submitter does (PR -> 'pr', internal -> 'official',
+      # otherwise -> 'ci'). Without these, manually-queued / scheduled / CI builds would
+      # be looked up under the wrong source prefix and find zero jobs.
+      toolArgs+=( --build-reason  "$(Build.Reason)" )
+      toolArgs+=( --source-branch "$(Build.SourceBranch)" )
 
       if [ -n '${{ parameters.toolNupkgArtifactName }}' ]; then
         # Tool was installed from a local nupkg; run the DLL via the repo-local dotnet.
