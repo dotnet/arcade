@@ -12,6 +12,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
 {
     internal sealed class FakeAzureDevOpsService : IAzureDevOpsService
     {
+        // FakeAzureDevOpsService is exercised concurrently when JobMonitorRunner kicks off
+        // multiple test-result uploads in parallel via Task.Run. All mutable state is
+        // guarded by _sync so observable assertions (e.g. UploadedJobNames count) are
+        // deterministic across machines with varying parallelism levels.
+        private readonly object _sync = new();
         private readonly List<AzureDevOpsTimelineRecord[]> _timelineResponses = [];
         private readonly HashSet<string> _previouslyProcessedJobs = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, int> _inProgressRunsByJobName = new(StringComparer.OrdinalIgnoreCase);
@@ -49,7 +54,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
 
         public FakeAzureDevOpsService WithPreviouslyProcessedJob(string jobName)
         {
-            _previouslyProcessedJobs.Add(jobName);
+            lock (_sync)
+            {
+                _previouslyProcessedJobs.Add(jobName);
+            }
             return this;
         }
 
@@ -69,38 +77,47 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
 
         public Task<IReadOnlySet<string>> GetProcessedHelixJobNamesAsync(CancellationToken cancellationToken)
         {
-            var result = new HashSet<string>(_previouslyProcessedJobs, StringComparer.OrdinalIgnoreCase);
-            return Task.FromResult<IReadOnlySet<string>>(result);
+            lock (_sync)
+            {
+                var result = new HashSet<string>(_previouslyProcessedJobs, StringComparer.OrdinalIgnoreCase);
+                return Task.FromResult<IReadOnlySet<string>>(result);
+            }
         }
 
         public Task<int> CreateTestRunAsync(string name, string helixJobName, CancellationToken cancellationToken)
         {
-            CreateTestRunCallCount++;
-
-            // Idempotent: if a run for this helix job is in-progress, reuse it
-            if (_inProgressRunsByJobName.TryGetValue(helixJobName, out int existingId))
+            lock (_sync)
             {
-                return Task.FromResult(existingId);
-            }
+                CreateTestRunCallCount++;
 
-            int id = Interlocked.Increment(ref _nextTestRunId);
-            CreatedTestRuns.Add(name);
-            _inProgressRunsByJobName[helixJobName] = id;
-            return Task.FromResult(id);
+                // Idempotent: if a run for this helix job is in-progress, reuse it
+                if (_inProgressRunsByJobName.TryGetValue(helixJobName, out int existingId))
+                {
+                    return Task.FromResult(existingId);
+                }
+
+                int id = Interlocked.Increment(ref _nextTestRunId);
+                CreatedTestRuns.Add(name);
+                _inProgressRunsByJobName[helixJobName] = id;
+                return Task.FromResult(id);
+            }
         }
 
         public Task CompleteTestRunAsync(int testRunId, CancellationToken cancellationToken)
         {
-            CompletedTestRunIds.Add(testRunId);
-
-            string keyToRemove = null;
-            foreach (var kvp in _inProgressRunsByJobName)
+            lock (_sync)
             {
-                if (kvp.Value == testRunId) { keyToRemove = kvp.Key; break; }
-            }
+                CompletedTestRunIds.Add(testRunId);
 
-            if (keyToRemove != null) _inProgressRunsByJobName.Remove(keyToRemove);
-            return Task.CompletedTask;
+                string keyToRemove = null;
+                foreach (var kvp in _inProgressRunsByJobName)
+                {
+                    if (kvp.Value == testRunId) { keyToRemove = kvp.Key; break; }
+                }
+
+                if (keyToRemove != null) _inProgressRunsByJobName.Remove(keyToRemove);
+                return Task.CompletedTask;
+            }
         }
 
         public async Task<int> UploadTestResultsAsync(int testRunId, IReadOnlyList<WorkItemTestResults> results, CancellationToken cancellationToken)
@@ -108,18 +125,21 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             UploadStarted.TrySetResult();
             await UploadBlocker.WaitAsync(cancellationToken);
 
-            if (!UploadedResultsByRunId.TryGetValue(testRunId, out List<WorkItemTestResults> existing))
+            lock (_sync)
             {
-                existing = [];
-                UploadedResultsByRunId[testRunId] = existing;
-            }
+                if (!UploadedResultsByRunId.TryGetValue(testRunId, out List<WorkItemTestResults> existing))
+                {
+                    existing = [];
+                    UploadedResultsByRunId[testRunId] = existing;
+                }
 
-            existing.AddRange(results);
+                existing.AddRange(results);
 
-            foreach (string jobName in results.Select(r => r.JobName).Distinct(StringComparer.OrdinalIgnoreCase))
-            {
-                UploadedJobNames.Add(jobName);
-                _previouslyProcessedJobs.Add(jobName);
+                foreach (string jobName in results.Select(r => r.JobName).Distinct(StringComparer.OrdinalIgnoreCase))
+                {
+                    UploadedJobNames.Add(jobName);
+                    _previouslyProcessedJobs.Add(jobName);
+                }
             }
 
             UploadCompleted.TrySetResult();
