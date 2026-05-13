@@ -197,7 +197,7 @@ while :; do
             __AlpineArch=ppc64le
             __QEMUArch=ppc64le
             __UbuntuArch=ppc64el
-            __UbuntuRepo="http://ports.ubuntu.com/ubuntu-ports/"
+            __UbuntuRepo="https://ports.ubuntu.com/ubuntu-ports/"
             __UbuntuPackages="${__UbuntuPackages// libunwind8-dev/}"
             __UbuntuPackages="${__UbuntuPackages// libomp-dev/}"
             __UbuntuPackages="${__UbuntuPackages// libomp5/}"
@@ -208,7 +208,7 @@ while :; do
             __AlpineArch=s390x
             __QEMUArch=s390x
             __UbuntuArch=s390x
-            __UbuntuRepo="http://ports.ubuntu.com/ubuntu-ports/"
+            __UbuntuRepo="https://ports.ubuntu.com/ubuntu-ports/"
             __UbuntuPackages="${__UbuntuPackages// libunwind8-dev/}"
             __UbuntuPackages="${__UbuntuPackages// libomp-dev/}"
             __UbuntuPackages="${__UbuntuPackages// libomp5/}"
@@ -224,13 +224,13 @@ while :; do
             __OpenBSDMachineArch=amd64
             __illumosArch=x86_64
             __HaikuArch=x86_64
-            __UbuntuRepo="http://archive.ubuntu.com/ubuntu/"
+            __UbuntuRepo="https://archive.ubuntu.com/ubuntu/"
             ;;
         x86)
             __BuildArch=x86
             __UbuntuArch=i386
             __AlpineArch=x86
-            __UbuntuRepo="http://archive.ubuntu.com/ubuntu/"
+            __UbuntuRepo="https://archive.ubuntu.com/ubuntu/"
             ;;
         lldb*)
             version="$(echo "$lowerI" | tr -d '[:alpha:]-=')"
@@ -290,7 +290,7 @@ while :; do
             __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
 
             if [[ -z "$__UbuntuRepo" ]]; then
-                __UbuntuRepo="http://ftp.debian.org/debian/"
+                __UbuntuRepo="https://archive.debian.org/debian/"
             fi
             ;;
         buster) # Debian 10
@@ -299,7 +299,7 @@ while :; do
             __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
 
             if [[ -z "$__UbuntuRepo" ]]; then
-                __UbuntuRepo="http://archive.debian.org/debian/"
+                __UbuntuRepo="https://archive.debian.org/debian/"
             fi
             ;;
         bullseye) # Debian 11
@@ -307,7 +307,7 @@ while :; do
             __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
 
             if [[ -z "$__UbuntuRepo" ]]; then
-                __UbuntuRepo="http://ftp.debian.org/debian/"
+                __UbuntuRepo="https://ftp.debian.org/debian/"
             fi
             ;;
         bookworm) # Debian 12
@@ -315,7 +315,7 @@ while :; do
             __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
 
             if [[ -z "$__UbuntuRepo" ]]; then
-                __UbuntuRepo="http://ftp.debian.org/debian/"
+                __UbuntuRepo="https://ftp.debian.org/debian/"
             fi
             ;;
         sid) # Debian sid
@@ -328,14 +328,14 @@ while :; do
                 __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
 
                 if [[ -z "$__UbuntuRepo" ]]; then
-                    __UbuntuRepo="http://ftp.debian.org/debian/"
+                    __UbuntuRepo="https://ftp.debian.org/debian/"
                 fi
                 ;;
             *)
                 __KeyringFile="/usr/share/keyrings/debian-ports-archive-keyring.gpg"
 
                 if [[ -z "$__UbuntuRepo" ]]; then
-                    __UbuntuRepo="http://ftp.ports.debian.org/debian-ports/"
+                    __UbuntuRepo="https://ftp.debian.org/debian-ports/"
                 fi
                 ;;
             esac
@@ -442,7 +442,7 @@ fi
 __UbuntuPackages+=" ${__LLDB_Package:-}"
 
 if [[ -z "$__UbuntuRepo" ]]; then
-    __UbuntuRepo="http://ports.ubuntu.com/"
+    __UbuntuRepo="https://ports.ubuntu.com/"
 fi
 
 if [[ -n "$__LLVM_MajorVersion" ]]; then
@@ -529,15 +529,15 @@ if [[ "$__CodeName" == "alpine" ]]; then
     # initialize DB
     # shellcheck disable=SC2086
     "$__ApkToolsDir/apk.static" \
-        -X "http://dl-cdn.alpinelinux.org/alpine/$version/main" \
-        -X "http://dl-cdn.alpinelinux.org/alpine/$version/community" \
+        -X "https://dl-cdn.alpinelinux.org/alpine/$version/main" \
+        -X "https://dl-cdn.alpinelinux.org/alpine/$version/community" \
         -U $__ApkSignatureArg --root "$__RootfsDir" --arch "$__AlpineArch" --initdb add
 
     if [[ "$__AlpineLlvmLibsLookup" == 1 ]]; then
         # shellcheck disable=SC2086
         __AlpinePackages+=" $("$__ApkToolsDir/apk.static" \
-            -X "http://dl-cdn.alpinelinux.org/alpine/$version/main" \
-            -X "http://dl-cdn.alpinelinux.org/alpine/$version/community" \
+            -X "https://dl-cdn.alpinelinux.org/alpine/$version/main" \
+            -X "https://dl-cdn.alpinelinux.org/alpine/$version/community" \
             -U $__ApkSignatureArg --root "$__RootfsDir" --arch "$__AlpineArch" \
             search 'llvm*-libs' | grep -E '^llvm' | sort | tail -1 | sed 's/-[^-]*//2g')"
     fi
@@ -545,8 +545,8 @@ if [[ "$__CodeName" == "alpine" ]]; then
     # install all packages in one go
     # shellcheck disable=SC2086
     "$__ApkToolsDir/apk.static" \
-        -X "http://dl-cdn.alpinelinux.org/alpine/$version/main" \
-        -X "http://dl-cdn.alpinelinux.org/alpine/$version/community" \
+        -X "https://dl-cdn.alpinelinux.org/alpine/$version/main" \
+        -X "https://dl-cdn.alpinelinux.org/alpine/$version/community" \
         -U $__ApkSignatureArg --root "$__RootfsDir" --arch "$__AlpineArch" $__NoEmulationArg \
         add $__AlpinePackages
 
@@ -563,7 +563,7 @@ elif [[ "$__CodeName" == "freebsd" ]]; then
         curl -SL "https://download.freebsd.org/ftp/releases/${__FreeBSDArch}/${__FreeBSDMachineArch}/${__FreeBSDBase}/base.txz" | tar -C "$__RootfsDir" -Jxf - ./lib ./usr/lib ./usr/libdata ./usr/include ./usr/share/keys ./etc ./bin/freebsd-version
     fi
     echo "ABI = \"FreeBSD:${__FreeBSDABI}:${__FreeBSDMachineArch}\"; FINGERPRINTS = \"${__RootfsDir}/usr/share/keys\"; REPOS_DIR = [\"${__RootfsDir}/etc/pkg\"]; REPO_AUTOUPDATE = NO; RUN_SCRIPTS = NO;" > "${__RootfsDir}"/usr/local/etc/pkg.conf
-    echo "FreeBSD: { url: \"pkg+http://pkg.FreeBSD.org/\${ABI}/quarterly\", mirror_type: \"srv\", signature_type: \"fingerprints\", fingerprints: \"/usr/share/keys/pkg\", enabled: yes }" > "${__RootfsDir}"/etc/pkg/FreeBSD.conf
+    echo "FreeBSD: { url: \"pkg+https://pkg.FreeBSD.org/\${ABI}/quarterly\", mirror_type: \"srv\", signature_type: \"fingerprints\", fingerprints: \"/usr/share/keys/pkg\", enabled: yes }" > "${__RootfsDir}"/etc/pkg/FreeBSD.conf
     mkdir -p "$__RootfsDir"/tmp
     # get and build package manager
     if [[ "$__hasWget" == 1 ]]; then
