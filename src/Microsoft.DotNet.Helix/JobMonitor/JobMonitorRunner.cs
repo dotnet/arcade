@@ -134,6 +134,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
             catch (OperationCanceledException)
             {
+                // Drain in-flight test-result uploads before exiting. The uploads were started
+                // via Task.Run and are not bound to the runner's cancellation token; if we
+                // return without awaiting them, any results that hadn't reached AzDO yet are
+                // lost (and tests that observe UploadedJobNames immediately after a cancelled
+                // run see a partial set).
+                await WaitForPendingTestResultUploadsAsync(CancellationToken.None);
                 ReportTimeout(associatedJobs, processedHelixJobs);
                 return 1;
             }
