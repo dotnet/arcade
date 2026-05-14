@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Attributes\ActiveIssueAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Attributes\ConditionalAssemblyAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Attributes\ConditionalClassAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Attributes\ConditionalFactAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Attributes\ConditionalTheoryAttribute.cs" />

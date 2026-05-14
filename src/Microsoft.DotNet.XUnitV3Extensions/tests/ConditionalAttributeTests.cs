@@ -1,6 +1,9 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Xunit;
 
@@ -84,6 +87,95 @@ namespace Microsoft.DotNet.XUnitExtensions.Tests
         public void ValidateConditionalTheoryTrueReceivedArgs()
         {
             Assert.NotNull(GetConditionalTheoryAttribute(nameof(ConditionalTheoryTrue)));
+        }
+
+        [Fact]
+        public void ConditionalAssemblyAttribute_TrueCondition_ReturnsNoTraits()
+        {
+            ConditionalAssemblyAttribute attribute = new ConditionalAssemblyAttribute(typeof(ConditionalAttributeTests), nameof(AlwaysTrue));
+
+            IReadOnlyCollection<KeyValuePair<string, string>> traits = attribute.GetTraits();
+
+            Assert.Empty(traits);
+        }
+
+        [Fact]
+        public void ConditionalAssemblyAttribute_FalseCondition_ReturnsFailingCategoryTrait()
+        {
+            ConditionalAssemblyAttribute attribute = new ConditionalAssemblyAttribute(typeof(ConditionalAttributeTests), nameof(AlwaysFalse));
+
+            IReadOnlyCollection<KeyValuePair<string, string>> traits = attribute.GetTraits();
+
+            KeyValuePair<string, string> trait = Assert.Single(traits);
+            Assert.Equal(XunitConstants.Category, trait.Key);
+            Assert.Equal("failing", trait.Value);
+        }
+
+        [Fact]
+        public void ConditionalAssemblyAttribute_MultipleConditions_AllTrue_ReturnsNoTraits()
+        {
+            ConditionalAssemblyAttribute attribute = new ConditionalAssemblyAttribute(
+                typeof(ConditionalAttributeTests),
+                nameof(AlwaysTrue),
+                nameof(AlwaysTrue));
+
+            Assert.Empty(attribute.GetTraits());
+        }
+
+        [Fact]
+        public void ConditionalAssemblyAttribute_MultipleConditions_OneFalse_ReturnsFailingCategoryTrait()
+        {
+            ConditionalAssemblyAttribute attribute = new ConditionalAssemblyAttribute(
+                typeof(ConditionalAttributeTests),
+                nameof(AlwaysTrue),
+                nameof(AlwaysFalse));
+
+            KeyValuePair<string, string> trait = Assert.Single(attribute.GetTraits());
+            Assert.Equal(XunitConstants.Category, trait.Key);
+            Assert.Equal("failing", trait.Value);
+        }
+
+        [Fact]
+        public void ConditionalAssemblyAttribute_NoConditionMembers_ReturnsNoTraits()
+        {
+            // With no condition names supplied, the attribute is treated as "no conditions" and tests run normally.
+            ConditionalAssemblyAttribute attribute = new ConditionalAssemblyAttribute(typeof(ConditionalAttributeTests));
+
+            Assert.Empty(attribute.GetTraits());
+        }
+
+        [Fact]
+        public void ConditionalAssemblyAttribute_MissingMember_Throws()
+        {
+            ConditionalAssemblyAttribute attribute = new ConditionalAssemblyAttribute(
+                typeof(ConditionalAttributeTests),
+                "MemberThatDoesNotExist");
+
+            Assert.Throws<InvalidOperationException>(() => attribute.GetTraits());
+        }
+
+        [Fact]
+        public void ConditionalAssemblyAttribute_StoresConstructorArguments()
+        {
+            ConditionalAssemblyAttribute attribute = new ConditionalAssemblyAttribute(
+                typeof(ConditionalAttributeTests),
+                nameof(AlwaysTrue),
+                nameof(AlwaysFalse));
+
+            Assert.Equal(typeof(ConditionalAttributeTests), attribute.CalleeType);
+            Assert.Equal(new[] { nameof(AlwaysTrue), nameof(AlwaysFalse) }, attribute.ConditionMemberNames);
+        }
+
+        [Fact]
+        public void ConditionalAssemblyAttribute_AttributeUsage_TargetsAssemblyOnly()
+        {
+            AttributeUsageAttribute usage = typeof(ConditionalAssemblyAttribute)
+                .GetCustomAttributes(typeof(AttributeUsageAttribute), inherit: true)
+                .Cast<AttributeUsageAttribute>()
+                .Single();
+
+            Assert.Equal(AttributeTargets.Assembly, usage.ValidOn);
+            Assert.True(usage.AllowMultiple);
         }
 
         private static ConditionalFactAttribute GetConditionalFactAttribute(string methodName)
