@@ -765,16 +765,7 @@ function MSBuild() {
 
     Enable-Nuget-EnhancedRetry
 
-    $toolsetBuildProject = InitializeToolset
-    $basePath = Split-Path -parent $toolsetBuildProject
-    $selectedPath = Join-Path $basePath (Join-Path $buildTool.Framework 'Microsoft.DotNet.ArcadeLogging.dll')
-
-    if (-not $selectedPath) {
-      Write-PipelineTelemetryError -Category 'Build' -Message "Unable to find arcade sdk logger assembly: $selectedPath"
-      ExitWithExitCode 1
-    }
-
-    $args += "/logger:$selectedPath"
+    InitializeToolset | Out-Null
   }
 
   MSBuild-Core @args
