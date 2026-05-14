@@ -13,12 +13,6 @@
 # Set to true to output binary log from msbuild. Note that emitting binary log slows down the build.
 [bool]$binaryLog = if (Test-Path variable:binaryLog) { $binaryLog } else { $ci -and !$excludeCIBinarylog }
 
-# Set to true to use the pipelines logger which will enable Azure logging output.
-# https://github.com/Microsoft/azure-pipelines-tasks/blob/master/docs/authoring/commands.md
-# This flag is meant as a temporary opt-opt for the feature while validate it across
-# our consumers. It will be deleted in the future.
-[bool]$pipelinesLog = if (Test-Path variable:pipelinesLog) { $pipelinesLog } else { $ci }
-
 # Turns on machine preparation/clean up code that changes the machine state (e.g. kills build processes).
 [bool]$prepareMachine = if (Test-Path variable:prepareMachine) { $prepareMachine } else { $false }
 
@@ -753,19 +747,16 @@ function Stop-Processes() {
 # Terminates the script if the build fails.
 #
 function MSBuild() {
-  if ($pipelinesLog) {
-    $buildTool = InitializeBuildTool
+  $buildTool = InitializeBuildTool
+  InitializeToolset | Out-Null
 
-    if ($ci -and $buildTool.Tool -eq 'dotnet') {
-      $env:NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS = 20
-      $env:NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS = 20
-      Write-PipelineSetVariable -Name 'NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS' -Value '20'
-      Write-PipelineSetVariable -Name 'NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS' -Value '20'
-    }
+  if ($ci -and $buildTool.Tool -eq 'dotnet') {
+    $env:NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS = 20
+    $env:NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS = 20
+    Write-PipelineSetVariable -Name 'NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS' -Value '20'
+    Write-PipelineSetVariable -Name 'NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS' -Value '20'
 
     Enable-Nuget-EnhancedRetry
-
-    InitializeToolset | Out-Null
   }
 
   MSBuild-Core @args
