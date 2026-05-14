@@ -14,9 +14,10 @@ using Xunit.v3;
 namespace Microsoft.DotNet.XUnitExtensions
 {
     /// <summary>
-    /// Apply this attribute to your test method to replace the
-    /// <see cref="Thread.CurrentThread" /> <see cref="CultureInfo.CurrentCulture" /> and
-    /// <see cref="CultureInfo.CurrentUICulture" /> with another culture.
+    /// Apply this attribute to a test method, class, or assembly to replace
+    /// <see cref="Thread.CurrentCulture" /> and <see cref="Thread.CurrentUICulture" />
+    /// on the current thread with the specified cultures for the duration of the test,
+    /// and restore the originals afterwards.
     /// </summary>
     [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class UseCultureAttribute : BeforeAfterTestAttribute
@@ -62,9 +63,9 @@ namespace Microsoft.DotNet.XUnitExtensions
         public CultureInfo UICulture => _uiCulture.Value;
 
         /// <summary>
-        /// Stores the current <see cref="CultureInfo.CurrentCulture" /> and
-        /// <see cref="CultureInfo.CurrentUICulture" /> and replaces them with the
-        /// new cultures defined in the constructor.
+        /// Stores the current <see cref="Thread.CurrentCulture" /> and
+        /// <see cref="Thread.CurrentUICulture" /> and replaces them with the
+        /// cultures defined in the constructor.
         /// </summary>
         /// <param name="methodUnderTest">The method under test.</param>
         /// <param name="test">The test that is about to be run.</param>
@@ -78,8 +79,8 @@ namespace Microsoft.DotNet.XUnitExtensions
         }
 
         /// <summary>
-        /// Restores the original <see cref="CultureInfo.CurrentCulture" /> and
-        /// <see cref="CultureInfo.CurrentUICulture" /> on the current thread.
+        /// Restores the original <see cref="Thread.CurrentCulture" /> and
+        /// <see cref="Thread.CurrentUICulture" /> on the current thread.
         /// </summary>
         /// <param name="methodUnderTest">The method under test.</param>
         /// <param name="test">The test that just finished running.</param>
