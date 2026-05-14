@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.JobMonitor;
+using Microsoft.DotNet.Helix.Sdk.Tests.Fakes;
 using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -90,6 +91,28 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             JObject body = JObject.Parse(Assert.Single(handler.Bodies));
             Assert.Equal("Completed", body.Value<string>("state"));
+        }
+
+        [Fact]
+        public async Task TagsArePostedButNeverObservableViaGet_DocumentsAzdoBehavior()
+        {
+            // Regression guard: even if a future change accidentally posts tags
+            // when creating a test run, Azure DevOps drops them server-side and
+            // GET /_apis/test/runs will not return them. The FakeAzureDevOpsTestRunsHandler
+            // models this quirk (see its class-level note); this test ensures that
+            // model is exercised so a regression to tag-based dedup would fail here.
+            using var handler = new FakeAzureDevOpsTestRunsHandler();
+            using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
+
+            int runId = await service.CreateTestRunAsync("Test Run", "helix-job-1", CancellationToken.None);
+            await service.CompleteTestRunAsync(runId, CancellationToken.None);
+
+            IReadOnlySet<string> processed = await service.GetProcessedHelixJobNamesAsync(CancellationToken.None);
+
+            // Helix job name round-trips via the run "name" suffix, NOT via tags.
+            Assert.Contains("helix-job-1", processed);
+            Assert.Equal("Test Run [HelixJob:helix-job-1]", handler.Runs[runId].Name);
+            Assert.Equal("Completed", handler.Runs[runId].State);
         }
 
         private static JobMonitorOptions CreateOptions()
