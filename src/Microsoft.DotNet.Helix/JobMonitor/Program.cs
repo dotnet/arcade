@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 if (options.ShowHelp)
                 {
-                    return 0;
+                    return 2;
                 }
 
                 using JobMonitorRunner runner = new(options, logger);
