@@ -748,7 +748,6 @@ function Stop-Processes() {
 #
 function MSBuild() {
   $buildTool = InitializeBuildTool
-  InitializeToolset | Out-Null
 
   if ($ci -and $buildTool.Tool -eq 'dotnet') {
     $env:NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS = 20
