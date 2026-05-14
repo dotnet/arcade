@@ -304,14 +304,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             JobWorkItemStatusCounts counts = GetStatusCounts(orderedJobs, workItemsByJob, completedJobNames, processedJobNames);
-            _logger.LogInformation("ℹ️ Jobs (Work Items) Status: {ProcessedJobs} ({ProcessedWorkItems}) processed / {CompletedJobs} ({CompletedWorkItems}) completed / {RunningJobs} ({RunningWorkItems}) running / {WaitingJobs} ({WaitingWorkItems}) waiting",
+            _logger.LogInformation(
+                "ℹ️ Status: {ProcessedJobs} processed / {CompletedJobs} completed / {RunningJobs} running / {WaitingJobs} waiting jobs{nl}"
+                + "          {ProcessedWorkItems} processed / {CompletedWorkItems} completed / {RunningWorkItems} running / {WaitingWorkItems} waiting work items",
                 counts.ProcessedJobs,
-                counts.ProcessedWorkItems,
                 counts.CompletedJobs,
-                counts.CompletedWorkItems,
                 counts.RunningJobs,
-                counts.RunningWorkItems,
                 counts.WaitingJobs,
+                Environment.NewLine,
+                counts.ProcessedWorkItems,
+                counts.CompletedWorkItems,
+                counts.RunningWorkItems,
                 counts.WaitingWorkItems);
 
             if (_options.Verbose)
