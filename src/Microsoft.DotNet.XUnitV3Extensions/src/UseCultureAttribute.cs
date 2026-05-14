@@ -75,9 +75,6 @@ namespace Microsoft.DotNet.XUnitExtensions
 
             Thread.CurrentThread.CurrentCulture = Culture;
             Thread.CurrentThread.CurrentUICulture = UICulture;
-
-            CultureInfo.CurrentCulture.ClearCachedData();
-            CultureInfo.CurrentUICulture.ClearCachedData();
         }
 
         /// <summary>
@@ -92,9 +89,6 @@ namespace Microsoft.DotNet.XUnitExtensions
                 Thread.CurrentThread.CurrentCulture = _originalCulture;
             if (_originalUICulture is not null)
                 Thread.CurrentThread.CurrentUICulture = _originalUICulture;
-
-            CultureInfo.CurrentCulture.ClearCachedData();
-            CultureInfo.CurrentUICulture.ClearCachedData();
         }
     }
 }
