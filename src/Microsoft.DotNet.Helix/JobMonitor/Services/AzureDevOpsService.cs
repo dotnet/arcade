@@ -20,20 +20,16 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 {
     internal sealed class AzureDevOpsService : IAzureDevOpsService, IDisposable
     {
-        // Tag prefix used to identify Azure DevOps test runs created by this monitor for a
-        // particular Helix job. The full tag value is "MonitoredJob-{helixJobName}" and is
-        // included in the test run create / complete requests as a best-effort signal.
-        //
-        // NOTE: Azure DevOps silently drops the "tags" property on POST /test/runs (and currently
-        // also on PATCH /test/runs/{id}) so we cannot rely on it for cross-attempt deduplication.
-        // The primary mechanism is therefore the Helix job name marker we append to the test run
-        // name (see <see cref="HelixJobNameMarkerStart"/>). The tag write is retained so that if
-        // the service is ever fixed, callers benefit automatically.
-        private const string MonitoredJobTagPrefix = "MonitoredJob-";
-
         // Marker appended to every test run name so we can recover the Helix job name on a
         // subsequent monitor attempt. Format: "{originalName} [HelixJob:{helixJobName}]".
         // The marker is intentionally human-readable to aid debugging in the AzDO UI.
+        //
+        // We use the run name (instead of "tags" or "customFields") because empirically that is
+        // the only run property that both (a) is persisted by the Azure DevOps test runs API on
+        // POST /test/runs and (b) is returned in the list response from
+        // GET /test/runs?buildUri=... — so cross-attempt dedup needs no per-run round-trips.
+        // Tags on test runs are silently dropped by the service; the dedicated tags endpoint
+        // does not exist; and customFields is reserved for system values.
         private const string HelixJobNameMarkerStart = "[HelixJob:";
         private const string HelixJobNameMarkerEnd = "]";
 
@@ -73,38 +69,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public async Task<IReadOnlySet<string>> GetProcessedHelixJobNamesAsync(CancellationToken cancellationToken)
         {
             string buildUri = Uri.EscapeDataString($"vstfs:///Build/Build/{_options.BuildId}");
-            JObject data = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs?buildUri={buildUri}&includeRunDetails=true&$top=1000&api-version=7.1", cancellationToken: cancellationToken);
+            JObject data = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs?buildUri={buildUri}&$top=1000&api-version=7.1", cancellationToken: cancellationToken);
             var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (JObject run in (data?["value"] as JArray ?? []).Cast<JObject>())
             {
-                int? runId = run.Value<int?>("id");
-                string state = run.Value<string>("state");
-                if (runId == null || !string.Equals(state, "Completed", StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(run.Value<string>("state"), "Completed", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
 
-                // Primary: parse the marker we appended to the test run name on creation.
-                // The list response always includes "name", so this avoids a per-run fetch.
                 string helixJobName = ExtractHelixJobNameFromRunName(run.Value<string>("name"));
-                if (!string.IsNullOrEmpty(helixJobName))
-                {
-                    processed.Add(helixJobName);
-                    continue;
-                }
-
-                // Fallback: tag-based discovery (only meaningful if AzDO ever starts persisting
-                // tags from POST/PATCH). Tags are not returned in the list response, so this
-                // requires a follow-up fetch per run.
-                helixJobName = GetMonitoredHelixJobName(run);
-                if (!string.IsNullOrEmpty(helixJobName))
-                {
-                    processed.Add(helixJobName);
-                    continue;
-                }
-
-                helixJobName = await GetMonitoredHelixJobNameAsync(runId.Value, cancellationToken);
                 if (!string.IsNullOrEmpty(helixJobName))
                 {
                     processed.Add(helixJobName);
@@ -112,29 +87,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             return processed;
-        }
-
-        private async Task<string> GetMonitoredHelixJobNameAsync(int testRunId, CancellationToken cancellationToken)
-        {
-            JObject run = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}?includeDetails=true&api-version=7.1", cancellationToken: cancellationToken);
-            return GetMonitoredHelixJobName(run);
-        }
-
-        private static string GetMonitoredHelixJobName(JObject run)
-        {
-            if (run?["tags"] is JArray tags)
-            {
-                foreach (JToken tag in tags)
-                {
-                    string tagName = tag?.Value<string>("name");
-                    if (!string.IsNullOrEmpty(tagName) && tagName.StartsWith(MonitoredJobTagPrefix, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return tagName.Substring(MonitoredJobTagPrefix.Length);
-                    }
-                }
-            }
-
-            return null;
         }
 
         internal static string EncodeRunName(string name, string helixJobName)
@@ -175,7 +127,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     ["build"] = new JObject { ["id"] = _options.BuildId },
                     ["name"] = EncodeRunName(name, helixJobName),
                     ["state"] = "InProgress",
-                    ["tags"] = new JArray { new JObject { ["name"] = MonitoredJobTagPrefix + helixJobName } },
                 },
                 cancellationToken: cancellationToken);
             return result?["id"]?.ToObject<int>() ?? 0;

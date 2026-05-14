@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
     public class AzureDevOpsServiceTests
     {
         [Fact]
-        public async Task CreateTestRunAsync_PersistsHelixJobTag()
+        public async Task CreateTestRunAsync_EmbedsHelixJobNameInRunName()
         {
             var handler = new RecordingHttpMessageHandler(_ =>
                 new HttpResponseMessage(HttpStatusCode.OK)
@@ -39,7 +39,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal("InProgress", body.Value<string>("state"));
             Assert.Equal("1403994", body["build"]?.Value<string>("id"));
             Assert.Null(body.Value<string>("comment"));
-            Assert.Equal("MonitoredJob-helix-job-1", body["tags"]?[0]?.Value<string>("name"));
+            // We deliberately do not send tags: Azure DevOps silently drops them on
+            // POST /test/runs (verified empirically), so the helix job name is round-tripped
+            // via the run name marker.
+            Assert.Null(body["tags"]);
         }
 
         [Fact]
@@ -48,75 +51,29 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             // Real Azure DevOps drops the "tags" property on POST /test/runs. The monitor must
             // therefore recover the Helix job name from the run name marker so test results are
             // not re-uploaded on a retry of the monitor task.
-            var responses = new Queue<string>([
-                @"{""value"":[
-                    {""id"":10,""state"":""Completed"",""name"":""Linux Build_Debug [HelixJob:helix-linux]""},
-                    {""id"":11,""state"":""Completed"",""name"":""Windows Build_Release [HelixJob:helix-windows]""},
-                    {""id"":12,""state"":""InProgress"",""name"":""Pending [HelixJob:helix-pending]""},
-                    {""id"":13,""state"":""Completed"",""name"":""Unrelated test run""}
-                ]}",
-                // Fallback per-run detail fetch for run 13 (no marker, no tag).
-                @"{""id"":13}"
-            ]);
             var handler = new RecordingHttpMessageHandler(_ =>
                 new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = new StringContent(responses.Dequeue())
+                    Content = new StringContent(@"{""value"":[
+                        {""id"":10,""state"":""Completed"",""name"":""Linux Build_Debug [HelixJob:helix-linux]""},
+                        {""id"":11,""state"":""Completed"",""name"":""Windows Build_Release [HelixJob:helix-windows]""},
+                        {""id"":12,""state"":""InProgress"",""name"":""Pending [HelixJob:helix-pending]""},
+                        {""id"":13,""state"":""Completed"",""name"":""Unrelated test run""}
+                    ]}")
                 });
             using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
 
             IReadOnlySet<string> processed = await service.GetProcessedHelixJobNamesAsync(CancellationToken.None);
 
             Assert.Equal(["helix-linux", "helix-windows"], processed.OrderBy(static name => name));
-            // Three list calls expected: 1 list + 1 fallback detail fetch for the unmarked run.
-            Assert.Equal(2, handler.Requests.Count);
+            // Single list call, no per-run detail fetches: the marker is in the run "name"
+            // which is always part of the list response.
+            HttpRequestMessage request = Assert.Single(handler.Requests);
+            Assert.EndsWith("/_apis/test/runs?buildUri=vstfs%3A%2F%2F%2FBuild%2FBuild%2F1403994&$top=1000&api-version=7.1", request.RequestUri.ToString());
         }
 
         [Fact]
-        public async Task GetProcessedHelixJobNamesAsync_ReadsCompletedRunsByMonitoredJobTag()
-        {
-            var responses = new Queue<string>([
-                @"{""value"":[{""id"":10,""state"":""Completed""},{""id"":11,""state"":""InProgress""},{""id"":12,""state"":""Completed"",""tags"":[{""name"":""MonitoredJob-helix-job-2""}]}]}",
-                @"{""id"":10,""tags"":[{""name"":""MonitoredJob-helix-job-1""}]}"
-            ]);
-            var handler = new RecordingHttpMessageHandler(_ =>
-                new HttpResponseMessage(HttpStatusCode.OK)
-                {
-                    Content = new StringContent(responses.Dequeue())
-                });
-            using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
-
-            IReadOnlySet<string> processed = await service.GetProcessedHelixJobNamesAsync(CancellationToken.None);
-
-            Assert.Equal(["helix-job-1", "helix-job-2"], processed.OrderBy(static name => name));
-            Assert.Equal(2, handler.Requests.Count);
-            Assert.EndsWith("/_apis/test/runs?buildUri=vstfs%3A%2F%2F%2FBuild%2FBuild%2F1403994&includeRunDetails=true&$top=1000&api-version=7.1", handler.Requests[0].RequestUri.ToString());
-            Assert.EndsWith("/_apis/test/runs/10?includeDetails=true&api-version=7.1", handler.Requests[1].RequestUri.ToString());
-        }
-
-        [Fact]
-        public async Task GetProcessedHelixJobNamesAsync_DoesNotUseResultMetadataAsFallback()
-        {
-            var responses = new Queue<string>([
-                @"{""value"":[{""id"":10,""state"":""Completed""}]}",
-                "{\"id\":10,\"comment\":\"{\\\"HelixJobId\\\":\\\"helix-job-from-result\\\",\\\"HelixWorkItemName\\\":\\\"work-item\\\"}\"}"
-            ]);
-            var handler = new RecordingHttpMessageHandler(_ =>
-                new HttpResponseMessage(HttpStatusCode.OK)
-                {
-                    Content = new StringContent(responses.Dequeue())
-                });
-            using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
-
-            IReadOnlySet<string> processed = await service.GetProcessedHelixJobNamesAsync(CancellationToken.None);
-
-            Assert.Empty(processed);
-            Assert.Equal(2, handler.Requests.Count);
-            Assert.EndsWith("/_apis/test/runs/10?includeDetails=true&api-version=7.1", handler.Requests[1].RequestUri.ToString());
-        }
-
-        [Fact]
-        public async Task CompleteTestRunAsync_UsesTestRunsApiVersionThatSupportsTags()
+        public async Task CompleteTestRunAsync_SendsCompletedState()
         {
             var handler = new RecordingHttpMessageHandler(_ =>
                 new HttpResponseMessage(HttpStatusCode.OK)
