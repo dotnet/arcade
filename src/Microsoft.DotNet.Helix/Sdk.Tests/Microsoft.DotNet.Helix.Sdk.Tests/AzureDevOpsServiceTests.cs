@@ -35,11 +35,41 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal("https://dev.azure.com/dnceng-public/public/_apis/test/runs?api-version=7.1", request.RequestUri.ToString());
 
             JObject body = JObject.Parse(Assert.Single(handler.Bodies));
-            Assert.Equal("Test Run", body.Value<string>("name"));
+            Assert.Equal("Test Run [HelixJob:helix-job-1]", body.Value<string>("name"));
             Assert.Equal("InProgress", body.Value<string>("state"));
             Assert.Equal("1403994", body["build"]?.Value<string>("id"));
             Assert.Null(body.Value<string>("comment"));
             Assert.Equal("MonitoredJob-helix-job-1", body["tags"]?[0]?.Value<string>("name"));
+        }
+
+        [Fact]
+        public async Task GetProcessedHelixJobNamesAsync_RecoversFromTestRunNameMarker()
+        {
+            // Real Azure DevOps drops the "tags" property on POST /test/runs. The monitor must
+            // therefore recover the Helix job name from the run name marker so test results are
+            // not re-uploaded on a retry of the monitor task.
+            var responses = new Queue<string>([
+                @"{""value"":[
+                    {""id"":10,""state"":""Completed"",""name"":""Linux Build_Debug [HelixJob:helix-linux]""},
+                    {""id"":11,""state"":""Completed"",""name"":""Windows Build_Release [HelixJob:helix-windows]""},
+                    {""id"":12,""state"":""InProgress"",""name"":""Pending [HelixJob:helix-pending]""},
+                    {""id"":13,""state"":""Completed"",""name"":""Unrelated test run""}
+                ]}",
+                // Fallback per-run detail fetch for run 13 (no marker, no tag).
+                @"{""id"":13}"
+            ]);
+            var handler = new RecordingHttpMessageHandler(_ =>
+                new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(responses.Dequeue())
+                });
+            using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
+
+            IReadOnlySet<string> processed = await service.GetProcessedHelixJobNamesAsync(CancellationToken.None);
+
+            Assert.Equal(["helix-linux", "helix-windows"], processed.OrderBy(static name => name));
+            // Three list calls expected: 1 list + 1 fallback detail fetch for the unmarked run.
+            Assert.Equal(2, handler.Requests.Count);
         }
 
         [Fact]

@@ -22,9 +22,20 @@ namespace Microsoft.DotNet.Helix.JobMonitor
     {
         // Tag prefix used to identify Azure DevOps test runs created by this monitor for a
         // particular Helix job. The full tag value is "MonitoredJob-{helixJobName}" and is
-        // attached to the test run when it is created. This lets us look up which Helix jobs
-        // we have already processed without encoding the Helix job name into the run name.
+        // included in the test run create / complete requests as a best-effort signal.
+        //
+        // NOTE: Azure DevOps silently drops the "tags" property on POST /test/runs (and currently
+        // also on PATCH /test/runs/{id}) so we cannot rely on it for cross-attempt deduplication.
+        // The primary mechanism is therefore the Helix job name marker we append to the test run
+        // name (see <see cref="HelixJobNameMarkerStart"/>). The tag write is retained so that if
+        // the service is ever fixed, callers benefit automatically.
         private const string MonitoredJobTagPrefix = "MonitoredJob-";
+
+        // Marker appended to every test run name so we can recover the Helix job name on a
+        // subsequent monitor attempt. Format: "{originalName} [HelixJob:{helixJobName}]".
+        // The marker is intentionally human-readable to aid debugging in the AzDO UI.
+        private const string HelixJobNameMarkerStart = "[HelixJob:";
+        private const string HelixJobNameMarkerEnd = "]";
 
         private readonly JobMonitorOptions _options;
         private readonly ILogger _logger;
@@ -74,7 +85,19 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     continue;
                 }
 
-                string helixJobName = GetMonitoredHelixJobName(run);
+                // Primary: parse the marker we appended to the test run name on creation.
+                // The list response always includes "name", so this avoids a per-run fetch.
+                string helixJobName = ExtractHelixJobNameFromRunName(run.Value<string>("name"));
+                if (!string.IsNullOrEmpty(helixJobName))
+                {
+                    processed.Add(helixJobName);
+                    continue;
+                }
+
+                // Fallback: tag-based discovery (only meaningful if AzDO ever starts persisting
+                // tags from POST/PATCH). Tags are not returned in the list response, so this
+                // requires a follow-up fetch per run.
+                helixJobName = GetMonitoredHelixJobName(run);
                 if (!string.IsNullOrEmpty(helixJobName))
                 {
                     processed.Add(helixJobName);
@@ -114,6 +137,34 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return null;
         }
 
+        internal static string EncodeRunName(string name, string helixJobName)
+        {
+            if (string.IsNullOrEmpty(helixJobName))
+            {
+                return name;
+            }
+
+            return $"{name} {HelixJobNameMarkerStart}{helixJobName}{HelixJobNameMarkerEnd}";
+        }
+
+        internal static string ExtractHelixJobNameFromRunName(string runName)
+        {
+            if (string.IsNullOrEmpty(runName) || !runName.EndsWith(HelixJobNameMarkerEnd, StringComparison.Ordinal))
+            {
+                return null;
+            }
+
+            int markerStart = runName.LastIndexOf(HelixJobNameMarkerStart, StringComparison.Ordinal);
+            if (markerStart < 0)
+            {
+                return null;
+            }
+
+            int valueStart = markerStart + HelixJobNameMarkerStart.Length;
+            int valueLength = runName.Length - valueStart - HelixJobNameMarkerEnd.Length;
+            return valueLength > 0 ? runName.Substring(valueStart, valueLength) : null;
+        }
+
         public async Task<int> CreateTestRunAsync(string name, string helixJobName, CancellationToken cancellationToken)
         {
             JObject result = await SendAsync(HttpMethod.Post,
@@ -122,7 +173,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 {
                     ["automated"] = true,
                     ["build"] = new JObject { ["id"] = _options.BuildId },
-                    ["name"] = name,
+                    ["name"] = EncodeRunName(name, helixJobName),
                     ["state"] = "InProgress",
                     ["tags"] = new JArray { new JObject { ["name"] = MonitoredJobTagPrefix + helixJobName } },
                 },
