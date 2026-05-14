@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.XUnitExtensions.Tests
     public class UseCultureAttributeTests
     {
         [Fact]
-        public void DefaultConstructorUsesSameCultureForBoth()
+        public void SingleArgumentConstructorUsesSameCultureForBoth()
         {
             UseCultureAttribute attr = new("fr-FR");
 
