@@ -49,10 +49,21 @@
 
     <!-- XUnit v3 tests are self-hosting executables and use XUnitV3Project instead -->
     <XUnitProject Remove="..\src\Microsoft.DotNet.XUnitV3Extensions\tests\Microsoft.DotNet.XUnitV3Extensions.Tests.csproj"/>
+    <XUnitProject Remove="..\src\Microsoft.DotNet.XUnitV3Extensions\tests\Microsoft.DotNet.XUnitV3Extensions.AlwaysFalseConditionalAssembly.Tests.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
     <XUnitV3Project Include="..\src\Microsoft.DotNet.XUnitV3Extensions\tests\Microsoft.DotNet.XUnitV3Extensions.Tests.csproj"/>
+    <!--
+      The assembly-level [ConditionalAssembly] in this project always evaluates to false,
+      tagging every test with the 'category=failing' trait. Filter that trait out so the
+      deliberately failing test is skipped on Helix; ignore the MTP "zero tests ran" exit
+      code (8) since no tests run after the filter. This validates that the attribute is
+      actually applied to all tests in the assembly.
+    -->
+    <XUnitV3Project Include="..\src\Microsoft.DotNet.XUnitV3Extensions\tests\Microsoft.DotNet.XUnitV3Extensions.AlwaysFalseConditionalAssembly.Tests.csproj">
+      <Arguments>--filter-not-trait "category=failing" --ignore-exit-code 8</Arguments>
+    </XUnitV3Project>
   </ItemGroup>
 
   <ItemGroup>
