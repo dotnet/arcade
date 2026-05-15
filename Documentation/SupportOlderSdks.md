@@ -15,6 +15,22 @@ This document proposes three coordinated changes that, taken together, allow Arc
 
 A first piece of (3) — moving Arcade's own project `TargetFramework` values from `$(NetCurrent)` down to `$(NetMinimum)` so that consumer repos on the previous-major SDK can load Arcade's tools and MSBuild tasks — has already merged on `main` ([dotnet/arcade@98d7ce0](https://github.com/dotnet/arcade/commit/98d7ce08e83c980d2bcc30bf3c846c8b3630c391)).
 
+### Scope
+
+This proposal is scoped to **active development branches** of inner repos — for example MSBuild's, Roslyn's, or SDK's `main` branch. The concrete motivating scenario: MSBuild `main` wants to consume Arcade `main` instead of Arcade `release/10.0`, while still building with a .NET 10 SDK. Servicing branches of inner repos and other already-shipped configurations are out of scope.
+
+### Goals
+
+- An inner repo's active development branch can consume Arcade `main` while staying on an older (still-supported) .NET SDK — concretely, today's .NET 10 SDK.
+- Cross-cutting changes spanning Arcade and consumer repos can be made on Arcade `main` and propagate to inner-repo `main` branches without first negotiating an SDK uplift.
+- Inner repos own their .NET SDK update cadence (via Dependabot or by pinning).
+
+### Non-goals (anti-goals)
+
+- **Eliminating Arcade `release/*` servicing branches.** This proposal explicitly does **not** aim to retire `release/10.0`, `release/9.0`, etc. Those branches continue to exist for the workloads they serve today (servicing of shipped releases, source-build for older bands, etc.). The proposal only changes what Arcade `main` is required to support.
+- Changing what Arcade flows besides the .NET SDK version.
+- Supporting arbitrarily old .NET SDKs in Arcade `main` (see §4.3 — the floor tracks `$(NetMinimum)`).
+
 ## 2. Background — current state
 
 ### 2.1 SDK version flow
