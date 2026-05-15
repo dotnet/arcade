@@ -353,6 +353,23 @@ def finalize_setup(rootfsdir):
 
     os.symlink(usr_lib_dir, lib_dir)
 
+    # Replicate `symlinks -cr`: rewrite
+    # every absolute symlink inside the rootfs to a relative path so that the
+    # rootfs is self-contained when referenced via --sysroot.
+    rootfsdir_abs = os.path.abspath(rootfsdir)
+    for dirpath, _, filenames in os.walk(rootfsdir_abs):
+        for name in filenames:
+            link_path = os.path.join(dirpath, name)
+            if not os.path.islink(link_path):
+                continue
+            target = os.readlink(link_path)
+            if not os.path.isabs(target):
+                continue
+            new_target = os.path.relpath(os.path.join(rootfsdir_abs, target.lstrip('/')),
+                                         start=dirpath)
+            os.remove(link_path)
+            os.symlink(new_target, link_path)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate rootfs for .NET runtime on Debian-like OS")
     parser.add_argument("--arch", required=True, help="Architecture (e.g., amd64, loong64, etc.)")
