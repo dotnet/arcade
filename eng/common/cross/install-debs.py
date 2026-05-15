@@ -328,7 +328,18 @@ def extract_deb_file(deb_file, tmp_dir, extract_dir, ar_tool):
             raise ValueError(f"Unsupported compression format: {file_extension}")
 
         with tarfile.open(tar_file_path, mode) as tar:
-            tar.extractall(path=extract_dir, filter='tar')
+            tar.extractall(path=extract_dir, filter=_rootfs_extraction_filter)
+
+def _rootfs_extraction_filter(member, dest_path):
+    """Tarfile extraction filter based on the 'data' filter that additionally
+    rewrites absolute-target symlinks/hardlinks into rootfs-relative paths.
+    """
+    if (member.issym() or member.islnk()) and os.path.isabs(member.linkname):
+        link_dir = os.path.dirname(member.name)
+        new_linkname = os.path.relpath(member.linkname.lstrip('/'),
+                                       start=link_dir or '.')
+        member = member.replace(linkname=new_linkname, deep=False)
+    return tarfile.data_filter(member, dest_path)
 
 def finalize_setup(rootfsdir):
     lib_dir = os.path.join(rootfsdir, 'lib')
@@ -352,23 +363,6 @@ def finalize_setup(rootfsdir):
             shutil.rmtree(lib_dir)
 
     os.symlink(usr_lib_dir, lib_dir)
-
-    # Replicate `symlinks -cr`: rewrite
-    # every absolute symlink inside the rootfs to a relative path so that the
-    # rootfs is self-contained when referenced via --sysroot.
-    rootfsdir_abs = os.path.abspath(rootfsdir)
-    for dirpath, _, filenames in os.walk(rootfsdir_abs):
-        for name in filenames:
-            link_path = os.path.join(dirpath, name)
-            if not os.path.islink(link_path):
-                continue
-            target = os.readlink(link_path)
-            if not os.path.isabs(target):
-                continue
-            new_target = os.path.relpath(os.path.join(rootfsdir_abs, target.lstrip('/')),
-                                         start=dirpath)
-            os.remove(link_path)
-            os.symlink(new_target, link_path)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate rootfs for .NET runtime on Debian-like OS")
