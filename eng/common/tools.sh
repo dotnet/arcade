@@ -504,8 +504,6 @@ function DotNet {
 function MSBuild {
   local args=( "$@" )
 
-  InitializeBuildTool
-
   if [[ "$ci" == true ]]; then
     export NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS=20
     export NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS=20

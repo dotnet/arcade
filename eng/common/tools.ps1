@@ -747,9 +747,7 @@ function Stop-Processes() {
 # Terminates the script if the build fails.
 #
 function MSBuild() {
-  $buildTool = InitializeBuildTool
-
-  if ($ci -and $buildTool.Tool -eq 'dotnet') {
+  if ($ci) {
     $env:NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS = 20
     $env:NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS = 20
     Write-PipelineSetVariable -Name 'NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS' -Value '20'
