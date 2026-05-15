@@ -2,6 +2,7 @@ parameters:
   sourceIndexUploadPackageVersion: 2.0.0-20250906.1
   sourceIndexProcessBinlogPackageVersion: 1.0.1-20250906.1
   sourceIndexPackageSource: https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
+  sourceIndexUseIsolatedNuGetConfig: false
   binlogPath: artifacts/log/Debug/Build.binlog
 
 steps:
@@ -13,12 +14,72 @@ steps:
     installationPath: $(Agent.TempDirectory)/dotnet
     workingDirectory: $(Agent.TempDirectory)
 
-- script: |
-    $(Agent.TempDirectory)/dotnet/dotnet tool install BinLogToSln --version ${{parameters.sourceIndexProcessBinlogPackageVersion}} --source ${{parameters.sourceIndexPackageSource}} --tool-path $(Agent.TempDirectory)/.source-index/tools
-    $(Agent.TempDirectory)/dotnet/dotnet tool install UploadIndexStage1 --version ${{parameters.sourceIndexUploadPackageVersion}} --source ${{parameters.sourceIndexPackageSource}} --tool-path $(Agent.TempDirectory)/.source-index/tools
-  displayName: "Source Index: Download netsourceindex Tools"
-  # Set working directory to temp directory so 'dotnet' doesn't try to use global.json and use the repo's sdk.
-  workingDirectory: $(Agent.TempDirectory)
+- ${{ if or(eq(parameters.sourceIndexUseIsolatedNuGetConfig, true), eq(parameters.sourceIndexUseIsolatedNuGetConfig, 'true')) }}:
+  - powershell: |
+      $ErrorActionPreference = 'Stop'
+
+      $sourceIndexRoot = "$(Agent.TempDirectory)/.source-index"
+      $toolsDirectory = "$sourceIndexRoot/tools"
+      $dotnet = "$(Agent.TempDirectory)/dotnet/dotnet"
+
+      New-Item -ItemType Directory -Force -Path $sourceIndexRoot | Out-Null
+      New-Item -ItemType Directory -Force -Path $toolsDirectory | Out-Null
+
+      # Generate an isolated NuGet config so tool restore doesn't inherit machine/user-level
+      # package sources (e.g. nuget.org), which trips 1ES Network Isolation. The template
+      # emitted by 'dotnet new nugetconfig' includes <clear/> in <packageSources>, blocking
+      # inherited sources.
+      & $dotnet new nugetconfig --force --output $sourceIndexRoot
+      if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to create isolated NuGet config."
+        exit 1
+      }
+
+      $nugetConfig = Join-Path $sourceIndexRoot 'nuget.config'
+      if (-not (Test-Path $nugetConfig)) {
+        $generated = Get-ChildItem -Path $sourceIndexRoot -Filter 'nuget.config' -File -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not $generated) { throw "Could not locate generated nuget.config under $sourceIndexRoot" }
+        $nugetConfig = $generated.FullName
+      }
+
+      # Remove the default NuGet.org source the template added so only the approved feed is contacted.
+      $nugetConfigXml = [xml](Get-Content -Raw $nugetConfig)
+      $nugetOrgSource = $nugetConfigXml.configuration.packageSources.add | Where-Object { $_.value -eq 'https://api.nuget.org/v3/index.json' } | Select-Object -First 1
+      if ($nugetOrgSource) {
+        & $dotnet nuget remove source $nugetOrgSource.key --configfile $nugetConfig
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "Failed to remove NuGet.org source '$($nugetOrgSource.key)'."
+          exit 1
+        }
+      }
+
+      & $dotnet nuget add source "${{parameters.sourceIndexPackageSource}}" --name source-index --configfile $nugetConfig
+      if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to add the source-index package source."
+        exit 1
+      }
+
+      & $dotnet tool install BinLogToSln --version ${{parameters.sourceIndexProcessBinlogPackageVersion}} --configfile $nugetConfig --tool-path $toolsDirectory
+      if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to install BinLogToSln."
+        exit 1
+      }
+
+      & $dotnet tool install UploadIndexStage1 --version ${{parameters.sourceIndexUploadPackageVersion}} --configfile $nugetConfig --tool-path $toolsDirectory
+      if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to install UploadIndexStage1."
+        exit 1
+      }
+    displayName: "Source Index: Download netsourceindex Tools"
+    # Set working directory to temp directory so 'dotnet' doesn't try to use global.json and use the repo's sdk.
+    workingDirectory: $(Agent.TempDirectory)
+- ${{ else }}:
+  - script: |
+      $(Agent.TempDirectory)/dotnet/dotnet tool install BinLogToSln --version ${{parameters.sourceIndexProcessBinlogPackageVersion}} --source ${{parameters.sourceIndexPackageSource}} --tool-path $(Agent.TempDirectory)/.source-index/tools
+      $(Agent.TempDirectory)/dotnet/dotnet tool install UploadIndexStage1 --version ${{parameters.sourceIndexUploadPackageVersion}} --source ${{parameters.sourceIndexPackageSource}} --tool-path $(Agent.TempDirectory)/.source-index/tools
+    displayName: "Source Index: Download netsourceindex Tools"
+    # Set working directory to temp directory so 'dotnet' doesn't try to use global.json and use the repo's sdk.
+    workingDirectory: $(Agent.TempDirectory)
 
 - script: $(Agent.TempDirectory)/.source-index/tools/BinLogToSln -i ${{parameters.BinlogPath}} -r $(System.DefaultWorkingDirectory) -n $(Build.Repository.Name) -o .source-index/stage1output
   displayName: "Source Index: Process Binlog into indexable sln"
