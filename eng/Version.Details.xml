@@ -90,6 +90,10 @@
     </Dependency>
     <!-- Necessary for source-build. This allows the live version of the dependency
          to flow in and eliminates related prebuilts. -->
+    <Dependency Name="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>dc5fd7a8dce8309e4add8fd4bd5d8718f221b15a</Sha>
+    </Dependency>
     <Dependency Name="Microsoft.Extensions.Logging.Console" Version="10.0.3">
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>dc5fd7a8dce8309e4add8fd4bd5d8718f221b15a</Sha>
