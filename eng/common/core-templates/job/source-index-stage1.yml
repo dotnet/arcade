@@ -3,6 +3,7 @@ parameters:
   sourceIndexBuildCommand: powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "eng/common/build.ps1 -restore -build -binarylog -ci"
   preSteps: []
   binlogPath: artifacts/log/Debug/Build.binlog
+  sourceIndexUseIsolatedNuGetConfig: false
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   dependsOn: ''
   pool: ''
@@ -44,3 +45,4 @@ jobs:
   - template: /eng/common/core-templates/steps/source-index-stage1-publish.yml
     parameters:
       binLogPath: ${{ parameters.binLogPath }}
+      sourceIndexUseIsolatedNuGetConfig: ${{ parameters.sourceIndexUseIsolatedNuGetConfig }}
