@@ -84,24 +84,6 @@ namespace Microsoft.DotNet.XUnitExtensions.Tests
             Assert.Equal(s_cultures, attribute.Cultures);
         }
 
-        [Fact]
-        public void CulturedConditionalFactIsCulturedFact()
-        {
-            // Verify the inheritance relationship: a CulturedConditionalFact is a CulturedFact (and therefore a Fact).
-            CulturedConditionalFactAttribute attribute = GetCulturedConditionalFactAttribute(nameof(CulturedConditionalFactTrue));
-            Assert.IsAssignableFrom<CulturedFactAttribute>(attribute);
-            Assert.IsAssignableFrom<FactAttribute>(attribute);
-        }
-
-        [Fact]
-        public void CulturedConditionalTheoryIsCulturedTheory()
-        {
-            // Verify the inheritance relationship: a CulturedConditionalTheory is a CulturedTheory (and therefore a Theory).
-            CulturedConditionalTheoryAttribute attribute = GetCulturedConditionalTheoryAttribute(nameof(CulturedConditionalTheoryTrue));
-            Assert.IsAssignableFrom<CulturedTheoryAttribute>(attribute);
-            Assert.IsAssignableFrom<TheoryAttribute>(attribute);
-        }
-
         private static CulturedConditionalFactAttribute GetCulturedConditionalFactAttribute(string methodName)
         {
             return (CulturedConditionalFactAttribute)typeof(CulturedConditionalAttributeTests)

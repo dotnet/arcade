@@ -25,7 +25,9 @@ namespace Xunit
             ConditionMemberNames = conditionMemberNames;
             string skipReason = ConditionalTestDiscoverer.EvaluateSkipConditions(calleeType, conditionMemberNames);
             if (skipReason != null)
+            {
                 Skip = skipReason;
+            }
         }
     }
 }
