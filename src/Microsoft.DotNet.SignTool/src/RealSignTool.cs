@@ -69,22 +69,16 @@ namespace Microsoft.DotNet.SignTool
 
                 var output = new StringBuilder();
                 var error = new StringBuilder();
-                var outputLock = new object();
-                var errorLock = new object();
 
-                // StringBuilder is not thread-safe and the OutputDataReceived/ErrorDataReceived
-                // events fire on background threads, so guard appends and the final ToString()
-                // with locks to avoid concurrent mutation (which can manifest as
-                // ArgumentOutOfRangeException 'chunkLength' inside StringBuilder.ToString()).
                 process.OutputDataReceived += (sender, e) =>
                 {
                     if (e.Data == null) return;
-                    lock (outputLock) { output.AppendLine(e.Data); }
+                    output.AppendLine(e.Data);
                 };
                 process.ErrorDataReceived += (sender, e) =>
                 {
                     if (e.Data == null) return;
-                    lock (errorLock) { error.AppendLine(e.Data); }
+                    error.AppendLine(e.Data);
                 };
 
                 process.Start();
@@ -122,15 +116,13 @@ namespace Microsoft.DotNet.SignTool
                     success = false;
                 }
 
-                string outputStr;
-                lock (outputLock) { outputStr = output.ToString().Trim(); }
+                string outputStr = output.ToString().Trim();
                 if (!string.IsNullOrWhiteSpace(outputStr))
                 {
                     File.WriteAllText(logPath, outputStr);
                 }
 
-                string errorStr;
-                lock (errorLock) { errorStr = error.ToString().Trim(); }
+                string errorStr = error.ToString().Trim();
                 if (!string.IsNullOrWhiteSpace(errorStr))
                 {
                     File.WriteAllText(errorLogPath, errorStr);
