@@ -116,7 +116,6 @@ stages:
           /p:MsdlToken=$(microsoft-symbol-server-pat)
           /p:SymWebToken=$(symweb-symbol-server-pat)
           /p:BuildQuality='${{ parameters.buildQuality }}'
-          /p:AzdoApiToken='$(dn-bot-all-orgs-build-rw-code-rw)'
           /p:ArtifactsBasePath='$(Build.ArtifactStagingDirectory)/'
           /p:BuildId='$(AzDOBuildId)'
           /p:AzureDevOpsOrg='$(AzDOAccount)'

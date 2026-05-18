@@ -34,7 +34,6 @@ steps:
       '$(akams-client-id)'
       '$(microsoft-symbol-server-pat)'
       '$(symweb-symbol-server-pat)'
-      '$(dn-bot-all-orgs-build-rw-code-rw)'
       ${{parameters.CustomSensitiveDataList}}
   continueOnError: true
   condition: always()

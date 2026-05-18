@@ -32,6 +32,7 @@ using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
 using static Microsoft.DotNet.Build.CloudTestTasks.AzureStorageUtils;
 using MsBuildUtils = Microsoft.Build.Utilities;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.DotNet.ArcadeAzureIntegration;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -887,16 +888,70 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 BaseAddress = new Uri(address)
             };
             client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                "Basic",
-                Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "",
-                    AzdoApiToken))));
+
+            if (!string.IsNullOrEmpty(AzdoApiToken))
+            {
+                // Legacy PAT-based authentication
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                    "Basic",
+                    Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "",
+                        AzdoApiToken))));
+            }
+            else
+            {
+                // Entra-based authentication using DefaultIdentityTokenCredential
+                // This supports AzurePipelinesCredential (from AzureCLI@2), ManagedIdentity, WorkloadIdentity, and AzureCLI
+                var credential = new DefaultIdentityTokenCredential(
+                    new DefaultIdentityTokenCredentialOptions
+                    {
+                        ManagedIdentityClientId = ManagedIdentityClientId
+                    });
+                var tokenRequestContext = new global::Azure.Core.TokenRequestContext(new[] { "499b84ac-1321-427f-aa17-267ca6975798/.default" });
+                var accessToken = credential.GetToken(tokenRequestContext, CancellationToken.None);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
+            }
+
             client.DefaultRequestHeaders.Add(
                 "Accept",
                 $"application/xml;api-version={versionOverride ?? AzureDevOpsFeedsApiVersion}");
             return client;
         }
 
+        /// <summary>
+        /// Checks whether Entra-based credentials are available in the current environment.
+        /// Returns true if running inside an AzureCLI@2 task (AzurePipelinesCredential),
+        /// or if a ManagedIdentityClientId is configured.
+        /// </summary>
+        private bool HasEntraCredentialsAvailable()
+        {
+            // AzurePipelinesCredential environment (set by AzureCLI@2 task with addSpnToEnvironment: true)
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURESUBSCRIPTION_CLIENT_ID")) &&
+                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURESUBSCRIPTION_TENANT_ID")) &&
+                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURESUBSCRIPTION_SERVICE_CONNECTION_ID")) &&
+                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN")) &&
+                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SYSTEM_OIDCREQUESTURI")))
+            {
+                return true;
+            }
+
+            // WorkloadIdentityCredential environment
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("servicePrincipalId")) &&
+                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("idToken")) &&
+                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("tenantId")))
+            {
+                return true;
+            }
+
+            // Managed Identity is configured
+            if (!string.IsNullOrEmpty(ManagedIdentityClientId))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private SemaphoreSlim _createArtifactSemaphore = new SemaphoreSlim(1,1);
         /// <summary>
         /// Gets the container Id, that is going to be used in another API call to download the assets
         /// ContainerId is the same for PackageArtifacts and BlobArtifacts
@@ -1792,9 +1847,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 Log.LogError($"The property {nameof(MaestroApiEndpoint)} is required but doesn't have a value set.");
             }
 
-            if (UseStreamingPublishing && string.IsNullOrEmpty(AzdoApiToken))
+            if (UseStreamingPublishing && string.IsNullOrEmpty(AzdoApiToken) && !HasEntraCredentialsAvailable())
             {
-                Log.LogError($"The property {nameof(AzdoApiToken)} is required when using streaming publishing, but doesn't have a value set.");
+                Log.LogError($"The property {nameof(AzdoApiToken)} is required when using streaming publishing (unless Entra credentials are available via AzureCLI@2 or Managed Identity), but doesn't have a value set.");
             }
 
             if (UseStreamingPublishing && string.IsNullOrEmpty(ArtifactsBasePath))
