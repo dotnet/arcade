@@ -69,9 +69,23 @@ namespace Microsoft.DotNet.SignTool
 
                 var output = new StringBuilder();
                 var error = new StringBuilder();
+                var outputLock = new object();
+                var errorLock = new object();
 
-                process.OutputDataReceived += (sender, e) => output.AppendLine(e.Data);
-                process.ErrorDataReceived += (sender, e) => error.AppendLine(e.Data);
+                // StringBuilder is not thread-safe and the OutputDataReceived/ErrorDataReceived
+                // events fire on background threads, so guard appends and the final ToString()
+                // with locks to avoid concurrent mutation (which can manifest as
+                // ArgumentOutOfRangeException 'chunkLength' inside StringBuilder.ToString()).
+                process.OutputDataReceived += (sender, e) =>
+                {
+                    if (e.Data == null) return;
+                    lock (outputLock) { output.AppendLine(e.Data); }
+                };
+                process.ErrorDataReceived += (sender, e) =>
+                {
+                    if (e.Data == null) return;
+                    lock (errorLock) { error.AppendLine(e.Data); }
+                };
 
                 process.Start();
                 process.BeginOutputReadLine();
@@ -88,6 +102,14 @@ namespace Microsoft.DotNet.SignTool
                     process.WaitForExit();
                     success = false;
                 }
+                else
+                {
+                    // When WaitForExit(timeout) returns true, the asynchronous output/error
+                    // event handlers are not guaranteed to have drained. The parameterless
+                    // WaitForExit() overload blocks until they have, which is required before
+                    // reading the StringBuilders below.
+                    process.WaitForExit();
+                }
 
                 if (process.ExitCode != 0)
                 {
@@ -100,13 +122,15 @@ namespace Microsoft.DotNet.SignTool
                     success = false;
                 }
 
-                string outputStr = output.ToString().Trim();
+                string outputStr;
+                lock (outputLock) { outputStr = output.ToString().Trim(); }
                 if (!string.IsNullOrWhiteSpace(outputStr))
                 {
                     File.WriteAllText(logPath, outputStr);
                 }
-                
-                string errorStr = error.ToString().Trim();
+
+                string errorStr;
+                lock (errorLock) { errorStr = error.ToString().Trim(); }
                 if (!string.IsNullOrWhiteSpace(errorStr))
                 {
                     File.WriteAllText(errorLogPath, errorStr);
