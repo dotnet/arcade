@@ -134,6 +134,7 @@ stages:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       inputs:
         azureSubscription: maestro-build-promotion
+        addSpnToEnvironment: true
         scriptType: ps
         scriptLocation: scriptPath
         scriptPath: $(System.DefaultWorkingDirectory)/eng/common/sdk-task.ps1
@@ -161,7 +162,6 @@ stages:
           /p:SymbolRequestProject='dotnet'
           ${{ parameters.symbolPublishingAdditionalParameters}}
           /p:BuildQuality='${{ parameters.buildQuality }}'
-          /p:AzdoApiToken='$(dn-bot-all-orgs-build-rw-code-rw)'
           /p:ArtifactsBasePath='$(Build.ArtifactStagingDirectory)/'
           /p:BuildId='$(AzDOBuildId)'
           /p:AzureDevOpsOrg='$(AzDOAccount)'
