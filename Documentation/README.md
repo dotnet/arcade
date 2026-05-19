@@ -17,21 +17,17 @@ areas:
 - **Shared tooling (Arcade)** - Striving to reduce duplication of tooling,
   improve development consistency between repos and drive tooling improvements
   across a wider swath of the ecosystem more quickly.
-- **Transitioning to Azure DevOps for public CI, and upgrading official builds**
-  - Move away from Jenkins, improve CI reliability, increase the consistency
-  between our official and PR builds, and bring first-class workflow for
-  internal as well as public changes.
-- **Improving our inter-repo dependency version management (Darc)** - Improve
+- **Supporting Azure DevOps for CI**
+  - Improve CI reliability, increase the consistency between official and PR builds,
+  and bring first-class workflow for internal as well as public changes.
+- **Improving inter-repo dependency version management (Darc)** - Improve
   the rate at which dependencies are updated in repos, improve content
   traceability, etc.
 
 ## Does my repository need to be involved?
 
 Generally, if your repo is shipping in .NET, yes.  For core functionality repos a full transition is required.  While there exist
-some special cases (e.g. repos used as submodules in aspnet/universe), we're
-striving to move as many people towards the new infrastructure as possible.
-- If you use .NET CI (ci.dot.net, ci2.dot.net, ci3.dot.net) you'll need to move
-  into Azure DevOps.
+some special cases (e.g. repos used as submodules), we're striving to move as many people towards the new infrastructure as possible.
 - If you pull new dependencies from other repos (e.g. latest
   Microsoft.NETCore.App package), you'll need to onboard onto Arcade and
   dependency flow.
@@ -84,7 +80,6 @@ some highlights
     - Tasks and Templates
   - [Darc](Darc.md): Arcade's dependency management system
   - [Maestro](Maestro.md): CI automation of dependency flow
-  - Mission Control
 
 #### Testing projects
   - Helix: [Introduction](/Documentation/Helix.md), [SDK](../src/Microsoft.DotNet.Helix/Sdk/Readme.md), [JobSender](../src/Microsoft.DotNet.Helix/JobSender/Readme.md)
@@ -97,8 +92,6 @@ some highlights
   - [SignTool](Signing.md) (and Microbuild)
   - BAR
 
-
 ## I need help, who should I talk to?
 
-Contact 'dnceng' for additional guidance.  Either @dotnet/dnceng on GitHub, or
-dnceng@microsoft.com
+Contact 'dnceng' for additional guidance.  Either @dotnet/dnceng on GitHub, or dnceng@microsoft.com
