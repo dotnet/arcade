@@ -147,7 +147,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             async Task UploadWorkItemAsync(WorkItemTestResults workItem)
             {
+                if (workItem.TestResultFiles.Count == 0)
+                {
+                    _logger.LogInformation("No test results to upload for work item {WorkItemId} in job {JobName}", workItem.WorkItemName, workItem.JobName);
+                    return;
+                }
+
                 await semaphore.WaitAsync(cancellationToken);
+
                 try
                 {
                     _logger.LogDebug("Publishing test results for work item '{WorkItemName}' in job '{JobName}'...", workItem.WorkItemName, workItem.JobName);
