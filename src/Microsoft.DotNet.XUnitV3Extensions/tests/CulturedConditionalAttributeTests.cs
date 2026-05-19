@@ -17,20 +17,20 @@ namespace Microsoft.DotNet.XUnitExtensions.Tests
         public static bool AlwaysTrue => true;
         public static bool AlwaysFalse => false;
 
-        [CulturedConditionalFact(new[] { "en-US", "fr-FR" }, typeof(CulturedConditionalAttributeTests), nameof(AlwaysTrue))]
+        [CulturedConditionalFact(new[] { "en-US", "fr-FR" }, typeof(CulturedConditionalAttributeTests), new[] { nameof(AlwaysTrue) })]
         public void CulturedConditionalFactTrue()
         {
             // The current culture must be one of the requested cultures when the test runs.
             Assert.Contains(CultureInfo.CurrentCulture.Name, s_cultures);
         }
 
-        [CulturedConditionalFact(new[] { "en-US", "fr-FR" }, typeof(CulturedConditionalAttributeTests), nameof(AlwaysFalse))]
+        [CulturedConditionalFact(new[] { "en-US", "fr-FR" }, typeof(CulturedConditionalAttributeTests), new[] { nameof(AlwaysFalse) })]
         public void CulturedConditionalFactFalse()
         {
             Assert.Fail("This test should have been skipped.");
         }
 
-        [CulturedConditionalTheory(new[] { "en-US", "fr-FR" }, typeof(CulturedConditionalAttributeTests), nameof(AlwaysTrue))]
+        [CulturedConditionalTheory(new[] { "en-US", "fr-FR" }, typeof(CulturedConditionalAttributeTests), new[] { nameof(AlwaysTrue) })]
         [InlineData(1, "one")]
         [InlineData(2, "two")]
         public void CulturedConditionalTheoryTrue(int number, string name)
@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.XUnitExtensions.Tests
             Assert.Contains(CultureInfo.CurrentCulture.Name, s_cultures);
         }
 
-        [CulturedConditionalTheory(new[] { "en-US", "fr-FR" }, typeof(CulturedConditionalAttributeTests), nameof(AlwaysFalse))]
+        [CulturedConditionalTheory(new[] { "en-US", "fr-FR" }, typeof(CulturedConditionalAttributeTests), new[] { nameof(AlwaysFalse) })]
         [InlineData(1)]
         [InlineData(2)]
 #pragma warning disable xUnit1026 // Theory methods should use all of their parameters

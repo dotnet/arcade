@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Microsoft.DotNet.XUnitExtensions;
 
 namespace Xunit
@@ -18,8 +19,10 @@ namespace Xunit
             string[] cultures,
             [DynamicallyAccessedMembers(StaticReflectionConstants.ConditionalMemberKinds)]
             Type calleeType,
-            params string[] conditionMemberNames)
-            : base(cultures)
+            string[] conditionMemberNames,
+            [CallerFilePath] string sourceFilePath = null,
+            [CallerLineNumber] int sourceLineNumber = 0)
+            : base(cultures, sourceFilePath, sourceLineNumber)
         {
             CalleeType = calleeType;
             ConditionMemberNames = conditionMemberNames;
