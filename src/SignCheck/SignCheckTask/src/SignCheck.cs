@@ -3,10 +3,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine;
 using System.Net.Http;
 using System.IO;
 using System.Linq;
-using CommandLine;
 using System.Threading.Tasks;
 using Microsoft.SignCheck.Logging;
 using Microsoft.SignCheck.Verification;
@@ -127,14 +127,139 @@ namespace SignCheckTask
         public SignCheck(string[] args)
         {
             Options = new Options();
-            ParserResult<Options> parseResult = Parser.Default.ParseArguments<Options>(args).
-                WithParsed(options => HandleOptions(options)).
-                WithNotParsed<Options>(errors => HandleErrors(errors));
+            RootCommand rootCommand = BuildRootCommand(parsedOptions => HandleOptions(parsedOptions));
+            ParseResult parseResult = rootCommand.Parse(args);
+
+            if (parseResult.Errors.Count > 0)
+            {
+                foreach (var error in parseResult.Errors)
+                {
+                    Console.Error.WriteLine(error.Message);
+                }
+                HasArgErrors = true;
+                return;
+            }
+
+            // Invoke executes the registered action (which calls HandleOptions) or prints help.
+            // When --help/--version is requested, no action runs and Options is left in its initial state;
+            // signal that to callers so they don't attempt to run.
+            int invokeResult = parseResult.Invoke();
+            if (Log == null)
+            {
+                HasArgErrors = true;
+            }
         }
 
         public SignCheck(Options options)
         {
             HandleOptions(options ?? new Options());
+        }
+
+        private static RootCommand BuildRootCommand(Action<Options> onParsed)
+        {
+            Option<string> errorLogFileOption = new("--error-log-file", "-e")
+            {
+                Description = "Log errors to a separate file. If the file already exists it will be overwritten."
+            };
+            Option<string[]> fileStatusOption = new("--file-status", "-f")
+            {
+                Description = "Report the status of a specific set of files. Any combination of the following values are allowed. Values are separated by a ','. 'UnsignedFiles', 'SignedFiles', 'SkippedFiles', 'ExcludedFiles', 'AllFiles'. Default is 'UnsignedFiles'",
+                CustomParser = result => result.Tokens.SelectMany(t => t.Value.Split(',')).ToArray(),
+                AllowMultipleArgumentsPerToken = true
+            };
+            Option<string> exclusionsOutputOption = new("--generate-exclusions-file", "-g")
+            {
+                Description = "Name of the exclusions file to generate. The entries in the file are generated using reported unsigned files. If the file already exists it will be overwritten."
+            };
+            Option<string[]> inputFilesOption = new("--input-files", "-i")
+            {
+                Description = "A list of files to scan. Wildcards (* and ?) are supported. You can specify groups of files, e.g. C:\\Dir1\\Dir*\\File?.EXE or a URL (http or https).",
+                AllowMultipleArgumentsPerToken = true
+            };
+            Option<bool> enableJarOption = new("--verify-jar", "-j")
+            {
+                Description = "Enable JAR signature verification. By default, .jar files are no verified."
+            };
+            Option<string> logFileOption = new("--log-file", "-l")
+            {
+                Description = "Output results to the specified log file. If the file already exists it will be overwritten."
+            };
+            Option<string> resultsXmlFileOption = new("--results-xml-file")
+            {
+                Description = "Output signing results to the specified XML log file. If the file already exists it will be overwritten."
+            };
+            Option<bool> enableXmlOption = new("--verify-xml", "-m")
+            {
+                Description = "Enable XML signature verification. By default, .xml files are not verified."
+            };
+            Option<bool> skipTimestampOption = new("--skip-timestamp", "-p")
+            {
+                Description = "Ignore timestamp checks for AuthentiCode signatures."
+            };
+            Option<bool> recursiveOption = new("--recursive", "-r")
+            {
+                Description = "Traverse subdirectories or container files such as .zip, .nupkg, .cab, and .msi"
+            };
+            Option<bool> verifyStrongNameOption = new("--verify-strongname", "-s")
+            {
+                Description = "Enable strongname checks for managed code files (.exe and .dll)"
+            };
+            Option<bool> traverseSubFoldersOption = new("--traverse-subfolders", "-t")
+            {
+                Description = "Traverse subfolders to find files matching wildcard patterns used by the --input-files option."
+            };
+            Option<LogVerbosity> verbosityOption = new("--verbosity", "-v")
+            {
+                Description = "Set the verbosity level: Minimum, Normal, Detailed, Diagnostic.",
+                DefaultValueFactory = _ => LogVerbosity.Normal
+            };
+            Option<string> exclusionsFileOption = new("--exclusions-file", "-x")
+            {
+                Description = "Path to a file containing a list of files to ignore when verification fails. Exclusions are not reported as errors."
+            };
+
+            RootCommand rootCommand = new("SignCheck - Build artifact signing validation tool")
+            {
+                errorLogFileOption,
+                fileStatusOption,
+                exclusionsOutputOption,
+                inputFilesOption,
+                enableJarOption,
+                logFileOption,
+                resultsXmlFileOption,
+                enableXmlOption,
+                skipTimestampOption,
+                recursiveOption,
+                verifyStrongNameOption,
+                traverseSubFoldersOption,
+                verbosityOption,
+                exclusionsFileOption,
+            };
+
+            rootCommand.SetAction(result =>
+            {
+                Options options = new()
+                {
+                    ErrorLogFile = result.GetValue(errorLogFileOption),
+                    FileStatus = result.GetValue(fileStatusOption) ?? Array.Empty<string>(),
+                    ExclusionsOutput = result.GetValue(exclusionsOutputOption),
+                    InputFiles = result.GetValue(inputFilesOption) ?? Array.Empty<string>(),
+                    EnableJarSignatureVerification = result.GetValue(enableJarOption),
+                    LogFile = result.GetValue(logFileOption),
+                    ResultsXmlFile = result.GetValue(resultsXmlFileOption),
+                    EnableXmlSignatureVerification = result.GetValue(enableXmlOption),
+                    SkipTimestamp = result.GetValue(skipTimestampOption),
+                    Recursive = result.GetValue(recursiveOption),
+                    VerifyStrongName = result.GetValue(verifyStrongNameOption),
+                    TraverseSubFolders = result.GetValue(traverseSubFoldersOption),
+                    Verbosity = result.GetValue(verbosityOption),
+                    ExclusionsFile = result.GetValue(exclusionsFileOption),
+                };
+                onParsed(options);
+                return 0;
+            });
+
+            return rootCommand;
         }
 
         private void HandleOptions(Options options)
@@ -187,11 +312,6 @@ namespace SignCheckTask
             {
                 Directory.CreateDirectory(_appData);
             }
-        }
-
-        private void HandleErrors(IEnumerable<Error> errors)
-        {
-            HasArgErrors = true;
         }
 
         private List<string> GetInputFilesFromOptions()

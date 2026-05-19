@@ -68,7 +68,6 @@
     <PackageVersion Include="Azure.Core" Version="1.53.0" />
     <PackageVersion Include="Azure.Identity" Version="1.21.0" />
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.19.1" />
-    <PackageVersion Include="CommandLineParser" Version="2.9.1" />
     <PackageVersion Include="coverlet.collector" Version="10.0.1" />
     <PackageVersion Include="AwesomeAssertions" Version="9.0.0" />
     <PackageVersion Include="Handlebars.Net" Version="1.11.5" />

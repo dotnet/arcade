@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Utilities.Core" />
-    <PackageReference Include="CommandLineParser" />
+    <PackageReference Include="System.CommandLine" />
     <ProjectReference Include="..\Microsoft.SignCheck\Microsoft.DotNet.SignCheckLibrary.csproj" Publish="true" />
   </ItemGroup>
 
