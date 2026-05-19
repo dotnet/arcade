@@ -25,7 +25,7 @@
        * `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet8/nuget/v3/index.json` (replace "8" with the latest .NET version)
        along with any other feeds your repo needs to restore packages from. You can see which feeds Arcade uses at: [NuGet.config](../NuGet.config).
 
-    See the [Arcade documentation](StartHere.md) for information on using various Arcade SDK sub-systems.
+    See the [Arcade documentation](README.md) for information on using various Arcade SDK sub-systems.
 
 - Set up pipelines
   - Add pipeline to https://dnceng-public.visualstudio.com/public for public PR validation CI.

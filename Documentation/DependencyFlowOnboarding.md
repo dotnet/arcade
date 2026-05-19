@@ -16,7 +16,7 @@ The following pre-requisites are not hard requirements, but enabling dependency 
 
 - Internal builds produced out of https://dev.azure.com/dnceng/internal
 
-- Publishing using the [Arcade SDK](StartHere.md#im-ready-to-get-started-what-do-i-do)
+- Publishing using the [Arcade SDK](README.md#im-ready-to-get-started-what-do-i-do)
 
 ## Publishing
 
