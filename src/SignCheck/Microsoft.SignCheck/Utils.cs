@@ -17,6 +17,43 @@ namespace Microsoft.SignCheck
     {
         private static readonly HttpClient s_client = new(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(10) });
 
+        public static readonly char[] WildCards = new char[] { '*', '?' };
+
+        public static string[] GetDirectories(string path, string searchPattern, SearchOption searchOption)
+        {
+            if (path.IndexOfAny(WildCards) > -1)
+            {
+                var directoryPath = Path.GetDirectoryName(path);
+                var directory = Path.GetFileName(path);
+
+                var matchedDirectories = GetDirectories(directoryPath, directory, searchOption);
+                var directories = new System.Collections.Generic.List<string>();
+
+                if (searchPattern != null)
+                {
+                    foreach (var match in matchedDirectories)
+                    {
+                        directories.AddRange(Directory.GetDirectories(match, searchPattern, searchOption));
+                    }
+
+                    return directories.ToArray();
+                }
+                else
+                {
+                    return matchedDirectories;
+                }
+            }
+            else
+            {
+                if (searchPattern != null)
+                {
+                    return Directory.GetDirectories(path, searchPattern, searchOption);
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Generate a hash for a string value using a given hash algorithm.
         /// </summary>

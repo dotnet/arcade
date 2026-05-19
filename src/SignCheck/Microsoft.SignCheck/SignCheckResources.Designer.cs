@@ -509,5 +509,95 @@ namespace Microsoft.SignCheck {
                 return ResourceManager.GetString("XmlSignatureNodes", resourceCulture);
             }
         }
+        
+        internal static string scCannotFindFile {
+            get {
+                return ResourceManager.GetString("scCannotFindFile", resourceCulture);
+            }
+        }
+        
+        internal static string scDeleteExistingFile {
+            get {
+                return ResourceManager.GetString("scDeleteExistingFile", resourceCulture);
+            }
+        }
+        
+        internal static string scDirDoesNotExist {
+            get {
+                return ResourceManager.GetString("scDirDoesNotExist", resourceCulture);
+            }
+        }
+        
+        internal static string scDownloading {
+            get {
+                return ResourceManager.GetString("scDownloading", resourceCulture);
+            }
+        }
+        
+        internal static string scErrorCannotFindExclusionFile {
+            get {
+                return ResourceManager.GetString("scErrorCannotFindExclusionFile", resourceCulture);
+            }
+        }
+        
+        internal static string scErrorUnknownFileStatus {
+            get {
+                return ResourceManager.GetString("scErrorUnknownFileStatus", resourceCulture);
+            }
+        }
+        
+        internal static string scInputFileDoesNotExist {
+            get {
+                return ResourceManager.GetString("scInputFileDoesNotExist", resourceCulture);
+            }
+        }
+        
+        internal static string scNoFilesProcessed {
+            get {
+                return ResourceManager.GetString("scNoFilesProcessed", resourceCulture);
+            }
+        }
+        
+        internal static string scNoSignIssues {
+            get {
+                return ResourceManager.GetString("scNoSignIssues", resourceCulture);
+            }
+        }
+        
+        internal static string scProcessExclusions {
+            get {
+                return ResourceManager.GetString("scProcessExclusions", resourceCulture);
+            }
+        }
+        
+        internal static string scResults {
+            get {
+                return ResourceManager.GetString("scResults", resourceCulture);
+            }
+        }
+        
+        internal static string scSignIssuesFound {
+            get {
+                return ResourceManager.GetString("scSignIssuesFound", resourceCulture);
+            }
+        }
+        
+        internal static string scStats {
+            get {
+                return ResourceManager.GetString("scStats", resourceCulture);
+            }
+        }
+        
+        internal static string scSummary {
+            get {
+                return ResourceManager.GetString("scSummary", resourceCulture);
+            }
+        }
+        
+        internal static string scTime {
+            get {
+                return ResourceManager.GetString("scTime", resourceCulture);
+            }
+        }
     }
 }

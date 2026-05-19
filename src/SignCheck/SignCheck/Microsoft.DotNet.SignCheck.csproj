@@ -16,8 +16,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommandLineParser" />
-    <ProjectReference Include="..\SignCheckTask\Microsoft.DotNet.SignCheckTask.csproj" />
+    <PackageReference Include="System.CommandLine" />
+    <ProjectReference Include="..\Microsoft.SignCheck\Microsoft.DotNet.SignCheckLibrary.csproj" />
   </ItemGroup>
 
 </Project>
