@@ -1,25 +1,45 @@
-# Overview of VS2019 Policy 
-Provide a reasonable mechanism to scout new minor versions of VS 2019 (both preview and release) that will minimize disruption to existing production queues
+# Toolset Principles and Guidance
 
-## Definition used to determine release 
-The versioning format used below is <Major.Minor.Patch>. As an example for version 16.5.1, 16 is the major version, 5 is the minor and 1 is the patch version. 
+For purposes of this document, 'Toolset' refers to tools which create and/or modify the shipping product. 
 
-## Policy for supporting VS 2019 – Released version
-DNCEng will create a temporary image (build.windows.vs2019.scouting.open) with 5 machines (20 cores) for each minor release of Visual Studio that can use to validate any changes made to the product. 
+## Principles
 
-This queue will be activated approximately one week after the [release](https://docs.microsoft.com/en-us/visualstudio/releases/2019/release-notes) of a minor update and will be available for two weeks. After approximately 2 weeks, we will in-place update the existing images (any helix image containing *.vs2019) will be updated as part of a regularly scheduled Helix Machines release.
+- **Consistent and serviceable across the stack:** The minimum number of tool versions should be used with the ideal being one (serviceable) version per tool for the entire .NET Core product.
+- **Visible:** It must be obvious which tool is being used in which situation.
+- **For tools MSFT owns, the latest shipping version is used to build .NET Core:** Our product/s should be built using the last shipping version of our toolsets.
 
-Patch updates will be made directly to the queues as required by corporate security or when requested by customers
+## Policy / Guidance
 
-## Policy for supporting VS 2019 – Public Preview Versions
-DNCEng will create a temporary build image (e.g. build.windows.vs2019.pre.scouting.open) for each public preview of Visual Studio that can use to validate changes. This queue will be activated approximately one week after the release of [public preview](https://docs.microsoft.com/en-us/visualstudio/releases/2019/release-notes-preview) and will be available for two weeks. 
+### General
+- Which tool version used across the stack should be determined in one place.  For more comments on this, see farther below.
+- The latest shipped version of a tool should be used.  This implies ongoing diligence of the product teams to update toolset dependencies.
+- As needed, dependencies can be taken on brand new, non-shipping versions of a toolset, and conversely, older versions too - so long as tactics approves.
+- Tools should be bootstrapped into the build where ever possible.  It is recognized that this is not always reasonable (or even the best approach), but is still desireable as we try and get as close as possible to 'clone and build'.  NOTE: There will still need to be provision for source-build to build "offline".
 
-After approximagely two weeks, we will in-place update the existing images as part of a regularly scheduled Helix Machines release (typically Wednesdays)
+### Servicing (LTS)
+- All toolsets should be the latest RTM (serviceable) version for LTS.
+- Toolsets should only change as needed, and with explicit consent of tactics.
+  
+### VC toolset
+- VC tools are brought in via Visual Studio, preferably via the build sku.  Given the install limitations of VS and the Windows SDK, VC tools are provided via VM images which make up our build/test pools.   
+- Tools from the latest public preview of VS are available via a machine pool.  Private previews of VS are not widely available and are used for targeting testing only.
+- The guidance is to build against the latest RTM'd version of VC, and do testing on the latest public preview versions of VS, such that upgrades can be done with confidence. 
 
-## Policy for supporting VS 2019 – Private Preview Versions
-There is currently no Engineering Services support for providing VS private preview queues.
+### .NET SDK / Managed toolset
+- Arcade SDK (shared infra for .NET Core) must always reference the latest preview version of the .NET Core SDK at a minimum. Immediately after shipping a preview, Arcade will update its .NET Core SDK reference.
+- In cases where a newer version of the .NET Core SDK is needed, a non-shipping (newer) version can be referenced by the Arcade SDK with approval from tactics.
+- In cases where an older version of .NET (and by implication Roslyn) is needed, exceptions are supported via Arcade, but should be approved by tactics and considered highly temporary.
+- Roslyn version is brought in as a dependency via the Arcade SDK.  It is not recommended for any build to take a direct dependency on Roslyn
 
+### Linux native toolsets
+- The native \*nix build tools are mostly managed via Docker containers.
+- Where possible, the Docker containers should be shared across the teams.
 
-<!-- Begin Generated Content: Doc Feedback -->
-<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CVS2019SupportPolicy.md)](https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CVS2019SupportPolicy.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CVS2019SupportPolicy.md)</sub>
-<!-- End Generated Content-->
+### Mac native toolsets
+- Mac tools are managed via O/S itself.  Here too we have both hosted and private machine pools.
+
+### Other
+- Any other tools not directly called out should be managed via Arcade, and preferably bootstrapped in as part of the build.
+- All toolset updates will be communicated in advance by the engineering services team.
+- The implication here is that product teams should expect to deal with the toolsets updating on a relatively high cadence.  However, this in turn means that the delta will be much smaller for each update.
+- The latest version principle does not apply to .net runtimes and refpacks when used for compat testing
