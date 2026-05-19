@@ -21,7 +21,7 @@ CodeQL adds a significant time to builds. We therefore recommend creating a new,
 
 See https://aka.ms/codeql3000 for documentation.  Users with builds in the dnceng/internal org may now stand up a pipeline using the CodeQL 3000 tasks installed at the organization level
 
-Since this involves wrapping the user's specific build with Azure Pipelines tasks, the Arcade repo does not provide a template for this; however, an example of how this is done in dotnet/arcade can be seen at ../azure-pipelines-codeql.yml
+Since this involves wrapping the user's specific build with Azure Pipelines tasks, the Arcade repo does not provide a template for this; however, an example of how this is done in dotnet/arcade can be seen at [../azure-pipelines-codeql.yml](../azure-pipelines-codeql.yml)
 
 ``` yaml
 

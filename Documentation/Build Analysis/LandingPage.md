@@ -9,6 +9,6 @@ Explore all the features offered by build analysis:
 - [Known Issues](KnownIssues.md): Report known issues so these can be automatically identified and reported on failed builds.
 - [Automatic Test Retries](Test%20Retry%20Documentation.md): Configure tests in your repo's pull requests to automatically retry when they encounter specific errors.
 - [Automatic Build Retries](BuildRetryOnboard.md): Configure your repo's pull request builds to automatically retry when they encounter specific errors.
-- [Test Reporting Queries](https://github.com/dotnet/arcade/blob/a264eb13fea14125f3ef8d4056586cd66fa55309/Documentation/AzureDevOps/TestReportingQueries.md):  We've collected your test results data into Kusto for ease of querying and put together a few queries to get started.
+- [Test Reporting Queries](../AzureDevOps/TestReportingQueries.md):  We've collected your test results data into Kusto for ease of querying and put together a few queries to get started.
 - [Build Analysis Pipelines Filtering](FilteringPipelines.md): This feature allows you to specify which pipelines are analyzed by Build Analysis for each target branch.
-- [Build Analysis Pipelines Filtering](EscapeMechanismforBuildAnalysis.md): This feature allows users to override the build analysis conclusion and set it to a successful conclusion
+- [Escape Mechanism for Build Analysis](EscapeMechanismforBuildAnalysis.md): This feature allows users to override the build analysis conclusion and set it to a successful conclusion

@@ -32,4 +32,4 @@ If you want to also validate your private build of Arcade using a repository oth
     ```
     Your private build of Arcade will be pushed to that feed when you publish it to the `General Testing` channel.
 4. Using darc, run `update-dependencies` ([update-dependencies documentation](../Darc.md#updating-dependencies-in-your-local-repository)) on your branch to use the build of Arcade you just created in the previous steps. 
-5. Build your project and run the project's unit tests locally, and/or build your branch with your project's Azure DevOps pipeline. Ensure that the build pipeline excutes any tests (unit, integration, scenario, et cetera).
+5. Build your project and run the project's unit tests locally, and/or build your branch with your project's Azure DevOps pipeline. Ensure that the build pipeline executes any tests (unit, integration, scenario, et cetera).
