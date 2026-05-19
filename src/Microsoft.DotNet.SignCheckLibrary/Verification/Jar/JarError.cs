@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.DotNet.SignCheck.Verification.Jar
+namespace Microsoft.SignCheck.Verification.Jar
 {
     public static class JarError
     {

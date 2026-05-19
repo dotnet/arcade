@@ -7,7 +7,7 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Microsoft.DotNet.SignCheck.Verification.Jar
+namespace Microsoft.SignCheck.Verification.Jar
 {
     public static class JarUtils
     {

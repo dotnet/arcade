@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.IO;
 
-namespace Microsoft.DotNet.SignCheck.Verification
+namespace Microsoft.SignCheck.Verification
 {
     /// <summary>
     /// Represents an exclusion describing

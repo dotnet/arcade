@@ -8,10 +8,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
-using Microsoft.DotNet.SignCheck.Logging;
+using Microsoft.SignCheck.Logging;
 using System.Security.Cryptography;
 
-namespace Microsoft.DotNet.SignCheck.Verification
+namespace Microsoft.SignCheck.Verification
 {
     public class MachOVerifier : FileVerifier
     {

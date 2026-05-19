@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Microsoft.DotNet.SignCheck.Verification
+namespace Microsoft.SignCheck.Verification
 {
     public class Exclusions
     {

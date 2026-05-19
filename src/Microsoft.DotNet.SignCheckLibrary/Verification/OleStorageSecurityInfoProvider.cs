@@ -6,12 +6,12 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Security.Cryptography.Pkcs;
-using Microsoft.DotNet.SignCheck.Interop;
+using Microsoft.SignCheck.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
 
 #pragma warning disable CA1416 // Validate platform compatibility
 
-namespace Microsoft.DotNet.SignCheck.Verification
+namespace Microsoft.SignCheck.Verification
 {
     /// <summary>
     /// Reads digital signature information from OLE Compound Document files (MSI, MSP).

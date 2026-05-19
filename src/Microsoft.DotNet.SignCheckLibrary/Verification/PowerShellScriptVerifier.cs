@@ -5,9 +5,9 @@ using System;
 using System.IO;
 using System.Security.Cryptography.Pkcs;
 using System.Text.RegularExpressions;
-using Microsoft.DotNet.SignCheck.Logging;
+using Microsoft.SignCheck.Logging;
 
-namespace Microsoft.DotNet.SignCheck.Verification
+namespace Microsoft.SignCheck.Verification
 {
     public class PowerShellScriptVerifier : AuthentiCodeVerifier
     {

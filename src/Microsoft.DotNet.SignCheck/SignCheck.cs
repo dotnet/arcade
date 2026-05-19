@@ -4,10 +4,10 @@
 using System;
 using System.CommandLine;
 using System.Linq;
-using Microsoft.DotNet.SignCheck;
-using Microsoft.DotNet.SignCheck.Logging;
+using Microsoft.SignCheck;
+using Microsoft.SignCheck.Logging;
 
-namespace Microsoft.DotNet.SignCheck
+namespace SignCheck
 {
     internal static class Program
     {

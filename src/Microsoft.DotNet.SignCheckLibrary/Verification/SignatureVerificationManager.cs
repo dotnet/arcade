@@ -6,10 +6,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using Microsoft.DotNet.SignCheck.Interop.PortableExecutable;
-using Microsoft.DotNet.SignCheck.Logging;
+using Microsoft.SignCheck.Interop.PortableExecutable;
+using Microsoft.SignCheck.Logging;
 
-namespace Microsoft.DotNet.SignCheck.Verification
+namespace Microsoft.SignCheck.Verification
 {
     public class SignatureVerificationManager
     {

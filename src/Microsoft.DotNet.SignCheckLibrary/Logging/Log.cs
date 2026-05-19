@@ -3,9 +3,9 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.DotNet.SignCheck.Verification;
+using Microsoft.SignCheck.Verification;
 
-namespace Microsoft.DotNet.SignCheck.Logging
+namespace Microsoft.SignCheck.Logging
 {
     public class Log : ILogger
     {

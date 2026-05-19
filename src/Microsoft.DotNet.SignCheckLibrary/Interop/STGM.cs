@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Microsoft.DotNet.SignCheck.Interop
+namespace Microsoft.SignCheck.Interop
 {
     public class STGM
     {

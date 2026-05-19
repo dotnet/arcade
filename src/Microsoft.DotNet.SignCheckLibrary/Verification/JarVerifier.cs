@@ -4,10 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.DotNet.SignCheck.Logging;
-using Microsoft.DotNet.SignCheck.Verification.Jar;
+using Microsoft.SignCheck.Logging;
+using Microsoft.SignCheck.Verification.Jar;
 
-namespace Microsoft.DotNet.SignCheck.Verification
+namespace Microsoft.SignCheck.Verification
 {
     public class JarVerifier : FileVerifier
     {

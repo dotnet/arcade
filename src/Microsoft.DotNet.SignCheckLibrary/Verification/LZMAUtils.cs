@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using SevenZip.Compression.LZMA;
 
-namespace Microsoft.DotNet.SignCheck.Verification
+namespace Microsoft.SignCheck.Verification
 {
     public class LZMAUtils
     {

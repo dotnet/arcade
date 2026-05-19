@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.SignCheck.Interop.PortableExecutable
+namespace Microsoft.SignCheck.Interop.PortableExecutable
 {
     [StructLayout(LayoutKind.Explicit)]
     public struct IMAGE_OPTIONAL_HEADER32

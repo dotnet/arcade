@@ -6,11 +6,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.SignCheck;
-using Microsoft.DotNet.SignCheck.Logging;
+using Microsoft.SignCheck;
+using Microsoft.SignCheck.Logging;
 using BuildTask = Microsoft.Build.Utilities.Task;
 
-namespace Microsoft.DotNet.SignCheck
+namespace SignCheckTask
 {
     public class SignCheckTask : BuildTask
     {

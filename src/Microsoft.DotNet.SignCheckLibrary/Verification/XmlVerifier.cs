@@ -6,9 +6,9 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Xml;
 using System.Xml;
-using Microsoft.DotNet.SignCheck.Logging;
+using Microsoft.SignCheck.Logging;
 
-namespace Microsoft.DotNet.SignCheck.Verification
+namespace Microsoft.SignCheck.Verification
 {
     public class XmlVerifier : FileVerifier
     {

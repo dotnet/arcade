@@ -8,7 +8,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Microsoft.DotNet.SignCheck.Verification.Jar
+namespace Microsoft.SignCheck.Verification.Jar
 {
     /// <summary>
     /// A class that encapsulates the JAR's manifest (META-INF/MANIFEST.MF).

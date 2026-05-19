@@ -3,9 +3,9 @@
 
 using System;
 using System.IO;
-using Microsoft.DotNet.SignCheck.Logging;
+using Microsoft.SignCheck.Logging;
 
-namespace Microsoft.DotNet.SignCheck.Verification
+namespace Microsoft.SignCheck.Verification
 {
     public class FileVerifier
     {

@@ -5,12 +5,12 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.SignCheck.Logging;
+using Microsoft.SignCheck.Logging;
 using NuGet.Common;
 using NuGet.Packaging;
 using NuGet.Packaging.Signing;
 
-namespace Microsoft.DotNet.SignCheck.Verification
+namespace Microsoft.SignCheck.Verification
 {
     public class NupkgVerifier : ZipVerifier
     {

@@ -2,9 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Collections.Generic;
-using Microsoft.DotNet.SignCheck.Logging;
+using Microsoft.SignCheck.Logging;
 
-namespace Microsoft.DotNet.SignCheck
+namespace Microsoft.SignCheck
 {
     public class Options
     {

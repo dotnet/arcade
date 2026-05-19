@@ -9,11 +9,11 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
-using Microsoft.DotNet.SignCheck.Interop;
-using Microsoft.DotNet.SignCheck.Logging;
+using Microsoft.SignCheck.Interop;
+using Microsoft.SignCheck.Logging;
 using System.Reflection.PortableExecutable;
 
-namespace Microsoft.DotNet.SignCheck.Verification
+namespace Microsoft.SignCheck.Verification
 {
     /// <summary>
     /// A generic FileVerifier that can be used to validate AuthentiCode signatures

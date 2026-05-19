@@ -2,9 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using Microsoft.DotNet.SignCheck.Verification;
+using Microsoft.SignCheck.Verification;
 
-namespace Microsoft.DotNet.SignCheck.Logging
+namespace Microsoft.SignCheck.Logging
 {
     public class ConsoleLogger : LoggerBase, ILogger
     {

@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.SignCheck.Interop.PortableExecutable
+namespace Microsoft.SignCheck.Interop.PortableExecutable
 {
     // See https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-image_data_directory
     [StructLayout(LayoutKind.Explicit)]

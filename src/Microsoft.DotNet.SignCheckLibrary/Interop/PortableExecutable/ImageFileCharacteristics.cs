@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Microsoft.DotNet.SignCheck.Interop.PortableExecutable
+namespace Microsoft.SignCheck.Interop.PortableExecutable
 {
     [Flags]
     public enum ImageFileCharacteristics : ushort

@@ -1,9 +1,9 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.DotNet.SignCheck.Verification;
+using Microsoft.SignCheck.Verification;
 
-namespace Microsoft.DotNet.SignCheck.Logging
+namespace Microsoft.SignCheck.Logging
 {
     public interface ILogger
     {

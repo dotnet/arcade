@@ -3,10 +3,10 @@
 
 using System.IO;
 using System.Runtime.Versioning;
-using Microsoft.DotNet.SignCheck.Interop;
-using Microsoft.DotNet.SignCheck.Logging;
+using Microsoft.SignCheck.Interop;
+using Microsoft.SignCheck.Logging;
 
-namespace Microsoft.DotNet.SignCheck.Verification
+namespace Microsoft.SignCheck.Verification
 {
     [SupportedOSPlatform("windows")]
     public class MspVerifier : AuthentiCodeVerifier

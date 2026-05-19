@@ -6,9 +6,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Collections.Generic;
 using System.Formats.Tar;
-using Microsoft.DotNet.SignCheck.Logging;
+using Microsoft.SignCheck.Logging;
 
-namespace Microsoft.DotNet.SignCheck.Verification
+namespace Microsoft.SignCheck.Verification
 {
     public class TarVerifier : PgpVerifier
     {

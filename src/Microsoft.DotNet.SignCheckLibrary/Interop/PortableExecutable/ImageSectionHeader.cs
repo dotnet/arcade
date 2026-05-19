@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.SignCheck.Interop
+namespace Microsoft.SignCheck.Interop
 {
     [StructLayout(LayoutKind.Explicit)]
     public struct IMAGE_SECTION_HEADER

@@ -7,7 +7,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.SignCheck.Interop.PortableExecutable
+namespace Microsoft.SignCheck.Interop.PortableExecutable
 {
     public class PortableExecutableHeader
     {

@@ -4,7 +4,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.SignCheck.Interop
+namespace Microsoft.SignCheck.Interop
 {
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     public struct WinTrustFileInfo

@@ -5,7 +5,7 @@ using System;
 using System.Runtime.InteropServices;
 using FILETIME = System.Runtime.InteropServices.ComTypes.FILETIME;
 
-namespace Microsoft.DotNet.SignCheck.Interop
+namespace Microsoft.SignCheck.Interop
 {
     // See WinCrypt.h
     // See https://support.microsoft.com/en-us/help/323809/how-to-get-information-from-authenticode-signed-executables
