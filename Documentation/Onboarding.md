@@ -4,7 +4,7 @@
   interacting with Azure DevOps, as well as shared tooling for signing,
   packaging, publishing and general build infrastructure.  
   
-  Resources: [Reference documentation](ArcadeSdk.md), [walkthough video](https://msit.microsoftstream.com/video/e22d2dad-ef72-4cca-9b62-7e33621f86a1).
+  Resources: [Reference documentation](ArcadeSdk.md), [walkthrough video](https://msit.microsoftstream.com/video/e22d2dad-ef72-4cca-9b62-7e33621f86a1).
 
    Steps:
     1. Add a [global.json](../global.json).
