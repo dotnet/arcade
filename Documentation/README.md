@@ -80,7 +80,6 @@ some highlights
     - Tasks and Templates
   - [Darc](Darc.md): Arcade's dependency management system
   - [Maestro](Maestro.md): CI automation of dependency flow
-  - Mission Control
 
 #### Testing projects
   - Helix: [Introduction](/Documentation/Helix.md), [SDK](../src/Microsoft.DotNet.Helix/Sdk/Readme.md), [JobSender](../src/Microsoft.DotNet.Helix/JobSender/Readme.md)
