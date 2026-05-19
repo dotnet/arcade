@@ -4,7 +4,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.SignCheck.Interop
+namespace Microsoft.DotNet.SignCheck.Interop
 {
     // See http://msdn.microsoft.com/en-us/library/aa388205(v=VS.85).aspx
     public static class WinTrust {

@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.SignCheck.Verification.Jar
+namespace Microsoft.DotNet.SignCheck.Verification.Jar
 {
     /// <summary>
     /// Represents a collection of individual entries inside a manifest file (.SF/.MF).

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Microsoft.SignCheck.Interop.PortableExecutable
+namespace Microsoft.DotNet.SignCheck.Interop.PortableExecutable
 {
     // See winnt.h and  https://docs.microsoft.com/en-us/windows/desktop/api/winnt/ns-winnt-_image_optional_header
     public enum ImageOptionalHeaderMagic : ushort

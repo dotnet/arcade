@@ -5,9 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
-using Microsoft.SignCheck.Logging;
+using Microsoft.DotNet.SignCheck.Logging;
 
-namespace Microsoft.SignCheck.Verification
+namespace Microsoft.DotNet.SignCheck.Verification
 {
     public abstract class ArchiveVerifier : FileVerifier
     {

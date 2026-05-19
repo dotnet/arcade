@@ -9,7 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.IO.Compression;
 
-namespace Microsoft.SignCheck.Verification.Jar
+namespace Microsoft.DotNet.SignCheck.Verification.Jar
 {
     /// <summary>
     /// Base class for manifest files.

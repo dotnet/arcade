@@ -4,7 +4,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using Microsoft.SignCheck.Logging;
+using Microsoft.DotNet.SignCheck.Logging;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Linq;
@@ -12,7 +12,7 @@ using Microsoft.DotNet.MacOsPkg.Core;
 using Microsoft.Tools.WindowsInstallerXml;
 using System.IO.Pipelines;
 
-namespace Microsoft.SignCheck.Verification
+namespace Microsoft.DotNet.SignCheck.Verification
 {
     public class PkgVerifier : ArchiveVerifier
     {

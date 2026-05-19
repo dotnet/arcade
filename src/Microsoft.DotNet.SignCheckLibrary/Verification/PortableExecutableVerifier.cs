@@ -3,11 +3,11 @@
 
 using System;
 using System.IO;
-using Microsoft.SignCheck.Interop.PortableExecutable;
-using Microsoft.SignCheck.Logging;
+using Microsoft.DotNet.SignCheck.Interop.PortableExecutable;
+using Microsoft.DotNet.SignCheck.Logging;
 using Microsoft.DotNet.StrongName;
 
-namespace Microsoft.SignCheck.Verification
+namespace Microsoft.DotNet.SignCheck.Verification
 {
     /// <summary>
     /// A generic verifier for portable executables (EXEs and DLLs).

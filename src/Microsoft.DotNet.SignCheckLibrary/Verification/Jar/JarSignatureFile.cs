@@ -8,10 +8,10 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Pkcs;
-using Microsoft.SignCheck.Interop;
+using Microsoft.DotNet.SignCheck.Interop;
 using NuGet.Packaging.Signing;
 
-namespace Microsoft.SignCheck.Verification.Jar
+namespace Microsoft.DotNet.SignCheck.Verification.Jar
 {
     public class JarSignatureFile : JarManifestFileBase
     {

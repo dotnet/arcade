@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Microsoft.SignCheck.Verification
+namespace Microsoft.DotNet.SignCheck.Verification
 {
     public class Timestamp
     {

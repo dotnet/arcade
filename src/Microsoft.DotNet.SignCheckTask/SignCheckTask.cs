@@ -6,11 +6,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
-using Microsoft.SignCheck;
-using Microsoft.SignCheck.Logging;
+using Microsoft.DotNet.SignCheck;
+using Microsoft.DotNet.SignCheck.Logging;
 using BuildTask = Microsoft.Build.Utilities.Task;
 
-namespace SignCheckTask
+namespace Microsoft.DotNet.SignCheck
 {
     public class SignCheckTask : BuildTask
     {
@@ -90,7 +90,7 @@ namespace SignCheckTask
                         }
                         else if (matchedFiles.Length == 0)
                         {
-                            Log.LogError($"Unable to find file '{checkFile}' in folder '{ArtifactFolder}'.  Try specifying 'Recursive=true` to include subfolders");
+                            Log.LogError($"Unable to find file '{checkFile}' in folder '{ArtifactFolder}'.  Try specifying 'Recursive=true' to include subfolders");
                         }
                         else if (matchedFiles.Length > 1)
                         {

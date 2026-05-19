@@ -3,7 +3,7 @@
 
 using System.Security.Cryptography.Pkcs;
 
-namespace Microsoft.SignCheck.Verification
+namespace Microsoft.DotNet.SignCheck.Verification
 {
     public interface ISecurityInfoProvider
     {

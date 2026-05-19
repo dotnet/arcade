@@ -4,10 +4,10 @@
 using System;
 using System.IO;
 using System.Linq;
-using Microsoft.SignCheck.Logging;
+using Microsoft.DotNet.SignCheck.Logging;
 using Microsoft.Tools.WindowsInstallerXml;
 
-namespace Microsoft.SignCheck.Verification
+namespace Microsoft.DotNet.SignCheck.Verification
 {
     public class ExeVerifier : PortableExecutableVerifier
     {

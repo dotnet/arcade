@@ -4,9 +4,9 @@
 using System;
 using System.IO;
 using System.Xml;
-using Microsoft.SignCheck.Verification;
+using Microsoft.DotNet.SignCheck.Verification;
 
-namespace Microsoft.SignCheck.Logging
+namespace Microsoft.DotNet.SignCheck.Logging
 {
     public class FileLogger : LoggerBase, ILogger
     {

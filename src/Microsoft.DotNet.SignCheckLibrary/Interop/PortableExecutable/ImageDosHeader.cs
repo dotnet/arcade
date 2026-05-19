@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.SignCheck.Interop.PortableExecutable
+namespace Microsoft.DotNet.SignCheck.Interop.PortableExecutable
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct IMAGE_DOS_HEADER

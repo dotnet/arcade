@@ -5,7 +5,7 @@ using System;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.OLE.Interop;
 
-namespace Microsoft.SignCheck.Interop
+namespace Microsoft.DotNet.SignCheck.Interop
 {
     public static class Ole32
     {

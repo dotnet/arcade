@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using System.Security.Cryptography.Pkcs;
 
-namespace Microsoft.SignCheck.Verification
+namespace Microsoft.DotNet.SignCheck.Verification
 {
     /// <summary>
     /// Reads digital signature information from Cabinet (.cab) files.

@@ -4,10 +4,10 @@
 using System;
 using System.CommandLine;
 using System.Linq;
-using Microsoft.SignCheck;
-using Microsoft.SignCheck.Logging;
+using Microsoft.DotNet.SignCheck;
+using Microsoft.DotNet.SignCheck.Logging;
 
-namespace SignCheck
+namespace Microsoft.DotNet.SignCheck
 {
     internal static class Program
     {
@@ -38,7 +38,7 @@ namespace SignCheck
 
             Option<bool> verifyJarOption = new("--verify-jar", "-j")
             {
-                Description = "Enable JAR signature verification. By default, .jar files are no verified."
+                Description = "Enable JAR signature verification. By default, .jar files are not verified."
             };
 
             Option<string> logFileOption = new("--log-file", "-l")

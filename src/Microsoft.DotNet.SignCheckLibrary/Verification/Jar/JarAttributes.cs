@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace Microsoft.SignCheck.Verification.Jar
+namespace Microsoft.DotNet.SignCheck.Verification.Jar
 {
     public class JarAttributes : Dictionary<string, string>
     {

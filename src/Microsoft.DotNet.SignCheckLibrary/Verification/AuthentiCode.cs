@@ -10,9 +10,9 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Pkcs;
-using Microsoft.SignCheck.Interop;
+using Microsoft.DotNet.SignCheck.Interop;
 
-namespace Microsoft.SignCheck.Verification
+namespace Microsoft.DotNet.SignCheck.Verification
 {
     public static class AuthentiCode
     {

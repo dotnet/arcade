@@ -11,7 +11,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Formats.Tar;
 
-namespace Microsoft.SignCheck
+namespace Microsoft.DotNet.SignCheck
 {
     public static class Utils
     {

@@ -5,9 +5,9 @@ using System;
 using System.IO;
 using System.Security.Cryptography.Pkcs;
 using System.Text.RegularExpressions;
-using Microsoft.SignCheck.Logging;
+using Microsoft.DotNet.SignCheck.Logging;
 
-namespace Microsoft.SignCheck.Verification
+namespace Microsoft.DotNet.SignCheck.Verification
 {
     public class JavaScriptVerifier : AuthentiCodeVerifier
     {

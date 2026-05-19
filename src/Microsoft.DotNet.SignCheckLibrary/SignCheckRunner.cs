@@ -7,10 +7,10 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Microsoft.SignCheck.Logging;
-using Microsoft.SignCheck.Verification;
+using Microsoft.DotNet.SignCheck.Logging;
+using Microsoft.DotNet.SignCheck.Verification;
 
-namespace Microsoft.SignCheck
+namespace Microsoft.DotNet.SignCheck
 {
     public class SignCheckRunner
     {

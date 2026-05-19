@@ -10,7 +10,7 @@ using STATSTG = Microsoft.VisualStudio.OLE.Interop.STATSTG;
 
 #pragma warning disable CA1416 // Validate platform compatibility
 
-namespace Microsoft.SignCheck.Interop
+namespace Microsoft.DotNet.SignCheck.Interop
 {
     // This code is a C# adaptation of MSIX:
     // https://blogs.msdn.microsoft.com/heaths/2006/02/27/identifying-windows-installer-file-types/

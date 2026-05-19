@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>$(NetMinimum)</TargetFramework>
-    <RootNamespace>Microsoft.SignCheck</RootNamespace>
+    <RootNamespace>Microsoft.DotNet.SignCheck</RootNamespace>
     <ExcludeFromSourceOnlyBuild>true</ExcludeFromSourceOnlyBuild>
   </PropertyGroup>
 
@@ -38,10 +38,10 @@
   <ItemGroup>
     <EmbeddedResource Update="SignCheckResources.resx"
                       GenerateSource="true"
-                      ClassName="Microsoft.SignCheck.SignCheckResources" />
+                      ClassName="Microsoft.DotNet.SignCheck.SignCheckResources" />
     <EmbeddedResource Update="Verification\Jar\JarResources.resx"
                       GenerateSource="true"
-                      ClassName="Microsoft.SignCheck.Verification.Jar.JarResources" />
+                      ClassName="Microsoft.DotNet.SignCheck.Verification.Jar.JarResources" />
   </ItemGroup>
 
 </Project>

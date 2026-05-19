@@ -8,7 +8,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Microsoft.SignCheck.Verification.Jar
+namespace Microsoft.DotNet.SignCheck.Verification.Jar
 {
     public class JarFile
     {
