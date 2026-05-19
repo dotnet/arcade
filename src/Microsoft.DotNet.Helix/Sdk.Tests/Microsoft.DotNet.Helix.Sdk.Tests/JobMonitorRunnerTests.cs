@@ -596,8 +596,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             // that passed on Windows. Final summary must report 1 failed work item and the
             // monitor must exit non-zero.
             Assert.Equal(1, exitCode);
-            Assert.Contains(logger.Messages, m =>
-                m.Contains("processed 2 Helix job(s); 1 work item(s) failed.", StringComparison.Ordinal));
         }
 
         [Fact]

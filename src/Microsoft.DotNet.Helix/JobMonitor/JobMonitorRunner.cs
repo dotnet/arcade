@@ -123,13 +123,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             try
             {
-                EntryResubmissionResult entryResubmission = await ResubmitFailedJobsAsync(cancellationToken);
+                JobResubmissionResult jobResubmission = await ResubmitFailedJobsAsync(cancellationToken);
 
                 return await RunLoopAsync(
                     processedHelixJobs,
                     associatedJobs,
-                    entryResubmission.RetryingHelixSubmitterJobs,
-                    entryResubmission.JobsForFirstPoll,
+                    jobResubmission,
                     cancellationToken);
             }
             catch (OperationCanceledException)
@@ -148,8 +147,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private async Task<int> RunLoopAsync(
             HashSet<string> processedHelixJobs,
             HashSet<HelixJobInfo> associatedJobs,
-            HashSet<string> retryingHelixSubmitterJobs,
-            IReadOnlyList<HelixJobInfo> jobsForFirstPoll,
+            JobResubmissionResult jobResubmission,
             CancellationToken cancellationToken)
         {
             bool anyNonMonitorJobFailures = false;
@@ -163,11 +161,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 cancellationToken.ThrowIfCancellationRequested();
 
                 IReadOnlyList<AzureDevOpsTimelineRecord> timelineRecords = await _azdo.GetTimelineRecordsAsync(cancellationToken);
-                IReadOnlyList<HelixJobInfo> associatedJobsWithBuild = jobsForFirstPoll ?? await _helix.GetJobsForBuildAsync(
+                IReadOnlyList<HelixJobInfo> associatedJobsWithBuild = jobResubmission.JobsForFirstPoll ?? await _helix.GetJobsForBuildAsync(
                     _helixSource,
                     _options.BuildId,
                     cancellationToken);
-                jobsForFirstPoll = null;
+                jobResubmission = jobResubmission with { JobsForFirstPoll = null };
 
                 // Drop timeline records and Helix jobs that belong to other stages so they don't
                 // gate completion or contribute failures.
@@ -226,7 +224,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 anyNonMonitorJobFailures = HelixJobMonitorUtilities.HasFailedNonMonitorJobs(
                     timelineRecords,
                     _options.JobMonitorName,
-                    retryingHelixSubmitterJobs);
+                    jobResubmission.RetryingHelixSubmitterJobs);
                 bool allPipelineJobsComplete = HelixJobMonitorUtilities.AreNonMonitorJobsComplete(timelineRecords, _options.JobMonitorName);
                 bool allHelixJobsComplete = associatedJobsWithBuild.Count == 0 || associatedJobsWithBuild.All(j => completedJobNames.Contains(j.JobName));
 
@@ -234,8 +232,20 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 {
                     await WaitForPendingTestResultUploadsAsync(cancellationToken);
                     bool anyWorkItemFailed = _workItemOutcomes.Values.Any(passed => !passed);
-                    _logger.LogInformation("Final summary: processed {ProcessedCount} Helix job(s); {FailedWorkItems} work item(s) failed.",
-                        processedHelixJobCount, _workItemOutcomes.Values.Count(passed => !passed));
+                    int totalWorkItems = _workItemOutcomes.Count;
+                    int failedWorkItems = _workItemOutcomes.Values.Count(passed => !passed);
+                    _logger.LogInformation(
+                        "📊 Final summary:{nl}"
+                      + "   Jobs:       {TotalJobs} submitted / {ResubmittedJobs} resubmitted / {ProcessedJobs} processed{nl}"
+                      + "   Work items: {TotalWorkItems} submitted / {ResubmittedWorkItems} resubmitted / {FailedWorkItems} still failing",
+                        Environment.NewLine,
+                        associatedJobs.Count,
+                        jobResubmission.ResubmittedJobCount,
+                        processedHelixJobCount,
+                        Environment.NewLine,
+                        totalWorkItems,
+                        jobResubmission.ResubmittedWorkItemCount,
+                        failedWorkItems);
                     LogFinalFailedWorkItemConsoleInfo();
 
                     if (anyNonMonitorJobFailures || anyWorkItemFailed)
@@ -727,12 +737,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private static string GetConsoleOutputText(string consoleOutputUri)
             => string.IsNullOrEmpty(consoleOutputUri) ? "no console link available" : consoleOutputUri;
 
-        private async Task<EntryResubmissionResult> ResubmitFailedJobsAsync(CancellationToken cancellationToken)
+        private async Task<JobResubmissionResult> ResubmitFailedJobsAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("🔁 Checking for failed Helix jobs to resubmit the failed work items...");
 
             var retryingHelixSubmitterJobs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var resubmittedJobs = new List<HelixJobInfo>();
+            int resubmittedWorkItemCount = 0;
 
             // This snapshot is taken when the monitor starts. Failed latest work items here are
             // not retried again until the monitor starts again, even if they fail during this run.
@@ -758,6 +769,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     if (resubmittedJob != null)
                     {
                         resubmittedJobs.Add(resubmittedJob);
+                        resubmittedWorkItemCount += failedWorkItems.Count;
 
                         if (!string.IsNullOrEmpty(completedJob.SubmitterJobName))
                         {
@@ -772,9 +784,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 _logger.LogInformation("No failed jobs found to resubmit");
             }
 
-            return new EntryResubmissionResult(
+            return new JobResubmissionResult(
                 retryingHelixSubmitterJobs,
-                [..scopedJobs, ..resubmittedJobs]);
+                [..scopedJobs, ..resubmittedJobs],
+                resubmittedJobs.Count,
+                resubmittedWorkItemCount);
         }
 
         private bool IsHelixJobInScope(HelixJobInfo job)
@@ -823,9 +837,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return depth;
         }
 
-        private sealed record EntryResubmissionResult(
+        private sealed record JobResubmissionResult(
             HashSet<string> RetryingHelixSubmitterJobs,
-            IReadOnlyList<HelixJobInfo> JobsForFirstPoll);
+            IReadOnlyList<HelixJobInfo> JobsForFirstPoll,
+            int ResubmittedJobCount,
+            int ResubmittedWorkItemCount);
 
         private sealed record FailedWorkItemConsoleInfo(
             string JobName,
