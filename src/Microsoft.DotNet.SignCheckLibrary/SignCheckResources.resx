@@ -258,6 +258,51 @@
   <data name="ProcessingFile" xml:space="preserve">
     <value>Processing {0} (parent: {1})</value>
   </data>
+  <data name="scCannotFindFile" xml:space="preserve">
+    <value>Unable to find {0}.</value>
+  </data>
+  <data name="scDeleteExistingFile" xml:space="preserve">
+    <value>{0} already exists. Deleting...</value>
+  </data>
+  <data name="scDirDoesNotExist" xml:space="preserve">
+    <value>Unable to find directory {0}.</value>
+  </data>
+  <data name="scDownloading" xml:space="preserve">
+    <value>Downloading {0} to {1}.</value>
+  </data>
+  <data name="scErrorCannotFindExclusionFile" xml:space="preserve">
+    <value>Cannot find exclusion file: {0}.</value>
+  </data>
+  <data name="scErrorUnknownFileStatus" xml:space="preserve">
+    <value>Unknown value for --file-status: {0}.</value>
+  </data>
+  <data name="scInputFileDoesNotExist" xml:space="preserve">
+    <value>Unable to locate {0}.</value>
+  </data>
+  <data name="scNoFilesProcessed" xml:space="preserve">
+    <value>No files were processed.</value>
+  </data>
+  <data name="scNoSignIssues" xml:space="preserve">
+    <value>No signing issues found</value>
+  </data>
+  <data name="scProcessExclusions" xml:space="preserve">
+    <value>Processing exclusions list in {0}</value>
+  </data>
+  <data name="scResults" xml:space="preserve">
+    <value>Results</value>
+  </data>
+  <data name="scSignIssuesFound" xml:space="preserve">
+    <value>Signing issues found</value>
+  </data>
+  <data name="scStats" xml:space="preserve">
+    <value>Total Files: {0}, Signed: {1}, Unsigned: {2}, Skipped: {3}, Excluded: {4}, Skipped &amp; Excluded: {5}, Not Unpacked: {6}</value>
+  </data>
+  <data name="scSummary" xml:space="preserve">
+    <value />
+  </data>
+  <data name="scTime" xml:space="preserve">
+    <value>Total Time: {0:c}</value>
+  </data>
   <data name="VsixChainBuildFailed" xml:space="preserve">
     <value>Failed to build certificate chain.</value>
   </data>
