@@ -3,17 +3,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
 using System.IO;
 using System.Linq;
-using CommandLine;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.SignCheck.Logging;
 using Microsoft.SignCheck.Verification;
 
-namespace SignCheckTask
+namespace Microsoft.SignCheck
 {
-    public class SignCheck
+    public class SignCheckRunner
     {
         private static readonly char[] _wildcards = new char[] { '*', '?' };
 
@@ -22,23 +21,11 @@ namespace SignCheckTask
 
         internal List<string> _inputFiles;
 
-        internal Exclusions Exclusions
-        {
-            get;
-            set;
-        }
+        internal Exclusions Exclusions { get; set; }
 
-        internal bool LoggedResults
-        {
-            get;
-            set;
-        }
+        internal bool LoggedResults { get; set; }
 
-        internal string[] ResultDetails
-        {
-            get;
-            set;
-        }
+        internal string[] ResultDetails { get; set; }
 
         internal IEnumerable<string> InputFiles
         {
@@ -52,87 +39,29 @@ namespace SignCheckTask
             }
         }
 
-        public FileStatus FileStatus
-        {
-            get;
-            set;
-        }
+        public FileStatus FileStatus { get; set; }
 
-        public bool HasArgErrors
-        {
-            get;
-            set;
-        }
+        public Options Options { get; set; }
 
-        public Options Options
-        {
-            get;
-            set;
-        }
+        public bool NoSignIssues { get; set; }
 
-        public bool NoSignIssues
-        {
-            get;
-            set;
-        }
+        public Log Log { get; set; }
 
-        public Log Log
-        {
-            get;
-            set;
-        }
+        public int TotalFiles { get; set; }
 
-        public int TotalFiles
-        {
-            get;
-            set;
-        }
+        public int TotalUnsignedFiles { get; set; }
 
-        public int TotalUnsignedFiles
-        {
-            get;
-            set;
-        }
+        public int TotalSignedFiles { get; set; }
 
-        public int TotalSignedFiles
-        {
-            get;
-            set;
-        }
+        public int TotalSkippedFiles { get; set; }
 
-        public int TotalSkippedFiles
-        {
-            get;
-            set;
-        }
+        public int TotalDoNotUnpackFiles { get; set; }
 
-        public int TotalDoNotUnpackFiles
-        {
-            get;
-            set;
-        }
+        public int TotalExcludedFiles { get; set; }
 
-        public int TotalExcludedFiles
-        {
-            get;
-            set;
-        }
+        public int TotalSkippedExcludedFiles { get; set; }
 
-        public int TotalSkippedExcludedFiles
-        {
-            get;
-            set;
-        }
-
-        public SignCheck(string[] args)
-        {
-            Options = new Options();
-            ParserResult<Options> parseResult = Parser.Default.ParseArguments<Options>(args).
-                WithParsed(options => HandleOptions(options)).
-                WithNotParsed<Options>(errors => HandleErrors(errors));
-        }
-
-        public SignCheck(Options options)
+        public SignCheckRunner(Options options)
         {
             HandleOptions(options ?? new Options());
         }
@@ -143,13 +72,12 @@ namespace SignCheckTask
 
             Log = new Log(options.LogFile, options.ErrorLogFile, options.ResultsXmlFile, options.Verbosity);
 
-            if (Options.FileStatus.Count() > 0)
+            if (Options.FileStatus != null && Options.FileStatus.Count() > 0)
             {
                 FileStatus = FileStatus.NoFiles;
                 foreach (string value in Options.FileStatus)
                 {
-                    FileStatus result;
-                    if (Enum.TryParse<FileStatus>(value, out result))
+                    if (Enum.TryParse<FileStatus>(value, out FileStatus result))
                     {
                         FileStatus |= result;
                     }
@@ -157,10 +85,6 @@ namespace SignCheckTask
                     {
                         Log.WriteError(LogVerbosity.Minimum, SignCheckResources.scErrorUnknownFileStatus, value);
                     }
-                }
-
-                if (FileStatus == FileStatus.NoFiles)
-                {
                 }
             }
             else
@@ -189,11 +113,6 @@ namespace SignCheckTask
             }
         }
 
-        private void HandleErrors(IEnumerable<Error> errors)
-        {
-            HasArgErrors = true;
-        }
-
         private List<string> GetInputFilesFromOptions()
         {
             var inputFiles = new List<string>();
@@ -204,9 +123,7 @@ namespace SignCheckTask
             }
             foreach (string inputFile in Options.InputFiles)
             {
-                Uri uriResult;
-
-                if ((Uri.TryCreate(inputFile, UriKind.Absolute, out uriResult)) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
+                if ((Uri.TryCreate(inputFile, UriKind.Absolute, out Uri uriResult)) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
                 {
                     string downloadPath = Path.Combine(_appData, Path.GetFileName(uriResult.LocalPath));
                     inputFiles.Add(downloadPath);

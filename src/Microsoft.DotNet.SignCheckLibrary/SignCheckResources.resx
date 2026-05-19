@@ -117,6 +117,147 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ArgumentNullOrEmpty" xml:space="preserve">
+    <value>'{0}' cannot be null or empty.</value>
+  </data>
+  <data name="DetailCertChainValid" xml:space="preserve">
+    <value>Certificate chain appears valid.</value>
+  </data>
+  <data name="DetailDoNotSignFileSigned" xml:space="preserve">
+    <value>{0} matches a DO-NOT-SIGN exclusion and is signed.</value>
+  </data>
+  <data name="DetailErrorFailedToBuildCertChain" xml:space="preserve">
+    <value>Failed to build certificate chain.</value>
+  </data>
+  <data name="DetailExcluded" xml:space="preserve">
+    <value>Excluded</value>
+  </data>
+  <data name="DetailFile" xml:space="preserve">
+    <value>File: {0}</value>
+  </data>
+  <data name="DetailFullName" xml:space="preserve">
+    <value>Full Name: {0}</value>
+  </data>
+  <data name="DetailHResult" xml:space="preserve">
+    <value>hresult={0:x8}</value>
+  </data>
+  <data name="DetailIdentifyByHeaderAsType" xml:space="preserve">
+    <value>File identified as {0} using file header.</value>
+  </data>
+  <data name="DetailMiscFileType" xml:space="preserve">
+    <value>File type: {0} (inferred)</value>
+  </data>
+  <data name="DetailNativeImage" xml:space="preserve">
+    <value>No StrongName signature (NGEN/CrossGen image).</value>
+  </data>
+  <data name="DetailPublicKeyToken" xml:space="preserve">
+    <value>Public key = {0}</value>
+  </data>
+  <data name="DetailSigned" xml:space="preserve">
+    <value>Signed: {0}</value>
+  </data>
+  <data name="DetailSignedAuthentiCode" xml:space="preserve">
+    <value>AuthentiCode signed: {0}</value>
+  </data>
+  <data name="DetailSignedStrongName" xml:space="preserve">
+    <value>StrongName signed: {0}</value>
+  </data>
+  <data name="DetailSkipped" xml:space="preserve">
+    <value>Skipped</value>
+  </data>
+  <data name="DetailSkippedUnsupportedFileType" xml:space="preserve">
+    <value>Skipped (unsupported file type)</value>
+  </data>
+  <data name="DetailVerificationError" xml:space="preserve">
+    <value>Verification error: {0}</value>
+  </data>
+  <data name="DetailTimestamp" xml:space="preserve">
+    <value>Timestamp: {0:MM/dd/yy H:mm:ss} ({1})</value>
+  </data>
+  <data name="DetailTimestampError" xml:space="preserve">
+    <value>Timestamp: Error retrieving timestamp</value>
+  </data>
+  <data name="DetailTimestampInvalid" xml:space="preserve">
+    <value>Invalid timestamp</value>
+  </data>
+  <data name="DetailTimestampOutisdeCertValidity" xml:space="preserve">
+    <value>Timestamp ({0}) outside validity period ({1} to {2}).</value>
+  </data>
+  <data name="DetailTimestampSkipped" xml:space="preserve">
+    <value>Timestamp: Skipped</value>
+  </data>
+  <data name="DetailVirtualPath" xml:space="preserve">
+    <value>Virtual path: {0}</value>
+  </data>
+  <data name="DetailVsixMultipleSignatures" xml:space="preserve">
+    <value>Multiple signatures found.</value>
+  </data>
+  <data name="DetailXmlMultipleSignatures" xml:space="preserve">
+    <value>Multiple signatures found ({0}), only the first signature is checked.</value>
+  </data>
+  <data name="DetailXmlNoSignature" xml:space="preserve">
+    <value>No Signature element found.</value>
+  </data>
+  <data name="DiagCheckingStrongName" xml:space="preserve">
+    <value>Checking strong name signature.</value>
+  </data>
+  <data name="DiagCheckingTimestamps" xml:space="preserve">
+    <value>Checking timestamp(s).</value>
+  </data>
+  <data name="DiagCreatingFolder" xml:space="preserve">
+    <value>Creating folder {0}.</value>
+  </data>
+  <data name="DiagDeletingFolder" xml:space="preserve">
+    <value>Deleting folder {0}.</value>
+  </data>
+  <data name="DiagExtractingFileContents" xml:space="preserve">
+    <value>Extracting file contents to {0}</value>
+  </data>
+  <data name="DiagFileHeaderIdentifyExtensionType" xml:space="preserve">
+    <value>File will be treated as '{0}'.</value>
+  </data>
+  <data name="DiagFirstExclusion" xml:space="preserve">
+    <value>Checking {0} against the exclusion list.</value>
+  </data>
+  <data name="DiagGenerateExclusion" xml:space="preserve">
+    <value>Generating exclusion for {0}: {1}</value>
+  </data>
+  <data name="DiagSectionHeader" xml:space="preserve">
+    <value>Found section header '{0}'.</value>
+  </data>
+  <data name="DiagSkippingArchiveExtraction" xml:space="preserve">
+    <value>Skipping archive extraction on {0}.</value>
+  </data>
+  <data name="DiagSkippingStrongName" xml:space="preserve">
+    <value>Skipping strong name signature check.</value>
+  </data>
+  <data name="DiagVerifyByFileHeader" xml:space="preserve">
+    <value>Examining file header to find applicable verifier.</value>
+  </data>
+  <data name="ErrorHResult" xml:space="preserve">
+    <value>HRESULT: {0:x8} ({1})</value>
+  </data>
+  <data name="ErrorInvalidOrMissingTimestamp" xml:space="preserve">
+    <value>Invalid or missing timestamp.</value>
+  </data>
+  <data name="ErrorInvalidOrMissingStrongNamePublicKeyToken" xml:space="preserve">
+    <value>Invalid or missing strong name public key token.</value>
+  </data>
+  <data name="ExclusionYourComment" xml:space="preserve">
+    <value>Add you comment here</value>
+  </data>
+  <data name="FileAlreadyExists" xml:space="preserve">
+    <value>A file named {0} already exists. The duplicate entry will be ignored.</value>
+  </data>
+  <data name="FileExtractedFromBinaryTable" xml:space="preserve">
+    <value>File was extracted from Binary table.</value>
+  </data>
+  <data name="NA" xml:space="preserve">
+    <value>N/A</value>
+  </data>
+  <data name="ProcessingFile" xml:space="preserve">
+    <value>Processing {0} (parent: {1})</value>
+  </data>
   <data name="scCannotFindFile" xml:space="preserve">
     <value>Unable to find {0}.</value>
   </data>
@@ -161,5 +302,14 @@
   </data>
   <data name="scTime" xml:space="preserve">
     <value>Total Time: {0:c}</value>
+  </data>
+  <data name="VsixChainBuildFailed" xml:space="preserve">
+    <value>Failed to build certificate chain.</value>
+  </data>
+  <data name="WixBundle" xml:space="preserve">
+    <value>Processing {0} as a WiX bundle.</value>
+  </data>
+  <data name="XmlSignatureNodes" xml:space="preserve">
+    <value>Number of XML Signature nodes: {0}.</value>
   </data>
 </root>
