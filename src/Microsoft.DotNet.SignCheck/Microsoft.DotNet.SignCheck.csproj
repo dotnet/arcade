@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="$(MSBuildThisFileDirectory)..\Microsoft.SignCheck\ResxWorkaround.props" />
+  <Import Project="$(MSBuildThisFileDirectory)..\Microsoft.DotNet.SignCheckLibrary\ResxWorkaround.props" />
 
   <PropertyGroup>
     <TargetFramework>$(NetMinimum)</TargetFramework>
@@ -9,6 +9,7 @@
     <IsPackable>true</IsPackable>
     <Description>Build artifact signing validation tool</Description>
     <PackageTags>Arcade Signing Validation Tool</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RootNamespace>SignCheck</RootNamespace>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>signcheck</ToolCommandName>
@@ -17,7 +18,11 @@
 
   <ItemGroup>
     <PackageReference Include="System.CommandLine" />
-    <ProjectReference Include="..\Microsoft.SignCheck\Microsoft.DotNet.SignCheckLibrary.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.SignCheckLibrary\Microsoft.DotNet.SignCheckLibrary.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\Microsoft.DotNet.SignCheckLibrary\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>
