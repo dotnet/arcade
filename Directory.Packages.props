@@ -96,7 +96,6 @@
     <PackageVersion Include="xunit.extensibility.execution" Version="$(XUnitVersion)" />
     <PackageVersion Include="xunit.v3.extensibility.core" Version="$(XUnitV3Version)" />
     <PackageVersion Include="xunit.runner.reporters" Version="$(XUnitVersion)" />
-    <PackageVersion Include="nsubstitute" Version="5.1.0" />
   </ItemGroup>
 
 </Project>
