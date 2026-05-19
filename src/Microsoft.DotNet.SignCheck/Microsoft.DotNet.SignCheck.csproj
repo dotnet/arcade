@@ -1,7 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="$(MSBuildThisFileDirectory)..\Microsoft.DotNet.SignCheckLibrary\ResxWorkaround.props" />
-
   <PropertyGroup>
     <TargetFramework>$(NetMinimum)</TargetFramework>
     <OutputType>Exe</OutputType>
