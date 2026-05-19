@@ -164,7 +164,7 @@ namespace SignCheckTask
             Option<string[]> fileStatusOption = new("--file-status", "-f")
             {
                 Description = "Report the status of a specific set of files. Any combination of the following values are allowed. Values are separated by a ','. 'UnsignedFiles', 'SignedFiles', 'SkippedFiles', 'ExcludedFiles', 'AllFiles'. Default is 'UnsignedFiles'",
-                CustomParser = result => result.Tokens.SelectMany(t => t.Value.Split(',')).ToArray(),
+                CustomParser = result => result.Tokens.SelectMany(t => t.Value.Split(',', StringSplitOptions.RemoveEmptyEntries)).ToArray(),
                 AllowMultipleArgumentsPerToken = true
             };
             Option<string> exclusionsOutputOption = new("--generate-exclusions-file", "-g")
@@ -178,7 +178,7 @@ namespace SignCheckTask
             };
             Option<bool> enableJarOption = new("--verify-jar", "-j")
             {
-                Description = "Enable JAR signature verification. By default, .jar files are no verified."
+                Description = "Enable JAR signature verification. By default, .jar files are not verified."
             };
             Option<string> logFileOption = new("--log-file", "-l")
             {
