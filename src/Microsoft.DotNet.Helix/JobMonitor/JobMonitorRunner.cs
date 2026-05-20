@@ -237,7 +237,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     _logger.LogInformation(
                         "📊 Final summary:{nl}"
                       + "   Jobs:       {TotalJobs} submitted / {ResubmittedJobs} resubmitted / {ProcessedJobs} processed{nl}"
-                      + "   Work items: {TotalWorkItems} submitted / {ResubmittedWorkItems} resubmitted / {FailedWorkItems} still failing",
+                      + "   Work items: {TotalWorkItems} submitted / {ResubmittedWorkItems} resubmitted / {FailedWorkItems} failed",
                         Environment.NewLine,
                         associatedJobs.Count,
                         jobResubmission.ResubmittedJobCount,
