@@ -934,7 +934,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 timeout.TotalMinutes,
                 timeout,
                 unfinishedJobs.Count,
-                string.Join(Environment.NewLine + "- ", unfinishedJobs.Select(j => j.DetailsUri)));
+                string.Join(Environment.NewLine + "- ", unfinishedJobs.Select(j => $"{j.DetailsUri} ({j.QueueId})")));
         }
 
         public void Dispose()
