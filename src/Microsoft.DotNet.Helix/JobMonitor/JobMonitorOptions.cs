@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using CommandLine;
+using System.CommandLine;
 
 namespace Microsoft.DotNet.Helix.JobMonitor
 {
@@ -18,70 +18,168 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         public bool ShowHelp { get; private set; }
 
-        [Option("organization", HelpText = "Organization name (e.g. 'dotnet' for 'dotnet/runtime').")]
         public string Organization { get; set; }
 
-        [Option("repository", HelpText = "Repository name (e.g. 'runtime' for 'dotnet/runtime').")]
         public string RepositoryName { get; set; }
 
-        [Option("build-reason", HelpText = "Azure DevOps Build.Reason value (PullRequest, Manual, Schedule, IndividualCI, BatchedCI, ...). Used to derive the Helix source prefix the same way the Helix SDK submitter does (PR -> 'pr', internal team project -> 'official', otherwise -> 'ci'). Defaults to the BUILD_REASON environment variable.")]
         public string BuildReason { get; set; }
 
-        [Option("source-branch", HelpText = "Azure DevOps Build.SourceBranch value (e.g. 'refs/heads/main' or 'refs/pull/N/merge'). Used as the branch component of the Helix source filter. Defaults to the BUILD_SOURCEBRANCH environment variable.")]
         public string SourceBranch { get; set; }
 
-        [Option("build-id", HelpText = "Azure DevOps build ID.")]
         public string BuildId { get; set; }
 
-        [Option("collection-uri", HelpText = "Azure DevOps collection URI.")]
         public string CollectionUri { get; set; }
 
-        [Option("team-project", HelpText = "Azure DevOps team project name.")]
         public string TeamProject { get; set; }
 
-        [Option("helix-base-uri", HelpText = "Base URI for the Helix service.")]
         public string HelixBaseUri { get; set; } = "https://helix.dot.net/";
 
-        [Option("polling-interval-seconds", HelpText = "Polling interval in seconds.", Default = 30)]
         public int PollingIntervalSeconds { get; set; } = 30;
 
-        [Option("max-wait-minutes", HelpText = "Maximum run time in minutes.", Default = 360)]
         public int MaximumWaitMinutes { get; set; } = 360;
 
-        [Option("job-monitor-name", HelpText = "Name of the Helix Job Monitor job in Azure DevOps.")]
         public string JobMonitorName { get; set; } = "HelixJobMonitor";
 
-        [Option("working-directory", HelpText = "Directory used to stage downloaded test results.")]
         public string WorkingDirectory { get; set; }
 
-        [Option("stage-name",HelpText = "Name of the Azure DevOps pipeline stage the monitor is running in. Used to scope monitoring to that stage. Defaults to the SYSTEM_STAGENAME environment variable.")]
         public string StageName { get; set; }
 
-        [Option("test-result-upload-parallelism", HelpText = "Maximum number of work items whose test results can be uploaded to Azure DevOps in parallel.", Default = 4)]
         public int TestResultUploadParallelism { get; set; } = 4;
 
-        [Option("verbose", HelpText = "Enable verbose job monitor logging.")]
         public bool Verbose { get; set; }
 
         public static JobMonitorOptions Parse(string[] args)
         {
             JobMonitorOptions parsed = null;
-            var parser = new Parser(settings =>
+
+            Option<string> organizationOption = new("--organization")
             {
-                settings.CaseInsensitiveEnumValues = true;
-                settings.HelpWriter = Console.Out;
+                Description = "Organization name (e.g. 'dotnet' for 'dotnet/runtime')."
+            };
+
+            Option<string> repositoryOption = new("--repository")
+            {
+                Description = "Repository name (e.g. 'runtime' for 'dotnet/runtime')."
+            };
+
+            Option<string> buildReasonOption = new("--build-reason")
+            {
+                Description = "Azure DevOps Build.Reason value (PullRequest, Manual, Schedule, IndividualCI, BatchedCI, ...). Used to derive the Helix source prefix the same way the Helix SDK submitter does (PR -> 'pr', internal team project -> 'official', otherwise -> 'ci'). Defaults to the BUILD_REASON environment variable."
+            };
+
+            Option<string> sourceBranchOption = new("--source-branch")
+            {
+                Description = "Azure DevOps Build.SourceBranch value (e.g. 'refs/heads/main' or 'refs/pull/N/merge'). Used as the branch component of the Helix source filter. Defaults to the BUILD_SOURCEBRANCH environment variable."
+            };
+
+            Option<string> buildIdOption = new("--build-id")
+            {
+                Description = "Azure DevOps build ID."
+            };
+
+            Option<string> collectionUriOption = new("--collection-uri")
+            {
+                Description = "Azure DevOps collection URI."
+            };
+
+            Option<string> teamProjectOption = new("--team-project")
+            {
+                Description = "Azure DevOps team project name."
+            };
+
+            Option<string> helixBaseUriOption = new("--helix-base-uri")
+            {
+                Description = "Base URI for the Helix service.",
+                DefaultValueFactory = _ => "https://helix.dot.net/"
+            };
+
+            Option<int> pollingIntervalSecondsOption = new("--polling-interval-seconds")
+            {
+                Description = "Polling interval in seconds.",
+                DefaultValueFactory = _ => 30
+            };
+
+            Option<int> maximumWaitMinutesOption = new("--max-wait-minutes")
+            {
+                Description = "Maximum run time in minutes.",
+                DefaultValueFactory = _ => 360
+            };
+
+            Option<string> jobMonitorNameOption = new("--job-monitor-name")
+            {
+                Description = "Name of the Helix Job Monitor job in Azure DevOps.",
+                DefaultValueFactory = _ => "HelixJobMonitor"
+            };
+
+            Option<string> workingDirectoryOption = new("--working-directory")
+            {
+                Description = "Directory used to stage downloaded test results."
+            };
+
+            Option<string> stageNameOption = new("--stage-name")
+            {
+                Description = "Name of the Azure DevOps pipeline stage the monitor is running in. Used to scope monitoring to that stage. Defaults to the SYSTEM_STAGENAME environment variable."
+            };
+
+            Option<int> testResultUploadParallelismOption = new("--test-result-upload-parallelism")
+            {
+                Description = "Maximum number of work items whose test results can be uploaded to Azure DevOps in parallel.",
+                DefaultValueFactory = _ => 4
+            };
+
+            Option<bool> verboseOption = new("--verbose")
+            {
+                Description = "Enable verbose job monitor logging."
+            };
+
+            RootCommand rootCommand = new("Standalone Helix Job Monitor tool for Azure DevOps pipelines")
+            {
+                TreatUnmatchedTokensAsErrors = true
+            };
+
+            rootCommand.Options.Add(organizationOption);
+            rootCommand.Options.Add(repositoryOption);
+            rootCommand.Options.Add(buildReasonOption);
+            rootCommand.Options.Add(sourceBranchOption);
+            rootCommand.Options.Add(buildIdOption);
+            rootCommand.Options.Add(collectionUriOption);
+            rootCommand.Options.Add(teamProjectOption);
+            rootCommand.Options.Add(helixBaseUriOption);
+            rootCommand.Options.Add(pollingIntervalSecondsOption);
+            rootCommand.Options.Add(maximumWaitMinutesOption);
+            rootCommand.Options.Add(jobMonitorNameOption);
+            rootCommand.Options.Add(workingDirectoryOption);
+            rootCommand.Options.Add(stageNameOption);
+            rootCommand.Options.Add(testResultUploadParallelismOption);
+            rootCommand.Options.Add(verboseOption);
+
+            rootCommand.SetAction(parseResult =>
+            {
+                parsed = new JobMonitorOptions
+                {
+                    Organization = parseResult.GetValue(organizationOption),
+                    RepositoryName = parseResult.GetValue(repositoryOption),
+                    BuildReason = parseResult.GetValue(buildReasonOption),
+                    SourceBranch = parseResult.GetValue(sourceBranchOption),
+                    BuildId = parseResult.GetValue(buildIdOption),
+                    CollectionUri = parseResult.GetValue(collectionUriOption),
+                    TeamProject = parseResult.GetValue(teamProjectOption),
+                    HelixBaseUri = parseResult.GetValue(helixBaseUriOption),
+                    PollingIntervalSeconds = parseResult.GetValue(pollingIntervalSecondsOption),
+                    MaximumWaitMinutes = parseResult.GetValue(maximumWaitMinutesOption),
+                    JobMonitorName = parseResult.GetValue(jobMonitorNameOption),
+                    WorkingDirectory = parseResult.GetValue(workingDirectoryOption),
+                    StageName = parseResult.GetValue(stageNameOption),
+                    TestResultUploadParallelism = parseResult.GetValue(testResultUploadParallelismOption),
+                    Verbose = parseResult.GetValue(verboseOption),
+                };
             });
 
-            parser.ParseArguments<JobMonitorOptions>(args)
-                .WithParsed(options => parsed = options)
-                .WithNotParsed(errors =>
-                {
-                    parsed = new JobMonitorOptions { ShowHelp = true };
-                });
+            int exitCode = rootCommand.Parse(args).Invoke();
 
-            if (parsed == null || parsed.ShowHelp)
+            if (exitCode != 0 || parsed == null)
             {
-                return parsed ?? new JobMonitorOptions { ShowHelp = true };
+                return new JobMonitorOptions { ShowHelp = true };
             }
 
             parsed.ApplyEnvironmentDefaults();
