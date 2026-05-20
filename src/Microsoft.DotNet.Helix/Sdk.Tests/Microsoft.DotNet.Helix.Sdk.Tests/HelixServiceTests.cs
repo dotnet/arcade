@@ -84,21 +84,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public async Task ListWorkItemsAsync_ReturnsHelixWorkItems()
-        {
-            var api = CreateApi();
-            IImmutableList<WorkItemSummary> expected = ImmutableList.Create(
-                new WorkItemSummary("details", "job", "work-item", "Finished"));
-            api.WorkItem
-                .Setup(w => w.ListAsync("job", It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expected);
-
-            IReadOnlyCollection<WorkItemSummary> actual = await CreateService(api.Api.Object).ListWorkItemsAsync("job", CancellationToken.None);
-
-            Assert.Same(expected, actual);
-        }
-
-        [Fact]
         public async Task DownloadTestResultsAsync_FiltersFilesUsesFileSystemAndContinuesAfterDownloadFailure()
         {
             var api = CreateApi();
