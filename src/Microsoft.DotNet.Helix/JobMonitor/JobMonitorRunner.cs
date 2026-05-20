@@ -902,7 +902,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             _logger.LogError(
-                "Helix Job Monitor timed out after {TimeoutMinutes} minute(s) ({Timeout}). {UnfinishedCount} Helix job(s) had not finished: {UnfinishedJobs}" + Environment.NewLine,
+                $"Helix Job Monitor timed out after {{TimeoutMinutes}} minute(s) ({{Timeout}}). {{UnfinishedCount}} Helix job(s) had not finished:{Environment.NewLine}{{UnfinishedJobs}}{Environment.NewLine}",
                 timeout.TotalMinutes,
                 timeout,
                 unfinishedJobs.Count,
