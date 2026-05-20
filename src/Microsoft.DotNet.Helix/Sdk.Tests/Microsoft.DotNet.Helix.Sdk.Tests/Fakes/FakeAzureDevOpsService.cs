@@ -20,6 +20,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         private readonly List<AzureDevOpsTimelineRecord[]> _timelineResponses = [];
         private readonly HashSet<string> _previouslyProcessedJobs = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, int> _inProgressRunsByJobName = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Queue<Exception> _uploadFailures = [];
         private int _timelineCallCount;
         private int _nextTestRunId;
 
@@ -29,6 +30,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         public Dictionary<int, List<WorkItemTestResults>> UploadedResultsByRunId { get; } = [];
         public List<string> UploadedJobNames { get; } = [];
         public int CreateTestRunCallCount { get; private set; }
+        public int UploadTestResultsCallCount { get; private set; }
         public TaskCompletionSource UploadStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource UploadCompleted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task UploadBlocker { get; set; } = Task.CompletedTask;
@@ -58,6 +60,16 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             {
                 _previouslyProcessedJobs.Add(jobName);
             }
+            return this;
+        }
+
+        public FakeAzureDevOpsService FailNextUpload(Exception exception = null)
+        {
+            lock (_sync)
+            {
+                _uploadFailures.Enqueue(exception ?? new InvalidOperationException("Injected upload failure."));
+            }
+
             return this;
         }
 
@@ -127,6 +139,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
 
             lock (_sync)
             {
+                UploadTestResultsCallCount++;
+                if (_uploadFailures.Count > 0)
+                {
+                    throw _uploadFailures.Dequeue();
+                }
+
                 if (!UploadedResultsByRunId.TryGetValue(testRunId, out List<WorkItemTestResults> existing))
                 {
                     existing = [];

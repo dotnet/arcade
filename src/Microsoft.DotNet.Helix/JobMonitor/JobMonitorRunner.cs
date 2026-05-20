@@ -554,38 +554,66 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             IReadOnlyCollection<string> workItemNames,
             CancellationToken cancellationToken)
         {
-            int testRunId = 0;
+            while (true)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                int testRunId = 0;
 
-            try
-            {
-                testRunId = await _azdo.CreateTestRunAsync(helixJob.TestRunName, helixJob.JobName, cancellationToken);
-                IReadOnlyList<WorkItemTestResults> downloadedFiles = await _helix.DownloadTestResultsAsync(
-                    helixJob.JobName,
-                    workItemNames,
-                    _options.WorkingDirectory,
-                    cancellationToken);
-
-                int uploadedCount = await _azdo.UploadTestResultsAsync(testRunId, downloadedFiles, cancellationToken);
-                _logger.LogInformation("{UploadedCount} test results for job '{JobName}' processed after upload.",
-                    uploadedCount,
-                    helixJob.DisplayName);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to upload test results for job {JobName} to Azure DevOps. Test run ID was {TestRunId}.", helixJob.DisplayName, testRunId);
-            }
-            finally
-            {
-                if (testRunId != 0)
+                try
                 {
-                    try
-                    {
-                        await _azdo.CompleteTestRunAsync(testRunId, cancellationToken);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Failed to complete Azure DevOps test run {TestRunId} for job {JobName}.", testRunId, helixJob.JobName);
-                    }
+                    testRunId = await _azdo.CreateTestRunAsync(helixJob.TestRunName, helixJob.JobName, cancellationToken);
+                    IReadOnlyList<WorkItemTestResults> downloadedFiles = await _helix.DownloadTestResultsAsync(
+                        helixJob.JobName,
+                        workItemNames,
+                        _options.WorkingDirectory,
+                        cancellationToken);
+
+                    int uploadedCount = await _azdo.UploadTestResultsAsync(testRunId, downloadedFiles, cancellationToken);
+                    await CompleteUploadedTestRunAsync(testRunId, helixJob, cancellationToken);
+
+                    _logger.LogInformation("{UploadedCount} test results for job '{JobName}' processed.",
+                        uploadedCount,
+                        helixJob.DisplayName);
+                    return;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Failed to upload test results for job {JobName} to Azure DevOps. Test run ID was {TestRunId}. Retrying after delay.",
+                        helixJob.DisplayName,
+                        testRunId);
+                    await Delay(cancellationToken);
+                }
+            }
+        }
+
+        private async Task CompleteUploadedTestRunAsync(
+            int testRunId,
+            HelixJobInfo helixJob,
+            CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                try
+                {
+                    await _azdo.CompleteTestRunAsync(testRunId, cancellationToken);
+                    return;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex,
+                        "Failed to complete Azure DevOps test run {TestRunId} for job {JobName}. Retrying after delay.",
+                        testRunId,
+                        helixJob.JobName);
+                    await Delay(cancellationToken);
                 }
             }
         }

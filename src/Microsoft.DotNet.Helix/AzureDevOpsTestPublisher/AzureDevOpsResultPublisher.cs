@@ -496,12 +496,15 @@ public sealed class AzureDevOpsResultPublisher
             }
 
             string responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
-            if (response.StatusCode == HttpStatusCode.ServiceUnavailable && triesLeft > 0)
+            if ((response.StatusCode == HttpStatusCode.ServiceUnavailable || response.StatusCode == HttpStatusCode.TooManyRequests) && triesLeft > 0)
             {
+                TimeSpan retryDelay = GetRetryDelay(response) ?? TimeSpan.FromSeconds(response.StatusCode == HttpStatusCode.TooManyRequests ? 30 : 3);
                 response.Dispose();
                 triesLeft--;
-                _logger.LogWarning("Hit HTTP 503 from Azure DevOps. Waiting three seconds and trying again.");
-                await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+                _logger.LogWarning("Hit HTTP {StatusCode} from Azure DevOps. Waiting {DelaySeconds:0.###} seconds and trying again.",
+                    (int)response.StatusCode,
+                    retryDelay.TotalSeconds);
+                await Task.Delay(retryDelay, cancellationToken);
                 continue;
             }
 
@@ -536,6 +539,26 @@ public sealed class AzureDevOpsResultPublisher
             response.Dispose();
             throw new AzureDevOpsReportingError($"Azure DevOps request failed with status code {(int)response.StatusCode}: {responseBody}");
         }
+    }
+
+    private static TimeSpan? GetRetryDelay(HttpResponseMessage response)
+    {
+        RetryConditionHeaderValue? retryAfter = response.Headers.RetryAfter;
+        if (retryAfter?.Delta is { } delta && delta > TimeSpan.Zero)
+        {
+            return delta;
+        }
+
+        if (retryAfter?.Date is { } date)
+        {
+            TimeSpan delay = date - DateTimeOffset.UtcNow;
+            if (delay > TimeSpan.Zero)
+            {
+                return delay;
+            }
+        }
+
+        return null;
     }
 
     private static async Task<IReadOnlyList<PublishedTestCaseResultReference>> ReadPublishedResultsAsync(
