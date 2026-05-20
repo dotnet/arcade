@@ -295,7 +295,9 @@ public sealed class ResultAggregator
             partials.Add(perAttempt);
         }
 
-        if (partials.Count == 0 || partials[0].Count == 0)
+        partials = [.. partials.Where(run => run.Count > 0)];
+
+        if (partials.Count == 0)
         {
             return [];
         }
