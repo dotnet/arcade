@@ -231,6 +231,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 if (allPipelineJobsComplete && allHelixJobsComplete)
                 {
                     await WaitForPendingTestResultUploadsAsync(cancellationToken);
+
+                    LogFinalFailedWorkItemConsoleInfo();
+
                     bool anyWorkItemFailed = _workItemOutcomes.Values.Any(passed => !passed);
                     int totalWorkItems = _workItemOutcomes.Count;
                     int failedWorkItems = _workItemOutcomes.Values.Count(passed => !passed);
@@ -246,7 +249,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         totalWorkItems,
                         jobResubmission.ResubmittedWorkItemCount,
                         failedWorkItems);
-                    LogFinalFailedWorkItemConsoleInfo();
 
                     if (anyNonMonitorJobFailures || anyWorkItemFailed)
                     {
