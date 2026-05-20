@@ -142,7 +142,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             string jobName,
             CancellationToken cancellationToken)
         {
-            return await RetryHelper.RetryAsync(() => _helixApi.WorkItem.ListAsync(jobName), cancellationToken);
+            return await RetryHelper.RetryAsync(async () =>
+            {
+                IImmutableList<WorkItemSummary> workItems = await _helixApi.WorkItem.ListAsync(jobName);
+                return workItems
+                    .Where(w => w.Name != "HelixController Work Queueing")
+                    .ToList();
+            }, cancellationToken);
         }
 
         public async Task<HelixJobInfo> ResubmitWorkItemsAsync(
