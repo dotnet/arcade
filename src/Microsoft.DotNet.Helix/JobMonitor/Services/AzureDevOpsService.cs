@@ -36,12 +36,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly JobMonitorOptions _options;
         private readonly ILogger _logger;
         private readonly HttpClient _azdoClient;
+        private readonly SemaphoreSlim _uploadSemaphore;
 
         public AzureDevOpsService(JobMonitorOptions options, ILogger logger)
         {
             _options = options;
             _logger = logger;
             _azdoClient = new HttpClient();
+            _uploadSemaphore = new SemaphoreSlim(options.TestResultUploadParallelism);
             InitializeClient();
         }
 
@@ -50,6 +52,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _options = options;
             _logger = logger;
             _azdoClient = azdoClient ?? throw new ArgumentNullException(nameof(azdoClient));
+            _uploadSemaphore = new SemaphoreSlim(options.TestResultUploadParallelism);
             InitializeClient();
         }
 
@@ -143,7 +146,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public async Task<int> UploadTestResultsAsync(int testRunId, IReadOnlyList<WorkItemTestResults> results, CancellationToken cancellationToken)
         {
             int uploadedCount = 0;
-            using var semaphore = new SemaphoreSlim(_options.TestResultUploadParallelism);
 
             async Task UploadWorkItemAsync(WorkItemTestResults workItem)
             {
@@ -153,7 +155,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     return;
                 }
 
-                await semaphore.WaitAsync(cancellationToken);
+                await _uploadSemaphore.WaitAsync(cancellationToken);
 
                 try
                 {
@@ -178,7 +180,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
                 finally
                 {
-                    semaphore.Release();
+                    _uploadSemaphore.Release();
                 }
             }
 
@@ -238,7 +240,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 double.TryParse(delayValues.FirstOrDefault(), NumberStyles.Float, CultureInfo.InvariantCulture, out double delaySeconds) &&
                 delaySeconds > 0)
             {
-                _logger.LogWarning(
+                _logger.LogDebug(
                     "Azure DevOps reported X-RateLimit-Delay of {DelaySeconds:0.###}s on request to {RequestUri}.",
                     delaySeconds,
                     requestUri);
@@ -246,7 +248,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             if (retryAfter.HasValue && retryAfter.Value > TimeSpan.Zero)
             {
-                _logger.LogWarning(
+                _logger.LogDebug(
                     "Azure DevOps requested rate limit back-off via Retry-After. Delaying next request by {DelaySeconds:0.###}s (request: {RequestUri}).",
                     retryAfter.Value.TotalSeconds,
                     requestUri);
@@ -254,6 +256,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
         }
 
-        public void Dispose() => _azdoClient.Dispose();
+        public void Dispose()
+        {
+            _azdoClient.Dispose();
+            _uploadSemaphore.Dispose();
+        }
     }
 }

@@ -51,7 +51,7 @@ public sealed class AzureDevOpsResultPublisher
         IReadOnlyList<AggregatedResult> aggregatedResults = new ResultAggregator().Aggregate(parsedResults);
         if (aggregatedResults.Count == 0)
         {
-            _logger.LogWarning("Test results were discovered but none could be aggregated.");
+            _logger.LogDebug("Test results were discovered but none could be aggregated.");
             return new TestResultUploadSummary(true, 0);
         }
 
@@ -496,14 +496,16 @@ public sealed class AzureDevOpsResultPublisher
             }
 
             string responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
-            if ((response.StatusCode == HttpStatusCode.ServiceUnavailable || response.StatusCode == HttpStatusCode.TooManyRequests) && triesLeft > 0)
+            bool isServerError = (int)response.StatusCode >= 500;
+            if ((isServerError || response.StatusCode == HttpStatusCode.TooManyRequests) && triesLeft > 0)
             {
                 TimeSpan retryDelay = GetRetryDelay(response) ?? TimeSpan.FromSeconds(response.StatusCode == HttpStatusCode.TooManyRequests ? 30 : 3);
                 response.Dispose();
                 triesLeft--;
-                _logger.LogWarning("Hit HTTP {StatusCode} from Azure DevOps. Waiting {DelaySeconds:0.###} seconds and trying again.",
+                _logger.LogDebug("Hit HTTP {StatusCode} from Azure DevOps. Waiting {DelaySeconds:0.###} seconds and trying again ({TriesLeft} retries left).",
                     (int)response.StatusCode,
-                    retryDelay.TotalSeconds);
+                    retryDelay.TotalSeconds,
+                    triesLeft);
                 await Task.Delay(retryDelay, cancellationToken);
                 continue;
             }

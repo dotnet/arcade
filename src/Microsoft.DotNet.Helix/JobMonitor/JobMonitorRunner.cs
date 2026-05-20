@@ -582,7 +582,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex,
+                    _logger.LogDebug(ex,
                         "Failed to upload test results for job {JobName} to Azure DevOps. Test run ID was {TestRunId}. Retrying after delay.",
                         helixJob.DisplayName,
                         testRunId);
@@ -609,7 +609,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex,
+                    _logger.LogDebug(ex,
                         "Failed to complete Azure DevOps test run {TestRunId} for job {JobName}. Retrying after delay.",
                         testRunId,
                         helixJob.JobName);
