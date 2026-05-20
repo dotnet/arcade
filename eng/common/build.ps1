@@ -104,19 +104,19 @@ function Build {
   $toolsetBuildProj = InitializeToolset
   InitializeCustomToolset
 
-  $binaryLogPath = if ([string]::IsNullOrEmpty($binaryLogName)) {
-    Join-Path $LogDir 'Build.binlog'
-  } elseif ([System.IO.Path]::IsPathRooted($binaryLogName)) {
-    $binaryLogName
-  } else {
-    Join-Path $LogDir $binaryLogName
-  }
-
+  $bl = ''
   if ($binaryLog) {
-    Create-Directory (Split-Path -Parent $binaryLogPath)
-  }
+    $binaryLogPath = if ([string]::IsNullOrEmpty($binaryLogName)) {
+      Join-Path $LogDir 'Build.binlog'
+    } elseif ([System.IO.Path]::IsPathRooted($binaryLogName)) {
+      $binaryLogName
+    } else {
+      Join-Path $LogDir $binaryLogName
+    }
 
-  $bl = if ($binaryLog) { '/bl:' + $binaryLogPath } else { '' }
+    Create-Directory (Split-Path -Parent $binaryLogPath)
+    $bl = '/bl:' + $binaryLogPath
+  }
   $platformArg = if ($platform) { "/p:Platform=$platform" } else { '' }
   $check = if ($buildCheck) { '/check' } else { '' }
 
