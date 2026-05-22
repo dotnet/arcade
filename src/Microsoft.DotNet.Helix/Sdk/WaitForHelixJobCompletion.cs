@@ -163,13 +163,15 @@ namespace Microsoft.DotNet.Helix.Sdk
         }
 
         private static bool IsQueuedState(string state) =>
-            state.IndexOf("wait", StringComparison.OrdinalIgnoreCase) >= 0
+            !string.IsNullOrEmpty(state)
+            && (state.IndexOf("wait", StringComparison.OrdinalIgnoreCase) >= 0
             || state.IndexOf("queue", StringComparison.OrdinalIgnoreCase) >= 0
-            || state.IndexOf("pending", StringComparison.OrdinalIgnoreCase) >= 0;
+            || state.IndexOf("pending", StringComparison.OrdinalIgnoreCase) >= 0);
 
         private static bool IsInProgressState(string state) =>
-            state.IndexOf("running", StringComparison.OrdinalIgnoreCase) >= 0
+            !string.IsNullOrEmpty(state)
+            && (state.IndexOf("running", StringComparison.OrdinalIgnoreCase) >= 0
             || state.IndexOf("inprogress", StringComparison.OrdinalIgnoreCase) >= 0
-            || state.IndexOf("execut", StringComparison.OrdinalIgnoreCase) >= 0;
+            || state.IndexOf("executing", StringComparison.OrdinalIgnoreCase) >= 0);
     }
 }

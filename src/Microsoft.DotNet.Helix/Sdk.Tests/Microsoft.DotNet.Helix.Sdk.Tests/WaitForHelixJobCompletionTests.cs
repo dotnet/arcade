@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Microsoft.DotNet.Helix.Client.Models;
 using Xunit;
 
@@ -23,10 +22,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 new WorkItemSummary("details-5", "job-1", "failed-item", "Failed")
             };
 
-            MethodInfo method = typeof(WaitForHelixJobCompletion).GetMethod("GetQueuedAndInProgressWorkItems", BindingFlags.Static | BindingFlags.NonPublic);
-
-            Assert.NotNull(method);
-            var result = ((IReadOnlyList<string> queuedWorkItems, IReadOnlyList<string> inProgressWorkItems))method.Invoke(null, new object[] { workItems });
+            var result = WaitForHelixJobCompletion.GetQueuedAndInProgressWorkItems(workItems);
 
             Assert.Equal(2, result.queuedWorkItems.Count);
             Assert.Contains("queued-item (Waiting)", result.queuedWorkItems);
@@ -45,10 +41,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 new WorkItemSummary("details-2", "job-1", "running-item", null!)
             };
 
-            MethodInfo method = typeof(WaitForHelixJobCompletion).GetMethod("GetQueuedAndInProgressWorkItems", BindingFlags.Static | BindingFlags.NonPublic);
-
-            Assert.NotNull(method);
-            var result = ((IReadOnlyList<string> queuedWorkItems, IReadOnlyList<string> inProgressWorkItems))method.Invoke(null, new object[] { workItems });
+            var result = WaitForHelixJobCompletion.GetQueuedAndInProgressWorkItems(workItems);
 
             Assert.Single(result.queuedWorkItems);
             Assert.Contains("<unnamed work item> (Queued)", result.queuedWorkItems);
