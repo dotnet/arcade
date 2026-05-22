@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Helix.Client
         /// Poll for the job to actually finish inside Helix.
         /// If the <paramref name="cancellationToken"/> is cancelled while waiting, this method will attempt
         /// to cancel the in-flight Helix job using <see cref="HelixCancellationToken"/> before re-throwing
-        /// the <see cref="T:System.OperationCanceledException"/>.
+        /// the cancellation exception.
         /// </summary>
         Task<JobPassFail> WaitAsync(int pollingIntervalMs = 10000, CancellationToken cancellationToken = default);
     }
