@@ -81,7 +81,7 @@ Behavior notes:
 
 - The reporter uses its own `SYSTEM_ACCESSTOKEN`, so it does not depend on the shorter-lived token from the job that originally submitted the Helix work.
 - If parseable xUnit, JUnit, or TRX result files are available, those are uploaded.
-- If no result files are found, the reporter creates synthetic work-item pass/fail results so that failures are still visible in Azure DevOps.
+- If no result files are found for a work item, no test results are uploaded for that work item; Helix work-item failures still affect the monitor job's final pass/fail status.
 - The reporter is safe to rerun because it checks for already-completed test runs and only processes new results.
 
 #### Adding the `microsoft.dotnet.helix.jobmonitor` package
