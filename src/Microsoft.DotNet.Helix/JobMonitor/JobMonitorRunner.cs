@@ -954,6 +954,6 @@ static file class WorkItemExtensions
 {
     extension(WorkItemSummary workItem)
     {
-        public bool IsFailed => workItem.ExitCode != 0 || !workItem.State.Equals("Finished", StringComparison.OrdinalIgnoreCase);
+        public bool IsFailed => workItem.ExitCode != null && workItem.ExitCode != 0;
     }
 }
