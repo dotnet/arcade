@@ -42,13 +42,6 @@ parameters:
   type: string
   default: ''
 
-# Optional NuGet feed used as an additional source when installing the tool. Only honored
-# when 'toolNupkgArtifactName' is set; in the default code path the tool is restored from
-# the consuming repo's .config/dotnet-tools.json manifest and no extra feeds are consulted.
-- name: toolSource
-  type: string
-  default: ''
-
 # Base URI for the Helix service (--helix-base-uri).
 - name: helixBaseUri
   type: string
