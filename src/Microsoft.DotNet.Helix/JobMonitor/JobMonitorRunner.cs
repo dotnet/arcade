@@ -1008,6 +1008,27 @@ static file class WorkItemExtensions
 {
     extension(WorkItemSummary workItem)
     {
-        public bool IsFailed => workItem.ExitCode != null && workItem.ExitCode != 0;
+        public bool IsFailed
+        {
+            get
+            {
+                if (workItem.ExitCode == null)
+                {
+                    return false;
+                }
+
+                if (workItem.ExitCode != 0)
+                {
+                    return true;
+                }
+
+                if (!workItem.State.Equals("Finished", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
     }
 }
