@@ -1175,6 +1175,47 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Single(azdo2.CreatedTestRuns);
         }
 
+        [Fact]
+        public async Task MonitorTimesOut_CancelsLatestInFlightHelixJobs()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "inProgress"));
+
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-finished", "finished"),
+                    HelixJob("helix-running", "running"),
+                    HelixJob("helix-old-attempt", "running"),
+                    HelixJob("helix-new-attempt", "running", previousHelixJobName: "helix-old-attempt"),
+                    HelixJob("helix-waiting", "waiting"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-finished"] = PassFail(passed: ["finished-work-item"]),
+                });
+
+            using var cts = new CancellationTokenSource();
+            var runner = new JobMonitorRunner(DefaultOptions(), NullLogger.Instance, azdo, helix,
+                (_, _) =>
+                {
+                    cts.Cancel();
+                    return Task.CompletedTask;
+                });
+
+            int exitCode = await runner.RunAsync(cts.Token);
+
+            Assert.Equal(1, exitCode);
+            Assert.Equal(["helix-finished"], azdo.UploadedJobNames);
+            Assert.Equal(
+                ["helix-new-attempt", "helix-running", "helix-waiting"],
+                helix.CanceledJobs.OrderBy(jobName => jobName, StringComparer.OrdinalIgnoreCase).ToArray());
+        }
+
         /// <summary>
         /// The monitor times out while some pipeline jobs haven't submitted Helix work yet,
         /// but one job's Helix results were already uploaded. On relaunch, the monitor picks up:

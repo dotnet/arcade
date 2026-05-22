@@ -124,6 +124,21 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
+        public async Task CancelJobAsync_DelegatesToHelixApiJobCancelAsync()
+        {
+            var api = CreateApi();
+            using var cts = new CancellationTokenSource();
+
+            api.Job
+                .Setup(j => j.CancelAsync("job-to-cancel", null, cts.Token))
+                .Returns(Task.CompletedTask);
+
+            await CreateService(api.Api.Object).CancelJobAsync("job-to-cancel", cts.Token);
+
+            api.Job.Verify(j => j.CancelAsync("job-to-cancel", null, cts.Token), Times.Once);
+        }
+
+        [Fact]
         public async Task ResubmitWorkItemsAsync_ReturnsNullWhenRequiredJobDetailsAreMissing()
         {
             var api = CreateApi();

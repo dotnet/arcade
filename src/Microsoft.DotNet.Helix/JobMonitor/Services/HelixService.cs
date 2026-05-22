@@ -151,6 +151,19 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }, cancellationToken);
         }
 
+        public async Task CancelJobAsync(
+            string jobName,
+            CancellationToken cancellationToken)
+        {
+            await RetryHelper.RetryAsync(
+                async () =>
+                {
+                    await _helixApi.Job.CancelAsync(jobName, cancellationToken: cancellationToken);
+                    return jobName;
+                },
+                cancellationToken);
+        }
+
         public async Task<HelixJobInfo> ResubmitWorkItemsAsync(
             HelixJobInfo originalJob,
             IReadOnlyCollection<WorkItemSummary> failedWorkItems,

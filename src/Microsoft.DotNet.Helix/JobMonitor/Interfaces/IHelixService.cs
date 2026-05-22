@@ -45,6 +45,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             CancellationToken cancellationToken);
 
         /// <summary>
+        /// Requests cancellation for the specified Helix job.
+        /// </summary>
+        Task CancelJobAsync(
+            string jobName,
+            CancellationToken cancellationToken);
+
+        /// <summary>
         /// Resubmits the specified failed work items from a completed Helix job as a new job.
         /// The new job copies correlation payloads and queue from the original, but only includes
         /// the specified work items. Returns the new job's info, or null if resubmission is not possible.

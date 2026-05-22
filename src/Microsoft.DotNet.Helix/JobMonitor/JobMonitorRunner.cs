@@ -142,8 +142,62 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 // run see a partial set).
                 await WaitForPendingTestResultUploadsAsync(CancellationToken.None);
                 ReportTimeout(associatedJobs, processedHelixJobs);
+
+                // On cancellation (typically the overall timeout), proactively cancel any
+                // Helix jobs we know about that haven't finished yet so they don't keep
+                // consuming queue capacity after the monitor exits. We use a short, bounded
+                // timeout that is independent of the runner's cancellation token (which is
+                // already cancelled) so the best-effort cancel calls actually run.
+                using (var cancelCts = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
+                {
+                    await CancelInFlightHelixJobsAsync(associatedJobs, processedHelixJobs, cancelCts.Token);
+                }
+
                 return 1;
             }
+        }
+
+        private async Task CancelInFlightHelixJobsAsync(
+            IEnumerable<HelixJobInfo> associatedJobs,
+            HashSet<string> processedHelixJobs,
+            CancellationToken cancellationToken)
+        {
+            List<HelixJobInfo> inFlightJobs =
+            [
+                ..GetLatestHelixJobAttempts(associatedJobs)
+                    .Where(j => !j.IsCompleted && !processedHelixJobs.Contains(j.JobName))
+                    .OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
+            ];
+
+            if (inFlightJobs.Count == 0)
+            {
+                return;
+            }
+
+            _logger.LogWarning("Cancellation requested. Attempting to cancel {Count} in-flight Helix job(s).", inFlightJobs.Count);
+
+            Task[] cancelTasks =
+            [
+                ..inFlightJobs.Select(async job =>
+                {
+                    try
+                    {
+                        await _helix.CancelJobAsync(job.JobName, cancellationToken);
+                        _logger.LogInformation("🛑 Requested cancellation of Helix job {JobName}.{nl}{JobUri}",
+                            job.DisplayName, Environment.NewLine, job.DetailsUri);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Bounded cancel window elapsed; nothing more to do.
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to cancel Helix job {JobName}.", job.DisplayName);
+                    }
+                })
+            ];
+
+            await Task.WhenAll(cancelTasks);
         }
 
         private async Task<int> RunLoopAsync(

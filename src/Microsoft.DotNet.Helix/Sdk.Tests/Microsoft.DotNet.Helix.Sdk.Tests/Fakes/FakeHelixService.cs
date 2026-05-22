@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -48,6 +49,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
 
         /// <summary>Number of times <see cref="GetJobsForBuildAsync"/> has been called.</summary>
         public int GetJobsCallCount => _getJobsCallCount;
+
+        public ConcurrentBag<string> CanceledJobs { get; } = [];
 
         private HelixSnapshot CurrentSnapshot
         {
@@ -124,6 +127,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             }
 
             return Task.FromResult<IReadOnlyCollection<WorkItemSummary>>(items);
+        }
+
+        public Task CancelJobAsync(string jobName, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            CanceledJobs.Add(jobName);
+            return Task.CompletedTask;
         }
 
         /// <summary>
