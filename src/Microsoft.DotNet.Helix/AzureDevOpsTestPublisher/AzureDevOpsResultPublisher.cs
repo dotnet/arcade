@@ -44,14 +44,14 @@ public sealed class AzureDevOpsResultPublisher
         IReadOnlyList<TestResult>[] parsedResults = await Task.WhenAll(parseTasks);
         if (parsedResults.Length == 0)
         {
-            _logger.LogWarning("No test results were discovered under.");
+            _logger.LogWarning("No test result files were provided for upload");
             return new TestResultUploadSummary(true, 0);
         }
 
         IReadOnlyList<AggregatedResult> aggregatedResults = new ResultAggregator().Aggregate(parsedResults);
         if (aggregatedResults.Count == 0)
         {
-            _logger.LogDebug("Test results were discovered but none could be aggregated.");
+            _logger.LogDebug("Test results were discovered but none could be aggregated");
             return new TestResultUploadSummary(true, 0);
         }
 
