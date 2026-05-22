@@ -168,7 +168,7 @@ stages:
             -projects $(System.DefaultWorkingDirectory)\tests\UnitTests.proj
             /bl:$(System.DefaultWorkingDirectory)\artifacts\log\$(_BuildConfig)\Helix.binlog
             /p:RestoreUsingNuGetTargets=false
-          displayName: Run Helix Tests
+          displayName: Submit Helix Tests
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
@@ -204,7 +204,7 @@ stages:
             --projects $(System.DefaultWorkingDirectory)/tests/UnitTests.proj
             /bl:$(System.DefaultWorkingDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
             /p:RestoreUsingNuGetTargets=false
-          displayName: Run Helix Tests
+          displayName: Submit Helix Tests
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
