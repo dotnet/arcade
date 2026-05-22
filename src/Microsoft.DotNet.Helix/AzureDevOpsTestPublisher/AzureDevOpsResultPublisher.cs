@@ -21,7 +21,12 @@ public sealed class AzureDevOpsResultPublisher
         WriteIndented = false,
     };
 
-    private static string s_lastSendContent = string.Empty;
+    private readonly System.Threading.AsyncLocal<string> _lastSendContent = new();
+    private string s_lastSendContent
+    {
+        get => _lastSendContent.Value ?? string.Empty;
+        set => _lastSendContent.Value = value;
+    }
 
     private readonly AzureDevOpsReportingParameters _azdoParameters;
     private readonly HttpClient _httpClient;
