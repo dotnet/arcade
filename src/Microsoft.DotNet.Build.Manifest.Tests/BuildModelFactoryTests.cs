@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Build.Manifest.Tests
         private const string _testBuildBranch = "foobranch";
         private const string _testBuildCommit = "664996a16fa9228cfd7a55d767deb31f62a65f51";
         private const string _testAzdoBuildId = "89999999";
-        private const string _testInitialLocation = "https://dev.azure.com/dnceng/project/_apis/build/builds/id/artifacts";
+        private const string _testInitialLocation = "https://dnceng.visualstudio.com/project/_apis/build/builds/id/artifacts";
         private const string _normalizedTestInitialLocation = "https://dev.azure.com/dnceng/project/_apis/build/builds/id/artifacts";
         private static readonly string[] _defaultManifestBuildData = new string[]
         {
@@ -755,7 +755,7 @@ namespace Microsoft.DotNet.Build.Manifest.Tests
         }
 
         [Theory]
-        [InlineData("AzureDevOpsAccount", "https://dev.azure.com/dnceng", "https://dev.azure.com/devdiv")]
+        [InlineData("AzureDevOpsAccount", "https://dev.azure.com/dnceng", "https://dnceng.visualstudio.com")]
         [InlineData("AzureDevOpsBranch", "refs/heads/main", "main")]
         [InlineData("AzureDevOpsBuildDefinitionId", "100", "1001")]
         [InlineData("AzureDevOpsBuildId", "100", "1001")]
