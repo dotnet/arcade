@@ -146,6 +146,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public async Task<int> UploadTestResultsAsync(int testRunId, IReadOnlyList<WorkItemTestResults> results, CancellationToken cancellationToken)
         {
             int uploadedCount = 0;
+            using var publisher = new AzureDevOpsResultPublisher(
+                new AzureDevOpsReportingParameters(
+                    new Uri(_options.CollectionUri, UriKind.Absolute),
+                    _options.TeamProject,
+                    testRunId.ToString(CultureInfo.InvariantCulture),
+                    _options.SystemAccessToken),
+                _logger);
 
             async Task UploadWorkItemAsync(WorkItemTestResults workItem)
             {
@@ -160,14 +167,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 try
                 {
                     _logger.LogDebug("Publishing test results for work item '{WorkItemName}' in job '{JobName}'...", workItem.WorkItemName, workItem.JobName);
-                    var publisher = new AzureDevOpsResultPublisher(
-                        new AzureDevOpsReportingParameters(
-                            new Uri(_options.CollectionUri, UriKind.Absolute),
-                            _options.TeamProject,
-                            testRunId.ToString(CultureInfo.InvariantCulture),
-                            _options.SystemAccessToken),
-                        _logger);
-
                     TestResultUploadSummary summary = await publisher.UploadTestResultsWithSummaryAsync(
                         workItem.TestResultFiles,
                         new

@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
-public sealed class AzureDevOpsResultPublisher
+public sealed class AzureDevOpsResultPublisher : IDisposable
 {
     private const int TestListBuckets = 32;
     private static readonly TimeSpan s_httpClientTimeout = TimeSpan.FromMinutes(5);
@@ -39,6 +39,11 @@ public sealed class AzureDevOpsResultPublisher
         _azdoParameters = azdoParameters;
         _httpClient = CreateHttpClient(azdoParameters.AccessToken);
         _logger = logger;
+    }
+
+    public void Dispose()
+    {
+        _httpClient.Dispose();
     }
 
     public async Task<TestResultUploadSummary> UploadTestResultsWithSummaryAsync(List<string> testResultFiles, object resultMetadata, CancellationToken cancellationToken = default)

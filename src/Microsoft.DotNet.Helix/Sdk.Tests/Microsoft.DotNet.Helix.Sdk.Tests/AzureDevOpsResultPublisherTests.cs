@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         [Fact]
         public void Constructor_ConfiguresHttpClientTimeoutForLongUploads()
         {
-            var publisher = new AzureDevOpsResultPublisher(
+            using var publisher = new AzureDevOpsResultPublisher(
                 new AzureDevOpsReportingParameters(
                     new Uri("https://dev.azure.com/dnceng-public/"),
                     "public",
