@@ -5,7 +5,7 @@ pipeline jobs and the Helix work submitted by those jobs. It must assume it may
 crash, time out, or be retried at any point. Any behavior that must survive a
 restart can only be reconstructed from durable external state:
 
-- Azure DevOps test run tags written by the monitor.
+- Azure DevOps test run name markers written by the monitor.
 - Helix job properties written when jobs are submitted or resubmitted.
 
 The monitor should not rely on in-memory state to make decisions that must remain
@@ -27,13 +27,17 @@ uploaded, or used to fail this monitor invocation.
 
 ## Durable state
 
-### Azure DevOps test run tags
+### Azure DevOps test run name markers
 
-The monitor tags each Azure DevOps test run it creates with the Helix job name.
-Those tags are used only to determine whether test results for a Helix job have
-already been uploaded.
+The monitor appends a Helix job name marker to each Azure DevOps test run name
+it creates. The marker format is `[HelixJob:<helix-job-name>]`, so the full test
+run name is `{original-name} [HelixJob:<helix-job-name>]`. Completed test runs
+with that marker are used only to determine whether test results for a Helix job
+have already been uploaded.
 
-Test run tags do not determine whether Helix work should be retried, and test
+The monitor uses the test run name instead of Azure DevOps test run tags because
+the Azure DevOps test runs API silently drops tags created with the run. Test run
+name markers do not determine whether Helix work should be retried, and test
 result upload success or failure does not determine whether the monitor passes or
 fails.
 
@@ -75,8 +79,8 @@ time as newer incarnations complete successfully.
 Test result upload is also restart-resilient, but it is independent from retry.
 
 1. Never upload the same Helix job's test results twice.
-2. Use Azure DevOps test run tags to discover which Helix jobs have already been
-   uploaded by previous monitor invocations.
+2. Use Azure DevOps test run name markers on completed test runs to discover
+   which Helix jobs have already been uploaded by previous monitor invocations.
 3. For completed Helix jobs that have not been uploaded, upload all available
    test results.
 4. Upload completed jobs in lineage order, from old to new. For example, if both
@@ -112,12 +116,12 @@ the monitor result.
 Because the monitor may stop at any time:
 
 - It should be safe to rerun after partially uploading test results.
-- It should skip uploads for Helix jobs already tagged in completed Azure DevOps
-  test runs.
+- It should skip uploads for Helix jobs whose marker appears in completed Azure
+   DevOps test run names.
 - It should discover retry candidates again from Helix job properties on the
   next entry.
 - It should not require any process-local memory from a prior invocation.
 
 The monitor may still have useful in-memory state while a single invocation is
-running, but durable correctness must come from Azure DevOps test run tags and
-Helix job properties.
+running, but durable correctness must come from Azure DevOps test run name
+markers and Helix job properties.
