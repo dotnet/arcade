@@ -236,10 +236,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
             }
 
+            TimeSpan delayToApply = TimeSpan.Zero;
+
             if (response.Headers.TryGetValues("X-RateLimit-Delay", out IEnumerable<string> delayValues) &&
                 double.TryParse(delayValues.FirstOrDefault(), NumberStyles.Float, CultureInfo.InvariantCulture, out double delaySeconds) &&
                 delaySeconds > 0)
             {
+                TimeSpan rateLimitDelay = TimeSpan.FromSeconds(delaySeconds);
+                delayToApply = rateLimitDelay;
                 _logger.LogDebug(
                     "Azure DevOps reported X-RateLimit-Delay of {DelaySeconds:0.###}s on request to {RequestUri}.",
                     delaySeconds,
@@ -248,11 +252,16 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             if (retryAfter.HasValue && retryAfter.Value > TimeSpan.Zero)
             {
+                delayToApply = delayToApply > retryAfter.Value ? delayToApply : retryAfter.Value;
+            }
+
+            if (delayToApply > TimeSpan.Zero)
+            {
                 _logger.LogDebug(
-                    "Azure DevOps requested rate limit back-off via Retry-After. Delaying next request by {DelaySeconds:0.###}s (request: {RequestUri}).",
-                    retryAfter.Value.TotalSeconds,
+                    "Azure DevOps rate limit back-off. Delaying next request by {DelaySeconds:0.###}s (request: {RequestUri}).",
+                    delayToApply.TotalSeconds,
                     requestUri);
-                await Task.Delay(retryAfter.Value, cancellationToken);
+                await Task.Delay(delayToApply, cancellationToken);
             }
         }
 
