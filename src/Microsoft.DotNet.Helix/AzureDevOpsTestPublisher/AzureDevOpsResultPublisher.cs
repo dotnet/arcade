@@ -21,7 +21,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         WriteIndented = false,
     };
 
-    private readonly System.Threading.AsyncLocal<string> _lastSendContent = new();
+    private readonly AsyncLocal<string> _lastSendContent = new();
     private string s_lastSendContent
     {
         get => _lastSendContent.Value ?? string.Empty;
@@ -86,26 +86,15 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
 
             _logger.LogDebug("Uploaded {Count} results", publishedTestCount);
 
-            await SendMetadataAsync(resultList, cancellationToken);
+            // TODO - Do we need this?
+            // await SendMetadataAsync(resultList, cancellationToken);
             return publishedTestCount;
         }
         catch (TerminalError ex)
         {
-            await LogErrorAsync(ex, cancellationToken);
+            _logger.LogError(ex, "Failed to upload test results to Azure DevOps.");
             throw;
         }
-    }
-
-    private async Task LogErrorAsync(Exception exception, CancellationToken cancellationToken)
-    {
-        _logger.LogError(exception, "Failed to upload test results to Azure DevOps.");
-        /* TODO
-         await _eventClient.ErrorAsync(
-            HelixEnvironmentSettings.FromEnvironment(),
-            "DevOpsReportFailure",
-            $"Failed to upload results: {exception.Message}",
-            cancellationToken: cancellationToken);
-        */
     }
 
     private static async Task SendMetadataAsync(
@@ -167,13 +156,12 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         }
         /*
         var uploadedUrls = new Dictionary<int, string>();
-        /* TODO
         foreach ((int key, List<TestListRow>? testNames) in partitionedResults)
         {
             byte[] csvBytes = CreateCompressedCsv(testNames);
             string fileName = $"{Guid.NewGuid():N}.csv.gz";
             uploadedUrls[key] = await _uploadClient.UploadAsync(csvBytes, fileName, "application/gzip", cancellationToken);
-        }* /
+        }
 
         var dataModel = new
         {
@@ -189,13 +177,12 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         string base64Data = Convert.ToBase64String(compressedBytes);
         string fileNameBase = $"__helix_metadata_{Guid.NewGuid():N}.json.gz";
 
-        //await SendWithRetryAsync(
-        //    HttpMethod.Post,
-        //    $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/attachments?api-version=7.1-preview.1",
-        //    new TestRunAttachmentRequest(fileNameBase, base64Data),
-        //    cancellationToken);
+        await SendWithRetryAsync(
+            HttpMethod.Post,
+            $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/attachments?api-version=7.1-preview.1",
+            new TestRunAttachmentRequest(fileNameBase, base64Data),
+            cancellationToken);
 
-        /* TODO
         string metadataUrl = await _uploadClient.UploadAsync(compressedBytes, fileNameBase, "application/gzip", cancellationToken);
         await _eventClient.SendAsync(
             new
