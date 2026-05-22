@@ -8,11 +8,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
+using Microsoft.DotNet.Helix.Client.Models;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
     public class WaitForHelixJobCompletion : HelixTask
     {
+        private static readonly TimeSpan WorkItemStatusQueryTimeout = TimeSpan.FromSeconds(30);
+
         /// <summary>
         /// An array of Helix Jobs to be waited on
         /// </summary>
@@ -79,6 +82,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                 // Just in case the cancellation was an Http client timeout from the API, check our token was the one that caused the exception
                 if (CancelHelixJobsOnTaskCancellation && cancellationToken.IsCancellationRequested)
                 {
+                    await LogOutstandingWorkItemsOnCancellationAsync(jobName).ConfigureAwait(false);
+
                     if (string.IsNullOrEmpty(helixJobCancellationToken))
                     {
                         Log.LogWarning($"{nameof(CancelHelixJobsOnTaskCancellation)} is set to 'true', but no value was provided for {nameof(helixJobCancellationToken)}");
@@ -98,5 +103,73 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
             }
         }
+
+        private async Task LogOutstandingWorkItemsOnCancellationAsync(string jobName)
+        {
+            try
+            {
+                using var workItemQueryCancellationTokenSource = new CancellationTokenSource(WorkItemStatusQueryTimeout);
+                IReadOnlyList<WorkItemSummary> workItems = await HelixApi.WorkItem.ListAsync(jobName, workItemQueryCancellationTokenSource.Token).ConfigureAwait(false);
+                (IReadOnlyList<string> queuedWorkItems, IReadOnlyList<string> inProgressWorkItems) = GetQueuedAndInProgressWorkItems(workItems);
+
+                if (queuedWorkItems.Count > 0)
+                {
+                    Log.LogWarning($"Queued work items that had not started when cancellation was requested for job '{jobName}': {string.Join(", ", queuedWorkItems)}");
+                }
+
+                if (inProgressWorkItems.Count > 0)
+                {
+                    Log.LogWarning($"In-progress work items when cancellation was requested for job '{jobName}': {string.Join(", ", inProgressWorkItems)}");
+                }
+
+                if (queuedWorkItems.Count == 0 && inProgressWorkItems.Count == 0)
+                {
+                    Log.LogWarning($"No queued or in-progress work items were reported when cancellation was requested for job '{jobName}'.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.LogWarning($"Failed to query Helix work item status for cancelled job '{jobName}': {ex.Message}");
+            }
+        }
+
+        internal static (IReadOnlyList<string> queuedWorkItems, IReadOnlyList<string> inProgressWorkItems) GetQueuedAndInProgressWorkItems(IEnumerable<WorkItemSummary> workItems)
+        {
+            List<string> queuedWorkItems = new List<string>();
+            List<string> inProgressWorkItems = new List<string>();
+
+            foreach (WorkItemSummary workItem in workItems ?? Enumerable.Empty<WorkItemSummary>())
+            {
+                string state = workItem?.State;
+                if (string.IsNullOrEmpty(state))
+                {
+                    continue;
+                }
+
+                string workItemName = string.IsNullOrEmpty(workItem.Name) ? "<unnamed work item>" : workItem.Name;
+                string workItemDescription = $"{workItemName} ({state})";
+
+                if (IsQueuedState(state))
+                {
+                    queuedWorkItems.Add(workItemDescription);
+                }
+                else if (IsInProgressState(state))
+                {
+                    inProgressWorkItems.Add(workItemDescription);
+                }
+            }
+
+            return (queuedWorkItems, inProgressWorkItems);
+        }
+
+        private static bool IsQueuedState(string state) =>
+            state.IndexOf("wait", StringComparison.OrdinalIgnoreCase) >= 0
+            || state.IndexOf("queue", StringComparison.OrdinalIgnoreCase) >= 0
+            || state.IndexOf("pending", StringComparison.OrdinalIgnoreCase) >= 0;
+
+        private static bool IsInProgressState(string state) =>
+            state.IndexOf("running", StringComparison.OrdinalIgnoreCase) >= 0
+            || state.IndexOf("inprogress", StringComparison.OrdinalIgnoreCase) >= 0
+            || state.IndexOf("execut", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 }
