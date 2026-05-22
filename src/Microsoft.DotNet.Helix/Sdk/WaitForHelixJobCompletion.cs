@@ -44,6 +44,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             Log.LogMessage(MessageImportance.High, $"Waiting for completion of job {jobName} on {queueName}{detailsUrlWhereApplicable}");
 
+            string accessTokenSuffix = string.IsNullOrEmpty(AccessToken) ? "" : "?access_token={Get this from helix.dot.net}";
+            var reportedWorkItemFailures = new HashSet<string>();
             int iterationCount = 0;
             try
             {
@@ -57,13 +59,25 @@ namespace Microsoft.DotNet.Helix.Sdk
                         if (jd.Errors.Count() > 0)
                         {
                             string errorMsgs = string.Join(",", jd.Errors.Select(d => d.Message));
-                            Log.LogError($"Helix encountered job-level error(s) for this job ({errorMsgs}).  Please contact dnceng with this information.");
+                            Log.LogError(FailureCategory.Helix, $"Helix encountered job-level error(s) for this job ({errorMsgs}).  Please contact dnceng with this information.");
                             return;
                         }
                     }
 
                     cancellationToken.ThrowIfCancellationRequested();
                     var pf = await HelixApi.Job.PassFailAsync(jobName, cancellationToken).ConfigureAwait(false);
+
+                    // Report any newly failed work items so this information makes it into the AzDO build timeline.
+                    foreach (string failedWorkItemName in pf.Failed ?? Enumerable.Empty<string>())
+                    {
+                        string wi = Helpers.CleanWorkItemName(failedWorkItemName);
+                        if (reportedWorkItemFailures.Add(wi))
+                        {
+                            string consoleUri = HelixApi.Options.BaseUri.AbsoluteUri.TrimEnd('/') + $"/api/2019-06-17/jobs/{jobName}/workitems/{Uri.EscapeDataString(wi)}/console";
+                            Log.LogError(FailureCategory.Test, $"Work item {wi} in job {jobName} has failed. Failure log: {consoleUri}{accessTokenSuffix}");
+                        }
+                    }
+
                     if (pf.Working == 0 && pf.Total != 0)
                     {
                         Log.LogMessage(MessageImportance.High, $"Job {jobName} on {queueName} is completed with {pf.Total} finished work items.");
