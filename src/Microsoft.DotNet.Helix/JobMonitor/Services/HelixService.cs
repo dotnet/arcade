@@ -165,7 +165,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 workItemsToLog = workItemsToLog.Take(19).Append(failedWorkItems.Count - 19 + " more ...");
             }
 
-            _logger.LogInformation("Resubmitting {Count} failed work item(s) for job {JobName}:{nl}{WorkItems}",
+            _logger.LogInformation("Resubmitting {Count} failed work item(s) for job {JobName}:{nl}- {WorkItems}",
                 failedWorkItems.Count,
                 originalDisplay,
                 Environment.NewLine,
