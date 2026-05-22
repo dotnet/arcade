@@ -20,7 +20,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         /// <summary>
         /// Returns the set of Helix job names that have already been processed
-        /// by a prior monitor invocation (identified via completed AzDO test run tags).
+        /// by a prior monitor invocation (identified via completed AzDO test run names
+        /// containing the [HelixJob:...] marker).
         /// </summary>
         Task<IReadOnlySet<string>> GetProcessedHelixJobNamesAsync(CancellationToken cancellationToken);
 
