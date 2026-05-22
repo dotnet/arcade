@@ -35,16 +35,15 @@
 
   <!-- 
     The convention for names of Azure DevOps repositories mirrored from GitHub is "{GitHub org name}-{GitHub repository name}"
-    In the legacy devdiv.visualstudio instance, it is instead "{GitHub org name}-{GitHub repository name}-Trusted" with no guarantees for casing.
+    In the legacy DevDiv instance, it is instead "{GitHub org name}-{GitHub repository name}-Trusted" with no guarantees for casing.
   -->
   <PropertyGroup>
     <!-- There are quite a few git repo forms:
       https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-services
       https://dev.azure.com/dnceng/internal/_git/dotnet-arcade-services
-      https://dnceng.visualstudio.com/internal/_git/dotnet-arcade-services
-      https://devdiv.visualstudio.com/DevDiv/_git/DotNet-msbuild-Trusted
-      dnceng@vs-ssh.visualstudio.com:v3/dnceng/internal/dotnet-arcade-services
+      https://dev.azure.com/devdiv/DevDiv/_git/DotNet-msbuild-Trusted
       git@ssh.dev.azure.com:v3/dnceng/internal/dotnet-arcade-services
+      Legacy visualstudio.com and vs-ssh.visualstudio.com forms are also supported.
     -->
     <!-- Set DisableSourceLinkUrlTranslation to true when building a tool for internal use where sources only come from internal URIs -->
     <DisableSourceLinkUrlTranslation Condition="'$(DisableSourceLinkUrlTranslation)' == ''">false</DisableSourceLinkUrlTranslation>
