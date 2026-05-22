@@ -306,24 +306,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         jobResubmission.ResubmittedWorkItemCount,
                         failedWorkItems);
 
-                    if (anyNonMonitorJobFailures || anyWorkItemFailed)
+                    if (anyNonMonitorJobFailures)
                     {
-                        if (anyNonMonitorJobFailures)
-                        {
-                            _logger.LogError("One or more non-monitor pipeline jobs failed.");
-                        }
+                        _logger.LogError("One or more non-monitor pipeline jobs failed.");
+                        return 1;
+                    }
 
-                        if (anyWorkItemFailed)
-                        {
-                            var failedItems = _workItemOutcomes
-                                .Where(kv => !kv.Value)
-                                .Select(kv => $"{FormatChainKeyForDisplay(kv.Key.ChainKey)}/{kv.Key.WorkItemName}")
-                                .OrderBy(s => s, StringComparer.OrdinalIgnoreCase)
-                                .ToList();
-                            _logger.LogError("The Helix Job Monitor detected {Count} failed work item(s): {Items}",
-                                failedItems.Count, string.Join(", ", failedItems));
-                        }
-
+                    if (anyWorkItemFailed)
+                    {
                         return 1;
                     }
 
