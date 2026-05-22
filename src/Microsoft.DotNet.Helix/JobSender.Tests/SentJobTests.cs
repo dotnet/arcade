@@ -36,15 +36,15 @@ namespace Microsoft.DotNet.Helix.JobSender.Test
                 .Setup(j => j.WaitForJobAsync(correlationId, It.IsAny<int>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new OperationCanceledException("Cancelled", cts.Token));
 
-            // CancelAsync should be called with the helix cancellation token
+            // CancelAsync should be called with the helix cancellation token and no cancellation
             jobApi
-                .Setup(j => j.CancelAsync(correlationId, helixCancellationToken, default))
+                .Setup(j => j.CancelAsync(correlationId, helixCancellationToken, CancellationToken.None))
                 .Returns(Task.CompletedTask);
 
             // Act & Assert
             await Assert.ThrowsAsync<OperationCanceledException>(() => sentJob.WaitAsync(cancellationToken: cts.Token));
 
-            jobApi.Verify(j => j.CancelAsync(correlationId, helixCancellationToken, default), Times.Once);
+            jobApi.Verify(j => j.CancelAsync(correlationId, helixCancellationToken, CancellationToken.None), Times.Once);
         }
 
         [Fact]
@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.Helix.JobSender.Test
 
             // CancelAsync throws an exception (e.g., network error)
             jobApi
-                .Setup(j => j.CancelAsync(correlationId, helixCancellationToken, default))
+                .Setup(j => j.CancelAsync(correlationId, helixCancellationToken, CancellationToken.None))
                 .ThrowsAsync(new InvalidOperationException("Cancel failed"));
 
             // Act & Assert - should still throw the original OperationCanceledException

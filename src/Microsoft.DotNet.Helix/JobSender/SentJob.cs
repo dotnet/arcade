@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Helix.Client
                 {
                     try
                     {
-                        await JobApi.CancelAsync(CorrelationId, HelixCancellationToken);
+                        await JobApi.CancelAsync(CorrelationId, HelixCancellationToken, CancellationToken.None);
                     }
                     catch
                     {
