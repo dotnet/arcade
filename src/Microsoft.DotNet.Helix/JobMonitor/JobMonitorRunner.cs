@@ -111,10 +111,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task<int> RunCoreAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Monitoring Helix jobs for stage {stage} of build {BuildId}:{nl}https://dev.azure.com/dnceng-public/public/_build/results?buildId={BuildId}",
+            _logger.LogInformation("Monitoring Helix jobs for stage {stage} of build {BuildId}:{nl}{collectionUri}{teamProject}/_build/results?buildId={BuildId}",
                 _options.StageName,
                 _options.BuildId,
                 Environment.NewLine,
+                _options.CollectionUri,
+                _options.TeamProject,
                 _options.BuildId);
 
             IReadOnlySet<string> alreadyProcessed = await _azdo.GetProcessedHelixJobNamesAsync(cancellationToken);
