@@ -76,7 +76,7 @@ __AlpinePackages+=" openssl-dev"
 __AlpinePackages+=" zlib-dev"
 
 __FreeBSDBase="13.5-RELEASE"
-__FreeBSDPkg="1.21.3"
+__FreeBSDPkg="2.7.5"
 __FreeBSDABI="13"
 __FreeBSDPackages="libunwind"
 __FreeBSDPackages+=" icu"
