@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         public string StageName { get; set; }
 
-        public int TestResultUploadParallelism { get; set; } = 8;
+        public int TestResultUploadParallelism { get; set; } = 4;
 
         public bool Verbose { get; set; }
 

@@ -687,6 +687,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return;
             }
 
+            // When test uploads are the last thing running, we want to speed it up
+            // Rate limiting should be dealt with by retry logic in the upload tasks
+            _options.TestResultUploadParallelism = 16;
+
             _logger.LogInformation("Waiting for {Count} pending test result upload(s) to complete.", _pendingTestResultUploads.Count);
             await Task.WhenAll(_pendingTestResultUploads);
             PruneCompletedTestResultUploads();
