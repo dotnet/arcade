@@ -1180,6 +1180,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         {
             var azdo = new FakeAzureDevOpsService();
             var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
 
             azdo.AddTimelineResponse(
                 MonitorJob(),
@@ -1200,7 +1201,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 });
 
             using var cts = new CancellationTokenSource();
-            var runner = new JobMonitorRunner(DefaultOptions(), NullLogger.Instance, azdo, helix,
+            var runner = new JobMonitorRunner(DefaultOptions(), logger, azdo, helix,
                 (_, _) =>
                 {
                     cts.Cancel();
@@ -1214,6 +1215,15 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal(
                 ["helix-new-attempt", "helix-running", "helix-waiting"],
                 helix.CanceledJobs.OrderBy(jobName => jobName, StringComparer.OrdinalIgnoreCase).ToArray());
+            Assert.Contains(logger.Messages, message =>
+                message.Contains("Helix job(s) were unfinished or unprocessed", StringComparison.Ordinal)
+                && message.Contains("helix-new-attempt", StringComparison.Ordinal)
+                && message.Contains("status=running", StringComparison.Ordinal)
+                && message.Contains("helix-waiting", StringComparison.Ordinal)
+                && message.Contains("status=waiting", StringComparison.Ordinal));
+            Assert.Contains(logger.Messages, message =>
+                message.Contains("non-monitor Azure DevOps pipeline job(s) were still in progress or queued", StringComparison.Ordinal)
+                && message.Contains("Test Linux [state=inProgress, result=none]", StringComparison.Ordinal));
         }
 
         /// <summary>
