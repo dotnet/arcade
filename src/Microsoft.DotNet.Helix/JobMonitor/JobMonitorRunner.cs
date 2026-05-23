@@ -1008,17 +1008,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         }
 
         private static IEnumerable<AzureDevOpsTimelineRecord> GetInProgressNonMonitorPipelineJobs(
-            IEnumerable<AzureDevOpsTimelineRecord> timelineRecords,
+            IReadOnlyList<AzureDevOpsTimelineRecord> timelineRecords,
             string jobMonitorName)
-            => (timelineRecords ?? [])
+            => timelineRecords
                 .Where(r => string.Equals(r.Type, "Job", StringComparison.OrdinalIgnoreCase))
                 .Where(r => !string.Equals(r.State, "completed", StringComparison.OrdinalIgnoreCase))
                 .Where(r => !IsMonitorRecord(r, jobMonitorName));
 
         private static string FormatUnfinishedHelixJobForTimeoutLog(HelixJobInfo helixJob)
         {
-            string workItemCount = helixJob.InitialWorkItemCount?.ToString() ?? "unknown";
-            return $"{helixJob.DisplayName} [status={helixJob.Status}, initialWorkItems={workItemCount}]{Environment.NewLine}  {helixJob.DetailsUri}";
+            string workItemCountText = helixJob.InitialWorkItemCount?.ToString() ?? "unknown";
+            return $"{helixJob.DisplayName} [status={helixJob.Status}, initialWorkItems={workItemCountText}]{Environment.NewLine}  {helixJob.DetailsUri}";
         }
 
         private static string FormatInProgressPipelineJobForTimeoutLog(AzureDevOpsTimelineRecord timelineRecord)
