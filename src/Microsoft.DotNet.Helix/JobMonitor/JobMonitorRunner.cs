@@ -695,7 +695,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     continue;
                 }
 
-                _logger.LogInformation("❌ Work item '{WorkItemName}' in job '{JobName}' failed ({State}).{nl}Console: {ConsoleOutputUri}",
+                _logger.LogError("❌ Work item '{WorkItemName}' in job '{JobName}' failed ({State}).{nl}Console: {ConsoleOutputUri}",
                     workItem.Name,
                     helixJob.DisplayName,
                     FormatWorkItemState(workItem),
