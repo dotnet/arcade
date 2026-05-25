@@ -20,8 +20,8 @@ This file should be imported by eng/Versions.props
     <!-- dotnet-dnceng dependencies -->
     <MicrosoftDncEngSecretManagerPackageVersion>1.1.0-beta.26272.3</MicrosoftDncEngSecretManagerPackageVersion>
     <!-- dotnet-msbuild dependencies -->
-    <MicrosoftBuildPackageVersion>17.12.50</MicrosoftBuildPackageVersion>
-    <MicrosoftBuildFrameworkPackageVersion>17.12.50</MicrosoftBuildFrameworkPackageVersion>
+    <MicrosoftBuildPackageVersion>18.6.3</MicrosoftBuildPackageVersion>
+    <MicrosoftBuildFrameworkPackageVersion>18.6.3</MicrosoftBuildFrameworkPackageVersion>
     <MicrosoftBuildTasksCorePackageVersion>17.12.50</MicrosoftBuildTasksCorePackageVersion>
     <MicrosoftBuildUtilitiesCorePackageVersion>17.12.50</MicrosoftBuildUtilitiesCorePackageVersion>
     <!-- dotnet-roslyn dependencies -->
