@@ -1201,10 +1201,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             using var cts = new CancellationTokenSource();
             var runner = new JobMonitorRunner(DefaultOptions(), NullLogger.Instance, azdo, helix,
-                (_, _) =>
+                async (_, _) =>
                 {
+                    Task completed = await Task.WhenAny(azdo.UploadCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+                    Assert.Same(azdo.UploadCompleted.Task, completed);
                     cts.Cancel();
-                    return Task.CompletedTask;
                 });
 
             int exitCode = await runner.RunAsync(cts.Token);
