@@ -42,12 +42,20 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 // to cancel any in-flight Helix jobs before the process is killed.
                 using var signalCts = new CancellationTokenSource();
 
-                // Handle CTRL+C (Windows and Linux).
-                Console.CancelKeyPress += (_, e) =>
+                // Handle CTRL+C (Windows and Linux). The first CTRL+C triggers graceful
+                // cancellation; subsequent presses fall through to default termination so
+                // that a stuck shutdown can still be aborted by the user.
+                bool cancelRequested = false;
+                ConsoleCancelEventHandler cancelKeyPressHandler = (_, e) =>
                 {
-                    e.Cancel = true; // Prevent immediate process termination.
-                    signalCts.Cancel();
+                    if (!cancelRequested)
+                    {
+                        cancelRequested = true;
+                        e.Cancel = true; // Prevent immediate process termination.
+                        signalCts.Cancel();
+                    }
                 };
+                Console.CancelKeyPress += cancelKeyPressHandler;
 
                 // Handle SIGTERM (the signal AzDO sends on Linux agents when cancelling).
                 // PosixSignalRegistration is only supported on Unix; skip on Windows where
@@ -77,6 +85,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
                 finally
                 {
+                    Console.CancelKeyPress -= cancelKeyPressHandler;
                     sigtermRegistration?.Dispose();
                 }
             }
