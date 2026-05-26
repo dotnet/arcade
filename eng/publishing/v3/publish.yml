@@ -13,7 +13,6 @@ stages:
       displayName: Publish Assets and Symbols
       timeoutInMinutes: 120
       variables:
-        - group: DotNet-Symbol-Server-Pats
         - group: DotNetBuilds storage account tokens
         - group: AzureDevOps-Artifact-Feeds-Pats
         - group: DotNet-MSRC-Storage
@@ -159,6 +158,17 @@ stages:
               $token = (az account get-access-token --resource "$env:servicePrincipalId" | ConvertFrom-Json).accessToken
               echo "##vso[task.setvariable variable=MaestroToken;isOutput=true;isSecret=true]$token"
 
+        - task: AzureCLI@2
+          displayName: Get Symbol Server Token
+          name: GetSymbolToken
+          inputs:
+            azureSubscription: maestro-build-promotion
+            scriptType: ps
+            scriptLocation: inlineScript
+            inlineScript: |
+              $token = (az account get-access-token --resource "499b84ac-1321-427f-aa17-267ca6975798" --query accessToken -o tsv)
+              echo "##vso[task.setvariable variable=SymbolServerToken;isOutput=true;isSecret=true]$token"
+
         - task: PowerShell@2
           displayName: Publish packages, blobs and symbols
           inputs:
@@ -182,8 +192,8 @@ stages:
               /p:PDBArtifactsBasePath='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
               /p:SymbolPublishingExclusionsFile='$(Build.ArtifactStagingDirectory)/ReleaseConfigs/SymbolPublishingExclusionsFile.txt'
               ${{ parameters.symbolPublishingAdditionalParameters}}
-              /p:MsdlToken=$(microsoft-symbol-server-pat)
-              /p:SymWebToken=$(symweb-symbol-server-pat)
+              /p:MsdlToken=$(GetSymbolToken.SymbolServerToken)
+              /p:SymWebToken=$(GetSymbolToken.SymbolServerToken)
               /p:BuildQuality='${{ parameters.buildQuality }}'
               /p:AzdoApiToken='$(dn-bot-all-orgs-build-rw-code-rw)'
               /p:ArtifactsBasePath='$(Build.ArtifactStagingDirectory)/'
