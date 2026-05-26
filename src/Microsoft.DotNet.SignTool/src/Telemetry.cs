@@ -26,8 +26,13 @@ namespace Microsoft.DotNet.SignTool
         public Telemetry()
         {
             _metrics = new Dictionary<string, double>();
+            // Skip telemetry if explicitly disabled, or if no Application Insights connection string /
+            // instrumentation key is configured. ApplicationInsights 3.x throws when attempting to
+            // track telemetry without a connection string, whereas earlier versions silently no-op'd.
             _disableTelemetry =
-                (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGNTOOL_DISABLE_TELEMETRY")));
+                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGNTOOL_DISABLE_TELEMETRY")) ||
+                (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING")) &&
+                 string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPINSIGHTS_INSTRUMENTATIONKEY")));
         }
 
         internal void AddMetric(string name, double value)
