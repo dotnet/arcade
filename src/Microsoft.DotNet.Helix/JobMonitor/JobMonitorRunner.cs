@@ -977,7 +977,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 .OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
                 .ToList();
             var inProgressPipelineJobs = GetInProgressNonMonitorPipelineJobs(latestTimelineRecords, _options.JobMonitorName)
-                .OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(r => r.Name ?? r.ReferenceName ?? r.Identifier ?? string.Empty, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
             if (unfinishedHelixJobs.Count == 0 && inProgressPipelineJobs.Count == 0)
