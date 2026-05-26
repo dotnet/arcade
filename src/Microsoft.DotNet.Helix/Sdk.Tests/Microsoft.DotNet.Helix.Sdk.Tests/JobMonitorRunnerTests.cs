@@ -2515,9 +2515,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 message.Contains("wi-pass", StringComparison.Ordinal)
                 && message.Contains("https://helix.example/wi-pass/console", StringComparison.Ordinal));
             Assert.Contains(logger.Messages, message =>
-                message.Contains($"Work item 'wi-fail' in job 'helix-linux' failed (Finished, exit code 1).{Environment.NewLine}Console: https://helix.example/wi-fail/console", StringComparison.Ordinal));
+                message.Contains($"##vso[task.logissue type=error]❌ Work item 'wi-fail' in job 'helix-linux' failed (Finished, exit code 1).{Environment.NewLine}##vso[task.logissue type=error]Console: https://helix.example/wi-fail/console", StringComparison.Ordinal));
             Assert.Contains(logger.ErrorMessages, message =>
-                message.Contains($"Work item 'wi-fail' in job 'helix-linux' failed (Finished, exit code 1).{Environment.NewLine}Console: https://helix.example/wi-fail/console", StringComparison.Ordinal));
+                message.Contains("##vso[task.logissue type=error]", StringComparison.Ordinal)
+                && message.Contains($"❌ Work item 'wi-fail' in job 'helix-linux' failed (Finished, exit code 1).{Environment.NewLine}##vso[task.logissue type=error]Console: https://helix.example/wi-fail/console", StringComparison.Ordinal));
             Assert.Contains(logger.Messages, message =>
                 message.Contains("Failed work item console logs:", StringComparison.Ordinal)
                 && message.Contains("Test results: https://dev.azure.com/dnceng/public/_build/results?buildId=123&view=ms.vss-test-web.build-test-results-tab", StringComparison.Ordinal)
