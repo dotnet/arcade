@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using System;
 using System.Collections.Generic;
@@ -45,7 +46,16 @@ namespace Microsoft.DotNet.SignTool
                 TelemetryConfiguration configuration = TelemetryConfiguration.CreateDefault();
                 TelemetryClient telemetryClient = new TelemetryClient(configuration);
 
-                telemetryClient.TrackEvent(s_sendEventName, properties: s_properties, metrics: _metrics);
+                EventTelemetry eventTelemetry = new EventTelemetry(s_sendEventName);
+                foreach (KeyValuePair<string, string> property in s_properties)
+                {
+                    eventTelemetry.Properties[property.Key] = property.Value;
+                }
+                telemetryClient.TrackEvent(eventTelemetry);
+                foreach (KeyValuePair<string, double> metric in _metrics)
+                {
+                    telemetryClient.TrackMetric(metric.Key, metric.Value, s_properties);
+                }
                 telemetryClient.Flush();
                 _metrics = null;
             }
