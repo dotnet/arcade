@@ -1010,7 +1010,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private static IEnumerable<AzureDevOpsTimelineRecord> GetInProgressNonMonitorPipelineJobs(
             IReadOnlyList<AzureDevOpsTimelineRecord> timelineRecords,
             string jobMonitorName)
-            => HelixJobMonitorUtilities.GetNonMonitorJobRecords(timelineRecords, jobMonitorName)
+            => HelixJobMonitorUtilities.GetRelevantNonMonitorJobRecords(timelineRecords, jobMonitorName)
                 .Where(r => !string.Equals(r.State, "completed", StringComparison.OrdinalIgnoreCase));
 
         private static string FormatUnfinishedHelixJobForTimeoutLog(HelixJobInfo helixJob)

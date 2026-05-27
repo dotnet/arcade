@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
     public static class HelixJobMonitorUtilities
     {
         public static bool AreNonMonitorJobsComplete(IEnumerable<AzureDevOpsTimelineRecord> records, string jobMonitorName)
-            => GetNonMonitorJobRecords(records, jobMonitorName).All(IsTerminal);
+            => GetRelevantNonMonitorJobRecords(records, jobMonitorName).All(IsTerminal);
 
         public static bool HasFailedNonMonitorJobs(IEnumerable<AzureDevOpsTimelineRecord> records, string jobMonitorName)
             => HasFailedNonMonitorJobs(records, jobMonitorName, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
@@ -65,13 +65,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             IEnumerable<AzureDevOpsTimelineRecord> records,
             string jobMonitorName,
             IReadOnlySet<string> ignoredJobNames)
-            => GetNonMonitorJobRecords(records, jobMonitorName)
+            => GetRelevantNonMonitorJobRecords(records, jobMonitorName)
                 .Where(r => ignoredJobNames == null || !ignoredJobNames.Contains(r.ReferenceName))
                 .Any(r =>
                     string.Equals(r.Result, "failed", StringComparison.OrdinalIgnoreCase)
                     || string.Equals(r.Result, "canceled", StringComparison.OrdinalIgnoreCase));
 
-        public static IEnumerable<AzureDevOpsTimelineRecord> GetNonMonitorJobRecords(
+        public static IEnumerable<AzureDevOpsTimelineRecord> GetRelevantNonMonitorJobRecords(
             IEnumerable<AzureDevOpsTimelineRecord> records,
             string jobMonitorName)
             => GetRelevantJobRecords(records, jobMonitorName);
