@@ -702,10 +702,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 Console.Error.WriteLine(failedWorkItemMessage);
                 Console.Error.WriteLine(consoleMessage);
-                _logger.LogError("{FailedWorkItemMessage}{nl}{ConsoleMessage}",
-                    failedWorkItemMessage,
+                _logger.LogError("##vso[task.logissue type=error]❌ Work item '{WorkItemName}' in job '{JobName}' failed ({State}).{nl}##vso[task.logissue type=error]Console: {ConsoleOutputUri}",
+                    workItem.Name,
+                    helixJob.DisplayName,
+                    state,
                     Environment.NewLine,
-                    consoleMessage);
+                    consoleOutputText);
             }
         }
 
