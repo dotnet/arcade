@@ -1010,10 +1010,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private static IEnumerable<AzureDevOpsTimelineRecord> GetInProgressNonMonitorPipelineJobs(
             IReadOnlyList<AzureDevOpsTimelineRecord> timelineRecords,
             string jobMonitorName)
-            => timelineRecords
-                .Where(r => string.Equals(r.Type, "Job", StringComparison.OrdinalIgnoreCase))
-                .Where(r => !string.Equals(r.State, "completed", StringComparison.OrdinalIgnoreCase))
-                .Where(r => !IsMonitorRecord(r, jobMonitorName));
+            => HelixJobMonitorUtilities.GetNonMonitorJobRecords(timelineRecords, jobMonitorName)
+                .Where(r => !string.Equals(r.State, "completed", StringComparison.OrdinalIgnoreCase));
 
         private static string FormatUnfinishedHelixJobForTimeoutLog(HelixJobInfo helixJob)
         {
@@ -1032,19 +1030,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             return $"{name} [state={state}, result={result}]";
-        }
-
-        private static bool IsMonitorRecord(AzureDevOpsTimelineRecord timelineRecord, string jobMonitorName)
-        {
-            if (timelineRecord is null)
-            {
-                return false;
-            }
-
-            return !string.IsNullOrEmpty(jobMonitorName)
-                && (string.Equals(timelineRecord.ReferenceName, jobMonitorName, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(timelineRecord.Name, jobMonitorName, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(timelineRecord.Identifier, jobMonitorName, StringComparison.OrdinalIgnoreCase));
         }
 
         public void Dispose()
