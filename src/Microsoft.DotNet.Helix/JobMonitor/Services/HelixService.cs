@@ -272,15 +272,25 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             string newJobListUri = AppendSasIfPresent(jobListBlobClient.Uri, container.ReadToken);
 
-            // 5. Build the new job creation request, copying over Source / Properties / Creator
+            // 5. Build the new job creation request, copying over source metadata / properties / creator
             //    so the resubmitted job remains discoverable (BuildId, System.StageName, TestRunName, etc.).
             var creationRequest = new JobCreationRequest(details.Type, newJobListUri, details.QueueId)
             {
-                Source = details.Source,
                 Creator = details.Creator,
                 Properties = ConvertPropertiesToImmutableDictionary(details.Properties)
                     .SetItem(HelixJobInfo.PreviousHelixJobNamePropertyName, originalJobName),
             };
+            if (TryParseSource(details.Source, out string sourcePrefix, out string teamProject, out string repository, out string branch))
+            {
+                creationRequest.SourcePrefix = sourcePrefix;
+                creationRequest.TeamProject = teamProject;
+                creationRequest.Repository = repository;
+                creationRequest.Branch = branch;
+            }
+            else
+            {
+                creationRequest.Source = details.Source;
+            }
 
             string idempotencyKey = Guid.NewGuid().ToString("N");
             JobCreationResult newJob = await RetryHelper.RetryAsync(
@@ -333,6 +343,49 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             return builder.ToImmutable();
+        }
+
+        private static bool TryParseSource(
+            string source,
+            out string sourcePrefix,
+            out string teamProject,
+            out string repository,
+            out string branch)
+        {
+            sourcePrefix = null;
+            teamProject = null;
+            repository = null;
+            branch = null;
+
+            if (string.IsNullOrWhiteSpace(source))
+            {
+                return false;
+            }
+
+            int firstSlash = source.IndexOf('/');
+            if (firstSlash <= 0 || firstSlash >= source.Length - 1)
+            {
+                return false;
+            }
+
+            int secondSlash = source.IndexOf('/', firstSlash + 1);
+            if (secondSlash <= firstSlash + 1 || secondSlash >= source.Length - 1)
+            {
+                return false;
+            }
+
+            string remainder = source[(secondSlash + 1)..];
+            int refsStart = remainder.IndexOf("/refs/", StringComparison.Ordinal);
+            if (refsStart <= 0 || refsStart >= remainder.Length - 1)
+            {
+                return false;
+            }
+
+            sourcePrefix = source[..firstSlash];
+            teamProject = source[(firstSlash + 1)..secondSlash];
+            repository = remainder[..refsStart];
+            branch = remainder[(refsStart + 1)..];
+            return true;
         }
 
         private static string GetStringPropertyFromProperties(JToken properties, string name)
