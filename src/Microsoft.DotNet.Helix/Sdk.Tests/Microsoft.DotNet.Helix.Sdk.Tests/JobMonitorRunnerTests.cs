@@ -2572,7 +2572,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.DoesNotContain(logger.Messages, message =>
                 message.Contains("Helix job details:", StringComparison.Ordinal));
             Assert.Contains(logger.Messages, message =>
-                message.Contains($"Work item 'wi-2' in job 'helix-linux' failed (Finished, exit code 1).{Environment.NewLine}Console: https://helix.example/wi-2/console", StringComparison.Ordinal));
+                message.Contains($"##vso[task.logissue type=error]❌ Work item 'wi-2' in job 'helix-linux' failed (Finished, exit code 1).{Environment.NewLine}##vso[task.logissue type=error]Console: https://helix.example/wi-2/console", StringComparison.Ordinal));
         }
 
         [Fact]
