@@ -702,7 +702,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     helixJob.DisplayName,
                     workItem.Name,
                     state,
-                    Environment.NewLine,
                     consoleOutputText);
             }
         }
