@@ -1,0 +1,24 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<Project>
+
+  <Target Name="BatchHelixWorkItems"
+          Condition="'$(EnableHelixWorkItemBatching)' == 'true' and '@(HelixWorkItem)' != ''"
+          BeforeTargets="CoreTest">
+    <BatchHelixWorkItems WorkItems="@(HelixWorkItem)"
+                         IntermediateOutputPath="$(IntermediateOutputPath)"
+                         IsPosixShell="$(IsPosixShell)"
+                         TargetDuration="$(HelixBatchTargetDuration)"
+                         TimeoutPadding="$(HelixBatchTimeoutPadding)"
+                         MaxItemsPerBatch="$(HelixBatchMaxItems)"
+                         MinItemsPerBatch="$(HelixBatchMinItems)">
+      <Output TaskParameter="BatchedWorkItems" ItemName="_BatchedHelixWorkItem" />
+    </BatchHelixWorkItems>
+
+    <ItemGroup>
+      <HelixWorkItem Remove="@(HelixWorkItem)" />
+      <HelixWorkItem Include="@(_BatchedHelixWorkItem)" />
+      <_BatchedHelixWorkItem Remove="@(_BatchedHelixWorkItem)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

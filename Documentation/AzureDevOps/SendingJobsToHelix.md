@@ -127,6 +127,30 @@ XUnit v3 test projects are self-hosting executables and do not need an external 
 
 For anything more complex than the above example, you'll want to create your own MSBuild proj file to specify the work items and correlation payloads you want to send up to Helix. Full documentation on how to do this can be found [in the SDK's readme](../../src/Microsoft.DotNet.Helix/Sdk/Readme.md).
 
+## Batching short work items
+
+If a job sends many short xUnit projects or `PayloadDirectory` work items, the Helix SDK can batch compatible work items to reduce per-item setup/download/upload overhead:
+
+```yaml
+- template: /eng/common/templates/steps/send-to-helix.yml
+  parameters:
+    EnableHelixWorkItemBatching: true
+    HelixBatchTargetDuration: '00:10:00'
+    HelixBatchMaxItems: 10
+```
+
+For custom Helix project files, set the same properties directly:
+
+```xml
+<PropertyGroup>
+  <EnableHelixWorkItemBatching>true</EnableHelixWorkItemBatching>
+  <HelixBatchTargetDuration>00:10:00</HelixBatchTargetDuration>
+  <HelixBatchMaxItems>10</HelixBatchMaxItems>
+</PropertyGroup>
+```
+
+Batching is opt-in and conservative. It currently batches simple `PayloadDirectory` work items, preserves unbatchable items unchanged, and writes each member's logs/results to a separate upload subdirectory. Use `HelixBatchable=false` on tests that require isolation.
+
 ## Viewing test results
 
 All test results will be downloaded to the Azure DevOps build and viewable through the **Tests** tab.
