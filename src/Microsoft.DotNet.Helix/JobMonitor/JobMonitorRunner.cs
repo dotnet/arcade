@@ -121,7 +121,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             IReadOnlySet<string> alreadyProcessed = await _azdo.GetProcessedHelixJobNamesAsync(cancellationToken);
             HashSet<string> processedHelixJobs = new(alreadyProcessed, StringComparer.OrdinalIgnoreCase);
-            HashSet<HelixJobInfo> associatedJobs = new(HelixJobInfo.ByJobNameComparer);
+            // Keyed by Helix job name so that each poll overwrites the cached snapshot with the
+            // latest state from Helix. Using a HashSet here would retain the first-seen snapshot
+            // (typically Status="running", Finished=null), which would cause ReportTimeout and
+            // CancelInFlightHelixJobsAsync to treat already-completed jobs as still in flight.
+            Dictionary<string, HelixJobInfo> associatedJobs = new(StringComparer.OrdinalIgnoreCase);
 
             try
             {
@@ -141,7 +145,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 // lost (and tests that observe UploadedJobNames immediately after a cancelled
                 // run see a partial set).
                 await WaitForPendingTestResultUploadsAsync(CancellationToken.None);
-                ReportTimeout(associatedJobs, processedHelixJobs);
+                ReportTimeout(associatedJobs.Values, processedHelixJobs);
 
                 // On cancellation (typically the overall timeout), proactively cancel any
                 // Helix jobs we know about that haven't finished yet so they don't keep
@@ -150,7 +154,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 // already cancelled) so the best-effort cancel calls actually run.
                 using (var cancelCts = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
                 {
-                    await CancelInFlightHelixJobsAsync(associatedJobs, processedHelixJobs, cancelCts.Token);
+                    await CancelInFlightHelixJobsAsync(associatedJobs.Values, processedHelixJobs, cancelCts.Token);
                 }
 
                 return 1;
@@ -202,7 +206,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task<int> RunLoopAsync(
             HashSet<string> processedHelixJobs,
-            HashSet<HelixJobInfo> associatedJobs,
+            Dictionary<string, HelixJobInfo> associatedJobs,
             JobResubmissionResult jobResubmission,
             CancellationToken cancellationToken)
         {
@@ -233,7 +237,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         || string.Equals(j.StageName, _options.StageName, StringComparison.OrdinalIgnoreCase))
                 ];
 
-                associatedJobs.UnionWith(associatedJobsWithBuild);
+                // Overwrite per poll so the cached entry reflects the latest Helix-side state
+                // (in particular, the Finished timestamp transitioning from null to a value).
+                foreach (HelixJobInfo j in associatedJobsWithBuild)
+                {
+                    associatedJobs[j.JobName] = j;
+                }
 
                 // Cache every job we have seen so GetSubmitterChainKey can follow the
                 // PreviousHelixJobName chain back to a root, even across polls.
