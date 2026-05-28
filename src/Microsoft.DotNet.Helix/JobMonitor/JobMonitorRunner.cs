@@ -698,7 +698,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 string state = FormatWorkItemState(workItem);
                 string consoleOutputText = GetConsoleOutputText(workItem.ConsoleOutputUri);
 
-                _logger.LogError("##vso[task.logissue type=error]❌ Work item '{WorkItemName}' in job '{JobName}' failed ({State}).{nl}##vso[task.logissue type=error]Console: {ConsoleOutputUri}",
+                _logger.LogError("##vso[task.logissue type=error]❌ Helix Job: {JobName} Work Item:  {WorkItemName}' Failed: {State}.{nl}##vso[task.logissue type=error]Console: {ConsoleOutputUri}",
                     workItem.Name,
                     helixJob.DisplayName,
                     state,
