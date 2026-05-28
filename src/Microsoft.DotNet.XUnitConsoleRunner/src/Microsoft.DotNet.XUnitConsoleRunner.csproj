@@ -1,7 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(NetMinimum)</TargetFramework>
+    <!-- Target NetCurrent so the test host can load test assemblies built against
+         the current .NET TFM. Using NetMinimum here causes TypeLoadException
+         "format is invalid" when loading newer-TFM test assemblies because the
+         minimum .NET runtime is selected and cannot resolve newer BCL members. -->
+    <TargetFramework>$(NetCurrent)</TargetFramework>
     <OutputType>Exe</OutputType>
     <AssemblyName>xunit.console</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
