@@ -287,18 +287,20 @@ namespace Microsoft.DotNet.Helix.Client
                 log("note : Helix queue health reporting is a preview feature; data and format may change.");
             }
 
-            log($"Helix queue '{queueId}' health{healthTag}:");
+            string queueName = string.IsNullOrEmpty(stats.QueueName) ? queueId : stats.QueueName;
+
+            log($"Helix queue '{queueName}' health{healthTag}:");
             log($"  Estimated wait : {estWait}   (queue depth: {depth}, avg run: {avgRun})");
             log($"  Snapshot taken : {snapshot}{staleTag}");
 
             if (overSla)
             {
-                log($"warning : Helix queue '{queueId}' estimated wait of {estWait} exceeds the {QueueWaitSlaThreshold.TotalMinutes:F0}-minute SLA - the queue is at capacity or unhealthy. Jobs may take longer than usual to start.");
+                log($"warning : Helix queue '{queueName}' estimated wait of {estWait} exceeds the {QueueWaitSlaThreshold.TotalMinutes:F0}-minute SLA - the queue is at capacity or unhealthy. Jobs may take longer than usual to start.");
             }
 
             if (stale)
             {
-                log($"warning : Helix queue '{queueId}' health snapshot is {FormatTimeSpan(snapshotAge)} old (threshold {SnapshotStaleThreshold.TotalMinutes:F0}m) - reported wait/depth may not reflect current queue state.");
+                log($"warning : Helix queue '{queueName}' health snapshot is {FormatTimeSpan(snapshotAge)} old (threshold {SnapshotStaleThreshold.TotalMinutes:F0}m) - reported wait/depth may not reflect current queue state.");
             }
 
             if (Interlocked.Exchange(ref s_firstRespondersHintShown, 1) == 0)
