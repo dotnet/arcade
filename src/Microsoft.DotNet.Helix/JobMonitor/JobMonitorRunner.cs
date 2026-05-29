@@ -102,13 +102,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return RunCoreAsync(cancellationToken);
         }
 
-        public async Task<int> RunAsync()
-        {
-            var cancellationTokenSource = new CancellationTokenSource();
-            cancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(_options.MaximumWaitMinutes));
-            return await RunCoreAsync(cancellationTokenSource.Token);
-        }
-
         private async Task<int> RunCoreAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Monitoring Helix jobs for stage {stage} of build {BuildId}:{nl}{collectionUri}{teamProject}/_build/results?buildId={BuildId}",
