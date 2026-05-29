@@ -502,22 +502,12 @@ function DotNet {
 }
 
 function MSBuild {
-  local args=( "$@" )
-
   if [[ "$ci" == true ]]; then
-    InitializeToolset
-
     export NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS=20
     export NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS=20
     Write-PipelineSetVariable -name "NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS" -value "20"
     Write-PipelineSetVariable -name "NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS" -value "20"
-  fi
 
-  MSBuild-Core "${args[@]}"
-}
-
-function MSBuild-Core {
-  if [[ "$ci" == true ]]; then
     if [[ "$binary_log" != true && "$exclude_ci_binary_log" != true ]]; then
       Write-PipelineTelemetryError -category 'Build'  "Binary log must be enabled in CI build, or explicitly opted-out from with the -noBinaryLog switch."
       ExitWithExitCode 1
@@ -665,3 +655,6 @@ fi
 if [[ -n "${useInstalledDotNetCli:-}" ]]; then
   use_installed_dotnet_cli="$useInstalledDotNetCli"
 fi
+
+# Initialize the nuget package cache vars
+GetNuGetPackageCachePath

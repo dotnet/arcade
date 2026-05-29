@@ -748,60 +748,11 @@ function Stop-Processes() {
 #
 function MSBuild() {
   if ($ci) {
-    InitializeToolset | Out-Null
-
     $env:NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS = 20
     $env:NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS = 20
     Write-PipelineSetVariable -Name 'NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS' -Value '20'
     Write-PipelineSetVariable -Name 'NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS' -Value '20'
 
-    Enable-Nuget-EnhancedRetry
-  }
-
-  MSBuild-Core @args
-}
-
-#
-# Executes a dotnet command with arguments passed to the function.
-# Terminates the script if the command fails.
-#
-function DotNet() {
-  $dotnetRoot = InitializeDotNetCli -install:$restore
-  $dotnetPath = Join-Path $dotnetRoot (GetExecutableFileName 'dotnet')
-
-  $cmdArgs = ""
-  foreach ($arg in $args) {
-    if ($null -ne $arg -and $arg.Trim() -ne "") {
-      if ($arg.EndsWith('\')) {
-        $arg = $arg + "\"
-      }
-      $cmdArgs += " `"$arg`""
-    }
-  }
-
-  $env:ARCADE_BUILD_TOOL_COMMAND = "`"$dotnetPath`" $cmdArgs"
-
-  $exitCode = Exec-Process $dotnetPath $cmdArgs
-
-  if ($exitCode -ne 0) {
-    Write-Host "dotnet command failed with exit code $exitCode. Check errors above." -ForegroundColor Red
-
-    if ($ci -and $env:SYSTEM_TEAMPROJECT -ne $null -and !$fromVMR) {
-      Write-PipelineSetResult -Result "Failed" -Message "dotnet command execution failed."
-      ExitWithExitCode 0
-    } else {
-      ExitWithExitCode $exitCode
-    }
-  }
-}
-
-#
-# Executes msbuild (or 'dotnet msbuild') with arguments passed to the function.
-# The arguments are automatically quoted.
-# Terminates the script if the build fails.
-#
-function MSBuild-Core() {
-  if ($ci) {
     if (!$binaryLog -and !$excludeCIBinarylog) {
       Write-PipelineTelemetryError -Category 'Build' -Message 'Binary log must be enabled in CI build, or explicitly opted-out from with the -excludeCIBinarylog switch.'
       ExitWithExitCode 1
@@ -876,6 +827,40 @@ function MSBuild-Core() {
   }
 }
 
+#
+# Executes a dotnet command with arguments passed to the function.
+# Terminates the script if the command fails.
+#
+function DotNet() {
+  $dotnetRoot = InitializeDotNetCli -install:$restore
+  $dotnetPath = Join-Path $dotnetRoot (GetExecutableFileName 'dotnet')
+
+  $cmdArgs = ""
+  foreach ($arg in $args) {
+    if ($null -ne $arg -and $arg.Trim() -ne "") {
+      if ($arg.EndsWith('\')) {
+        $arg = $arg + "\"
+      }
+      $cmdArgs += " `"$arg`""
+    }
+  }
+
+  $env:ARCADE_BUILD_TOOL_COMMAND = "`"$dotnetPath`" $cmdArgs"
+
+  $exitCode = Exec-Process $dotnetPath $cmdArgs
+
+  if ($exitCode -ne 0) {
+    Write-Host "dotnet command failed with exit code $exitCode. Check errors above." -ForegroundColor Red
+
+    if ($ci -and $env:SYSTEM_TEAMPROJECT -ne $null -and !$fromVMR) {
+      Write-PipelineSetResult -Result "Failed" -Message "dotnet command execution failed."
+      ExitWithExitCode 0
+    } else {
+      ExitWithExitCode $exitCode
+    }
+  }
+}
+
 function GetMSBuildBinaryLogCommandLineArgument($arguments) {
   foreach ($argument in $arguments) {
     if ($argument -ne $null) {
@@ -914,6 +899,21 @@ function Get-Darc($version) {
     & $PSScriptRoot\darc-init.ps1 -toolpath $darcPath | Out-Host
   }
   return "$darcPath\darc.exe"
+}
+
+# If $ci flag is set, turn on (and log that we did) special environment variables for improved Nuget client retry logic.
+function Enable-Nuget-EnhancedRetry() {
+  if ($ci) {
+    Write-Host "Setting NUGET enhanced retry environment variables"
+    $env:NUGET_ENABLE_ENHANCED_HTTP_RETRY = 'true'
+    $env:NUGET_ENHANCED_MAX_NETWORK_TRY_COUNT = 6
+    $env:NUGET_ENHANCED_NETWORK_RETRY_DELAY_MILLISECONDS = 1000
+    $env:NUGET_RETRY_HTTP_429 = 'true'
+    Write-PipelineSetVariable -Name 'NUGET_ENABLE_ENHANCED_HTTP_RETRY' -Value 'true'
+    Write-PipelineSetVariable -Name 'NUGET_ENHANCED_MAX_NETWORK_TRY_COUNT' -Value '6'
+    Write-PipelineSetVariable -Name 'NUGET_ENHANCED_NETWORK_RETRY_DELAY_MILLISECONDS' -Value '1000'
+    Write-PipelineSetVariable -Name 'NUGET_RETRY_HTTP_429' -Value 'true'
+  }
 }
 
 . $PSScriptRoot\pipeline-logging-functions.ps1
@@ -960,19 +960,5 @@ if (!$disableConfigureToolsetImport) {
   }
 }
 
-#
-# If $ci flag is set, turn on (and log that we did) special environment variables for improved Nuget client retry logic.
-#
-function Enable-Nuget-EnhancedRetry() {
-    if ($ci) {
-      Write-Host "Setting NUGET enhanced retry environment variables"
-      $env:NUGET_ENABLE_ENHANCED_HTTP_RETRY = 'true'
-      $env:NUGET_ENHANCED_MAX_NETWORK_TRY_COUNT = 6
-      $env:NUGET_ENHANCED_NETWORK_RETRY_DELAY_MILLISECONDS = 1000
-      $env:NUGET_RETRY_HTTP_429 = 'true'
-      Write-PipelineSetVariable -Name 'NUGET_ENABLE_ENHANCED_HTTP_RETRY' -Value 'true'
-      Write-PipelineSetVariable -Name 'NUGET_ENHANCED_MAX_NETWORK_TRY_COUNT' -Value '6'
-      Write-PipelineSetVariable -Name 'NUGET_ENHANCED_NETWORK_RETRY_DELAY_MILLISECONDS' -Value '1000'
-      Write-PipelineSetVariable -Name 'NUGET_RETRY_HTTP_429' -Value 'true'
-    }
-}
+# Initialize the nuget package cache vars
+GetNuGetPackageCachePath | Out-Null
