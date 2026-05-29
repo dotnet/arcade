@@ -53,16 +53,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly List<Task> _pendingTestResultUploads = [];
 
         /// <summary>
-        /// Drives cancellation of background test-result uploads. This is deliberately
-        /// independent of the runner's cancellation token: once an upload has started we want
-        /// it to run to completion even if the monitor times out, so that results which have
-        /// already been gathered are not lost. The timeout/drain path waits a bounded grace
-        /// period for in-flight uploads to finish and only then cancels this source to abort
-        /// any stragglers stuck in their retry loops.
-        /// </summary>
-        private readonly CancellationTokenSource _uploadCts = new();
-
-        /// <summary>
         /// Constructor for production use with real services.
         /// </summary>
         public JobMonitorRunner(JobMonitorOptions options, ILogger logger)
@@ -142,26 +132,27 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
             catch (OperationCanceledException)
             {
-                // Drain in-flight test-result uploads before exiting. The uploads run on their
-                // own cancellation source (_uploadCts), independent of the runner's token, so a
-                // started upload keeps running after the monitor times out; if we returned
-                // without awaiting them, any results that hadn't reached AzDO yet would be lost
-                // (and tests that observe UploadedJobNames immediately after a cancelled run
-                // would see a partial set). We wait a bounded grace period for them to finish
-                // and only then cancel stragglers so a persistently-failing upload can't hang
-                // shutdown forever.
-                await DrainPendingTestResultUploadsAsync();
+                // The monitor was cancelled — either AzDO is tearing down the pipeline job
+                // (CTRL+C / SIGTERM) or the configured MaximumWaitMinutes elapsed. We can't
+                // tell those apart (both share the runner's cancellation token), and in the
+                // AzDO case the agent only gives us a short window before it kills the process.
+                // So do the cheap, important cleanup first: report the timeout and proactively
+                // cancel any in-flight Helix jobs so they don't keep consuming queue capacity
+                // after we exit. The Helix-cancel calls use a short, bounded timeout that is
+                // independent of the runner's (already-cancelled) token so they actually run.
                 ReportTimeout(associatedJobs.Values, processedHelixJobs);
 
-                // On cancellation (typically the overall timeout), proactively cancel any
-                // Helix jobs we know about that haven't finished yet so they don't keep
-                // consuming queue capacity after the monitor exits. We use a short, bounded
-                // timeout that is independent of the runner's cancellation token (which is
-                // already cancelled) so the best-effort cancel calls actually run.
                 using (var cancelCts = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
                 {
                     await CancelInFlightHelixJobsAsync(associatedJobs.Values, processedHelixJobs, cancelCts.Token);
                 }
+
+                // In-flight test-result uploads are bound to the (now-cancelled) runner token
+                // and are already unwinding. We only observe them best-effort: if this is the
+                // self-timeout case the monitor is relaunched and re-uploads any results that
+                // didn't make it, so we must not block shutdown waiting on them, nor let their
+                // cancellation/faults escape and skip the cleanup above.
+                await ObservePendingTestResultUploadsAsync();
 
                 return 1;
             }
@@ -586,7 +577,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             if (uploadTestResults)
             {
-                QueueTestResultUpload(helixJob, workItems);
+                QueueTestResultUpload(helixJob, workItems, cancellationToken);
             }
 
             _logger.LogInformation("{Icon} Job '{JobName}' {Status} ({PassedCount} passed, {FailedCount} failed){nl}{JobUri}",
@@ -600,17 +591,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private void QueueTestResultUpload(
             HelixJobInfo helixJob,
-            IReadOnlyCollection<WorkItemSummary> workItems)
+            IReadOnlyCollection<WorkItemSummary> workItems,
+            CancellationToken cancellationToken)
         {
             IReadOnlyList<string> workItemNames = [.. workItems.Select(w => w.Name)];
-
-            // Run the upload on _uploadCts.Token rather than the runner's cancellation token so
-            // that an upload which has already started runs to completion even if the monitor
-            // times out. This is what makes the timeout-path drain (DrainPendingTestResultUploadsAsync)
-            // effective: without it, an in-flight upload would observe the cancelled runner token
-            // and abort, losing results that had already been gathered.
             Task uploadTask = Task.Run(
-                () => UploadTestResultsForJobAsync(helixJob, workItemNames, _uploadCts.Token),
+                () => UploadTestResultsForJobAsync(helixJob, workItemNames, cancellationToken),
                 CancellationToken.None);
             _pendingTestResultUploads.Add(uploadTask);
         }
@@ -692,8 +678,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private async Task WaitForPendingTestResultUploadsAsync(CancellationToken cancellationToken)
         {
             PruneCompletedTestResultUploads();
-            Task[] pending = [.. _pendingTestResultUploads];
-            if (pending.Length == 0)
+            if (_pendingTestResultUploads.Count == 0)
             {
                 return;
             }
@@ -702,56 +687,36 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             // Rate limiting should be dealt with by retry logic in the upload tasks
             _options.TestResultUploadParallelism = 16;
 
-            _logger.LogInformation("Waiting for {Count} pending test result upload(s) to complete.", pending.Length);
-
-            // The uploads themselves run on _uploadCts.Token, not this token. Honor the runner's
-            // token only for the *wait* so that if the monitor times out while we are waiting on
-            // the normal completion path, the OperationCanceledException propagates and we enter
-            // the timeout/drain path (which returns exit code 1) instead of hanging here.
-            await Task.WhenAll(pending).WaitAsync(cancellationToken);
+            _logger.LogInformation("Waiting for {Count} pending test result upload(s) to complete.", _pendingTestResultUploads.Count);
+            await Task.WhenAll(_pendingTestResultUploads);
             PruneCompletedTestResultUploads();
         }
 
-        /// <summary>
-        /// Drains in-flight test-result uploads after the monitor has been cancelled. Waits a
-        /// bounded grace period for the uploads (which run on <see cref="_uploadCts"/>, not the
-        /// runner token) to finish so already-gathered results are persisted, then cancels any
-        /// stragglers so a persistently-failing upload can't hang shutdown indefinitely.
-        /// </summary>
-        private async Task DrainPendingTestResultUploadsAsync()
+        private async Task ObservePendingTestResultUploadsAsync()
         {
-            PruneCompletedTestResultUploads();
+            // Snapshot before pruning so already-faulted upload tasks are still included in the
+            // WhenAll below (which observes their exceptions); pruning first would drop them and
+            // they'd resurface as unobserved task exceptions.
             Task[] pending = [.. _pendingTestResultUploads];
             if (pending.Length == 0)
             {
                 return;
             }
 
-            // When test uploads are the last thing running, we want to speed it up
-            // Rate limiting should be dealt with by retry logic in the upload tasks
-            _options.TestResultUploadParallelism = 16;
-
-            _logger.LogInformation("Waiting for {Count} pending test result upload(s) to complete.", pending.Length);
-
-            Task allUploads = Task.WhenAll(pending);
-            Task completed = await Task.WhenAny(allUploads, Task.Delay(TimeSpan.FromSeconds(30)));
-            if (!ReferenceEquals(completed, allUploads))
-            {
-                _logger.LogWarning("Pending test result uploads did not complete within the grace period; cancelling them.");
-                _uploadCts.Cancel();
-            }
-
+            // The uploads are bound to the already-cancelled runner token, so this awaits their
+            // unwinding rather than their completion. We swallow cancellation and log any other
+            // failure so an upload fault can't surface as an unobserved task exception or mask
+            // the cancellation exit path.
             try
             {
-                await allUploads;
+                await Task.WhenAll(pending);
             }
             catch (OperationCanceledException)
             {
-                // Expected when stragglers were cancelled after the grace period elapsed.
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "One or more test result uploads failed to complete during shutdown.");
+                _logger.LogWarning(ex, "One or more test result uploads did not complete before shutdown.");
             }
 
             PruneCompletedTestResultUploads();
@@ -1062,7 +1027,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         public void Dispose()
         {
-            _uploadCts.Dispose();
             (_azdo as IDisposable)?.Dispose();
             (_helix as IDisposable)?.Dispose();
         }
