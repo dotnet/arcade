@@ -599,7 +599,7 @@ function GetDefaultMSBuildEngine() {
   ExitWithExitCode 1
 }
 
-function GetNuGetPackageCachePath() {
+function InitializeNuGetPackageCachePath() {
   if ($env:NUGET_PACKAGES -eq $null) {
     # Use local cache on CI to ensure deterministic build.
     # Avoid using the http cache as workaround for https://github.com/NuGet/Home/issues/3116
@@ -657,8 +657,6 @@ function InitializeToolset() {
     return $global:_InitializeToolset
   }
 
-  $nugetCache = GetNuGetPackageCachePath
-
   $toolsetVersion = Read-ArcadeSdkVersion
   $toolsetToolsDir = Join-Path $ToolsetDir $toolsetVersion
 
@@ -679,7 +677,7 @@ function InitializeToolset() {
     ExitWithExitCode 1
   }
 
-  $downloadArgs = @("package", "download", "Microsoft.DotNet.Arcade.Sdk@$toolsetVersion", "--verbosity", "minimal", "--prerelease", "--output", "$nugetCache")
+  $downloadArgs = @("package", "download", "Microsoft.DotNet.Arcade.Sdk@$toolsetVersion", "--verbosity", "minimal", "--prerelease", "--output", "$nugetPackageCachePath")
   $nugetConfig = $env:NUGET_CONFIG
   if (-not $nugetConfig) {
     # Search for any variation of nuget.config in the RepoRoot
@@ -696,7 +694,7 @@ function InitializeToolset() {
   }
   DotNet @downloadArgs
 
-  $packageDir = Join-Path $nugetCache (Join-Path 'microsoft.dotnet.arcade.sdk' $toolsetVersion)
+  $packageDir = Join-Path $nugetPackageCachePath (Join-Path 'microsoft.dotnet.arcade.sdk' $toolsetVersion)
   $packageToolsetDir = Join-Path $packageDir 'toolset'
 
   if (!(Test-Path $packageToolsetDir)) {
@@ -748,11 +746,6 @@ function Stop-Processes() {
 #
 function MSBuild() {
   if ($ci) {
-    $env:NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS = 20
-    $env:NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS = 20
-    Write-PipelineSetVariable -Name 'NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS' -Value '20'
-    Write-PipelineSetVariable -Name 'NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS' -Value '20'
-
     if (!$binaryLog -and !$excludeCIBinarylog) {
       Write-PipelineTelemetryError -Category 'Build' -Message 'Binary log must be enabled in CI build, or explicitly opted-out from with the -excludeCIBinarylog switch.'
       ExitWithExitCode 1
@@ -763,8 +756,6 @@ function MSBuild() {
       ExitWithExitCode 1
     }
   }
-
-  Enable-Nuget-EnhancedRetry
 
   $buildTool = InitializeBuildTool
 
@@ -901,21 +892,6 @@ function Get-Darc($version) {
   return "$darcPath\darc.exe"
 }
 
-# If $ci flag is set, turn on (and log that we did) special environment variables for improved Nuget client retry logic.
-function Enable-Nuget-EnhancedRetry() {
-  if ($ci) {
-    Write-Host "Setting NUGET enhanced retry environment variables"
-    $env:NUGET_ENABLE_ENHANCED_HTTP_RETRY = 'true'
-    $env:NUGET_ENHANCED_MAX_NETWORK_TRY_COUNT = 6
-    $env:NUGET_ENHANCED_NETWORK_RETRY_DELAY_MILLISECONDS = 1000
-    $env:NUGET_RETRY_HTTP_429 = 'true'
-    Write-PipelineSetVariable -Name 'NUGET_ENABLE_ENHANCED_HTTP_RETRY' -Value 'true'
-    Write-PipelineSetVariable -Name 'NUGET_ENHANCED_MAX_NETWORK_TRY_COUNT' -Value '6'
-    Write-PipelineSetVariable -Name 'NUGET_ENHANCED_NETWORK_RETRY_DELAY_MILLISECONDS' -Value '1000'
-    Write-PipelineSetVariable -Name 'NUGET_RETRY_HTTP_429' -Value 'true'
-  }
-}
-
 . $PSScriptRoot\pipeline-logging-functions.ps1
 
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..\')
@@ -961,4 +937,4 @@ if (!$disableConfigureToolsetImport) {
 }
 
 # Initialize the nuget package cache vars
-GetNuGetPackageCachePath | Out-Null
+$nugetPackageCachePath = InitializeNuGetPackageCachePath
