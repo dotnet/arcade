@@ -181,8 +181,11 @@ namespace Microsoft.DotNet.Helix.Sdk
                 IJobDefinition def = currentHelixApi.Job.Define()
                     .WithType(Type)
                     .WithTargetQueue(TargetQueue)
-                    .WithMaxRetryCount(MaxRetryCount)
-                    .WithShowQueueStats(EnableShowHelixQueueStats);
+                    .WithMaxRetryCount(MaxRetryCount);
+                if (EnableShowHelixQueueStats)
+                {
+                    def = def.WithQueueStats();
+                }
                 Log.LogMessage($"Initialized job definition with type '{Type}', and target queue '{TargetQueue}'");
 
                 if (!string.IsNullOrEmpty(Creator))

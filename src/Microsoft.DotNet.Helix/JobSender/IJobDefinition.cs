@@ -180,7 +180,7 @@ namespace Microsoft.DotNet.Helix.Client
         /// snapshot time) returned in the job creation response. Off by default.
         /// </summary>
         /// <returns>Fluent job builder.</returns>
-        IJobDefinition WithShowQueueStats(bool showQueueStats);
+        IJobDefinition WithQueueStats();
 
         /// <summary>
         /// <para>Sends the fully specified job to execution.</para>

@@ -456,9 +456,9 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
-        public IJobDefinition WithShowQueueStats(bool showQueueStats)
+        public IJobDefinition WithQueueStats()
         {
-            ShowQueueStats = showQueueStats;
+            ShowQueueStats = true;
             return this;
         }
 
