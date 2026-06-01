@@ -16,13 +16,13 @@
       <Uri>https://github.com/dotnet/templating</Uri>
       <Sha>43b5827697e501c442eb75ffff832cd4df2514fe</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="11.0.0-beta.26279.2">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="11.0.0-beta.26279.5">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>1b316965488be8268afb5b8e6c0f2dffc249605d</Sha>
+      <Sha>2bc908b1bdb34e2c42982eb511679bb458ddac2c</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="11.0.0-beta.26279.2">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="11.0.0-beta.26279.5">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>1b316965488be8268afb5b8e6c0f2dffc249605d</Sha>
+      <Sha>2bc908b1bdb34e2c42982eb511679bb458ddac2c</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.ProductConstructionService.Client" Version="1.1.0-beta.26268.2">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
@@ -124,9 +124,9 @@
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>dc5fd7a8dce8309e4add8fd4bd5d8718f221b15a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DncEng.SecretManager" Version="1.1.0-beta.26272.3">
+    <Dependency Name="Microsoft.DncEng.SecretManager" Version="1.1.0-beta.26278.5">
       <Uri>https://github.com/dotnet/dnceng</Uri>
-      <Sha>5f7c5dd02d4c38b0d59c9ab93ac7c3f753ab0167</Sha>
+      <Sha>c8baaa69459cb9049bffa6094f53524e5f49c652</Sha>
     </Dependency>
     <!-- Dependencies required for source build to lift to the previously-source-built version. -->
     <Dependency Name="Microsoft.Build" Version="17.12.50">
