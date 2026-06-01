@@ -9,8 +9,7 @@
          NetMinimum causes TypeLoadException "format is invalid" when it is asked to load a
          NetCurrent test assembly that references newer BCL members. The consuming project
          selects the matching host via the packaged build props. -->
-    <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
-    <TargetFrameworks Condition="'$(NetMinimum)' != '' and '$(NetMinimum)' != '$(NetCurrent)'">$(NetMinimum);$(NetCurrent)</TargetFrameworks>
+    <TargetFrameworks>$(NetCurrent);$(NetPrevious);$(NetMinimum)</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <AssemblyName>xunit.console</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
