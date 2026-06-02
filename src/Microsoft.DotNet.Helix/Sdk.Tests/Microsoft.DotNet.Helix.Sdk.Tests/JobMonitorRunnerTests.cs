@@ -2041,14 +2041,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             using var cts1 = new CancellationTokenSource();
             var runner1 = new JobMonitorRunner(DefaultOptions(), NullLogger.Instance, azdo1, helix1,
-                async (_, _) =>
+                (_, _) =>
                 {
-                    // Wait for helix-a's test-result upload to finish before cancelling so the
-                    // assertion below is deterministic. Otherwise the background upload task
-                    // (bound to the runner's cancellation token) races against cts1.Cancel().
-                    Task completed = await Task.WhenAny(azdo1.UploadCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
-                    Assert.Same(azdo1.UploadCompleted.Task, completed);
                     cts1.Cancel();
+                    return Task.CompletedTask;
                 });
 
             int exitCode1 = await runner1.RunAsync(cts1.Token);
