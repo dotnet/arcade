@@ -43,7 +43,7 @@ This file should be imported by eng/Versions.props
     <!-- dotnet-sdk dependencies -->
     <MicrosoftNETSdkWorkloadManifestReaderPackageVersion>9.0.100-preview.6.24328.19</MicrosoftNETSdkWorkloadManifestReaderPackageVersion>
     <!-- dotnet-symreader-converter dependencies -->
-    <MicrosoftDiaSymReaderConverterPackageVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderConverterPackageVersion>
+    <MicrosoftDiaSymReaderConverterPackageVersion>1.1.0-ci</MicrosoftDiaSymReaderConverterPackageVersion>
     <MicrosoftDiaSymReaderPdb2PdbPackageVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderPdb2PdbPackageVersion>
     <!-- dotnet-symuploader dependencies -->
     <MicrosoftSymbolUploaderBuildTaskPackageVersion>2.0.0-preview.1.23470.14</MicrosoftSymbolUploaderBuildTaskPackageVersion>
