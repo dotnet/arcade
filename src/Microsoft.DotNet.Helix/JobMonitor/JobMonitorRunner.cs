@@ -967,24 +967,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             string State,
             string ConsoleOutput);
 
-        private static string FormatChainKeyForDisplay(string chainKey)
-        {
-            const string submitterPrefix = "submitter:";
-            const string helixPrefix = "helix:";
-            if (chainKey is null) return string.Empty;
-            if (chainKey.StartsWith(submitterPrefix, StringComparison.Ordinal))
-            {
-                return chainKey.Substring(submitterPrefix.Length);
-            }
-
-            if (chainKey.StartsWith(helixPrefix, StringComparison.Ordinal))
-            {
-                return chainKey.Substring(helixPrefix.Length);
-            }
-
-            return chainKey;
-        }
-
         private sealed class WorkItemOutcomeKeyComparer : IEqualityComparer<(string ChainKey, string WorkItemName)>
         {
             public static readonly WorkItemOutcomeKeyComparer Instance = new();
