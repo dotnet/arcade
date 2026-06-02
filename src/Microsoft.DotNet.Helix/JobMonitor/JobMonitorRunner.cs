@@ -753,18 +753,20 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// <summary>
         /// Produces a key that rolls up work-item outcomes within a logical AzDO submitter
         /// chain. When the job carries an AzDO <c>System.JobName</c>, the chain key is based
-        /// on that name (so resubmissions of the same AzDO job share the same key while two
-        /// independent AzDO jobs running identically-named work items stay distinct). When
-        /// there is no submitter name (test scenarios, manual Helix submissions), the chain
-        /// is followed back through <c>PreviousHelixJobName</c> links to the root and the
-        /// root Helix job name is used instead, so that retries still overwrite prior
-        /// failures correctly.
+        /// on that name combined with the Helix <c>QueueId</c> (so resubmissions of the same
+        /// AzDO job to the same queue share the same key while a single AzDO matrix leg that
+        /// fans out to multiple Helix queues — each producing its own Helix job under the
+        /// same <c>System.JobName</c> — stays distinct and cannot overwrite a sibling queue's
+        /// failure with a pass). When there is no submitter name (test scenarios, manual Helix
+        /// submissions), the chain is followed back through <c>PreviousHelixJobName</c> links
+        /// to the root and the root Helix job name is used instead, so that retries still
+        /// overwrite prior failures correctly.
         /// </summary>
         private string GetSubmitterChainKey(HelixJobInfo job)
         {
             if (!string.IsNullOrEmpty(job.SubmitterJobName))
             {
-                return $"submitter:{job.SubmitterJobName}";
+                return FormatSubmitterChainKey(job.SubmitterJobName, job.QueueId);
             }
 
             HelixJobInfo current = job;
@@ -780,7 +782,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 if (!string.IsNullOrEmpty(previous.SubmitterJobName))
                 {
-                    return $"submitter:{previous.SubmitterJobName}";
+                    return FormatSubmitterChainKey(previous.SubmitterJobName, previous.QueueId);
                 }
 
                 current = previous;
@@ -788,6 +790,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             return $"helix:{(current?.JobName ?? job.JobName)}";
         }
+
+        private static string FormatSubmitterChainKey(string submitterJobName, string queueId)
+            => string.IsNullOrEmpty(queueId)
+                ? $"submitter:{submitterJobName}"
+                : $"submitter:{submitterJobName}|queue:{queueId}";
 
         private void LogFinalFailedWorkItemConsoleInfo()
         {
@@ -935,24 +942,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             string WorkItemName,
             string State,
             string ConsoleOutput);
-
-        private static string FormatChainKeyForDisplay(string chainKey)
-        {
-            const string submitterPrefix = "submitter:";
-            const string helixPrefix = "helix:";
-            if (chainKey is null) return string.Empty;
-            if (chainKey.StartsWith(submitterPrefix, StringComparison.Ordinal))
-            {
-                return chainKey.Substring(submitterPrefix.Length);
-            }
-
-            if (chainKey.StartsWith(helixPrefix, StringComparison.Ordinal))
-            {
-                return chainKey.Substring(helixPrefix.Length);
-            }
-
-            return chainKey;
-        }
 
         private sealed class WorkItemOutcomeKeyComparer : IEqualityComparer<(string ChainKey, string WorkItemName)>
         {
