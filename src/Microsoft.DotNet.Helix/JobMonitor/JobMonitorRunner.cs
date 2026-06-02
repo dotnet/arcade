@@ -976,6 +976,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private void LogError(string message)
             => _logger.LogError("{Prefix}{Message}", AzdoErrorPrefix, message);
 
+        private void LogError(Exception exception, string message)
+            => _logger.LogError(exception, "{Prefix}{Message}", AzdoErrorPrefix, message);
+
         public void Dispose()
         {
             (_azdo as IDisposable)?.Dispose();
