@@ -280,8 +280,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 Properties = ConvertPropertiesToImmutableDictionary(details.Properties)
                     .SetItem(HelixJobInfo.PreviousHelixJobNamePropertyName, originalJobName),
             };
-            if (TryGetSourceMetadataFromProperties(details.Properties, out string sourcePrefix, out string teamProject, out string repository, out string branch)
-                || TryParseSource(details.Source, out sourcePrefix, out teamProject, out repository, out branch))
+            if (TryGetSourceMetadataFromProperties(details.Properties, out string sourcePrefix, out string teamProject, out string repository, out string branch))
             {
                 creationRequest.SourcePrefix = sourcePrefix;
                 creationRequest.TeamProject = teamProject;
@@ -361,49 +360,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 && !string.IsNullOrWhiteSpace(teamProject)
                 && !string.IsNullOrWhiteSpace(repository)
                 && !string.IsNullOrWhiteSpace(branch);
-        }
-
-        private static bool TryParseSource(
-            string source,
-            out string sourcePrefix,
-            out string teamProject,
-            out string repository,
-            out string branch)
-        {
-            sourcePrefix = null;
-            teamProject = null;
-            repository = null;
-            branch = null;
-
-            if (string.IsNullOrWhiteSpace(source))
-            {
-                return false;
-            }
-
-            int firstSlash = source.IndexOf('/');
-            if (firstSlash <= 0 || firstSlash >= source.Length - 1)
-            {
-                return false;
-            }
-
-            int secondSlash = source.IndexOf('/', firstSlash + 1);
-            if (secondSlash <= firstSlash + 1 || secondSlash >= source.Length - 1)
-            {
-                return false;
-            }
-
-            string remainder = source[(secondSlash + 1)..];
-            int refsStart = remainder.IndexOf("/refs/", StringComparison.Ordinal);
-            if (refsStart <= 0 || refsStart >= remainder.Length - 1)
-            {
-                return false;
-            }
-
-            sourcePrefix = source[..firstSlash];
-            teamProject = source[(firstSlash + 1)..secondSlash];
-            repository = remainder[..refsStart];
-            branch = remainder[(refsStart + 1)..];
-            return true;
         }
 
         private static string GetStringPropertyFromProperties(JToken properties, string name)

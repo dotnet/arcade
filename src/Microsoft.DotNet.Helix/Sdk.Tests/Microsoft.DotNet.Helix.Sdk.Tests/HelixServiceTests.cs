@@ -307,7 +307,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public async Task ResubmitWorkItemsAsync_FallsBackToParsingSourceWhenPropertiesAreMissing()
+        public async Task ResubmitWorkItemsAsync_FallsBackToSourceWhenSourceMetadataPropertiesAreMissing()
         {
             var api = CreateApi();
             api.Job
@@ -344,11 +344,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 .ResubmitWorkItemsAsync(new HelixJobInfo("original-job", "finished"), [WorkItem("work-a")], CancellationToken.None);
 
             Assert.NotNull(capturedRequest);
-            Assert.Null(capturedRequest.Source);
-            Assert.Equal("ci", capturedRequest.SourcePrefix);
-            Assert.Equal("public", capturedRequest.TeamProject);
-            Assert.Equal("dotnet/arcade", capturedRequest.Repository);
-            Assert.Equal("refs/heads/main", capturedRequest.Branch);
+            Assert.Equal("ci/public/dotnet/arcade/refs/heads/main", capturedRequest.Source);
+            Assert.Null(capturedRequest.SourcePrefix);
+            Assert.Null(capturedRequest.TeamProject);
+            Assert.Null(capturedRequest.Repository);
+            Assert.Null(capturedRequest.Branch);
         }
 
         private static HelixService CreateService(IHelixApi api, IBlobClientFactory blobClientFactory = null, IFileSystem fileSystem = null)
