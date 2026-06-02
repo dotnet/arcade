@@ -610,6 +610,47 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal(1, exitCode);
         }
 
+        /// <summary>
+        /// Regression: a single AzDO matrix leg (one <c>System.JobName</c>) fans out to
+        /// multiple Helix queues — each queue produces its own Helix job sharing the same
+        /// <c>SubmitterJobName</c>. A work item with the same name (e.g.
+        /// <c>Microsoft.DotNet.Helix.Sdk.Tests.dll</c>) runs in every queue; it fails on one
+        /// queue and passes on another. The earlier queue's failure must NOT be overwritten
+        /// by the later queue's pass on the same submitter, and the monitor must exit
+        /// non-zero. This mirrors the production scenario where eight Helix jobs (two
+        /// configurations × three queues + extras) reported "0 failed" in the final summary
+        /// even though one work item failed.
+        /// </summary>
+        [Fact]
+        public async Task OneSubmitter_FansOutToMultipleQueues_SameWorkItemName_FailureNotOverwrittenByPass()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Linux_Build_Debug", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-ubuntu", "finished", submitterJobName: "Linux_Build_Debug", queueId: "ubuntu.2204.amd64.open"),
+                    HelixJob("helix-osx", "finished", submitterJobName: "Linux_Build_Debug", queueId: "osx.15.amd64.open"),
+                    HelixJob("helix-windows", "finished", submitterJobName: "Linux_Build_Debug", queueId: "windows.11.amd64.client.open"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-ubuntu"] = PassFail(failed: ["Microsoft.DotNet.Helix.Sdk.Tests.dll"]),
+                    ["helix-osx"] = PassFail(passed: ["Microsoft.DotNet.Helix.Sdk.Tests.dll"]),
+                    ["helix-windows"] = PassFail(passed: ["Microsoft.DotNet.Helix.Sdk.Tests.dll"]),
+                });
+
+            var runner = CreateRunner(azdo, helix);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            Assert.Equal(1, exitCode);
+        }
+
         [Fact]
         public async Task StageRerun_UploadsNewHelixWorkItemsWithoutReuploadingPreviousWorkItems()
         {
