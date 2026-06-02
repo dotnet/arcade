@@ -181,13 +181,9 @@ PackageSources+=$(grep -oh '"darc-int-[^"]*"' $ConfigFile | tr -d '"')
 IFS=$PrevIFS
 
 if [ "$CredToken" ]; then
-    EscapedCredToken=$(printf '%s' "$CredToken" | sed 's/[&|\\]/\\&/g')
-
-    UpsertCredential() {
-        local FeedName="$1"
-
+    for FeedName in ${PackageSources[@]} ; do
         # Check if there is no existing credential for this FeedName
-        grep -i "<$FeedName>" "$ConfigFile" > /dev/null
+        grep -i "<$FeedName>" $ConfigFile 
         if [ "$?" != "0" ]; then
             echo "	Inserting credential for feed: $FeedName"
 
@@ -195,25 +191,6 @@ if [ "$CredToken" ]; then
             NewCredential="${TB}${TB}<$FeedName>${NL}${TB}<add key=\"Username\" value=\"dn-bot\" />${NL}${TB}${TB}<add key=\"ClearTextPassword\" value=\"$CredToken\" />${NL}${TB}${TB}</$FeedName>"
 
             sed -i.bak "s|$PackageSourceCredentialsNodeFooter|$NewCredential${NL}$PackageSourceCredentialsNodeFooter|" $ConfigFile
-            return
         fi
-
-        # Existing credential node should match SetupNugetSources.ps1 behavior and refresh Username/ClearTextPassword.
-        sed -i.bak "/<$FeedName>/,/<\/$FeedName>/ s|<add key=\"Username\" value=\"[^\"]*\" />|<add key=\"Username\" value=\"dn-bot\" />|I" "$ConfigFile"
-        sed -i.bak "/<$FeedName>/,/<\/$FeedName>/ s|<add key=\"ClearTextPassword\" value=\"[^\"]*\" />|<add key=\"ClearTextPassword\" value=\"$EscapedCredToken\" />|I" "$ConfigFile"
-
-        sed -n "/<$FeedName>/,/<\/$FeedName>/p" "$ConfigFile" | grep -i "<add key=\"Username\"" > /dev/null
-        if [ "$?" != "0" ]; then
-            sed -i.bak "/<$FeedName>/a\\${TB}${TB}<add key=\"Username\" value=\"dn-bot\" />" "$ConfigFile"
-        fi
-
-        sed -n "/<$FeedName>/,/<\/$FeedName>/p" "$ConfigFile" | grep -i "<add key=\"ClearTextPassword\"" > /dev/null
-        if [ "$?" != "0" ]; then
-            sed -i.bak "/<\/$FeedName>/i\\${TB}${TB}<add key=\"ClearTextPassword\" value=\"$EscapedCredToken\" />" "$ConfigFile"
-        fi
-    }
-
-    for FeedName in ${PackageSources[@]} ; do
-        UpsertCredential "$FeedName"
     done
 fi

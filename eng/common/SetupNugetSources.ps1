@@ -25,7 +25,6 @@
 [CmdletBinding()]
 param (
     [Parameter(Mandatory = $true)][string]$ConfigFile,
-    [Alias("CredentialToken")]
     $Password
 )
 

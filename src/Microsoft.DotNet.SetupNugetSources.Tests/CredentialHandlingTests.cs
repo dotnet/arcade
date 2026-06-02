@@ -3,9 +3,7 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using AwesomeAssertions;
 using Microsoft.DotNet.XUnitExtensions;
 using Xunit;
@@ -143,50 +141,6 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             // Should add new credentials for internal feeds
             modifiedConfig.ShouldContainCredentials("dotnet6-internal", "dn-bot", "should add credentials for new internal feed");
             modifiedConfig.ShouldContainCredentials("dotnet6-internal-transport", "dn-bot", "should add credentials for new transport feed");
-        }
-
-        [Fact]
-        public async Task ConfigWithExistingInternalFeedCredentials_UpdatesCredentialValues()
-        {
-            // Arrange
-            var originalConfig = @"<?xml version=""1.0"" encoding=""utf-8""?>
-<configuration>
-  <packageSources>
-    <add key=""dotnet-public"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json"" />
-    <add key=""dotnet6"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json"" />
-    <add key=""dotnet6-internal"" value=""https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal/nuget/v2"" />
-  </packageSources>
-  <packageSourceCredentials>
-    <dotnet6-internal>
-      <add key=""Username"" value=""old-user"" />
-      <add key=""ClearTextPassword"" value=""old-password"" />
-    </dotnet6-internal>
-  </packageSourceCredentials>
-</configuration>";
-            var configPath = Path.Combine(_testOutputDirectory, "nuget.config");
-            await Task.Run(() => File.WriteAllText(configPath, originalConfig));
-            var testCredential = "new-password";
-
-            // Act
-            var result = await _scriptRunner.RunScript(configPath, testCredential);
-
-            // Assert
-            result.exitCode.Should().Be(0, "script should succeed, but got error: {result.error}");
-            var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            modifiedConfig.ShouldContainCredentials("dotnet6-internal", "dn-bot", "should update username for existing internal feed credentials");
-
-            var doc = XDocument.Parse(modifiedConfig);
-            var internalFeedCredentials = doc.Root?.Element("packageSourceCredentials")?.Element("dotnet6-internal");
-            internalFeedCredentials.Should().NotBeNull("credentials for dotnet6-internal should exist");
-
-            internalFeedCredentials!.Elements("add").Count(e => e.Attribute("key")?.Value == "Username")
-                .Should().Be(1, "there should be exactly one username entry");
-            internalFeedCredentials.Elements("add").Count(e => e.Attribute("key")?.Value == "ClearTextPassword")
-                .Should().Be(1, "there should be exactly one password entry");
-
-            var passwordElement = internalFeedCredentials.Elements("add").FirstOrDefault(e => e.Attribute("key")?.Value == "ClearTextPassword");
-            passwordElement.Should().NotBeNull("clear text password should exist");
-            passwordElement!.Attribute("value")?.Value.Should().Be(testCredential, "clear text password should be updated to the provided credential");
         }
 
         [Fact]

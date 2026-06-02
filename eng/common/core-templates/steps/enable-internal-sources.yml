@@ -19,7 +19,7 @@ steps:
       displayName: Setup Internal Feeds
       inputs:
         filePath: $(System.DefaultWorkingDirectory)/eng/common/SetupNugetSources.ps1
-        arguments: -ConfigFile $(System.DefaultWorkingDirectory)/NuGet.config -CredentialToken $Env:Token
+        arguments: -ConfigFile $(System.DefaultWorkingDirectory)/NuGet.config -Password $Env:Token
       env:
         Token: ${{ parameters.legacyCredential }}
     - task: Bash@3
@@ -57,7 +57,7 @@ steps:
         displayName: Setup Internal Feeds
         inputs:
           filePath: $(System.DefaultWorkingDirectory)/eng/common/SetupNugetSources.ps1
-          arguments: -ConfigFile $(System.DefaultWorkingDirectory)/NuGet.config -CredentialToken $(dnceng-artifacts-feeds-read-access-token)
+          arguments: -ConfigFile $(System.DefaultWorkingDirectory)/NuGet.config -Password $(dnceng-artifacts-feeds-read-access-token)
       - task: Bash@3
         condition: and(succeeded(), ne(variables['Agent.Os'], 'Windows_NT'))
         displayName: Setup Internal Feeds
