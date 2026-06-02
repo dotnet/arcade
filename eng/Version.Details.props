@@ -14,7 +14,7 @@ This file should be imported by eng/Versions.props
     <!-- dotnet-command-line-api dependencies -->
     <SystemCommandLinePackageVersion>2.0.3</SystemCommandLinePackageVersion>
     <!-- dotnet-deployment-tools dependencies -->
-    <MicrosoftDeploymentDotNetReleasesPackageVersion>2.0.0-preview.1.24305.1</MicrosoftDeploymentDotNetReleasesPackageVersion>
+    <MicrosoftDeploymentDotNetReleasesPackageVersion>2.0.0-rtm.1.26229.119</MicrosoftDeploymentDotNetReleasesPackageVersion>
     <!-- dotnet-diagnostics dependencies -->
     <MicrosoftSymbolManifestGeneratorPackageVersion>8.0.0-preview.24461.2</MicrosoftSymbolManifestGeneratorPackageVersion>
     <!-- dotnet-dnceng dependencies -->
