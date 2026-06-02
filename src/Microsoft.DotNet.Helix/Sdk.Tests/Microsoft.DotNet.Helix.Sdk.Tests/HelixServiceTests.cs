@@ -267,7 +267,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             var api = CreateApi();
             api.Job
                 .Setup(j => j.DetailsAsync("original-job", It.IsAny<CancellationToken>()))
-                .ReturnsAsync(JobDetails(source: "source"));
+                .ReturnsAsync(JobDetails(source: "source", includeSourceMetadataInProperties: false));
             api.Storage
                 .Setup(s => s.NewAsync(It.IsAny<ContainerCreationRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ContainerInformation(
@@ -332,7 +332,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 Properties = properties,
             };
 
-        private static JobDetails JobDetails(string source = "ci/public/dotnet/arcade/refs/heads/main")
+        private static JobDetails JobDetails(string source = "source", bool includeSourceMetadataInProperties = true)
             => new("https://storage/job-list.json", null, "original-job", "wait", source, "helix-type", "build")
             {
                 Creator = "creator",
@@ -342,6 +342,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     ["BuildId"] = "123",
                     ["TestRunName"] = "custom run",
                     ["System.StageName"] = "test stage",
+                    ["SourcePrefix"] = includeSourceMetadataInProperties ? "ci" : null,
+                    ["TeamProject"] = includeSourceMetadataInProperties ? "public" : null,
+                    ["Repository"] = includeSourceMetadataInProperties ? "dotnet/arcade" : null,
+                    ["Branch"] = includeSourceMetadataInProperties ? "refs/heads/main" : null,
                     ["ObjectProperty"] = new JObject
                     {
                         ["nested"] = true,

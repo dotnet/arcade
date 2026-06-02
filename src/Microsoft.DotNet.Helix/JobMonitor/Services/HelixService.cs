@@ -280,7 +280,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 Properties = ConvertPropertiesToImmutableDictionary(details.Properties)
                     .SetItem(HelixJobInfo.PreviousHelixJobNamePropertyName, originalJobName),
             };
-            if (TryParseSource(details.Source, out string sourcePrefix, out string teamProject, out string repository, out string branch))
+            if (TryGetSourceMetadataFromProperties(details.Properties, out string sourcePrefix, out string teamProject, out string repository, out string branch)
+                || TryParseSource(details.Source, out sourcePrefix, out teamProject, out repository, out branch))
             {
                 creationRequest.SourcePrefix = sourcePrefix;
                 creationRequest.TeamProject = teamProject;
@@ -343,6 +344,23 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             return builder.ToImmutable();
+        }
+
+        private static bool TryGetSourceMetadataFromProperties(
+            JToken properties,
+            out string sourcePrefix,
+            out string teamProject,
+            out string repository,
+            out string branch)
+        {
+            sourcePrefix = GetStringPropertyFromProperties(properties, "SourcePrefix");
+            teamProject = GetStringPropertyFromProperties(properties, "TeamProject");
+            repository = GetStringPropertyFromProperties(properties, "Repository");
+            branch = GetStringPropertyFromProperties(properties, "Branch");
+            return !string.IsNullOrWhiteSpace(sourcePrefix)
+                && !string.IsNullOrWhiteSpace(teamProject)
+                && !string.IsNullOrWhiteSpace(repository)
+                && !string.IsNullOrWhiteSpace(branch);
         }
 
         private static bool TryParseSource(
