@@ -8,6 +8,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using AwesomeAssertions;
 using Microsoft.DotNet.Helix.JobMonitor;
 using Microsoft.DotNet.Helix.Sdk.Tests.Fakes;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -66,7 +67,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             IReadOnlySet<string> processed = await service.GetProcessedHelixJobNamesAsync(CancellationToken.None);
 
-            Assert.Equal(["helix-linux", "helix-windows"], processed.OrderBy(static name => name));
+            processed.Should().BeEquivalentTo(["helix-linux", "helix-windows"]);
             // Single list call, no per-run detail fetches: the marker is in the run "name"
             // which is always part of the list response.
             HttpRequestMessage request = Assert.Single(handler.Requests);
