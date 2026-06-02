@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client.Models;
@@ -1215,6 +1216,94 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal(
                 ["helix-new-attempt", "helix-running", "helix-waiting"],
                 helix.CanceledJobs.OrderBy(jobName => jobName, StringComparer.OrdinalIgnoreCase).ToArray());
+        }
+
+        [Fact]
+        public async Task ReportTimeout_OnlyInFlightLatestAttempts_AlignsWithCancelInFlightCount()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+            HelixJobInfo[] associatedJobs =
+            [
+                HelixJob("helix-running-a", "running", queueId: "queue-a"),
+                HelixJob("helix-running-b", "waiting", queueId: "queue-b"),
+            ];
+            var processedHelixJobs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var runner = CreateRunner(azdo, helix, logger: logger);
+
+            InvokeReportTimeout(runner, associatedJobs, processedHelixJobs);
+            await InvokeCancelInFlightHelixJobsAsync(runner, associatedJobs, processedHelixJobs);
+
+            string unfinishedMessage = Assert.Single(logger.Messages, message =>
+                message.Contains("Helix job(s) had not finished", StringComparison.Ordinal));
+            Assert.Contains("2 Helix job(s) had not finished", unfinishedMessage, StringComparison.Ordinal);
+            Assert.Contains("helix-running-a", unfinishedMessage, StringComparison.Ordinal);
+            Assert.Contains("helix-running-b", unfinishedMessage, StringComparison.Ordinal);
+            Assert.DoesNotContain(logger.Messages, message =>
+                message.Contains("completed on Helix but their test result processing in AzDO did not finish before timeout", StringComparison.Ordinal));
+            Assert.Contains(logger.Messages, message =>
+                message.Contains("Attempting to cancel 2 in-flight Helix job(s)", StringComparison.Ordinal));
+            Assert.Equal(
+                ["helix-running-a", "helix-running-b"],
+                helix.CanceledJobs.OrderBy(jobName => jobName, StringComparer.OrdinalIgnoreCase).ToArray());
+        }
+
+        [Fact]
+        public void ReportTimeout_OnlyCompletedUnprocessedJobs_LogsWarningCategoryOnly()
+        {
+            var logger = new RecordingLogger();
+            HelixJobInfo[] associatedJobs =
+            [
+                HelixJob("helix-finished", "finished", queueId: "queue-finished"),
+            ];
+            var processedHelixJobs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var runner = CreateRunner(new FakeAzureDevOpsService(), new FakeHelixService(), logger: logger);
+
+            InvokeReportTimeout(runner, associatedJobs, processedHelixJobs);
+
+            Assert.DoesNotContain(logger.Messages, message =>
+                message.Contains("Helix job(s) had not finished", StringComparison.Ordinal));
+            Assert.Contains(logger.Messages, message =>
+                message.Contains("1 Helix job(s) completed on Helix but their test result processing in AzDO did not finish before timeout", StringComparison.Ordinal)
+                && message.Contains("helix-finished", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public async Task ReportTimeout_MixedStateWithSupersededAttempt_SplitsAndFiltersCategories()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+            HelixJobInfo[] associatedJobs =
+            [
+                HelixJob("helix-old-attempt", "running", queueId: "queue-old"),
+                HelixJob("helix-new-attempt", "running", queueId: "queue-new", previousHelixJobName: "helix-old-attempt"),
+                HelixJob("helix-completed", "finished", queueId: "queue-completed"),
+            ];
+            var processedHelixJobs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var runner = CreateRunner(azdo, helix, logger: logger);
+
+            InvokeReportTimeout(runner, associatedJobs, processedHelixJobs);
+            await InvokeCancelInFlightHelixJobsAsync(runner, associatedJobs, processedHelixJobs);
+
+            string unfinishedMessage = Assert.Single(logger.Messages, message =>
+                message.Contains("Helix job(s) had not finished", StringComparison.Ordinal));
+            Assert.Contains("1 Helix job(s) had not finished", unfinishedMessage, StringComparison.Ordinal);
+            Assert.Contains("helix-new-attempt", unfinishedMessage, StringComparison.Ordinal);
+            Assert.DoesNotContain("helix-old-attempt", unfinishedMessage, StringComparison.Ordinal);
+            Assert.DoesNotContain("helix-completed", unfinishedMessage, StringComparison.Ordinal);
+
+            string unprocessedCompletedMessage = Assert.Single(logger.Messages, message =>
+                message.Contains("completed on Helix but their test result processing in AzDO did not finish before timeout", StringComparison.Ordinal));
+            Assert.Contains("1 Helix job(s) completed on Helix", unprocessedCompletedMessage, StringComparison.Ordinal);
+            Assert.Contains("helix-completed", unprocessedCompletedMessage, StringComparison.Ordinal);
+            Assert.DoesNotContain("helix-old-attempt", unprocessedCompletedMessage, StringComparison.Ordinal);
+            Assert.DoesNotContain("helix-new-attempt", unprocessedCompletedMessage, StringComparison.Ordinal);
+
+            Assert.Contains(logger.Messages, message =>
+                message.Contains("Attempting to cancel 1 in-flight Helix job(s)", StringComparison.Ordinal));
+            Assert.Equal(["helix-new-attempt"], helix.CanceledJobs.OrderBy(j => j, StringComparer.OrdinalIgnoreCase).ToArray());
         }
 
         /// <summary>
@@ -2715,6 +2804,31 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             options.StageName = stageName;
 
             return new(options, logger ?? NullLogger.Instance, azdo, helix, NoDelay);
+        }
+
+        private static void InvokeReportTimeout(
+            JobMonitorRunner runner,
+            IEnumerable<HelixJobInfo> associatedJobs,
+            HashSet<string> processedHelixJobs)
+        {
+            MethodInfo reportTimeoutMethod = typeof(JobMonitorRunner).GetMethod(
+                "ReportTimeout",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(reportTimeoutMethod);
+            reportTimeoutMethod!.Invoke(runner, [associatedJobs, processedHelixJobs]);
+        }
+
+        private static async Task InvokeCancelInFlightHelixJobsAsync(
+            JobMonitorRunner runner,
+            IEnumerable<HelixJobInfo> associatedJobs,
+            HashSet<string> processedHelixJobs)
+        {
+            MethodInfo cancelMethod = typeof(JobMonitorRunner).GetMethod(
+                "CancelInFlightHelixJobsAsync",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(cancelMethod);
+            Task cancelTask = (Task)cancelMethod!.Invoke(runner, [associatedJobs, processedHelixJobs, CancellationToken.None])!;
+            await cancelTask;
         }
 
         private sealed class RecordingLogger : ILogger

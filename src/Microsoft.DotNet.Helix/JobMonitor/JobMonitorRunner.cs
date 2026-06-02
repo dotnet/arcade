@@ -968,12 +968,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             HashSet<string> processedHelixJobs)
         {
             var timeout = TimeSpan.FromMinutes(_options.MaximumWaitMinutes);
-            var unfinishedJobs = latestAssociatedJobs
-                .Where(j => !j.IsCompleted || !processedHelixJobs.Contains(j.JobName))
+            IReadOnlyList<HelixJobInfo> latestAttempts = GetLatestHelixJobAttempts(latestAssociatedJobs);
+            var unfinishedJobs = latestAttempts
+                .Where(j => !j.IsCompleted)
+                .OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            var unprocessedCompletedJobs = latestAttempts
+                .Where(j => j.IsCompleted && !processedHelixJobs.Contains(j.JobName))
                 .OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            if (unfinishedJobs.Count == 0)
+            if (unfinishedJobs.Count == 0 && unprocessedCompletedJobs.Count == 0)
             {
                 _logger.LogCritical("Helix Job Monitor timed out after {TimeoutMinutes} minute(s) ({Timeout}). No unfinished Helix jobs were tracked at the time of timeout.",
                     timeout.TotalMinutes,
@@ -981,12 +986,25 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return;
             }
 
-            _logger.LogError(
-                $"Helix Job Monitor timed out after {{TimeoutMinutes}} minute(s) ({{Timeout}}). {{UnfinishedCount}} Helix job(s) had not finished:{Environment.NewLine}- {{UnfinishedJobs}}{Environment.NewLine}",
-                timeout.TotalMinutes,
-                timeout,
-                unfinishedJobs.Count,
-                string.Join(Environment.NewLine + "- ", unfinishedJobs.Select(j => $"{j.DetailsUri} ({j.QueueId})")));
+            if (unfinishedJobs.Count > 0)
+            {
+                _logger.LogError(
+                    $"Helix Job Monitor timed out after {{TimeoutMinutes}} minute(s) ({{Timeout}}). {{UnfinishedCount}} Helix job(s) had not finished:{Environment.NewLine}- {{UnfinishedJobs}}{Environment.NewLine}",
+                    timeout.TotalMinutes,
+                    timeout,
+                    unfinishedJobs.Count,
+                    string.Join(Environment.NewLine + "- ", unfinishedJobs.Select(j => $"{j.DetailsUri} ({j.QueueId})")));
+            }
+
+            if (unprocessedCompletedJobs.Count > 0)
+            {
+                _logger.LogWarning(
+                    $"Helix Job Monitor timed out after {{TimeoutMinutes}} minute(s) ({{Timeout}}). {{UnprocessedCompletedCount}} Helix job(s) completed on Helix but their test result processing in AzDO did not finish before timeout:{Environment.NewLine}- {{UnprocessedCompletedJobs}}{Environment.NewLine}",
+                    timeout.TotalMinutes,
+                    timeout,
+                    unprocessedCompletedJobs.Count,
+                    string.Join(Environment.NewLine + "- ", unprocessedCompletedJobs.Select(j => $"{j.DetailsUri} ({j.QueueId})")));
+            }
         }
 
         public void Dispose()
