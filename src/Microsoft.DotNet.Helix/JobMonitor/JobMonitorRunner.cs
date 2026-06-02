@@ -16,6 +16,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 {
     internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
     {
+        private const string AzdoWarningPrefix = "##vso[task.logissue type=warning]";
+        private const string AzdoErrorPrefix = "##vso[task.logissue type=error]";
+
         private readonly JobMonitorOptions _options;
         private readonly ILogger _logger;
         private readonly IAzureDevOpsService _azdo;
@@ -171,7 +174,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return;
             }
 
-            _logger.LogWarning("Cancellation requested. Attempting to cancel {Count} in-flight Helix job(s).", inFlightJobs.Count);
+            LogWarning($"Cancellation requested. Attempting to cancel {inFlightJobs.Count} in-flight Helix job(s).");
 
             Task[] cancelTasks =
             [
@@ -189,7 +192,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Failed to cancel Helix job {JobName}.", job.DisplayName);
+                        LogWarning(ex, $"Failed to cancel Helix job {job.DisplayName}.");
                     }
                 })
             ];
@@ -310,7 +313,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                     if (anyNonMonitorJobFailures)
                     {
-                        _logger.LogError("One or more non-monitor pipeline jobs failed.");
+                        LogError("One or more non-monitor pipeline jobs failed.");
                         return 1;
                     }
 
@@ -697,12 +700,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     continue;
                 }
 
-                _logger.LogInformation("❌ Work item '{WorkItemName}' in job '{JobName}' failed ({State}).{nl}Console: {ConsoleOutputUri}",
-                    workItem.Name,
-                    helixJob.DisplayName,
-                    FormatWorkItemState(workItem),
-                    Environment.NewLine,
-                    GetConsoleOutputText(workItem.ConsoleOutputUri));
+                LogWarning($"❌ Work item '{workItem.Name}' in job '{helixJob.DisplayName}' failed ({FormatWorkItemState(workItem)}).{Environment.NewLine}Console: {GetConsoleOutputText(workItem.ConsoleOutputUri)}");
             }
         }
 
@@ -813,11 +811,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 lines.Add($"{(i == failures.Count - 1 ? "   " : "│  ")}└─ Console: {failure.ConsoleOutput}");
             }
 
-            _logger.LogError("❌ Failed work item console logs:{nl}Test results: {TestResultsUri}{nl}{FailedWorkItemConsoleLogs}",
-                Environment.NewLine,
-                GetTestResultsUri(),
-                Environment.NewLine,
-                string.Join(Environment.NewLine, lines));
+            LogError($"❌ Failed work item console logs:{Environment.NewLine}Test results: {GetTestResultsUri()}{Environment.NewLine}{string.Join(Environment.NewLine, lines)}");
         }
 
         private string GetTestResultsUri()
@@ -970,13 +964,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return;
             }
 
-            _logger.LogError(
-                $"Helix Job Monitor timed out after {{TimeoutMinutes}} minute(s) ({{Timeout}}). {{UnfinishedCount}} Helix job(s) had not finished:{Environment.NewLine}- {{UnfinishedJobs}}{Environment.NewLine}",
-                timeout.TotalMinutes,
-                timeout,
-                unfinishedJobs.Count,
-                string.Join(Environment.NewLine + "- ", unfinishedJobs.Select(j => $"{j.DetailsUri} ({j.QueueId})")));
+            LogError($"Helix Job Monitor timed out after {timeout.TotalMinutes} minute(s) ({timeout}). {unfinishedJobs.Count} Helix job(s) had not finished:{Environment.NewLine}- {string.Join(Environment.NewLine + "- ", unfinishedJobs.Select(j => $"{j.DetailsUri} ({j.QueueId})"))}{Environment.NewLine}");
         }
+
+        private void LogWarning(string message)
+            => _logger.LogWarning("{Prefix}{Message}", AzdoWarningPrefix, message);
+
+        private void LogWarning(Exception exception, string message)
+            => _logger.LogWarning(exception, "{Prefix}{Message}", AzdoWarningPrefix, message);
+
+        private void LogError(string message)
+            => _logger.LogError("{Prefix}{Message}", AzdoErrorPrefix, message);
 
         public void Dispose()
         {
