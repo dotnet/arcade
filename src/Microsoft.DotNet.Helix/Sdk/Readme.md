@@ -241,8 +241,8 @@ Batching is disabled by default. Enable it from the Helix project:
 ```xml
 <PropertyGroup>
   <EnableHelixWorkItemBatching>true</EnableHelixWorkItemBatching>
-  <HelixBatchTargetDuration>00:10:00</HelixBatchTargetDuration>
-  <HelixBatchTimeoutPadding>00:02:00</HelixBatchTimeoutPadding>
+  <HelixBatchTargetDuration>10</HelixBatchTargetDuration> <!-- minutes -->
+  <HelixBatchTimeoutPadding>2</HelixBatchTimeoutPadding> <!-- minutes -->
   <HelixBatchMaxItems>10</HelixBatchMaxItems>
 </PropertyGroup>
 ```
@@ -257,7 +257,7 @@ Optional duration metadata improves grouping:
 </ItemGroup>
 ```
 
-Set `HelixBatchable=false` on a work item or xUnit project that needs machine-level isolation. The initial batching implementation only batches simple `PayloadDirectory` items; archive/URI payloads and items with per-work-item pre/post commands are preserved unchanged.
+Set `HelixBatchable=false` on a `HelixWorkItem` that needs machine-level isolation to opt it out of batching. (The metadata is read from the generated `HelixWorkItem` items, so when using `XUnitProject`/`XUnitProjects` the opt-out applies to the produced work items rather than being set directly on the project.) The initial batching implementation only batches simple `PayloadDirectory` items; archive/URI payloads and items with per-work-item pre/post commands are preserved unchanged.
 
 ### All Possible Options
 ```xml

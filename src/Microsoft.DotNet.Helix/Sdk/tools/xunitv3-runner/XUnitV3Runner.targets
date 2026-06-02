@@ -49,7 +49,7 @@
   -->
   <Target Name="CreateXUnitV3WorkItems"
           Condition="'@(XUnitV3Project)' != ''"
-          BeforeTargets="BatchHelixWorkItems;CoreTest">
+          BeforeTargets="CoreTest">
     <CreateXUnitV3WorkItems XUnitV3Projects="@(XUnitV3Project)" IsPosixShell="$(IsPosixShell)" XUnitWorkItemTimeout="$(XUnitWorkItemTimeout)" UseMicrosoftTestingPlatformRunner="$(UseMicrosoftTestingPlatformRunner)">
       <Output TaskParameter="XUnitV3WorkItems" ItemName="HelixWorkItem"/>
     </CreateXUnitV3WorkItems>

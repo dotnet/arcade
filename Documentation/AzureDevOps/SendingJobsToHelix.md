@@ -135,8 +135,10 @@ If a job sends many short xUnit projects or `PayloadDirectory` work items, the H
 - template: /eng/common/templates/steps/send-to-helix.yml
   parameters:
     EnableHelixWorkItemBatching: true
-    HelixBatchTargetDuration: '00:10:00'
+    HelixBatchTargetDuration: 10           # minutes
+    HelixBatchTimeoutPadding: 2            # minutes
     HelixBatchMaxItems: 10
+    HelixBatchMinItems: 2
 ```
 
 For custom Helix project files, set the same properties directly:
@@ -144,7 +146,8 @@ For custom Helix project files, set the same properties directly:
 ```xml
 <PropertyGroup>
   <EnableHelixWorkItemBatching>true</EnableHelixWorkItemBatching>
-  <HelixBatchTargetDuration>00:10:00</HelixBatchTargetDuration>
+  <HelixBatchTargetDuration>10</HelixBatchTargetDuration> <!-- minutes -->
+  <HelixBatchTimeoutPadding>2</HelixBatchTimeoutPadding> <!-- minutes -->
   <HelixBatchMaxItems>10</HelixBatchMaxItems>
 </PropertyGroup>
 ```

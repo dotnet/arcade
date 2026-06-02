@@ -4,11 +4,11 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using AwesomeAssertions;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace Microsoft.DotNet.Helix.Sdk.Tests
@@ -127,11 +127,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             task.Execute().Should().BeTrue();
 
             string manifestPath = Path.Combine(task.BatchedWorkItems.Single().GetMetadata("PayloadDirectory"), "batch-manifest.json");
-            var manifest = JObject.Parse(File.ReadAllText(manifestPath));
+            using JsonDocument document = JsonDocument.Parse(File.ReadAllText(manifestPath));
+            JsonElement manifest = document.RootElement;
 
-            manifest["version"].Value<int>().Should().Be(1);
-            manifest["workItems"].Should().HaveCount(2);
-            manifest["workItems"][1]["timeout"].Value<string>().Should().Be("00:02:00");
+            manifest.GetProperty("version").GetInt32().Should().Be(1);
+            manifest.GetProperty("workItems").GetArrayLength().Should().Be(2);
+            manifest.GetProperty("workItems")[1].GetProperty("timeout").GetString().Should().Be("00:02:00");
         }
 
         private BatchHelixWorkItems CreateTask(params ITaskItem[] workItems)
@@ -142,8 +143,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 WorkItems = workItems,
                 IntermediateOutputPath = Path.Combine(_root, "obj"),
                 IsPosixShell = false,
-                TargetDuration = "00:10:00",
-                TimeoutPadding = "00:02:00",
+                TargetDuration = 10,
+                TimeoutPadding = 2,
                 MaxItemsPerBatch = 10,
                 MinItemsPerBatch = 2
             };

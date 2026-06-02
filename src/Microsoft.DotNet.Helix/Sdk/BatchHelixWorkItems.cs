@@ -15,8 +15,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 {
     public class BatchHelixWorkItems : BaseTask
     {
-        private const string DefaultTargetDuration = "00:10:00";
-        private const string DefaultTimeoutPadding = "00:02:00";
+        private const int DefaultTargetDurationMinutes = 10;
+        private const int DefaultTimeoutPaddingMinutes = 2;
 
         public ITaskItem[] WorkItems { get; set; } = Array.Empty<ITaskItem>();
 
@@ -26,9 +26,9 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public bool IsPosixShell { get; set; }
 
-        public string TargetDuration { get; set; } = DefaultTargetDuration;
+        public int TargetDuration { get; set; } = DefaultTargetDurationMinutes;
 
-        public string TimeoutPadding { get; set; } = DefaultTimeoutPadding;
+        public int TimeoutPadding { get; set; } = DefaultTimeoutPaddingMinutes;
 
         public int MaxItemsPerBatch { get; set; } = 10;
 
@@ -39,10 +39,10 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         public override bool Execute()
         {
-            TimeSpan targetDuration = ParseDurationOrDefault(TargetDuration, TimeSpan.FromMinutes(10), nameof(TargetDuration));
-            TimeSpan timeoutPadding = ParseDurationOrDefault(TimeoutPadding, TimeSpan.FromMinutes(2), nameof(TimeoutPadding));
+            TimeSpan targetDuration = TimeSpan.FromMinutes(Math.Max(1, TargetDuration));
+            TimeSpan timeoutPadding = TimeSpan.FromMinutes(Math.Max(0, TimeoutPadding));
             int maxItemsPerBatch = Math.Max(1, MaxItemsPerBatch);
-            int minItemsPerBatch = Math.Max(2, MinItemsPerBatch);
+            int minItemsPerBatch = Math.Max(1, MinItemsPerBatch);
 
             string batchRoot = Path.GetFullPath(Path.Combine(IntermediateOutputPath, "helix-work-item-batches"));
             if (Directory.Exists(batchRoot))
@@ -216,17 +216,17 @@ namespace Microsoft.DotNet.Helix.Sdk
                 string memberId = GetMemberId(i, entries[i].Name);
                 string payload = entries[i].PayloadDirectory;
                 builder.AppendLine($"echo \"##[group]Starting batched Helix work item {memberId}\"");
-                builder.AppendLine($"member_upload=\"$upload_root/{EscapePosix(memberId)}\"");
+                builder.AppendLine($"member_upload=\"$upload_root/{memberId}\"");
                 builder.AppendLine("mkdir -p \"$member_upload\"");
                 builder.AppendLine("(");
-                builder.AppendLine($"  cd \"$batch_root/{EscapePosix(payload)}\"");
+                builder.AppendLine($"  cd \"$batch_root/{payload}\"");
                 builder.AppendLine("  export HELIX_WORKITEM_PAYLOAD=$(pwd)");
                 builder.AppendLine("  export HELIX_WORKITEM_ROOT=$(pwd)");
                 builder.AppendLine("  export HELIX_WORKITEM_UPLOAD_ROOT=\"$member_upload\"");
                 builder.AppendLine($"  /bin/sh ./run-member.sh");
                 builder.AppendLine($") > \"$member_upload/console.log\" 2>&1");
                 builder.AppendLine("member_exit=$?");
-                builder.AppendLine($"find \"$batch_root/{EscapePosix(payload)}\" -maxdepth 5 \\( -iname '*.trx' -o -iname 'testResults.xml' -o -iname 'test-results.xml' -o -iname 'test_results.xml' -o -iname 'junit-results.xml' -o -iname 'junitresults.xml' \\) -exec cp {{}} \"$member_upload/\" \\; 2>/dev/null");
+                builder.AppendLine($"find \"$batch_root/{payload}\" -maxdepth 5 \\( -iname '*.trx' -o -iname 'testResults.xml' -o -iname 'test-results.xml' -o -iname 'test_results.xml' -o -iname 'junit-results.xml' -o -iname 'junitresults.xml' \\) -exec cp {{}} \"$member_upload/\" \\; 2>/dev/null");
                 builder.AppendLine("if [ $member_exit -ne 0 ]; then batch_exit=$member_exit; fi");
                 builder.AppendLine("cat \"$member_upload/console.log\"");
                 builder.AppendLine($"echo \"##[endgroup]Finished batched Helix work item {memberId} with exit code $member_exit\"");
@@ -303,17 +303,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             return fallback;
         }
 
-        private TimeSpan ParseDurationOrDefault(string value, TimeSpan defaultValue, string propertyName)
-        {
-            if (TimeSpan.TryParse(value, CultureInfo.InvariantCulture, out TimeSpan parsed) && parsed > TimeSpan.Zero)
-            {
-                return parsed;
-            }
-
-            Log.LogWarning($"Invalid {propertyName} value '{value}'. Falling back to '{defaultValue}'.");
-            return defaultValue;
-        }
-
         private static void CopyDirectory(string sourceDirectory, string destinationDirectory)
         {
             Directory.CreateDirectory(destinationDirectory);
@@ -364,8 +353,6 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return hash.ToString("x", CultureInfo.InvariantCulture);
             }
         }
-
-        private static string EscapePosix(string value) => value.Replace("'", "'\"'\"'");
 
         private sealed class BatchMember
         {

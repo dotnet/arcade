@@ -1,9 +1,17 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
 
+  <!--
+    Batching must observe every HelixWorkItem, so it has to run after all in-box producers of
+    HelixWorkItem items. Ordering among targets that merely share BeforeTargets="CoreTest" is
+    unspecified, so we explicitly order batching after each known producer via AfterTargets.
+    References to producers that aren't imported (e.g. xharness when unused) are ignored by MSBuild.
+    New producers of HelixWorkItem should be added to this AfterTargets list.
+  -->
   <Target Name="BatchHelixWorkItems"
           Condition="'$(EnableHelixWorkItemBatching)' == 'true' and '@(HelixWorkItem)' != ''"
-          BeforeTargets="CoreTest">
+          BeforeTargets="CoreTest"
+          AfterTargets="CreateXUnitWorkItems;CreateXUnitV3WorkItems;CreateAndroidWorkItems;CreateAppleWorkItems">
     <BatchHelixWorkItems WorkItems="@(HelixWorkItem)"
                          IntermediateOutputPath="$(IntermediateOutputPath)"
                          IsPosixShell="$(IsPosixShell)"

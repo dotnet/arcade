@@ -29,8 +29,8 @@
   <PropertyGroup>
     <EnableHelixJobMonitor Condition="'$(EnableHelixJobMonitor)' != 'true'">false</EnableHelixJobMonitor>
     <EnableHelixWorkItemBatching Condition="'$(EnableHelixWorkItemBatching)' != 'true'">false</EnableHelixWorkItemBatching>
-    <HelixBatchTargetDuration Condition="'$(HelixBatchTargetDuration)' == ''">00:10:00</HelixBatchTargetDuration>
-    <HelixBatchTimeoutPadding Condition="'$(HelixBatchTimeoutPadding)' == ''">00:02:00</HelixBatchTimeoutPadding>
+    <HelixBatchTargetDuration Condition="'$(HelixBatchTargetDuration)' == ''">10</HelixBatchTargetDuration>
+    <HelixBatchTimeoutPadding Condition="'$(HelixBatchTimeoutPadding)' == ''">2</HelixBatchTimeoutPadding>
     <HelixBatchMaxItems Condition="'$(HelixBatchMaxItems)' == ''">10</HelixBatchMaxItems>
     <HelixBatchMinItems Condition="'$(HelixBatchMinItems)' == ''">2</HelixBatchMinItems>
     <_HelixMonoQueueTargets>$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)helix-batching\HelixBatching.targets</_HelixMonoQueueTargets>
