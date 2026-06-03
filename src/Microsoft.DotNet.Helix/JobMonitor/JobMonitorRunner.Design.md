@@ -28,7 +28,7 @@ Each invocation owns exactly one Azure DevOps stage. All decisions (retry,
 completion gating, upload, pass/fail) consider only:
 
 - Azure DevOps timeline jobs belonging to the monitor's stage.
-- Helix jobs whose `System.StageName` property matches the monitor's stage.
+- Helix jobs whose `System.StageName` property is empty (stage unknown) or matches the monitor's stage.
 
 Jobs and work items from other stages must not be retried, uploaded, or used
 to fail this invocation.
