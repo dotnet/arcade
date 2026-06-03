@@ -167,9 +167,7 @@ behaviorally; method names are illustrative.
 - **Get processed Helix job names** — extract Helix job names from
   `[HelixJob:<name>]` markers on completed test runs. This is the durable
   upload-dedup signal.
-- **Create test run / upload results / complete test run** — the standard
-  three-call sequence. Creation must reuse an in-progress test run with the
-  same name rather than creating a duplicate.
+- **Create test run / upload results / complete test run** — the standard three-call sequence. Creation always creates a new in-progress test run; durable deduplication is based on the completed-run name marker (§2.2).
 
 ## 5. Behavior
 
