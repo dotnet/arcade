@@ -611,6 +611,47 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             exitCode.Should().Be(1);
         }
 
+        /// <summary>
+        /// Regression: a single AzDO matrix leg (one <c>System.JobName</c>) fans out to
+        /// multiple Helix queues — each queue produces its own Helix job sharing the same
+        /// <c>SubmitterJobName</c>. A work item with the same name (e.g.
+        /// <c>Microsoft.DotNet.Helix.Sdk.Tests.dll</c>) runs in every queue; it fails on one
+        /// queue and passes on another. The earlier queue's failure must NOT be overwritten
+        /// by the later queue's pass on the same submitter, and the monitor must exit
+        /// non-zero. This mirrors the production scenario where eight Helix jobs (two
+        /// configurations × three queues + extras) reported "0 failed" in the final summary
+        /// even though one work item failed.
+        /// </summary>
+        [Fact]
+        public async Task OneSubmitter_FansOutToMultipleQueues_SameWorkItemName_FailureNotOverwrittenByPass()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Linux_Build_Debug", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-ubuntu", "finished", submitterJobName: "Linux_Build_Debug", queueId: "ubuntu.2204.amd64.open"),
+                    HelixJob("helix-osx", "finished", submitterJobName: "Linux_Build_Debug", queueId: "osx.15.amd64.open"),
+                    HelixJob("helix-windows", "finished", submitterJobName: "Linux_Build_Debug", queueId: "windows.11.amd64.client.open"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-ubuntu"] = PassFail(failed: ["Microsoft.DotNet.Helix.Sdk.Tests.dll"]),
+                    ["helix-osx"] = PassFail(passed: ["Microsoft.DotNet.Helix.Sdk.Tests.dll"]),
+                    ["helix-windows"] = PassFail(passed: ["Microsoft.DotNet.Helix.Sdk.Tests.dll"]),
+                });
+
+            var runner = CreateRunner(azdo, helix);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(1);
+        }
+
         [Fact]
         public async Task StageRerun_UploadsNewHelixWorkItemsWithoutReuploadingPreviousWorkItems()
         {
@@ -1180,6 +1221,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         {
             var azdo = new FakeAzureDevOpsService();
             var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
 
             azdo.AddTimelineResponse(
                 MonitorJob(),
@@ -1200,7 +1242,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 });
 
             using var cts = new CancellationTokenSource();
-            var runner = new JobMonitorRunner(DefaultOptions(), NullLogger.Instance, azdo, helix,
+            var runner = new JobMonitorRunner(DefaultOptions(), logger, azdo, helix,
                 async (_, _) =>
                 {
                     Task completed = await Task.WhenAny(azdo.UploadCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
@@ -1213,6 +1255,15 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             exitCode.Should().Be(1);
             azdo.UploadedJobNames.Should().Equal(["helix-finished"]);
             helix.CanceledJobs.Should().BeEquivalentTo(["helix-new-attempt", "helix-running", "helix-waiting"]);
+            logger.Messages.Should().Contain(message =>
+                message.Contains("Helix job(s) were unfinished or unprocessed", StringComparison.Ordinal)
+                && message.Contains("helix-new-attempt", StringComparison.Ordinal)
+                && message.Contains("status=running", StringComparison.Ordinal)
+                && message.Contains("helix-waiting", StringComparison.Ordinal)
+                && message.Contains("status=waiting", StringComparison.Ordinal));
+            logger.Messages.Should().Contain(message =>
+                message.Contains("non-monitor Azure DevOps pipeline job(s) were still in progress or queued", StringComparison.Ordinal)
+                && message.Contains("Test Linux [state=inProgress, result=none]", StringComparison.Ordinal));
         }
 
         /// <summary>
@@ -2034,10 +2085,14 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             using var cts1 = new CancellationTokenSource();
             var runner1 = new JobMonitorRunner(DefaultOptions(), NullLogger.Instance, azdo1, helix1,
-                (_, _) =>
+                async (_, _) =>
                 {
+                    // Wait for helix-a's test-result upload to finish before cancelling so the
+                    // assertion below is deterministic. Otherwise the background upload task
+                    // (bound to the runner's cancellation token) races against cts1.Cancel().
+                    Task completed = await Task.WhenAny(azdo1.UploadCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+                    completed.Should().BeSameAs(azdo1.UploadCompleted.Task);
                     cts1.Cancel();
-                    return Task.CompletedTask;
                 });
 
             int exitCode1 = await runner1.RunAsync(cts1.Token);
