@@ -1167,19 +1167,21 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     ["helix-linux"] = PassFail(passed: ["linux-wi-1"]),
                 });
 
-            // Simulate timeout via cancellation after 2 polls
+            // Simulate timeout via cancellation after 2 polls. Wait for helix-linux's upload
+            // to finish before cancelling so the in-flight upload isn't aborted by the
+            // cancellation token.
             int pollCount1 = 0;
             using var cts = new CancellationTokenSource();
             var runner1 = new JobMonitorRunner(DefaultOptions(), NullLogger.Instance, azdo1, helix1,
-                (_, ct) =>
+                async (_, _) =>
                 {
                     pollCount1++;
                     if (pollCount1 >= 2)
                     {
+                        Task completed = await Task.WhenAny(azdo1.UploadCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+                        Assert.Same(azdo1.UploadCompleted.Task, completed);
                         cts.Cancel();
                     }
-
-                    return Task.CompletedTask;
                 });
 
             int exitCode1 = await runner1.RunAsync(cts.Token);
@@ -1376,15 +1378,15 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             int pollCount1 = 0;
             using var cts = new CancellationTokenSource();
             var runner1 = new JobMonitorRunner(DefaultOptions(), NullLogger.Instance, azdo1, helix1,
-                (_, ct) =>
+                async (_, _) =>
                 {
                     pollCount1++;
                     if (pollCount1 >= 2)
                     {
+                        Task completed = await Task.WhenAny(azdo1.UploadCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+                        Assert.Same(azdo1.UploadCompleted.Task, completed);
                         cts.Cancel();
                     }
-
-                    return Task.CompletedTask;
                 });
 
             int exitCode1 = await runner1.RunAsync(cts.Token);
