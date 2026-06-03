@@ -243,7 +243,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal("helix-type", capturedRequest.Type);
             Assert.Equal("queue-id", capturedRequest.QueueId);
             Assert.Equal("https://account.blob.core.windows.net/container/job-list.json?read", capturedRequest.ListUri);
-            Assert.Equal("source", capturedRequest.Source);
+            Assert.Null(capturedRequest.Source);
+            Assert.Equal("ci", capturedRequest.SourcePrefix);
+            Assert.Equal("public", capturedRequest.TeamProject);
+            Assert.Equal("dotnet/arcade", capturedRequest.Repository);
+            Assert.Equal("refs/heads/main", capturedRequest.Branch);
             Assert.Equal("creator", capturedRequest.Creator);
             Assert.Equal("123", capturedRequest.Properties["BuildId"]);
             Assert.Equal("custom run", capturedRequest.Properties["TestRunName"]);
@@ -255,6 +259,96 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 It.Is<ContainerCreationRequest>(r => r.ExpirationInDays == 30 && r.DesiredName == "joblists" && r.TargetQueue == "queue-id"),
                 It.IsAny<CancellationToken>()),
                 Times.Once);
+        }
+
+        [Fact]
+        public async Task ResubmitWorkItemsAsync_FallsBackToSourceWhenSourceCannotBeParsed()
+        {
+            var api = CreateApi();
+            api.Job
+                .Setup(j => j.DetailsAsync("original-job", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(JobDetails(source: "source", includeSourceMetadataInProperties: false));
+            api.Storage
+                .Setup(s => s.NewAsync(It.IsAny<ContainerCreationRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ContainerInformation(
+                    DateTimeOffset.Parse("2026-04-30T00:00:00Z"),
+                    DateTimeOffset.Parse("2026-05-30T00:00:00Z"),
+                    "creator",
+                    "container",
+                    "account",
+                    Guid.Empty,
+                    "region")
+                {
+                    ReadToken = "?read",
+                    WriteToken = "?write",
+                });
+
+            JobCreationRequest capturedRequest = null;
+            api.Job
+                .Setup(j => j.NewAsync(It.IsAny<JobCreationRequest>(), It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
+                .Callback<JobCreationRequest, string, bool?, CancellationToken>((request, _, _, _) => capturedRequest = request)
+                .ReturnsAsync(new JobCreationResult("new-job", "summary", "results", null));
+
+            var blobClientFactory = new FakeBlobClientFactory
+            {
+                DownloadedText = """[{ "WorkItemId": "work-a", "Command": "run a", "PayloadUri": "payload-a" }]""",
+                UploadedBlobUri = new Uri("https://account.blob.core.windows.net/container/job-list.json"),
+            };
+
+            await CreateService(api.Api.Object, blobClientFactory)
+                .ResubmitWorkItemsAsync(new HelixJobInfo("original-job", "finished"), [WorkItem("work-a")], CancellationToken.None);
+
+            Assert.NotNull(capturedRequest);
+            Assert.Equal("source", capturedRequest.Source);
+            Assert.Null(capturedRequest.SourcePrefix);
+            Assert.Null(capturedRequest.TeamProject);
+            Assert.Null(capturedRequest.Repository);
+            Assert.Null(capturedRequest.Branch);
+        }
+
+        [Fact]
+        public async Task ResubmitWorkItemsAsync_FallsBackToSourceWhenSourceMetadataPropertiesAreMissing()
+        {
+            var api = CreateApi();
+            api.Job
+                .Setup(j => j.DetailsAsync("original-job", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(JobDetails(source: "ci/public/dotnet/arcade/refs/heads/main", includeSourceMetadataInProperties: false));
+            api.Storage
+                .Setup(s => s.NewAsync(It.IsAny<ContainerCreationRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ContainerInformation(
+                    DateTimeOffset.Parse("2026-04-30T00:00:00Z"),
+                    DateTimeOffset.Parse("2026-05-30T00:00:00Z"),
+                    "creator",
+                    "container",
+                    "account",
+                    Guid.Empty,
+                    "region")
+                {
+                    ReadToken = "?read",
+                    WriteToken = "?write",
+                });
+
+            JobCreationRequest capturedRequest = null;
+            api.Job
+                .Setup(j => j.NewAsync(It.IsAny<JobCreationRequest>(), It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
+                .Callback<JobCreationRequest, string, bool?, CancellationToken>((request, _, _, _) => capturedRequest = request)
+                .ReturnsAsync(new JobCreationResult("new-job", "summary", "results", null));
+
+            var blobClientFactory = new FakeBlobClientFactory
+            {
+                DownloadedText = """[{ "WorkItemId": "work-a", "Command": "run a", "PayloadUri": "payload-a" }]""",
+                UploadedBlobUri = new Uri("https://account.blob.core.windows.net/container/job-list.json"),
+            };
+
+            await CreateService(api.Api.Object, blobClientFactory)
+                .ResubmitWorkItemsAsync(new HelixJobInfo("original-job", "finished"), [WorkItem("work-a")], CancellationToken.None);
+
+            Assert.NotNull(capturedRequest);
+            Assert.Equal("ci/public/dotnet/arcade/refs/heads/main", capturedRequest.Source);
+            Assert.Null(capturedRequest.SourcePrefix);
+            Assert.Null(capturedRequest.TeamProject);
+            Assert.Null(capturedRequest.Repository);
+            Assert.Null(capturedRequest.Branch);
         }
 
         private static HelixService CreateService(IHelixApi api, IBlobClientFactory blobClientFactory = null, IFileSystem fileSystem = null)
@@ -283,8 +377,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 Properties = properties,
             };
 
-        private static JobDetails JobDetails()
-            => new("https://storage/job-list.json", null, "original-job", "wait", "source", "helix-type", "build")
+        private static JobDetails JobDetails(string source = "source", bool includeSourceMetadataInProperties = true)
+            => new("https://storage/job-list.json", null, "original-job", "wait", source, "helix-type", "build")
             {
                 Creator = "creator",
                 QueueId = "queue-id",
@@ -293,6 +387,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     ["BuildId"] = "123",
                     ["TestRunName"] = "custom run",
                     ["System.StageName"] = "test stage",
+                    ["SourcePrefix"] = includeSourceMetadataInProperties ? "ci" : null,
+                    ["TeamProject"] = includeSourceMetadataInProperties ? "public" : null,
+                    ["Repository"] = includeSourceMetadataInProperties ? "dotnet/arcade" : null,
+                    ["Branch"] = includeSourceMetadataInProperties ? "refs/heads/main" : null,
                     ["ObjectProperty"] = new JObject
                     {
                         ["nested"] = true,

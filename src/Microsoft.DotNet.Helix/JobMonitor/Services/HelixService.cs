@@ -272,15 +272,25 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             string newJobListUri = AppendSasIfPresent(jobListBlobClient.Uri, container.ReadToken);
 
-            // 5. Build the new job creation request, copying over Source / Properties / Creator
+            // 5. Build the new job creation request, copying over source metadata / properties / creator
             //    so the resubmitted job remains discoverable (BuildId, System.StageName, TestRunName, etc.).
             var creationRequest = new JobCreationRequest(details.Type, newJobListUri, details.QueueId)
             {
-                Source = details.Source,
                 Creator = details.Creator,
                 Properties = ConvertPropertiesToImmutableDictionary(details.Properties)
                     .SetItem(HelixJobInfo.PreviousHelixJobNamePropertyName, originalJobName),
             };
+            if (TryGetSourceMetadataFromProperties(details.Properties, out string sourcePrefix, out string teamProject, out string repository, out string branch))
+            {
+                creationRequest.SourcePrefix = sourcePrefix;
+                creationRequest.TeamProject = teamProject;
+                creationRequest.Repository = repository;
+                creationRequest.Branch = branch;
+            }
+            else
+            {
+                creationRequest.Source = details.Source;
+            }
 
             string idempotencyKey = Guid.NewGuid().ToString("N");
             JobCreationResult newJob = await RetryHelper.RetryAsync(
@@ -333,6 +343,23 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             return builder.ToImmutable();
+        }
+
+        private static bool TryGetSourceMetadataFromProperties(
+            JToken properties,
+            out string sourcePrefix,
+            out string teamProject,
+            out string repository,
+            out string branch)
+        {
+            sourcePrefix = GetStringPropertyFromProperties(properties, "SourcePrefix");
+            teamProject = GetStringPropertyFromProperties(properties, "TeamProject");
+            repository = GetStringPropertyFromProperties(properties, "Repository");
+            branch = GetStringPropertyFromProperties(properties, "Branch");
+            return !string.IsNullOrWhiteSpace(sourcePrefix)
+                && !string.IsNullOrWhiteSpace(teamProject)
+                && !string.IsNullOrWhiteSpace(repository)
+                && !string.IsNullOrWhiteSpace(branch);
         }
 
         private static string GetStringPropertyFromProperties(JToken properties, string name)

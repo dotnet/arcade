@@ -1179,7 +1179,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     if (pollCount1 >= 2)
                     {
                         Task completed = await Task.WhenAny(azdo1.UploadCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
-                        Assert.Same(azdo1.UploadCompleted.Task, completed);
+                        completed.Should().BeSameAs(azdo1.UploadCompleted.Task);
                         cts.Cancel();
                     }
                 });
@@ -1384,7 +1384,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     if (pollCount1 >= 2)
                     {
                         Task completed = await Task.WhenAny(azdo1.UploadCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
-                        Assert.Same(azdo1.UploadCompleted.Task, completed);
+                        completed.Should().BeSameAs(azdo1.UploadCompleted.Task);
                         cts.Cancel();
                     }
                 });
