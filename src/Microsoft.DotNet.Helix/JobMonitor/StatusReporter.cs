@@ -19,6 +19,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
     /// </summary>
     internal sealed class StatusReporter
     {
+        private const string AzdoWarningPrefix = "##vso[task.logissue type=warning]";
+        private const string AzdoErrorPrefix = "##vso[task.logissue type=error]";
+
         private readonly ILogger _logger;
         private readonly JobMonitorOptions _options;
         private readonly IHelixService _helix;
@@ -88,12 +91,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     continue;
                 }
 
-                _logger.LogInformation("❌ Work item '{WorkItemName}' in job '{JobName}' failed ({State}).{nl}Console: {ConsoleOutputUri}",
-                    workItem.Name,
-                    helixJob.DisplayName,
-                    workItem.FormattedState,
-                    Environment.NewLine,
-                    MonitorState.GetConsoleOutputText(workItem.ConsoleOutputUri));
+                LogWarning($"Work item '{workItem.Name}' in job '{helixJob.DisplayName}' failed ({workItem.FormattedState}).{Environment.NewLine}Console: {MonitorState.GetConsoleOutputText(workItem.ConsoleOutputUri)}");
             }
         }
 
@@ -159,7 +157,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         public void LogNonMonitorPipelineFailure()
         {
-            _logger.LogError("One or more non-monitor pipeline jobs failed.");
+            LogError("One or more non-monitor pipeline jobs failed.");
         }
 
         /// <summary>
@@ -190,11 +188,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 lines.Add($"{childPrefix}└─ Console: {failure.ConsoleOutput}");
             }
 
-            _logger.LogError("❌ Failed work item console logs:{nl}Test results: {TestResultsUri}{nl}{FailedWorkItemConsoleLogs}",
-                Environment.NewLine,
-                GetTestResultsUri(),
-                Environment.NewLine,
-                string.Join(Environment.NewLine, lines));
+            LogError($"Failed work item console logs:{Environment.NewLine}Test results: {GetTestResultsUri()}{Environment.NewLine}{string.Join(Environment.NewLine, lines)}");
         }
 
         /// <summary>
@@ -230,22 +224,22 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             if (unfinishedHelixJobs.Count > 0)
             {
-                _logger.LogError(
-                    $"Helix Job Monitor timed out after {{TimeoutMinutes}} minute(s) ({{Timeout}}). {{UnfinishedCount}} Helix job(s) were unfinished or unprocessed:{Environment.NewLine}- {{UnfinishedJobs}}{Environment.NewLine}",
-                    timeout.TotalMinutes,
-                    timeout,
-                    unfinishedHelixJobs.Count,
-                    string.Join(Environment.NewLine + "- ", unfinishedHelixJobs.Select(FormatUnfinishedHelixJob)));
+                LogError(
+                    $"Helix Job Monitor timed out after {timeout.TotalMinutes} minute(s) ({timeout}). {unfinishedHelixJobs.Count} Helix job(s) were unfinished or unprocessed:{Environment.NewLine}- {string.Join(Environment.NewLine + "- ", unfinishedHelixJobs.Select(FormatUnfinishedHelixJob))}{Environment.NewLine}");
             }
 
             if (inProgressPipelineJobs.Count > 0)
             {
-                _logger.LogError(
-                    $"At timeout, {{InProgressCount}} non-monitor Azure DevOps pipeline job(s) were still in progress or queued:{Environment.NewLine}- {{InProgressJobs}}{Environment.NewLine}",
-                    inProgressPipelineJobs.Count,
-                    string.Join(Environment.NewLine + "- ", inProgressPipelineJobs.Select(FormatInProgressPipelineJob)));
+                LogError(
+                    $"At timeout, {inProgressPipelineJobs.Count} non-monitor Azure DevOps pipeline job(s) were still in progress or queued:{Environment.NewLine}- {string.Join(Environment.NewLine + "- ", inProgressPipelineJobs.Select(FormatInProgressPipelineJob))}{Environment.NewLine}");
             }
         }
+
+        private void LogWarning(string message)
+            => _logger.LogWarning("{Prefix}{Message}", AzdoWarningPrefix, message);
+
+        private void LogError(string message)
+            => _logger.LogError("{Prefix}{Message}", AzdoErrorPrefix, message);
 
         private void LogVerboseTree(
             IReadOnlyList<HelixJobInfo> jobs,

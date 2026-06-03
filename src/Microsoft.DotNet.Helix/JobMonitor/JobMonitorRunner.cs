@@ -22,6 +22,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
     /// </summary>
     internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
     {
+        private const string AzdoWarningPrefix = "##vso[task.logissue type=warning]";
+
         private readonly JobMonitorOptions _options;
         private readonly ILogger _logger;
         private readonly IAzureDevOpsService _azdo;
@@ -371,7 +373,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return;
             }
 
-            _logger.LogWarning("Cancellation requested. Attempting to cancel {Count} in-flight Helix job(s).", inFlightJobs.Count);
+            LogWarning($"Cancellation requested. Attempting to cancel {inFlightJobs.Count} in-flight Helix job(s).");
 
             await Task.WhenAll(inFlightJobs.Select(async job =>
             {
@@ -387,7 +389,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to cancel Helix job {JobName}.", job.DisplayName);
+                    LogWarning(ex, $"Failed to cancel Helix job {job.DisplayName}.");
                 }
             }));
         }
@@ -404,6 +406,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private Task Delay(CancellationToken cancellationToken)
             => _delayFunc(TimeSpan.FromSeconds(Math.Max(5, _options.PollingIntervalSeconds)), cancellationToken);
+
+        private void LogWarning(string message)
+            => _logger.LogWarning("{Prefix}{Message}", AzdoWarningPrefix, message);
+
+        private void LogWarning(Exception exception, string message)
+            => _logger.LogWarning(exception, "{Prefix}{Message}", AzdoWarningPrefix, message);
 
         /// <summary>
         /// Mutable per-loop cursor used by <see cref="PollOnceAsync"/> to decide when to
