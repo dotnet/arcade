@@ -185,7 +185,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     try
                     {
                         await _helix.CancelJobAsync(job.JobName, cancellationToken);
-                        _logger.LogInformation("🛑 Requested cancellation of Helix job {JobName}.{nl}{JobUri}",
+                        _logger.LogInformation("Requested cancellation of Helix job {JobName}.{nl}{JobUri}",
                             job.DisplayName, Environment.NewLine, job.DetailsUri);
                     }
                     catch (OperationCanceledException)
@@ -304,7 +304,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     int totalWorkItems = _workItemOutcomes.Count;
                     int failedWorkItems = _workItemOutcomes.Values.Count(passed => !passed);
                     _logger.LogInformation(
-                        "📊 Final summary:{nl}"
+                        "Final summary:{nl}"
                       + "   Jobs:       {TotalJobs} submitted / {ResubmittedJobs} resubmitted / {ProcessedJobs} processed{nl}"
                       + "   Work items: {TotalWorkItems} submitted / {ResubmittedWorkItems} resubmitted / {FailedWorkItems} failed",
                         Environment.NewLine,
@@ -373,7 +373,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             JobWorkItemStatusCounts counts = GetStatusCounts(orderedJobs, workItemsByJob, completedJobNames, processedJobNames);
             _logger.LogInformation(
-                "ℹ️ Status: {ProcessedJobs} processed / {CompletedJobs} completed / {RunningJobs} running / {WaitingJobs} waiting jobs{nl}"
+                "Status: {ProcessedJobs} processed / {CompletedJobs} completed / {RunningJobs} running / {WaitingJobs} waiting jobs{nl}"
               + "           {ProcessedWorkItems} processed / {CompletedWorkItems} completed / {RunningWorkItems} running / {WaitingWorkItems} waiting work items",
                 counts.ProcessedJobs,
                 counts.CompletedJobs,
@@ -478,7 +478,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             string jobConnector = isLastJob ? "└─" : "├─";
             string childPrefix = isLastJob ? "   " : "│  ";
-            lines.Add($"{jobConnector} 🧪 Helix job {job.DisplayName} [{jobStatus}]");
+            lines.Add($"{jobConnector} Helix job {job.DisplayName} [{jobStatus}]");
 
             List<WorkItemSummary> orderedWorkItems =
             [
@@ -584,8 +584,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 QueueTestResultUpload(helixJob, workItems, cancellationToken);
             }
 
-            _logger.LogInformation("{Icon} Job '{JobName}' {Status} ({PassedCount} passed, {FailedCount} failed){nl}{JobUri}",
-                failedWorkItemCount == 0 ? "✅" : "❌",
+            _logger.LogInformation("Job '{JobName}' {Status} ({PassedCount} passed, {FailedCount} failed){nl}{JobUri}",
                 helixJob.DisplayName,
                 failedWorkItemCount == 0 ? "succeeded" : "failed",
                 successfulWorkItemCount,
@@ -705,7 +704,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     continue;
                 }
 
-                LogWarning($"❌ Work item '{workItem.Name}' in job '{helixJob.DisplayName}' failed ({FormatWorkItemState(workItem)}).{Environment.NewLine}Console: {GetConsoleOutputText(workItem.ConsoleOutputUri)}");
+                LogWarning($"Work item '{workItem.Name}' in job '{helixJob.DisplayName}' failed ({FormatWorkItemState(workItem)}).{Environment.NewLine}Console: {GetConsoleOutputText(workItem.ConsoleOutputUri)}");
             }
         }
 
@@ -816,7 +815,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 lines.Add($"{(i == failures.Count - 1 ? "   " : "│  ")}└─ Console: {failure.ConsoleOutput}");
             }
 
-            LogError($"❌ Failed work item console logs:{Environment.NewLine}Test results: {GetTestResultsUri()}{Environment.NewLine}{string.Join(Environment.NewLine, lines)}");
+            LogError($"Failed work item console logs:{Environment.NewLine}Test results: {GetTestResultsUri()}{Environment.NewLine}{string.Join(Environment.NewLine, lines)}");
         }
 
         private string GetTestResultsUri()
@@ -827,7 +826,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task<JobResubmissionResult> ResubmitFailedJobsAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("🔁 Checking for failed Helix jobs to resubmit the failed work items...");
+            _logger.LogInformation("Checking for failed Helix jobs to resubmit the failed work items...");
 
             var retryingHelixSubmitterJobs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var resubmittedJobs = new List<HelixJobInfo>();
