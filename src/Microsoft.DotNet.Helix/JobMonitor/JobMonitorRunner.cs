@@ -705,7 +705,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     continue;
                 }
 
-                LogWarning($"❌ Work item '{workItem.Name}' in job '{helixJob.DisplayName}' failed ({FormatWorkItemState(workItem)}).{Environment.NewLine}Console: {GetConsoleOutputText(workItem.ConsoleOutputUri)}");
+                LogWarning($"Work item '{workItem.Name}' in job '{helixJob.DisplayName}' failed ({FormatWorkItemState(workItem)}).{Environment.NewLine}Console: {GetConsoleOutputText(workItem.ConsoleOutputUri)}");
             }
         }
 
@@ -816,7 +816,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 lines.Add($"{(i == failures.Count - 1 ? "   " : "│  ")}└─ Console: {failure.ConsoleOutput}");
             }
 
-            LogError($"❌ Failed work item console logs:{Environment.NewLine}Test results: {GetTestResultsUri()}{Environment.NewLine}{string.Join(Environment.NewLine, lines)}");
+            LogError($"Failed work item console logs:{Environment.NewLine}Test results: {GetTestResultsUri()}{Environment.NewLine}{string.Join(Environment.NewLine, lines)}");
         }
 
         private string GetTestResultsUri()
