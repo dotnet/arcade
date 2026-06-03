@@ -1329,6 +1329,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             // cached snapshot was overwritten with the latest (finished) state.
             string timeoutMessage = logger.Messages.Should().ContainSingle(m =>
                 m.Contains("Helix Job Monitor timed out", StringComparison.Ordinal)).Subject;
+            timeoutMessage.Should().StartWith("##vso[task.logissue type=error]");
             timeoutMessage.Should().Contain("helix-stuck");
             timeoutMessage.Should().NotContain("helix-good");
 
@@ -2639,10 +2640,14 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             logger.Messages.Should().Contain(message =>
                 message.Contains($"Work item 'wi-fail' in job 'helix-linux' failed (Finished, exit code 1).{Environment.NewLine}Console: https://helix.example/wi-fail/console", StringComparison.Ordinal));
             logger.Messages.Should().Contain(message =>
+                message.Contains("##vso[task.logissue type=warning]Work item 'wi-fail' in job 'helix-linux' failed", StringComparison.Ordinal));
+            logger.Messages.Should().Contain(message =>
                 message.Contains("Failed work item console logs:", StringComparison.Ordinal)
                 && message.Contains("Test results: https://dev.azure.com/dnceng/public/_build/results?buildId=123&view=ms.vss-test-web.build-test-results-tab", StringComparison.Ordinal)
                 && message.Contains("└─ wi-fail (Job: helix-linux) (Finished, exit code 1)", StringComparison.Ordinal)
                 && message.Contains("└─ Console: https://helix.example/wi-fail/console", StringComparison.Ordinal));
+            logger.Messages.Should().Contain(message =>
+                message.Contains("##vso[task.logissue type=error]Failed work item console logs:", StringComparison.Ordinal));
             logger.Messages.Should().NotContain(message =>
                 message.Contains("Helix job: helix-linux", StringComparison.Ordinal));
         }
