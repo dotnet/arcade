@@ -102,13 +102,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return RunCoreAsync(cancellationToken);
         }
 
-        public async Task<int> RunAsync()
-        {
-            var cancellationTokenSource = new CancellationTokenSource();
-            cancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(_options.MaximumWaitMinutes));
-            return await RunCoreAsync(cancellationTokenSource.Token);
-        }
-
         private async Task<int> RunCoreAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Monitoring Helix jobs for stage {stage} of build {BuildId}:{nl}{collectionUri}{teamProject}/_build/results?buildId={BuildId}",
@@ -121,7 +114,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             IReadOnlySet<string> alreadyProcessed = await _azdo.GetProcessedHelixJobNamesAsync(cancellationToken);
             HashSet<string> processedHelixJobs = new(alreadyProcessed, StringComparer.OrdinalIgnoreCase);
-            HashSet<HelixJobInfo> associatedJobs = new(HelixJobInfo.ByJobNameComparer);
+            // Keyed by Helix job name so that each poll overwrites the cached snapshot with the
+            // latest state from Helix. Using a HashSet here would retain the first-seen snapshot
+            // (typically Status="running", Finished=null), which would cause ReportTimeout and
+            // CancelInFlightHelixJobsAsync to treat already-completed jobs as still in flight.
+            Dictionary<string, HelixJobInfo> associatedJobs = new(StringComparer.OrdinalIgnoreCase);
+            var latestTimelineRecords = new List<AzureDevOpsTimelineRecord>();
 
             try
             {
@@ -130,6 +128,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return await RunLoopAsync(
                     processedHelixJobs,
                     associatedJobs,
+                    latestTimelineRecords,
                     jobResubmission,
                     cancellationToken);
             }
@@ -141,7 +140,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 // lost (and tests that observe UploadedJobNames immediately after a cancelled
                 // run see a partial set).
                 await WaitForPendingTestResultUploadsAsync(CancellationToken.None);
-                ReportTimeout(associatedJobs, processedHelixJobs);
+                ReportTimeout(associatedJobs.Values, processedHelixJobs, latestTimelineRecords);
 
                 // On cancellation (typically the overall timeout), proactively cancel any
                 // Helix jobs we know about that haven't finished yet so they don't keep
@@ -150,7 +149,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 // already cancelled) so the best-effort cancel calls actually run.
                 using (var cancelCts = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
                 {
-                    await CancelInFlightHelixJobsAsync(associatedJobs, processedHelixJobs, cancelCts.Token);
+                    await CancelInFlightHelixJobsAsync(associatedJobs.Values, processedHelixJobs, cancelCts.Token);
                 }
 
                 return 1;
@@ -202,7 +201,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task<int> RunLoopAsync(
             HashSet<string> processedHelixJobs,
-            HashSet<HelixJobInfo> associatedJobs,
+            Dictionary<string, HelixJobInfo> associatedJobs,
+            List<AzureDevOpsTimelineRecord> latestTimelineRecords,
             JobResubmissionResult jobResubmission,
             CancellationToken cancellationToken)
         {
@@ -232,8 +232,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         string.IsNullOrEmpty(j.StageName)
                         || string.Equals(j.StageName, _options.StageName, StringComparison.OrdinalIgnoreCase))
                 ];
+                latestTimelineRecords.Clear();
+                latestTimelineRecords.AddRange(timelineRecords);
 
-                associatedJobs.UnionWith(associatedJobsWithBuild);
+                // Overwrite per poll so the cached entry reflects the latest Helix-side state
+                // (in particular, the Finished timestamp transitioning from null to a value).
+                foreach (HelixJobInfo j in associatedJobsWithBuild)
+                {
+                    associatedJobs[j.JobName] = j;
+                }
 
                 // Cache every job we have seen so GetSubmitterChainKey can follow the
                 // PreviousHelixJobName chain back to a root, even across polls.
@@ -746,18 +753,20 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// <summary>
         /// Produces a key that rolls up work-item outcomes within a logical AzDO submitter
         /// chain. When the job carries an AzDO <c>System.JobName</c>, the chain key is based
-        /// on that name (so resubmissions of the same AzDO job share the same key while two
-        /// independent AzDO jobs running identically-named work items stay distinct). When
-        /// there is no submitter name (test scenarios, manual Helix submissions), the chain
-        /// is followed back through <c>PreviousHelixJobName</c> links to the root and the
-        /// root Helix job name is used instead, so that retries still overwrite prior
-        /// failures correctly.
+        /// on that name combined with the Helix <c>QueueId</c> (so resubmissions of the same
+        /// AzDO job to the same queue share the same key while a single AzDO matrix leg that
+        /// fans out to multiple Helix queues — each producing its own Helix job under the
+        /// same <c>System.JobName</c> — stays distinct and cannot overwrite a sibling queue's
+        /// failure with a pass). When there is no submitter name (test scenarios, manual Helix
+        /// submissions), the chain is followed back through <c>PreviousHelixJobName</c> links
+        /// to the root and the root Helix job name is used instead, so that retries still
+        /// overwrite prior failures correctly.
         /// </summary>
         private string GetSubmitterChainKey(HelixJobInfo job)
         {
             if (!string.IsNullOrEmpty(job.SubmitterJobName))
             {
-                return $"submitter:{job.SubmitterJobName}";
+                return FormatSubmitterChainKey(job.SubmitterJobName, job.QueueId);
             }
 
             HelixJobInfo current = job;
@@ -773,7 +782,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 if (!string.IsNullOrEmpty(previous.SubmitterJobName))
                 {
-                    return $"submitter:{previous.SubmitterJobName}";
+                    return FormatSubmitterChainKey(previous.SubmitterJobName, previous.QueueId);
                 }
 
                 current = previous;
@@ -781,6 +790,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             return $"helix:{(current?.JobName ?? job.JobName)}";
         }
+
+        private static string FormatSubmitterChainKey(string submitterJobName, string queueId)
+            => string.IsNullOrEmpty(queueId)
+                ? $"submitter:{submitterJobName}"
+                : $"submitter:{submitterJobName}|queue:{queueId}";
 
         private void LogFinalFailedWorkItemConsoleInfo()
         {
@@ -929,24 +943,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             string State,
             string ConsoleOutput);
 
-        private static string FormatChainKeyForDisplay(string chainKey)
-        {
-            const string submitterPrefix = "submitter:";
-            const string helixPrefix = "helix:";
-            if (chainKey is null) return string.Empty;
-            if (chainKey.StartsWith(submitterPrefix, StringComparison.Ordinal))
-            {
-                return chainKey.Substring(submitterPrefix.Length);
-            }
-
-            if (chainKey.StartsWith(helixPrefix, StringComparison.Ordinal))
-            {
-                return chainKey.Substring(helixPrefix.Length);
-            }
-
-            return chainKey;
-        }
-
         private sealed class WorkItemOutcomeKeyComparer : IEqualityComparer<(string ChainKey, string WorkItemName)>
         {
             public static readonly WorkItemOutcomeKeyComparer Instance = new();
@@ -963,28 +959,68 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private void ReportTimeout(
             IEnumerable<HelixJobInfo> latestAssociatedJobs,
-            HashSet<string> processedHelixJobs)
+            HashSet<string> processedHelixJobs,
+            IReadOnlyList<AzureDevOpsTimelineRecord> latestTimelineRecords)
         {
             var timeout = TimeSpan.FromMinutes(_options.MaximumWaitMinutes);
-            var unfinishedJobs = latestAssociatedJobs
+            var unfinishedHelixJobs = GetLatestHelixJobAttempts(latestAssociatedJobs)
                 .Where(j => !j.IsCompleted || !processedHelixJobs.Contains(j.JobName))
                 .OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
                 .ToList();
+            var inProgressPipelineJobs = GetInProgressNonMonitorPipelineJobs(latestTimelineRecords, _options.JobMonitorName)
+                .OrderBy(r => r.Name ?? r.ReferenceName ?? r.Identifier ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                .ToList();
 
-            if (unfinishedJobs.Count == 0)
+            if (unfinishedHelixJobs.Count == 0 && inProgressPipelineJobs.Count == 0)
             {
-                _logger.LogCritical("Helix Job Monitor timed out after {TimeoutMinutes} minute(s) ({Timeout}). No unfinished Helix jobs were tracked at the time of timeout.",
+                _logger.LogCritical("Helix Job Monitor timed out after {TimeoutMinutes} minute(s) ({Timeout}). No unfinished Helix or Azure DevOps jobs were tracked at the time of timeout.",
                     timeout.TotalMinutes,
                     timeout);
                 return;
             }
 
-            _logger.LogError(
-                $"Helix Job Monitor timed out after {{TimeoutMinutes}} minute(s) ({{Timeout}}). {{UnfinishedCount}} Helix job(s) had not finished:{Environment.NewLine}- {{UnfinishedJobs}}{Environment.NewLine}",
-                timeout.TotalMinutes,
-                timeout,
-                unfinishedJobs.Count,
-                string.Join(Environment.NewLine + "- ", unfinishedJobs.Select(j => $"{j.DetailsUri} ({j.QueueId})")));
+            if (unfinishedHelixJobs.Count > 0)
+            {
+                _logger.LogError(
+                    $"Helix Job Monitor timed out after {{TimeoutMinutes}} minute(s) ({{Timeout}}). {{UnfinishedCount}} Helix job(s) were unfinished or unprocessed:{Environment.NewLine}- {{UnfinishedJobs}}{Environment.NewLine}",
+                    timeout.TotalMinutes,
+                    timeout,
+                    unfinishedHelixJobs.Count,
+                    string.Join(Environment.NewLine + "- ", unfinishedHelixJobs.Select(FormatUnfinishedHelixJobForTimeoutLog)));
+            }
+
+            if (inProgressPipelineJobs.Count > 0)
+            {
+                _logger.LogError(
+                    $"At timeout, {{InProgressCount}} non-monitor Azure DevOps pipeline job(s) were still in progress or queued:{Environment.NewLine}- {{InProgressJobs}}{Environment.NewLine}",
+                    inProgressPipelineJobs.Count,
+                    string.Join(Environment.NewLine + "- ", inProgressPipelineJobs.Select(FormatInProgressPipelineJobForTimeoutLog)));
+            }
+        }
+
+        private static IEnumerable<AzureDevOpsTimelineRecord> GetInProgressNonMonitorPipelineJobs(
+            IReadOnlyList<AzureDevOpsTimelineRecord> timelineRecords,
+            string jobMonitorName)
+            => HelixJobMonitorUtilities.GetRelevantNonMonitorJobRecords(timelineRecords, jobMonitorName)
+                .Where(r => !string.Equals(r.State, "completed", StringComparison.OrdinalIgnoreCase));
+
+        private static string FormatUnfinishedHelixJobForTimeoutLog(HelixJobInfo helixJob)
+        {
+            string workItemCountText = helixJob.InitialWorkItemCount?.ToString() ?? "unknown";
+            return $"{helixJob.DisplayName} [status={helixJob.Status}, initialWorkItems={workItemCountText}]{Environment.NewLine}  {helixJob.DetailsUri}";
+        }
+
+        private static string FormatInProgressPipelineJobForTimeoutLog(AzureDevOpsTimelineRecord timelineRecord)
+        {
+            string state = string.IsNullOrEmpty(timelineRecord.State) ? "unknown" : timelineRecord.State;
+            string result = string.IsNullOrEmpty(timelineRecord.Result) ? "none" : timelineRecord.Result;
+            string name = string.IsNullOrEmpty(timelineRecord.Name) ? timelineRecord.ReferenceName : timelineRecord.Name;
+            if (string.IsNullOrEmpty(name))
+            {
+                name = timelineRecord.Identifier;
+            }
+
+            return $"{name} [state={state}, result={result}]";
         }
 
         public void Dispose()
