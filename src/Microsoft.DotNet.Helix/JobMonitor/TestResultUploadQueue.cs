@@ -64,7 +64,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             _logger.LogInformation("Waiting for {Count} pending test result upload(s) to complete.", _pending.Count);
-            await Task.WhenAll(_pending);
+            try
+            {
+                await Task.WhenAll(_pending).WaitAsync(cancellationToken);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                // One or more upload tasks were cancelled; treat as best-effort drained.
+            }
             Prune();
         }
 

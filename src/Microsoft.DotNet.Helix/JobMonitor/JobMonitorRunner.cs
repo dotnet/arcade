@@ -99,11 +99,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
             catch (OperationCanceledException)
             {
-                // Drain in-flight uploads before exiting. The uploads were started via Task.Run
-                // and are not bound to the runner's cancellation token; if we return without
-                // awaiting them, any results that hadn't reached AzDO yet are lost (and tests
-                // that observe UploadedJobNames immediately after a cancelled run see a partial
-                // set).
+                // Drain in-flight uploads before exiting. Uploads are started via Task.Run and are
+                // not awaited as part of the poll loop, so we need to await them here to avoid
+                // dropping results that were already in progress when the runner was cancelled.
                 await _uploads.DrainAsync(CancellationToken.None);
                 _reporter.ReportTimeout();
 
