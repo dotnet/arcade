@@ -51,7 +51,7 @@
     <!-- Use DeterministicTimestamp before falling back to wall-clock -->
     <_BuildNumber Condition="'$(_BuildNumber)' == '' and '$(DeterministicTimestamp)' != '' and '$(DeterministicTimestamp)' != 'true' and '$(DeterministicTimestamp)' != 'false' and !$(DeterministicTimestamp.Contains('-'))">$([System.DateTimeOffset]::FromUnixTimeSeconds($(DeterministicTimestamp)).UtcDateTime.ToString(yyyyMMdd)).1</_BuildNumber>
     <_BuildNumber Condition="'$(_BuildNumber)' == '' and $(DeterministicTimestamp.Contains('-'))">$([System.DateTimeOffset]::Parse($(DeterministicTimestamp)).UtcDateTime.ToString(yyyyMMdd)).1</_BuildNumber>
-    <_BuildNumber Condition="'$(_BuildNumber)' == ''">$([System.DateTime]::Now.ToString(yyyyMMdd)).1</_BuildNumber>
+    <_BuildNumber Condition="'$(_BuildNumber)' == ''">$([System.DateTime]::UtcNow.ToString(yyyyMMdd)).1</_BuildNumber>
 
     <!--
       OfficialBuildId is assumed to have format "20yymmdd.r" (the assumption is checked later in a target).
