@@ -56,12 +56,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public HashSet<string> WorkItemOutcomeJobs { get; } = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
-        /// Tracks which work-item names belong to which Helix job, so resubmission only
-        /// resubmits items from the specific source job.
-        /// </summary>
-        public Dictionary<string, HashSet<string>> WorkItemsByJob { get; } = new(StringComparer.OrdinalIgnoreCase);
-
-        /// <summary>
         /// Latest known console-link information for every failed work item, keyed the same
         /// way as <see cref="WorkItemOutcomes"/>. Cleared per key when a later incarnation
         /// passes. Used to build the final aggregated failure report.

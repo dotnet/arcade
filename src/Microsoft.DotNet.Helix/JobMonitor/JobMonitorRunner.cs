@@ -317,8 +317,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     _state.TrackFailedWorkItemConsoleInfo(helixJob, chainKey, wi);
                     jobWorkItems.Add(wi.Name);
                 }
-
-                _state.WorkItemsByJob[helixJob.JobName] = jobWorkItems;
             }
 
             if (queueUpload)
