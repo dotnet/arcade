@@ -373,16 +373,18 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             JobWorkItemStatusCounts counts = GetStatusCounts(orderedJobs, workItemsByJob, completedJobNames, processedJobNames);
             _logger.LogInformation(
-                "ℹ️ Status: {ProcessedJobs} processed / {CompletedJobs} completed / {RunningJobs} running / {WaitingJobs} waiting jobs{nl}"
-              + "           {ProcessedWorkItems} processed / {CompletedWorkItems} completed / {RunningWorkItems} running / {WaitingWorkItems} waiting work items",
+                "ℹ️ Status: {ProcessedJobs} processed / {CompletedJobs} completed / {RunningJobs} running / {QueuedJobs} queued / {WaitingJobs} waiting jobs{nl}"
+              + "           {ProcessedWorkItems} processed / {CompletedWorkItems} completed / {RunningWorkItems} running / {QueuedWorkItems} queued / {WaitingWorkItems} waiting work items",
                 counts.ProcessedJobs,
                 counts.CompletedJobs,
                 counts.RunningJobs,
+                counts.QueuedJobs,
                 counts.WaitingJobs,
                 Environment.NewLine,
                 counts.ProcessedWorkItems,
                 counts.CompletedWorkItems,
                 counts.RunningWorkItems,
+                counts.QueuedWorkItems,
                 counts.WaitingWorkItems);
 
             if (_options.Verbose)
@@ -403,6 +405,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             int completedWorkItems = 0;
             int runningJobs = 0;
             int runningWorkItems = 0;
+            int queuedJobs = 0;
+            int queuedWorkItems = 0;
             int waitingJobs = 0;
             int waitingWorkItems = 0;
 
@@ -423,8 +427,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
                 else if (workItems.Count > 0)
                 {
-                    runningJobs++;
-                    runningWorkItems += workItems.Count;
+                    int jobRunningCount = workItems.Count(wi => string.Equals(wi.State, "Running", StringComparison.OrdinalIgnoreCase));
+                    int jobQueuedCount = workItems.Count(wi => string.Equals(wi.State, "Waiting", StringComparison.OrdinalIgnoreCase));
+                    int jobOtherCount = workItems.Count - jobRunningCount - jobQueuedCount;
+
+                    runningWorkItems += jobRunningCount + jobOtherCount;
+                    queuedWorkItems += jobQueuedCount;
+
+                    if (jobRunningCount > 0 || jobOtherCount > 0)
+                        runningJobs++;
+                    else
+                        queuedJobs++;
                 }
                 else
                 {
@@ -440,6 +453,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 completedWorkItems,
                 runningJobs,
                 runningWorkItems,
+                queuedJobs,
+                queuedWorkItems,
                 waitingJobs,
                 waitingWorkItems);
         }
@@ -518,7 +533,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return "Completed";
             }
 
-            return workItems.Count > 0 ? "Running" : "Waiting";
+            if (workItems.Count == 0)
+            {
+                return "Waiting";
+            }
+
+            return workItems.Any(wi => string.Equals(wi.State, "Running", StringComparison.OrdinalIgnoreCase))
+                ? "Running"
+                : "Queued";
         }
 
         private static string FormatWorkItemState(WorkItemSummary workItem)
@@ -725,6 +747,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             int CompletedWorkItems,
             int RunningJobs,
             int RunningWorkItems,
+            int QueuedJobs,
+            int QueuedWorkItems,
             int WaitingJobs,
             int WaitingWorkItems);
 
