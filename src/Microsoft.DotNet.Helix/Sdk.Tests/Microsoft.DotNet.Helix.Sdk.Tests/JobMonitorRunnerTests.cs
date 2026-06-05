@@ -2689,9 +2689,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             exitCode.Should().Be(1);
             logger.Messages.Should().Contain(message =>
-                message.Contains("0 processed / 0 completed / 1 running / 0 queued / 0 waiting jobs", StringComparison.Ordinal));
+                message.Contains("0 processed / 0 completed / 1 running / 0 waiting jobs", StringComparison.Ordinal));
             logger.Messages.Should().Contain(message =>
-                message.Contains("0 processed / 0 completed / 3 running / 0 queued / 0 waiting work items", StringComparison.Ordinal));
+                message.Contains("0 processed / 0 completed / 3 running / 0 waiting work items", StringComparison.Ordinal));
             logger.Messages.Should().NotContain(message =>
                 message.Contains("Helix job details:", StringComparison.Ordinal));
             logger.Messages.Should().Contain(message =>
@@ -2741,13 +2741,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         /// <summary>
-        /// When Helix work items are in the "Waiting" state (queued but no agent assigned),
-        /// the status line should count them as "queued" rather than "running".
-        /// In verbose mode, the job should also be labeled "Queued" to distinguish it from
-        /// jobs that are actively executing.
+        /// When Helix work items are in the "Waiting" state, the summary should keep them in
+        /// the "waiting" work item bucket while still reporting the parent job as "Running"
+        /// because work items have already been assigned.
         /// </summary>
         [Fact]
-        public async Task LoopStatus_WaitingWorkItems_CountedAsQueued()
+        public async Task LoopStatus_WaitingWorkItems_CountedAsWaitingWhileJobIsRunning()
         {
             var azdo = new FakeAzureDevOpsService();
             var helix = new FakeHelixService();
@@ -2775,14 +2774,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             int exitCode = await runner.RunAsync(cts.Token);
 
             exitCode.Should().Be(1);
-            // Work items in "Waiting" state should appear as "queued", not "running"
             logger.Messages.Should().Contain(message =>
-                message.Contains("0 processed / 0 completed / 0 running / 1 queued / 0 waiting jobs", StringComparison.Ordinal));
+                message.Contains("0 processed / 0 completed / 1 running / 0 waiting jobs", StringComparison.Ordinal));
             logger.Messages.Should().Contain(message =>
-                message.Contains("0 processed / 0 completed / 0 running / 2 queued / 0 waiting work items", StringComparison.Ordinal));
-            // In verbose mode, the job itself should be labeled "Queued"
+                message.Contains("0 processed / 0 completed / 0 running / 2 waiting work items", StringComparison.Ordinal));
             logger.Messages.Should().Contain(message =>
-                message.Contains("└─ 🧪 Helix job helix-linux [Queued]", StringComparison.Ordinal));
+                message.Contains("└─ 🧪 Helix job helix-linux [Running]", StringComparison.Ordinal));
         }
 
         // -----------------------------------------------------------------------
