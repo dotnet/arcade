@@ -428,9 +428,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     foreach (WorkItemSummary wi in workItems)
                     {
                         if (string.Equals(wi.State, "Running", StringComparison.OrdinalIgnoreCase))
+                        {
                             jobRunningCount++;
+                        }
                         else if (string.Equals(wi.State, "Waiting", StringComparison.OrdinalIgnoreCase))
+                        {
                             jobWaitingCount++;
+                        }
                     }
                     int jobOtherCount = workItems.Count - jobRunningCount - jobWaitingCount;
 
