@@ -530,12 +530,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return "Completed";
             }
 
-            if (workItems.Count == 0)
-            {
-                return "Waiting";
-            }
-
-            return "Running";
+            return workItems.Count > 0 ? "Running" : "Waiting";
         }
 
         private static string FormatWorkItemState(WorkItemSummary workItem)
