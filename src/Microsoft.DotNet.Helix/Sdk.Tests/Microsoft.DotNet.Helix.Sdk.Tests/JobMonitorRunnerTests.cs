@@ -652,6 +652,48 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             exitCode.Should().Be(1);
         }
 
+        /// <summary>
+        /// Regression: two Helix jobs from the same AzDO submitter + queue both report a failed
+        /// work item with the same name. Final summary and the aggregated failed-work-item block
+        /// must count/report both failed attempts (one per Helix job).
+        /// </summary>
+        [Fact]
+        public async Task OneSubmitterSameQueue_SameWorkItemNameFailsInTwoJobs_FinalSummaryCountsBothFailures()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Linux_Build_Debug", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-ubuntu-1", "finished", submitterJobName: "Linux_Build_Debug", queueId: "ubuntu.2204.amd64.open"),
+                    HelixJob("helix-ubuntu-2", "finished", submitterJobName: "Linux_Build_Debug", queueId: "ubuntu.2204.amd64.open"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-ubuntu-1"] = PassFail(failed: ["Microsoft.DotNet.Helix.Sdk.Tests.dll"]),
+                    ["helix-ubuntu-2"] = PassFail(failed: ["Microsoft.DotNet.Helix.Sdk.Tests.dll"]),
+                });
+
+            var runner = CreateRunner(azdo, helix, logger: logger);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(1);
+            logger.Messages.Should().Contain(message =>
+                message.Contains("2 processed / 2 completed / 0 running / 0 waiting work items", StringComparison.Ordinal));
+            logger.Messages.Should().Contain(message =>
+                message.Contains("Work items: 2 submitted / 2 resubmitted / 2 failed", StringComparison.Ordinal));
+            logger.Messages.Should().Contain(message =>
+                message.Contains("Failed work item console logs:", StringComparison.Ordinal)
+                && message.Contains("Microsoft.DotNet.Helix.Sdk.Tests.dll (Job: Linux_Build_Debug - ubuntu.2204.amd64.open (helix-ubuntu-1)) (Finished, exit code 1)", StringComparison.Ordinal)
+                && message.Contains("Microsoft.DotNet.Helix.Sdk.Tests.dll (Job: Linux_Build_Debug - ubuntu.2204.amd64.open (helix-ubuntu-2)) (Finished, exit code 1)", StringComparison.Ordinal));
+        }
+
         [Fact]
         public async Task StageRerun_UploadsNewHelixWorkItemsWithoutReuploadingPreviousWorkItems()
         {
