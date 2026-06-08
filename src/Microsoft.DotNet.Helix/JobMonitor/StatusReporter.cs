@@ -348,8 +348,18 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
                 else if (workItems.Count > 0)
                 {
+                    int jobWaitingCount = 0;
+                    foreach (WorkItemSummary wi in workItems)
+                    {
+                        if (string.Equals(wi.State, "Waiting", StringComparison.OrdinalIgnoreCase))
+                        {
+                            jobWaitingCount++;
+                        }
+                    }
+
                     runningJobs++;
-                    runningWorkItems += workItems.Count;
+                    waitingWorkItems += jobWaitingCount;
+                    runningWorkItems += workItems.Count - jobWaitingCount;
                 }
                 else
                 {
