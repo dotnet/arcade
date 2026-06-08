@@ -191,6 +191,8 @@ namespace Microsoft.DotNet.RemoteExecutor
                                                     foreach (ClrThread thread in runtime.Threads.Where(t => t.IsAlive))
                                                     {
                                                         ClrThreadState state = thread.State;
+                                                        // ClrMD v4 no longer exposes gate/timer/wait thread pool flags, so only the
+                                                        // completion port and worker kinds remain detectable via ClrThreadState.
                                                         string threadKind =
                                                             (state & ClrThreadState.TS_CompletionPortThread) != 0 ? "[Thread pool completion port]" :
                                                             (state & ClrThreadState.TS_TPWorkerThread) != 0 ? "[Thread pool worker]" :
