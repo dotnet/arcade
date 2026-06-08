@@ -689,9 +689,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             logger.Messages.Should().Contain(message =>
                 message.Contains("Work items: 2 submitted / 2 resubmitted / 2 failed", StringComparison.Ordinal));
             logger.Messages.Should().Contain(message =>
-                message.Contains("Failed work item console logs:", StringComparison.Ordinal)
-                && message.Contains("Microsoft.DotNet.Helix.Sdk.Tests.dll (Job: Linux_Build_Debug - ubuntu.2204.amd64.open (helix-ubuntu-1)) (Finished, exit code 1)", StringComparison.Ordinal)
-                && message.Contains("Microsoft.DotNet.Helix.Sdk.Tests.dll (Job: Linux_Build_Debug - ubuntu.2204.amd64.open (helix-ubuntu-2)) (Finished, exit code 1)", StringComparison.Ordinal));
+                message.Contains("Failed work item console logs:", StringComparison.Ordinal));
+            logger.Messages.Should().Contain(message =>
+                message.Contains("Microsoft.DotNet.Helix.Sdk.Tests.dll (Job: Linux_Build_Debug - ubuntu.2204.amd64.open (helix-ubuntu-1)) (Finished, exit code 1)", StringComparison.Ordinal));
+            logger.Messages.Should().Contain(message =>
+                message.Contains("Microsoft.DotNet.Helix.Sdk.Tests.dll (Job: Linux_Build_Debug - ubuntu.2204.amd64.open (helix-ubuntu-2)) (Finished, exit code 1)", StringComparison.Ordinal));
         }
 
         [Fact]

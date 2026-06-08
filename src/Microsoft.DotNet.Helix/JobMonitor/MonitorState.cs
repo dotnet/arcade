@@ -57,7 +57,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         /// <summary>
         /// Latest known console-link information for every failed work item attempt, keyed by
-        /// (HelixJobName, WorkItemName). Used to build the final aggregated failure report
+        /// (JobName, WorkItemName) where <c>JobName</c> is the Helix job name. Used to build
+        /// the final aggregated failure report
         /// without collapsing failures across different jobs.
         /// </summary>
         public Dictionary<(string JobName, string WorkItemName), FailedWorkItemConsoleInfo> FailedWorkItemConsoleInfo { get; }
@@ -88,8 +89,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public int ProcessedWorkItemCount { get; set; }
         public int FailedProcessedWorkItemCount { get; set; }
 
-        public int FailedWorkItemCount => WorkItemOutcomes.Values.Count(passed => !passed);
-
+        /// <summary>
+        /// True when the latest logical outcome (after retry supersession within a submitter
+        /// chain) still has at least one failure. This drives monitor success/failure.
+        /// </summary>
         public bool HasFailedWorkItem => WorkItemOutcomes.Values.Any(passed => !passed);
 
         /// <summary>
