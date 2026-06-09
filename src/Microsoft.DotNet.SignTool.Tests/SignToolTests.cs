@@ -1781,8 +1781,8 @@ $@"
 
         /// <summary>
         /// Validates that tar.gz archives containing symbolic links are handled correctly.
-        /// This test is Unix-only because there are no signing scenarios that use
-        /// symbolic links on Windows.
+        /// This test is Unix-only because creating symlinks on Windows requires elevation
+        /// and there are no signing scenarios that use symbolic links on Windows.
         /// </summary>
         [UnixOnlyFactAttribute]
         public void SignTarGZipFileWithSymlinks()
