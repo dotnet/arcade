@@ -1,0 +1,97 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<Project>
+
+  <!--
+    Microsoft.Testing.Platform (MTP) test projects are self-hosting executables produced via
+    Microsoft.Testing.Platform.MSBuild. The Helix Sdk publishes them and runs the resulting
+    assembly directly with 'dotnet exec'. The publish helper is the generic
+    xunit-runner/XUnitPublish.targets file (it only defines a 'PublishWithOutput' helper
+    target and is intentionally framework-agnostic).
+
+    Two item types are supported:
+      <MTPProject Include="...csproj" />       — generic primitive, any MTP-based framework
+                                                  (MSTest 4.x, xUnit v3 with MTP, NUnit with
+                                                  MTP, TUnit, custom MTP).
+      <MSTestProject Include="...csproj" />    — discoverability shim for MSTest users; folded
+                                                  into @(MTPProject) before any other target.
+
+    Test projects must reference 'Microsoft.Testing.Extensions.TrxReport' so that the work
+    item command can produce a TRX file. Projects using 'MSTest.Sdk' include it by default;
+    xUnit v3 projects built with Microsoft.DotNet.Arcade.Sdk's XUnitV3 targets pick it up
+    implicitly as well. Other MTP-based frameworks must add the package manually.
+  -->
+
+  <PropertyGroup>
+    <_MTPPublishTargetsPath>$(MSBuildThisFileDirectory)../xunit-runner/XUnitPublish.targets</_MTPPublishTargetsPath>
+    <!--
+      Name of the TRX file produced by Microsoft.Testing.Extensions.TrxReport. The arcade
+      Python TRXFormat parser (and EnableHelixJobMonitor's *.trx sweep) will pick up any
+      *.trx in the work item working directory, so the exact name only matters if the user
+      has multiple consumers expecting a specific filename.
+    -->
+    <MTPTrxReportFilename Condition="'$(MTPTrxReportFilename)' == ''">testResults.trx</MTPTrxReportFilename>
+  </PropertyGroup>
+
+  <!--
+    MSTestProject is a thin alias for MTPProject. Folding it in this early (before Restore)
+    ensures every downstream target sees a single uniform item set. Duplicate-by-Identity-
+    and-AdditionalProperties items (e.g. a user who listed the same project under both
+    MSTestProject and MTPProject) are collapsed by CreateMTPWorkItems before HelixWorkItems
+    are emitted.
+  -->
+  <ItemGroup Condition="'@(MSTestProject)' != ''">
+    <MTPProject Include="@(MSTestProject)">
+      <_FromMSTestProject>true</_FromMSTestProject>
+    </MTPProject>
+  </ItemGroup>
+
+  <Target Name="RestoreMTPProjects"
+          Condition="'@(MTPProject)' != ''"
+          BeforeTargets="Restore"
+          Outputs="%(MTPProject.Identity)%(MTPProject.AdditionalProperties)">
+    <MSBuild Projects="%(MTPProject.Identity)"
+             Targets="Restore"
+             Properties="CustomAfterMicrosoftCommonTargets=$(_MTPPublishTargetsPath);%(MTPProject.AdditionalProperties)">
+    </MSBuild>
+  </Target>
+
+  <Target Name="BuildMTPProjects"
+          Condition="'@(MTPProject)' != ''"
+          BeforeTargets="CoreBuild"
+          Outputs="%(MTPProject.Identity)%(MTPProject.AdditionalProperties)">
+    <PropertyGroup>
+      <_CurrentMTPProject>%(MTPProject.Identity)</_CurrentMTPProject>
+      <_CurrentMTPAdditionalProperties>%(MTPProject.AdditionalProperties)</_CurrentMTPAdditionalProperties>
+    </PropertyGroup>
+    <MSBuild Projects="$(_CurrentMTPProject)" Targets="PublishWithOutput" Properties="CustomAfterMicrosoftCommonTargets=$(_MTPPublishTargetsPath);$(_CurrentMTPAdditionalProperties)">
+      <Output TaskParameter="TargetOutputs" PropertyName="_MTPPublishOutputDir" />
+    </MSBuild>
+    <MSBuild Projects="$(_CurrentMTPProject)" Targets="GetTargetPath" Properties="CustomAfterMicrosoftCommonTargets=$(_MTPPublishTargetsPath);$(_CurrentMTPAdditionalProperties)">
+      <Output TaskParameter="TargetOutputs" PropertyName="_MTPTargetPath" />
+    </MSBuild>
+
+    <ItemGroup>
+      <!--
+        Match on Identity AND AdditionalProperties so multi-targeted projects (the same
+        csproj listed twice with TargetFramework=net8.0 then net9.0, for example) each
+        get their own PublishDirectory / TargetPath instead of overwriting each other.
+      -->
+      <MTPProject Condition="'%(Identity)' == '$(_CurrentMTPProject)' and '%(AdditionalProperties)' == '$(_CurrentMTPAdditionalProperties)'">
+        <PublishDirectory>$(_MTPPublishOutputDir)</PublishDirectory>
+        <TargetPath>$(_MTPTargetPath)</TargetPath>
+      </MTPProject>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CreateMTPWorkItems"
+          Condition="'@(MTPProject)' != ''"
+          BeforeTargets="CoreTest">
+    <CreateMTPWorkItems MTPProjects="@(MTPProject)"
+                        IsPosixShell="$(IsPosixShell)"
+                        MTPWorkItemTimeout="$(MTPWorkItemTimeout)"
+                        TrxReportFilename="$(MTPTrxReportFilename)">
+      <Output TaskParameter="MTPWorkItems" ItemName="HelixWorkItem"/>
+    </CreateMTPWorkItems>
+  </Target>
+
+</Project>
