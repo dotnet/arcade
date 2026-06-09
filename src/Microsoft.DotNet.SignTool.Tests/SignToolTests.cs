@@ -604,7 +604,7 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             foreach ((string path, string linkName) in expectedHardlinks)
             {
-                hardlinkEntries.Should().Contain((path, linkName),
+                hardlinkEntries.Should().Contain((Name: path, LinkName: linkName),
                     $"hardlink '{path}' -> '{linkName}' should be preserved in the repacked tarball");
             }
         }
