@@ -111,12 +111,16 @@ Version selection rules:
   ordering semantics.
 - Only ever move a property **forward** to a higher version than its current
   value. Never downgrade.
-- **Do not bump across a major version.** Pick the highest available version that
-  shares the same major version as the current value. A new major version
-  frequently requires coordinated manual changes (build logic, tooling, etc.), so
-  leave those for a human. If the only newer versions available are in a higher
-  major, leave the property unchanged.
-- If the highest available version equals the current value, leave the property
+- **Major version bumps are allowed by default** — pick the highest version
+  available across the feeds, even when that crosses a major version boundary.
+  **Exception:** if the line directly above the property carries a comment
+  containing the marker `minor-patch-only` (e.g.
+  `<!-- minor-patch-only: <reason> -->`), restrict the update to versions that
+  share the **same major version** as the current value (i.e. only minor/patch
+  bumps). Such packages need coordinated manual work to cross a major, so leave a
+  higher major for a human. If the only newer versions are in a higher major,
+  leave the property unchanged.
+- If the highest eligible version equals the current value, leave the property
   unchanged.
 
 ## Step 3 — Apply the updates
