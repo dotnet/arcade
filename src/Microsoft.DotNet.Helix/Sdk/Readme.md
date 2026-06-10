@@ -340,16 +340,9 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
       results can be reported as a TRX file (which arcade's reporter consumes natively).
       Projects built with MSTest.Sdk, or with Microsoft.DotNet.Arcade.Sdk's XUnitV3
       targets, get this reference implicitly.
-
-      For MSTest projects you can use the discoverability alias <MSTestProject .../>;
-      it is folded into @(MTPProject) before any other target runs.
   -->
   <ItemGroup>
-    <!-- xUnit v3 / NUnit-MTP / TUnit / custom MTP -->
     <MTPProject Include="..\tests\bar.Tests.csproj"/>
-
-    <!-- MSTest (folded into MTPProject) -->
-    <MSTestProject Include="..\tests\baz.Tests.csproj"/>
   </ItemGroup>
   <PropertyGroup>
     <!-- Optional: customize the TRX filename produced by Microsoft.Testing.Extensions.TrxReport. Defaults to testResults.trx. -->

@@ -75,10 +75,10 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private async Task ExecuteAsync()
         {
-            // De-duplicate inputs by (Identity, AdditionalProperties). This collapses
-            // accidental duplicates such as a project listed under both MSTestProject and
-            // MTPProject, while preserving legitimate same-Identity entries that differ in
-            // AdditionalProperties (the canonical multi-TFM pattern).
+            // De-duplicate inputs by (Identity, AdditionalProperties). Protects against the
+            // same project being included by overlapping globs while preserving legitimate
+            // same-Identity entries that differ in AdditionalProperties (the canonical
+            // multi-TFM pattern).
             var deduped = MTPProjects
                 .GroupBy(p => (p.ItemSpec, p.GetMetadata("AdditionalProperties") ?? string.Empty))
                 .Select(g => g.First())
