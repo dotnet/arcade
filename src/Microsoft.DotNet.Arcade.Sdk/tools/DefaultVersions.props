@@ -38,7 +38,10 @@
     <!--
       The UsingToolXUnit property is deprecated,
       use the TestRunnerName property to choose which test runner to use.
+      A deprecation warning is emitted from Tests.targets when this property
+      is set explicitly. See Documentation/TestRunnerConsolidation.md.
     -->
+    <_UsingToolXUnitExplicitlySet Condition="'$(UsingToolXUnit)' != ''">true</_UsingToolXUnitExplicitlySet>
     <UsingToolXUnit Condition="'$(UsingToolXUnit)' == ''">true</UsingToolXUnit>
 
     <!--
