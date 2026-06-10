@@ -55,7 +55,7 @@ Examples:
 | `Microsoft.Signed.Wix` | `MicrosoftSignedWixVersion` |
 | `Microsoft.WixToolset.Sdk` | `MicrosoftWixToolsetSdkVersion` |
 | `Microsoft.ManifestTool.CrossPlatform` | `MicrosoftManifestToolCrossPlatformVersion` |
-| `Microsoft.VisualStudio.Eng.MicroBuild.Core` | `MicrosoftVisualStudioEngMicroBuildCoreVersion` |
+| `Microsoft.VisualStudioEng.MicroBuild.Core` | `MicrosoftVisualStudioEngMicroBuildCoreVersion` |
 | `xunit` | `XUnitVersion` |
 | `MSTest` | `MSTestVersion` |
 | `vswhere` | `VSWhereVersion` |
@@ -64,7 +64,12 @@ Because removing the dots is lossy, reverse it by **generating candidate package
 IDs** (inserting dots at plausible PascalCase boundaries) and **validating** each
 candidate against the feeds (Step 2). A candidate is correct only if the package
 exists AND `candidateId.Replace(".", "")` equals the property name minus the
-trailing `Version`, compared case-insensitively.
+trailing `Version`, compared case-insensitively. Several dot placements can map
+to the same property name, so the feed lookup is what disambiguates — e.g.
+`MicrosoftVisualStudioEngMicroBuildCoreVersion` could be split as
+`Microsoft.VisualStudio.Eng.MicroBuild.Core` or
+`Microsoft.VisualStudioEng.MicroBuild.Core`, and only the latter actually exists
+on the feeds. **Never invent a package ID that you have not confirmed exists.**
 
 Skip a property when:
 - You cannot confidently determine and validate a package ID — **skip it**, do
@@ -72,6 +77,11 @@ Skip a property when:
 - Its value is an MSBuild property reference such as `$(ArcadeSdkVersion)` — these
   are produced in-repo or flow via Maestro / `Version.Details.xml` and must not
   be touched.
+- The property is marked as **opt-out** by a comment on the line directly above
+  it that contains the marker `no-auto-update` (e.g.
+  `<!-- no-auto-update: <reason> -->`). Some packages require coordinated manual
+  changes (for example a major Wix upgrade) and must not be bumped automatically.
+  Leave such properties unchanged.
 
 Known exceptions to the naming convention (read the inline comments in the file):
 - `MicrosoftVSSDKBuildToolsDefaultVersion` maps to the package
@@ -101,6 +111,11 @@ Version selection rules:
   ordering semantics.
 - Only ever move a property **forward** to a higher version than its current
   value. Never downgrade.
+- **Do not bump across a major version.** Pick the highest available version that
+  shares the same major version as the current value. A new major version
+  frequently requires coordinated manual changes (build logic, tooling, etc.), so
+  leave those for a human. If the only newer versions available are in a higher
+  major, leave the property unchanged.
 - If the highest available version equals the current value, leave the property
   unchanged.
 
