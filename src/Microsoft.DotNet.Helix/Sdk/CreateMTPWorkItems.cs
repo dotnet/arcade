@@ -113,6 +113,18 @@ namespace Microsoft.DotNet.Helix.Sdk
                 assemblyBaseName = assemblyBaseName.Substring(0, assemblyBaseName.Length - 4);
             }
 
+            // Defense in depth: reject values that would let the TRX file escape the work
+            // item working directory or break shell tokenization in surprising ways. Path
+            // separators in particular would cause '--results-directory .' + the filename
+            // to land outside the cwd where neither the arcade Python reporter nor the
+            // Helix job monitor scan for results.
+            if (string.IsNullOrEmpty(TrxReportFilename) ||
+                TrxReportFilename.IndexOfAny(new[] { '/', '\\', '"' }) >= 0)
+            {
+                Log.LogError($"Invalid value \"{TrxReportFilename}\" provided for TrxReportFilename; it must be a non-empty filename with no path separators or quote characters.");
+                return null;
+            }
+
             // MTP test apps are self-hosting executables. Run the assembly directly with
             // 'dotnet exec'. The reporter args below require the test project to reference
             // Microsoft.Testing.Extensions.TrxReport. MSTest.Sdk references it transitively;
@@ -123,7 +135,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             //                             work item's cwd and is scanned by the arcade Python
             //                             reporter / EnableHelixJobMonitor.
             //   --report-trx           -> enable the TrxReport extension.
-            //   --report-trx-filename  -> deterministic filename so the parser finds it.
+            //   --report-trx-filename  -> deterministic filename so the parser finds it. The
+            //                             value is wrapped in double quotes so spaces or
+            //                             other shell-significant characters in the filename
+            //                             do not split the argument.
             //
             // Note about the AzureDevOps reporter (Microsoft.Testing.Extensions.AzureDevOpsReport):
             // it activates only when '--report-azdo' is explicitly passed AND TF_BUILD=true.
@@ -132,7 +147,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             // wired '--report-azdo' into their test project they should remove it for Helix
             // runs (it conflicts with the Helix-managed run).
             string reporterArgs =
-                $"--results-directory . --report-trx --report-trx-filename {TrxReportFilename}";
+                $"--results-directory . --report-trx --report-trx-filename \"{TrxReportFilename}\"";
 
             string command = $"{PathToDotnet} exec --roll-forward Major " +
                 $"--runtimeconfig {assemblyBaseName}.runtimeconfig.json " +
@@ -145,9 +160,13 @@ namespace Microsoft.DotNet.Helix.Sdk
             TimeSpan timeout = TimeSpan.FromMinutes(5);
             if (!string.IsNullOrEmpty(MTPWorkItemTimeout))
             {
-                if (!TimeSpan.TryParse(MTPWorkItemTimeout, out timeout))
+                if (!TimeSpan.TryParse(MTPWorkItemTimeout, out TimeSpan parsedTimeout))
                 {
                     Log.LogWarning($"Invalid value \"{MTPWorkItemTimeout}\" provided for MTPWorkItemTimeout; falling back to default value of \"00:05:00\" (5 minutes)");
+                }
+                else
+                {
+                    timeout = parsedTimeout;
                 }
             }
 

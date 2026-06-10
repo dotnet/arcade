@@ -54,12 +54,7 @@
     </MSBuild>
 
     <ItemGroup>
-      <!--
-        Match on Identity AND AdditionalProperties so multi-targeted projects (the same
-        csproj listed twice with TargetFramework=net8.0 then net9.0, for example) each
-        get their own PublishDirectory / TargetPath instead of overwriting each other.
-      -->
-      <MTPProject Condition="'%(Identity)' == '$(_CurrentMTPProject)' and '%(AdditionalProperties)' == '$(_CurrentMTPAdditionalProperties)'">
+      <MTPProject Condition="'%(Identity)' == '$(_CurrentMTPProject)'">
         <PublishDirectory>$(_MTPPublishOutputDir)</PublishDirectory>
         <TargetPath>$(_MTPTargetPath)</TargetPath>
       </MTPProject>
