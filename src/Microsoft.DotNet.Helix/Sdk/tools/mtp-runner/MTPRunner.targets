@@ -12,15 +12,20 @@
     xUnit v3 with MTP, NUnit with MTP, TUnit, custom MTP).
 
     Test projects must reference 'Microsoft.Testing.Extensions.TrxReport' so that the work
-    item command can produce a TRX file. Projects using 'MSTest.Sdk' include it by default;
-    xUnit v3 projects built with Microsoft.DotNet.Arcade.Sdk's XUnitV3 targets pick it up
-    implicitly as well. Other MTP-based frameworks must add the package manually.
+    item produces a TRX file that arcade's Helix infrastructure can ingest. Projects using
+    'MSTest.Sdk' include it by default; xUnit v3 projects built with
+    Microsoft.DotNet.Arcade.Sdk's XUnitV3 targets pick it up implicitly as well. Other
+    MTP-based frameworks must add the package manually.
+
+    With MTP's --auto-reporters on by default the TRX reporter activates automatically as
+    long as the extension is referenced. The generated work item command therefore only
+    passes the built-in '--results-directory .' so artifacts land in the work item working
+    directory. If you need to force a specific reporter or filename (e.g. when running
+    'MTPAdditionalArguments=--auto-reporters off') pass the flags via 'MTPAdditionalArguments'.
   -->
 
   <PropertyGroup>
     <_MTPPublishTargetsPath>$(MSBuildThisFileDirectory)../xunit-runner/XUnitPublish.targets</_MTPPublishTargetsPath>
-    <!-- Name of the TRX file produced by Microsoft.Testing.Extensions.TrxReport. -->
-    <MTPTrxReportFilename Condition="'$(MTPTrxReportFilename)' == ''">testResults.trx</MTPTrxReportFilename>
   </PropertyGroup>
 
   <Target Name="RestoreMTPProjects"
@@ -62,7 +67,6 @@
     <CreateMTPWorkItems MTPProjects="@(MTPProject)"
                         IsPosixShell="$(IsPosixShell)"
                         MTPWorkItemTimeout="$(MTPWorkItemTimeout)"
-                        TrxReportFilename="$(MTPTrxReportFilename)"
                         MTPAdditionalArguments="$(MTPAdditionalArguments)">
       <Output TaskParameter="MTPWorkItems" ItemName="HelixWorkItem"/>
     </CreateMTPWorkItems>

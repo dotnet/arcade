@@ -340,21 +340,29 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
       results can be reported as a TRX file (which arcade's reporter consumes natively).
       Projects built with MSTest.Sdk, or with Microsoft.DotNet.Arcade.Sdk's XUnitV3
       targets, get this reference implicitly.
+
+      With MTP's --auto-reporters on by default the TRX reporter activates automatically.
+      The generated work item command passes only the built-in '--results-directory .'
+      so artifacts land in the work item working directory. Pass any reporter flags
+      (e.g. '--report-trx --report-trx-filename testResults.trx' if you need a
+      deterministic file name) via MTPAdditionalArguments below.
   -->
   <ItemGroup>
     <MTPProject Include="..\tests\bar.Tests.csproj"/>
   </ItemGroup>
   <PropertyGroup>
-    <!-- Optional: customize the TRX filename produced by Microsoft.Testing.Extensions.TrxReport. Defaults to testResults.trx. -->
-    <MTPTrxReportFilename>testResults.trx</MTPTrxReportFilename>
     <!-- Optional: per-work-item timeout (TimeSpan format). Defaults to 5 minutes. -->
     <MTPWorkItemTimeout>00:05:00</MTPWorkItemTimeout>
     <!--
-      Optional: extra command-line arguments appended to every MTP work item command.
-      Use this for framework-specific MTP switches that should not be forced on every
-      framework. For example, xUnit v3's MTP integration registers '--auto-reporters off'
-      (MSTest / NUnit / TUnit reject it as an unknown option, so it cannot be set by
-      default in arcade).
+      Optional: extra command-line arguments appended to every MTP work item command,
+      between the built-in '--results-directory .' flag and any per-project Arguments
+      metadata. Use this for reporter or framework-specific MTP switches that should
+      not be forced on every framework. Examples:
+        '--report-trx --report-trx-filename testResults.trx' to control the TRX name
+        (requires Microsoft.Testing.Extensions.TrxReport).
+        '--auto-reporters off' to silence xUnit v3's auto-activated reporters - this
+        flag is registered by xUnit v3 only; MSTest / NUnit / TUnit reject it as an
+        unknown option, so it is not injected by default.
     -->
     <MTPAdditionalArguments></MTPAdditionalArguments>
   </PropertyGroup>

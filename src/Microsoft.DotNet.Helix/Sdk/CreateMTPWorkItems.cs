@@ -55,19 +55,21 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string MTPWorkItemTimeout { get; set; }
 
         /// <summary>
-        /// Optional name of the TRX file produced by Microsoft.Testing.Extensions.TrxReport.
-        /// Defaults to "testResults.trx". Whatever value is used here is what the arcade
-        /// Python TRXFormat parser will pick up from the work item's working directory.
-        /// </summary>
-        public string TrxReportFilename { get; set; } = "testResults.trx";
-
-        /// <summary>
         /// Optional extra command-line arguments to append to every emitted MTP work item
-        /// command, between the reporter args and any per-project <c>Arguments</c> metadata.
-        /// Use this to apply framework-specific switches across all MTP projects in a run
-        /// (for example, xUnit v3's <c>--auto-reporters off</c>, which is xUnit-specific and
-        /// is rejected by MSTest / NUnit / TUnit MTP apps as an unknown option, so we cannot
-        /// inject it by default).
+        /// command, between the built-in <c>--results-directory</c> flag and any per-project
+        /// <c>Arguments</c> metadata. Use this to apply framework- or extension-specific
+        /// switches across all MTP projects in a run. Examples:
+        /// <list type="bullet">
+        ///   <item><description>
+        ///     <c>--report-trx --report-trx-filename testResults.trx</c> to explicitly
+        ///     control the TRX file name (requires <c>Microsoft.Testing.Extensions.TrxReport</c>).
+        ///   </description></item>
+        ///   <item><description>
+        ///     <c>--auto-reporters off</c> for xUnit v3 with MTP, where it suppresses xUnit's
+        ///     auto-activated reporters; MSTest / NUnit / TUnit reject the option as unknown,
+        ///     so we do not inject it by default.
+        ///   </description></item>
+        /// </list>
         /// </summary>
         public string MTPAdditionalArguments { get; set; }
 
@@ -115,20 +117,22 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             // MTP test apps are self-hosting executables. Run the assembly directly with
-            // 'dotnet exec'. The reporter args below require the test project to reference
-            // Microsoft.Testing.Extensions.TrxReport. MSTest.Sdk references it transitively;
-            // xUnit v3 projects built with Microsoft.DotNet.Arcade.Sdk's XUnitV3 targets get
-            // it implicitly as well. Other MTP-based frameworks must add the package.
-            // The filename is wrapped in double quotes so spaces in user-provided values do
-            // not split the argument. MTP itself rejects values containing path separators.
+            // 'dotnet exec'. We pass only --results-directory (a built-in MTP option) so
+            // any reporter-produced artifacts land in the work item's working directory
+            // where Helix collects results from.
             //
-            // We deliberately do NOT add framework-specific options here (e.g.
-            // '--auto-reporters off' is registered by xUnit v3's MTP integration and is
-            // rejected as unknown by MSTest / NUnit / TUnit MTP apps). Users who need such
-            // options can set MTPAdditionalArguments (applies to every work item) or the
-            // per-project Arguments metadata on MTPProject.
-            string reporterArgs =
-                $"--results-directory . --report-trx --report-trx-filename \"{TrxReportFilename}\"";
+            // We deliberately do NOT inject reporter flags here:
+            //   * --report-trx requires the Microsoft.Testing.Extensions.TrxReport
+            //     extension to be referenced; MTP apps without it would error out.
+            //     With MTP's --auto-reporters on by default, projects that DO reference
+            //     the TrxReport extension produce a TRX file automatically (default name
+            //     based on assembly + tfm + timestamp); arcade's TRXFormat reporter
+            //     globs *.trx so the auto-generated name is fine.
+            //   * --auto-reporters off is registered by xUnit v3's MTP integration and
+            //     is rejected as unknown by MSTest / NUnit / TUnit MTP apps.
+            // Users who need such options can set MTPAdditionalArguments (applies to
+            // every work item) or the per-project Arguments metadata on MTPProject.
+            string reporterArgs = "--results-directory .";
 
             string command = $"{PathToDotnet} exec --roll-forward Major " +
                 $"--runtimeconfig {assemblyBaseName}.runtimeconfig.json " +

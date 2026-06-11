@@ -55,7 +55,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             command.Should().Contain("--runtimeconfig MyApp.Tests.runtimeconfig.json");
             command.Should().Contain("--depsfile MyApp.Tests.deps.json");
             command.Should().Contain("MyApp.Tests.dll");
-            command.Should().Contain("--results-directory . --report-trx --report-trx-filename \"testResults.trx\"");
+            command.Should().EndWith(" --results-directory .");
+            command.Should().NotContain("--report-trx");
             command.Should().NotContain("--auto-reporters");
         }
 
@@ -68,20 +69,20 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             task.Execute().Should().BeTrue();
 
             var command = task.MTPWorkItems.Single().GetMetadata("Command");
-            command.Should().EndWith("--report-trx-filename \"testResults.trx\" --filter Category=Smoke");
+            command.Should().EndWith("--results-directory . --filter Category=Smoke");
         }
 
         [Fact]
         public void MTPAdditionalArgumentsIsInsertedBeforePerProjectArguments()
         {
             var task = CreateTask();
-            task.MTPAdditionalArguments = "--auto-reporters off";
+            task.MTPAdditionalArguments = "--report-trx --report-trx-filename testResults.trx --auto-reporters off";
             task.MTPProjects = new[] { CreateProject("MyApp.Tests.csproj", arguments: "--filter Category=Smoke") };
 
             task.Execute().Should().BeTrue();
 
             var command = task.MTPWorkItems.Single().GetMetadata("Command");
-            command.Should().EndWith("--report-trx-filename \"testResults.trx\" --auto-reporters off --filter Category=Smoke");
+            command.Should().EndWith("--results-directory . --report-trx --report-trx-filename testResults.trx --auto-reporters off --filter Category=Smoke");
         }
 
         [Fact]
@@ -94,39 +95,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             task.Execute().Should().BeTrue();
 
             var command = task.MTPWorkItems.Single().GetMetadata("Command");
-            command.Should().EndWith("--report-trx-filename \"testResults.trx\" --auto-reporters off");
-        }
-
-        [Fact]
-        public void CustomTrxReportFilenameIsQuoted()
-        {
-            var task = CreateTask();
-            task.TrxReportFilename = "my results.trx";
-            task.MTPProjects = new[] { CreateProject("MyApp.Tests.csproj") };
-
-            task.Execute().Should().BeTrue();
-
-            var command = task.MTPWorkItems.Single().GetMetadata("Command");
-            command.Should().Contain("--report-trx-filename \"my results.trx\"");
-        }
-
-        [Theory]
-        [InlineData("../escape.trx")]
-        [InlineData("sub/results.trx")]
-        [InlineData("sub\\results.trx")]
-        [InlineData("with\"quote.trx")]
-        [InlineData("")]
-        public void TrxReportFilenameIsPassedThroughVerbatim(string filename)
-        {
-            // The task no longer validates the filename - MTP itself rejects values containing
-            // path separators, and the value is quoted in the command so spaces are safe.
-            var task = CreateTask();
-            task.TrxReportFilename = filename;
-            task.MTPProjects = new[] { CreateProject("MyApp.Tests.csproj") };
-
-            task.Execute().Should().BeTrue();
-            task.MTPWorkItems.Single().GetMetadata("Command")
-                .Should().Contain($"--report-trx-filename \"{filename}\"");
+            command.Should().EndWith("--results-directory . --auto-reporters off");
         }
 
         [Fact]
