@@ -89,14 +89,17 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         [InlineData("sub\\results.trx")]
         [InlineData("with\"quote.trx")]
         [InlineData("")]
-        public void InvalidTrxReportFilenameIsRejected(string filename)
+        public void TrxReportFilenameIsPassedThroughVerbatim(string filename)
         {
+            // The task no longer validates the filename - MTP itself rejects values containing
+            // path separators, and the value is quoted in the command so spaces are safe.
             var task = CreateTask();
             task.TrxReportFilename = filename;
             task.MTPProjects = new[] { CreateProject("MyApp.Tests.csproj") };
 
-            task.Execute().Should().BeFalse();
-            task.MTPWorkItems.Should().BeEmpty();
+            task.Execute().Should().BeTrue();
+            task.MTPWorkItems.Single().GetMetadata("Command")
+                .Should().Contain($"--report-trx-filename \"{filename}\"");
         }
 
         [Fact]
@@ -144,8 +147,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public void DuplicatesByIdentityAndAdditionalPropertiesAreCollapsed()
+        public void DuplicateInputsArePassedThroughAsSeparateWorkItems()
         {
+            // The task does not deduplicate - it mirrors the old CreateXUnitV3WorkItems behavior
+            // and trusts the caller to provide a clean item list (MSBuild's RemoveDuplicates can
+            // be used upstream if needed).
             var task = CreateTask();
             task.MTPProjects = new[]
             {
@@ -154,7 +160,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             };
 
             task.Execute().Should().BeTrue();
-            task.MTPWorkItems.Should().HaveCount(1);
+            task.MTPWorkItems.Should().HaveCount(2);
         }
 
         [Fact]

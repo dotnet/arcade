@@ -19,12 +19,7 @@
 
   <PropertyGroup>
     <_MTPPublishTargetsPath>$(MSBuildThisFileDirectory)../xunit-runner/XUnitPublish.targets</_MTPPublishTargetsPath>
-    <!--
-      Name of the TRX file produced by Microsoft.Testing.Extensions.TrxReport. The arcade
-      Python TRXFormat parser (and EnableHelixJobMonitor's *.trx sweep) will pick up any
-      *.trx in the work item working directory, so the exact name only matters if the user
-      has multiple consumers expecting a specific filename.
-    -->
+    <!-- Name of the TRX file produced by Microsoft.Testing.Extensions.TrxReport. -->
     <MTPTrxReportFilename Condition="'$(MTPTrxReportFilename)' == ''">testResults.trx</MTPTrxReportFilename>
   </PropertyGroup>
 

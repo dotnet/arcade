@@ -75,16 +75,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private async Task ExecuteAsync()
         {
-            // De-duplicate inputs by (Identity, AdditionalProperties). Protects against the
-            // same project being included by overlapping globs while preserving legitimate
-            // same-Identity entries that differ in AdditionalProperties (the canonical
-            // multi-TFM pattern).
-            var deduped = MTPProjects
-                .GroupBy(p => (p.ItemSpec, p.GetMetadata("AdditionalProperties") ?? string.Empty))
-                .Select(g => g.First())
-                .ToArray();
-
-            MTPWorkItems = (await Task.WhenAll(deduped.Select(PrepareWorkItem))).Where(wi => wi != null).ToArray();
+            MTPWorkItems = (await Task.WhenAll(MTPProjects.Select(PrepareWorkItem))).Where(wi => wi != null).ToArray();
         }
 
         /// <summary>
@@ -113,39 +104,13 @@ namespace Microsoft.DotNet.Helix.Sdk
                 assemblyBaseName = assemblyBaseName.Substring(0, assemblyBaseName.Length - 4);
             }
 
-            // Defense in depth: reject values that would let the TRX file escape the work
-            // item working directory or break shell tokenization in surprising ways. Path
-            // separators in particular would cause '--results-directory .' + the filename
-            // to land outside the cwd where neither the arcade Python reporter nor the
-            // Helix job monitor scan for results.
-            if (string.IsNullOrEmpty(TrxReportFilename) ||
-                TrxReportFilename.IndexOfAny(new[] { '/', '\\', '"' }) >= 0)
-            {
-                Log.LogError($"Invalid value \"{TrxReportFilename}\" provided for TrxReportFilename; it must be a non-empty filename with no path separators or quote characters.");
-                return null;
-            }
-
             // MTP test apps are self-hosting executables. Run the assembly directly with
             // 'dotnet exec'. The reporter args below require the test project to reference
             // Microsoft.Testing.Extensions.TrxReport. MSTest.Sdk references it transitively;
             // xUnit v3 projects built with Microsoft.DotNet.Arcade.Sdk's XUnitV3 targets get
             // it implicitly as well. Other MTP-based frameworks must add the package.
-            //
-            //   --results-directory .  -> TRX is written next to the assembly, which is the
-            //                             work item's cwd and is scanned by the arcade Python
-            //                             reporter / EnableHelixJobMonitor.
-            //   --report-trx           -> enable the TrxReport extension.
-            //   --report-trx-filename  -> deterministic filename so the parser finds it. The
-            //                             value is wrapped in double quotes so spaces or
-            //                             other shell-significant characters in the filename
-            //                             do not split the argument.
-            //
-            // Note about the AzureDevOps reporter (Microsoft.Testing.Extensions.AzureDevOpsReport):
-            // it activates only when '--report-azdo' is explicitly passed AND TF_BUILD=true.
-            // We never pass '--report-azdo' here, so there is no risk of a duplicate Azure
-            // DevOps test run on top of the one the Helix Sdk already opened. If a user has
-            // wired '--report-azdo' into their test project they should remove it for Helix
-            // runs (it conflicts with the Helix-managed run).
+            // The filename is wrapped in double quotes so spaces in user-provided values do
+            // not split the argument. MTP itself rejects values containing path separators.
             string reporterArgs =
                 $"--results-directory . --report-trx --report-trx-filename \"{TrxReportFilename}\"";
 
@@ -158,16 +123,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             Log.LogMessage($"Creating MTP work item with properties Identity: {assemblyName}, PayloadDirectory: {publishDirectory}, Command: {command}");
 
             TimeSpan timeout = TimeSpan.FromMinutes(5);
-            if (!string.IsNullOrEmpty(MTPWorkItemTimeout))
+            if (!string.IsNullOrEmpty(MTPWorkItemTimeout) && !TimeSpan.TryParse(MTPWorkItemTimeout, out timeout))
             {
-                if (!TimeSpan.TryParse(MTPWorkItemTimeout, out TimeSpan parsedTimeout))
-                {
-                    Log.LogWarning($"Invalid value \"{MTPWorkItemTimeout}\" provided for MTPWorkItemTimeout; falling back to default value of \"00:05:00\" (5 minutes)");
-                }
-                else
-                {
-                    timeout = parsedTimeout;
-                }
+                Log.LogWarning($"Invalid value \"{MTPWorkItemTimeout}\" provided for MTPWorkItemTimeout; falling back to default value of \"00:05:00\" (5 minutes)");
+                timeout = TimeSpan.FromMinutes(5);
             }
 
             var result = new Microsoft.Build.Utilities.TaskItem(assemblyName, new Dictionary<string, string>()
