@@ -243,15 +243,13 @@
 
     Wiring
     ------
-    Import this file from a Directory.Build.props (or Directory.Build.targets)
-    so it is imported into every project:
+    This workaround is implemented in Workarounds.targets and is imported automatically
+    by Microsoft.DotNet.Arcade.Sdk (see sdk/Sdk.targets). No additional wiring is
+    required for Arcade SDK consumers.
 
-        <Import Project="$(MSBuildThisFileDirectory)NormalizeNetCoreSdkRootCasing.targets" />
-
-    InitialTargets on this <Project> aggregates into the importing project's
-    InitialTargets, so the target runs once per project BEFORE any other target
-    (and therefore before the first .NET task host is launched). NetCoreSdkRoot
-    is defined during evaluation, so it is available by the time the target runs.
+    InitialTargets on this <Project> aggregates into the importing project's InitialTargets,
+    so the target runs early in the build (before the first .NET task host is launched).
+    NetCoreSdkRoot is defined during evaluation, so it is available by the time the target runs.
     ==========================================================================
   -->
 
