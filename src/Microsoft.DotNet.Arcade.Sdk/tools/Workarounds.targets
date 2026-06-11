@@ -376,8 +376,7 @@ public class NormalizeSdkRootDriveCasing : Task
   </UsingTask>
 
   <Target Name="NormalizeNetCoreSdkRootCasing"
-          Condition="'$(OS)' == 'Windows_NT' and '$(NetCoreSdkRoot)' != ''">
-    <NormalizeSdkRootDriveCasing SdkRoot="$(NetCoreSdkRoot)">
+          Condition="'$(OS)' == 'Windows_NT' and '$(MSBuildRuntimeType)' == 'Full' and '$(NetCoreSdkRoot)' != ''">
       <Output TaskParameter="Result" PropertyName="NetCoreSdkRoot" />
     </NormalizeSdkRootDriveCasing>
   </Target>
