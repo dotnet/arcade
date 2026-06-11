@@ -111,8 +111,12 @@ namespace Microsoft.DotNet.Helix.Sdk
             // it implicitly as well. Other MTP-based frameworks must add the package.
             // The filename is wrapped in double quotes so spaces in user-provided values do
             // not split the argument. MTP itself rejects values containing path separators.
+            // --auto-reporters off prevents any other MTP reporter extension the test project
+            // happens to reference from auto-activating in the Helix work item (we want the
+            // TRX reporter and nothing else, so the arcade Helix pipeline sees a single set
+            // of results).
             string reporterArgs =
-                $"--results-directory . --report-trx --report-trx-filename \"{TrxReportFilename}\"";
+                $"--results-directory . --report-trx --report-trx-filename \"{TrxReportFilename}\" --auto-reporters off";
 
             string command = $"{PathToDotnet} exec --roll-forward Major " +
                 $"--runtimeconfig {assemblyBaseName}.runtimeconfig.json " +
