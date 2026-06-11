@@ -62,7 +62,8 @@
     <CreateMTPWorkItems MTPProjects="@(MTPProject)"
                         IsPosixShell="$(IsPosixShell)"
                         MTPWorkItemTimeout="$(MTPWorkItemTimeout)"
-                        TrxReportFilename="$(MTPTrxReportFilename)">
+                        TrxReportFilename="$(MTPTrxReportFilename)"
+                        MTPAdditionalArguments="$(MTPAdditionalArguments)">
       <Output TaskParameter="MTPWorkItems" ItemName="HelixWorkItem"/>
     </CreateMTPWorkItems>
   </Target>

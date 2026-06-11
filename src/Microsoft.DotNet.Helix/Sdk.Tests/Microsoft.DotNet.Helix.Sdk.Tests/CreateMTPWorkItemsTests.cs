@@ -55,7 +55,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             command.Should().Contain("--runtimeconfig MyApp.Tests.runtimeconfig.json");
             command.Should().Contain("--depsfile MyApp.Tests.deps.json");
             command.Should().Contain("MyApp.Tests.dll");
-            command.Should().Contain("--results-directory . --report-trx --report-trx-filename \"testResults.trx\" --auto-reporters off");
+            command.Should().Contain("--results-directory . --report-trx --report-trx-filename \"testResults.trx\"");
+            command.Should().NotContain("--auto-reporters");
         }
 
         [Fact]
@@ -67,7 +68,33 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             task.Execute().Should().BeTrue();
 
             var command = task.MTPWorkItems.Single().GetMetadata("Command");
-            command.Should().EndWith("--auto-reporters off --filter Category=Smoke");
+            command.Should().EndWith("--report-trx-filename \"testResults.trx\" --filter Category=Smoke");
+        }
+
+        [Fact]
+        public void MTPAdditionalArgumentsIsInsertedBeforePerProjectArguments()
+        {
+            var task = CreateTask();
+            task.MTPAdditionalArguments = "--auto-reporters off";
+            task.MTPProjects = new[] { CreateProject("MyApp.Tests.csproj", arguments: "--filter Category=Smoke") };
+
+            task.Execute().Should().BeTrue();
+
+            var command = task.MTPWorkItems.Single().GetMetadata("Command");
+            command.Should().EndWith("--report-trx-filename \"testResults.trx\" --auto-reporters off --filter Category=Smoke");
+        }
+
+        [Fact]
+        public void MTPAdditionalArgumentsAloneIsAppendedAfterReporterArgs()
+        {
+            var task = CreateTask();
+            task.MTPAdditionalArguments = "--auto-reporters off";
+            task.MTPProjects = new[] { CreateProject("MyApp.Tests.csproj") };
+
+            task.Execute().Should().BeTrue();
+
+            var command = task.MTPWorkItems.Single().GetMetadata("Command");
+            command.Should().EndWith("--report-trx-filename \"testResults.trx\" --auto-reporters off");
         }
 
         [Fact]

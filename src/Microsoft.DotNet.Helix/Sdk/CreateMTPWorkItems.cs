@@ -62,6 +62,16 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string TrxReportFilename { get; set; } = "testResults.trx";
 
         /// <summary>
+        /// Optional extra command-line arguments to append to every emitted MTP work item
+        /// command, between the reporter args and any per-project <c>Arguments</c> metadata.
+        /// Use this to apply framework-specific switches across all MTP projects in a run
+        /// (for example, xUnit v3's <c>--auto-reporters off</c>, which is xUnit-specific and
+        /// is rejected by MSTest / NUnit / TUnit MTP apps as an unknown option, so we cannot
+        /// inject it by default).
+        /// </summary>
+        public string MTPAdditionalArguments { get; set; }
+
+        /// <summary>
         /// An array of ITaskItems of type HelixWorkItem.
         /// </summary>
         [Output]
@@ -111,17 +121,20 @@ namespace Microsoft.DotNet.Helix.Sdk
             // it implicitly as well. Other MTP-based frameworks must add the package.
             // The filename is wrapped in double quotes so spaces in user-provided values do
             // not split the argument. MTP itself rejects values containing path separators.
-            // --auto-reporters off prevents any other MTP reporter extension the test project
-            // happens to reference from auto-activating in the Helix work item (we want the
-            // TRX reporter and nothing else, so the arcade Helix pipeline sees a single set
-            // of results).
+            //
+            // We deliberately do NOT add framework-specific options here (e.g.
+            // '--auto-reporters off' is registered by xUnit v3's MTP integration and is
+            // rejected as unknown by MSTest / NUnit / TUnit MTP apps). Users who need such
+            // options can set MTPAdditionalArguments (applies to every work item) or the
+            // per-project Arguments metadata on MTPProject.
             string reporterArgs =
-                $"--results-directory . --report-trx --report-trx-filename \"{TrxReportFilename}\" --auto-reporters off";
+                $"--results-directory . --report-trx --report-trx-filename \"{TrxReportFilename}\"";
 
             string command = $"{PathToDotnet} exec --roll-forward Major " +
                 $"--runtimeconfig {assemblyBaseName}.runtimeconfig.json " +
                 $"--depsfile {assemblyBaseName}.deps.json " +
                 $"{assemblyName} {reporterArgs}" +
+                (string.IsNullOrEmpty(MTPAdditionalArguments) ? "" : " " + MTPAdditionalArguments) +
                 (string.IsNullOrEmpty(arguments) ? "" : " " + arguments);
 
             Log.LogMessage($"Creating MTP work item with properties Identity: {assemblyName}, PayloadDirectory: {publishDirectory}, Command: {command}");

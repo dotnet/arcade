@@ -349,6 +349,14 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     <MTPTrxReportFilename>testResults.trx</MTPTrxReportFilename>
     <!-- Optional: per-work-item timeout (TimeSpan format). Defaults to 5 minutes. -->
     <MTPWorkItemTimeout>00:05:00</MTPWorkItemTimeout>
+    <!--
+      Optional: extra command-line arguments appended to every MTP work item command.
+      Use this for framework-specific MTP switches that should not be forced on every
+      framework. For example, xUnit v3's MTP integration registers '--auto-reporters off'
+      (MSTest / NUnit / TUnit reject it as an unknown option, so it cannot be set by
+      default in arcade).
+    -->
+    <MTPAdditionalArguments></MTPAdditionalArguments>
   </PropertyGroup>
 
   <ItemGroup>
