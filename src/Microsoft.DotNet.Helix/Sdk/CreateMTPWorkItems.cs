@@ -23,8 +23,9 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// An array of MTP project work items containing the following metadata:
         /// - [Required] PublishDirectory: the publish output directory of the test project
         /// - [Required] TargetPath: the output dll path
-        /// - [Optional] Arguments: a string of arguments to be passed to the test executable
-        ///   *after* the auto-injected reporter flags
+        /// - [Optional] Arguments: extra arguments appended to the generated dotnet exec
+        ///   command, after the built-in <c>--results-directory .</c> flag and after any
+        ///   value supplied via <see cref="MTPAdditionalArguments"/>.
         /// The two required parameters are populated automatically by MTPRunner.targets when
         /// MTPProject.Identity is set to the path of the test csproj file.
         /// </summary>

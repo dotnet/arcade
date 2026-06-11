@@ -17,11 +17,9 @@
     Microsoft.DotNet.Arcade.Sdk's XUnitV3 targets pick it up implicitly as well. Other
     MTP-based frameworks must add the package manually.
 
-    With MTP's --auto-reporters on by default the TRX reporter activates automatically as
-    long as the extension is referenced. The generated work item command therefore only
-    passes the built-in '--results-directory .' so artifacts land in the work item working
-    directory. If you need to force a specific reporter or filename (e.g. when running
-    'MTPAdditionalArguments=--auto-reporters off') pass the flags via 'MTPAdditionalArguments'.
+    Pass extra MTP command-line flags (e.g. to override the TRX filename, disable xUnit
+    v3's auto-reporters, etc.) via the MTPAdditionalArguments MSBuild property. See the
+    Helix Sdk Readme for full usage examples.
   -->
 
   <PropertyGroup>
