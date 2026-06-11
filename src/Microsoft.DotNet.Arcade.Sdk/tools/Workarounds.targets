@@ -256,7 +256,7 @@
   <UsingTask TaskName="NormalizeSdkRootDriveCasing"
              TaskFactory="RoslynCodeTaskFactory"
              AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll"
-             Condition="'$(MSBuildRuntimeType)' == 'Full' and  and '$(NetCoreSdkRoot)' != ''">
+             Condition="'$(MSBuildRuntimeType)' == 'Full' and '$(NetCoreSdkRoot)' != ''">
     <ParameterGroup>
       <SdkRoot ParameterType="System.String" Required="true" />
       <Result ParameterType="System.String" Output="true" />
