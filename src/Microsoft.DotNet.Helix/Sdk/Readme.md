@@ -232,6 +232,33 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
 </Project>
 ```
 
+### Batching short work items
+
+Repos that send many short `HelixWorkItem`s can opt into submission-time batching. Batching combines compatible `PayloadDirectory` work items into a single Helix work item, runs each original command from its own staged payload directory, and namespaces each member's logs and test result files under `$HELIX_WORKITEM_UPLOAD_ROOT`.
+
+Batching is disabled by default. Enable it from the Helix project:
+
+```xml
+<PropertyGroup>
+  <EnableHelixWorkItemBatching>true</EnableHelixWorkItemBatching>
+  <HelixBatchTargetDuration>10</HelixBatchTargetDuration> <!-- minutes -->
+  <HelixBatchTimeoutPadding>2</HelixBatchTimeoutPadding> <!-- minutes -->
+  <HelixBatchMaxItems>10</HelixBatchMaxItems>
+</PropertyGroup>
+```
+
+Optional duration metadata improves grouping:
+
+```xml
+<ItemGroup>
+  <XUnitProject Include="tests\Example.Tests.csproj">
+    <ExpectedExecutionTime>00:01:15</ExpectedExecutionTime>
+  </XUnitProject>
+</ItemGroup>
+```
+
+Set `HelixBatchable=false` on a `HelixWorkItem` that needs machine-level isolation to opt it out of batching. (The metadata is read from the generated `HelixWorkItem` items, so when using `XUnitProject`/`XUnitProjects` the opt-out applies to the produced work items rather than being set directly on the project.) The initial batching implementation only batches simple `PayloadDirectory` items; archive/URI payloads and items with per-work-item pre/post commands are preserved unchanged.
+
 ### All Possible Options
 ```xml
 <Project Sdk="Microsoft.DotNet.Helix.Sdk" DefaultTargets="Test">

@@ -28,6 +28,12 @@
   -->
   <PropertyGroup>
     <EnableHelixJobMonitor Condition="'$(EnableHelixJobMonitor)' != 'true'">false</EnableHelixJobMonitor>
+    <EnableHelixWorkItemBatching Condition="'$(EnableHelixWorkItemBatching)' != 'true'">false</EnableHelixWorkItemBatching>
+    <HelixBatchTargetDuration Condition="'$(HelixBatchTargetDuration)' == ''">10</HelixBatchTargetDuration>
+    <HelixBatchTimeoutPadding Condition="'$(HelixBatchTimeoutPadding)' == ''">2</HelixBatchTimeoutPadding>
+    <HelixBatchMaxItems Condition="'$(HelixBatchMaxItems)' == ''">10</HelixBatchMaxItems>
+    <HelixBatchMinItems Condition="'$(HelixBatchMinItems)' == ''">2</HelixBatchMinItems>
+    <_HelixMonoQueueTargets>$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)helix-batching\HelixBatching.targets</_HelixMonoQueueTargets>
   </PropertyGroup>
 
   <!--
@@ -47,6 +53,7 @@
   <UsingTask TaskName="GetHelixWorkItems" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)" Runtime="NET" Architecture="*" TaskFactory="$(MicrosoftDotNetHelixSdkTasksFactory)" />
   <UsingTask TaskName="CreateXUnitWorkItems" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)" Runtime="NET" Architecture="*" TaskFactory="$(MicrosoftDotNetHelixSdkTasksFactory)" />
   <UsingTask TaskName="CreateXUnitV3WorkItems" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)" Runtime="NET" Architecture="*" TaskFactory="$(MicrosoftDotNetHelixSdkTasksFactory)" />
+  <UsingTask TaskName="BatchHelixWorkItems" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)" Runtime="NET" Architecture="*" TaskFactory="$(MicrosoftDotNetHelixSdkTasksFactory)" />
   <UsingTask TaskName="CreateXHarnessAndroidWorkItems" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)" Runtime="NET" Architecture="*" TaskFactory="$(MicrosoftDotNetHelixSdkTasksFactory)" />
   <UsingTask TaskName="CreateXHarnessAppleWorkItems" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)" Runtime="NET" Architecture="*" TaskFactory="$(MicrosoftDotNetHelixSdkTasksFactory)" />
   <UsingTask TaskName="CreateTestsForWorkItems" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)" Runtime="NET" Architecture="*" TaskFactory="$(MicrosoftDotNetHelixSdkTasksFactory)" />

@@ -19,6 +19,11 @@ parameters:
   XUnitPublishTargetFramework: ''        # optional -- framework to use to publish your xUnit projects
   XUnitRuntimeTargetFramework: ''        # optional -- framework to use for the xUnit console runner
   XUnitRunnerVersion: ''                 # optional -- version of the xUnit nuget package you wish to use on Helix; required for XUnitProjects
+  EnableHelixWorkItemBatching: false     # optional -- batch compatible short Helix work items to reduce per-item overhead
+  HelixBatchTargetDuration: 10           # optional -- target aggregate duration per batch, in minutes
+  HelixBatchTimeoutPadding: 2            # optional -- additional time added to each batch's aggregate timeout, in minutes
+  HelixBatchMaxItems: 10                 # optional -- maximum original work items per batch
+  HelixBatchMinItems: 2                  # optional -- minimum original work items required to form a batch
   IncludeDotNetCli: false                # optional -- true will download a version of the .NET CLI onto the Helix machine as a correlation payload; requires DotNetCliPackageType and DotNetCliVersion
   DotNetCliPackageType: ''               # optional -- either 'sdk', 'runtime' or 'aspnetcore-runtime'; determines whether the sdk or runtime will be sent to Helix; see https://raw.githubusercontent.com/dotnet/core/main/release-notes/releases-index.json
   DotNetCliVersion: ''                   # optional -- version of the CLI to send to Helix; based on this: https://raw.githubusercontent.com/dotnet/core/main/release-notes/releases-index.json
@@ -52,6 +57,11 @@ steps:
       XUnitPublishTargetFramework: ${{ parameters.XUnitPublishTargetFramework }}
       XUnitRuntimeTargetFramework: ${{ parameters.XUnitRuntimeTargetFramework }}
       XUnitRunnerVersion: ${{ parameters.XUnitRunnerVersion }}
+      EnableHelixWorkItemBatching: ${{ parameters.EnableHelixWorkItemBatching }}
+      HelixBatchTargetDuration: ${{ parameters.HelixBatchTargetDuration }}
+      HelixBatchTimeoutPadding: ${{ parameters.HelixBatchTimeoutPadding }}
+      HelixBatchMaxItems: ${{ parameters.HelixBatchMaxItems }}
+      HelixBatchMinItems: ${{ parameters.HelixBatchMinItems }}
       IncludeDotNetCli: ${{ parameters.IncludeDotNetCli }}
       DotNetCliPackageType: ${{ parameters.DotNetCliPackageType }}
       DotNetCliVersion: ${{ parameters.DotNetCliVersion }}
@@ -82,6 +92,11 @@ steps:
       XUnitPublishTargetFramework: ${{ parameters.XUnitPublishTargetFramework }}
       XUnitRuntimeTargetFramework: ${{ parameters.XUnitRuntimeTargetFramework }}
       XUnitRunnerVersion: ${{ parameters.XUnitRunnerVersion }}
+      EnableHelixWorkItemBatching: ${{ parameters.EnableHelixWorkItemBatching }}
+      HelixBatchTargetDuration: ${{ parameters.HelixBatchTargetDuration }}
+      HelixBatchTimeoutPadding: ${{ parameters.HelixBatchTimeoutPadding }}
+      HelixBatchMaxItems: ${{ parameters.HelixBatchMaxItems }}
+      HelixBatchMinItems: ${{ parameters.HelixBatchMinItems }}
       IncludeDotNetCli: ${{ parameters.IncludeDotNetCli }}
       DotNetCliPackageType: ${{ parameters.DotNetCliPackageType }}
       DotNetCliVersion: ${{ parameters.DotNetCliVersion }}
