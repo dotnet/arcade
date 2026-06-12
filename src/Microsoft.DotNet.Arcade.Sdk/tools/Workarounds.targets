@@ -374,8 +374,13 @@ public class NormalizeSdkRootDriveCasing : Task
                 // change from symlink/junction resolution, which GetFinalPathNameByHandle
                 // performs but the child's Environment.ProcessPath (GetModuleFileNameW)
                 // does not - keeping both sides' salts in agreement.
+                // NetCoreSdkRoot carries a trailing directory separator, but
+                // GetFinalPathNameByHandle returns the path without one, so compare with
+                // trailing separators trimmed off both sides.
+                string canonicalTrimmed = canonical.TrimEnd('\\', '/');
+                string sdkRootTrimmed = SdkRoot.TrimEnd('\\', '/');
                 if (canonical.Length >= 2 && canonical[1] == ':' &&
-                    string.Equals(canonical, SdkRoot, StringComparison.OrdinalIgnoreCase))
+                    string.Equals(canonicalTrimmed, sdkRootTrimmed, StringComparison.OrdinalIgnoreCase))
                 {
                     char canonicalDrive = canonical[0];
                     if (canonicalDrive != SdkRoot[0])
