@@ -220,23 +220,32 @@
 
     HOW WE MATCH Environment.ProcessPath EXACTLY
     --------------------------------------------
-    Environment.ProcessPath is implemented as GetModuleFileNameW(NULL) for the
-    current process. We obtain the identical canonicalization in-process, WITHOUT
-    launching the SDK, by:
+    Environment.ProcessPath is GetModuleFileNameW(NULL), which reports the
+    volume's canonical on-disk drive-letter casing. We obtain the identical
+    drive-letter casing in-process, WITHOUT launching the SDK, by opening
+    $(NetCoreSdkRoot) and asking the OS for its final (canonical) path:
 
-        LoadLibraryEx(<apphost on the SDK volume>, LOAD_LIBRARY_AS_DATAFILE)
-        GetModuleFileNameW(hModule)
+        CreateFileW(<NetCoreSdkRoot>, FILE_FLAG_BACKUP_SEMANTICS) // open the dir
+        GetFinalPathNameByHandleW(handle, VOLUME_NAME_DOS)        // canonical path
 
-    Empirically (verified on Windows), GetModuleFileNameW IGNORES the drive
-    casing passed to LoadLibraryEx and returns the volume's canonical casing -
-    the exact same value Environment.ProcessPath yields for a process launched
-    from that volume. The canonical drive-letter casing is a property of the
-    volume mount, not of the individual file, so loading MSBuild.exe (or, if the
-    apphost is absent, MSBuild.dll) from $(NetCoreSdkRoot) yields the same drive
-    letter the child task host will see.
+    The canonical drive-letter casing is a property of the volume mount, not of
+    the individual file, so the drive letter returned for the SDK root directory
+    is the exact same drive letter the child task host will see via
+    Environment.ProcessPath. We splice ONLY that drive letter onto the original
+    path, and only when the rest of the canonical path is otherwise identical
+    (case-insensitively) to $(NetCoreSdkRoot). That guard rejects any change
+    introduced by symlink/junction resolution (which GetFinalPathNameByHandle
+    performs but GetModuleFileNameW does not), keeping the two sides in agreement.
 
-    This is Windows-only, idempotent, and a safe no-op when no loadable image is
-    found under $(NetCoreSdkRoot).
+    NOTE: an earlier revision used LoadLibraryEx(LOAD_LIBRARY_AS_DATAFILE) +
+    GetModuleFileNameW(hModule). That is unreliable: GetModuleFileNameW returns
+    ERROR_MOD_NOT_FOUND (0) for an image loaded only as a data file (e.g. the
+    SDK's MSBuild.exe/MSBuild.dll, which are not otherwise loaded in the VS
+    MSBuild process), making the workaround a silent no-op. CreateFile +
+    GetFinalPathNameByHandle is load- and bitness-independent.
+
+    This is Windows-only, idempotent, and a safe no-op when $(NetCoreSdkRoot)
+    cannot be opened.
 
     Remove this workaround once BOTH the VS MSBuild host and the .NET SDK task
     host carry the bilateral salt-casing normalization from #14026.
@@ -264,7 +273,6 @@
     <Task>
       <Code Type="Class" Language="cs"><![CDATA[
 using System;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Build.Framework;
@@ -278,17 +286,28 @@ public class NormalizeSdkRootDriveCasing : Task
     [Output]
     public string Result { get; set; }
 
-    private const uint LOAD_LIBRARY_AS_DATAFILE = 0x2;
+    private const uint FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
+    private const uint OPEN_EXISTING = 3;
+    private const uint FILE_SHARE_READ_WRITE_DELETE = 0x1 | 0x2 | 0x4;
+    private const uint VOLUME_NAME_DOS = 0x0;
+    private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    private static extern IntPtr LoadLibraryExW(string lpFileName, IntPtr hFile, uint dwFlags);
+    private static extern IntPtr CreateFileW(
+        string lpFileName,
+        uint dwDesiredAccess,
+        uint dwShareMode,
+        IntPtr lpSecurityAttributes,
+        uint dwCreationDisposition,
+        uint dwFlagsAndAttributes,
+        IntPtr hTemplateFile);
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    private static extern uint GetModuleFileNameW(IntPtr hModule, StringBuilder lpFilename, uint nSize);
+    private static extern uint GetFinalPathNameByHandleW(IntPtr hFile, StringBuilder lpszFilePath, uint cchFilePath, uint dwFlags);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool FreeLibrary(IntPtr hModule);
+    private static extern bool CloseHandle(IntPtr hObject);
 
     public override bool Execute()
     {
@@ -303,27 +322,18 @@ public class NormalizeSdkRootDriveCasing : Task
                 return true;
             }
 
-            // Load any PE image that lives on the SDK volume. The canonical drive
-            // letter is volume-wide, so the specific file does not matter; we prefer
-            // the apphost (the exact image the child task host runs as).
-            string image = null;
-            foreach (string candidate in new[] { "MSBuild.exe", "MSBuild.dll" })
-            {
-                string p = Path.Combine(SdkRoot, candidate);
-                if (File.Exists(p))
-                {
-                    image = p;
-                    break;
-                }
-            }
+            // Open the SDK root directory (FILE_FLAG_BACKUP_SEMANTICS is required to get a
+            // handle to a directory). We need no access rights for GetFinalPathNameByHandle.
+            IntPtr handle = CreateFileW(
+                SdkRoot,
+                0,
+                FILE_SHARE_READ_WRITE_DELETE,
+                IntPtr.Zero,
+                OPEN_EXISTING,
+                FILE_FLAG_BACKUP_SEMANTICS,
+                IntPtr.Zero);
 
-            if (image == null)
-            {
-                return true;
-            }
-
-            IntPtr module = LoadLibraryExW(image, IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
-            if (module == IntPtr.Zero)
+            if (handle == INVALID_HANDLE_VALUE)
             {
                 return true;
             }
@@ -331,16 +341,41 @@ public class NormalizeSdkRootDriveCasing : Task
             try
             {
                 var sb = new StringBuilder(1024);
-                uint len = GetModuleFileNameW(module, sb, (uint)sb.Capacity);
+                uint len = GetFinalPathNameByHandleW(handle, sb, (uint)sb.Capacity, VOLUME_NAME_DOS);
                 if (len == 0)
                 {
                     return true;
                 }
+                if (len > sb.Capacity)
+                {
+                    sb = new StringBuilder((int)len);
+                    len = GetFinalPathNameByHandleW(handle, sb, (uint)sb.Capacity, VOLUME_NAME_DOS);
+                    if (len == 0)
+                    {
+                        return true;
+                    }
+                }
 
-                // GetModuleFileNameW returns the same canonical path Environment.ProcessPath
-                // would report. Splice ONLY its drive letter onto the original SDK root.
+                // Strip the extended-length prefix (\\?\ or \\?\UNC\) that
+                // GetFinalPathNameByHandle prepends.
                 string canonical = sb.ToString();
-                if (canonical.Length >= 2 && canonical[1] == ':')
+                if (canonical.StartsWith(@"\\?\UNC\", StringComparison.Ordinal))
+                {
+                    // UNC path: no drive letter to splice, leave unchanged.
+                    return true;
+                }
+                if (canonical.StartsWith(@"\\?\", StringComparison.Ordinal))
+                {
+                    canonical = canonical.Substring(4);
+                }
+
+                // Only adopt the canonical drive letter when the rest of the path is
+                // otherwise identical (case-insensitively). This rejects any structural
+                // change from symlink/junction resolution, which GetFinalPathNameByHandle
+                // performs but the child's Environment.ProcessPath (GetModuleFileNameW)
+                // does not - keeping both sides' salts in agreement.
+                if (canonical.Length >= 2 && canonical[1] == ':' &&
+                    string.Equals(canonical, SdkRoot, StringComparison.OrdinalIgnoreCase))
                 {
                     char canonicalDrive = canonical[0];
                     if (canonicalDrive != SdkRoot[0])
@@ -356,7 +391,7 @@ public class NormalizeSdkRootDriveCasing : Task
             }
             finally
             {
-                FreeLibrary(module);
+                CloseHandle(handle);
             }
         }
         catch (Exception ex)
