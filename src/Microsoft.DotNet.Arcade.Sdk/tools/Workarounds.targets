@@ -381,8 +381,9 @@ public class NormalizeSdkRootDriveCasing : Task
                     if (canonicalDrive != SdkRoot[0])
                     {
                         Result = canonicalDrive + SdkRoot.Substring(1);
+                        // High importance so the (temporary) workaround leaves clear evidence in CI logs.
                         Log.LogMessage(
-                            MessageImportance.Low,
+                            MessageImportance.High,
                             "Normalized NetCoreSdkRoot drive casing '{0}' -> '{1}' to match Environment.ProcessPath (#14026 workaround).",
                             SdkRoot[0],
                             canonicalDrive);
