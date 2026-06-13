@@ -150,9 +150,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 _state.ResubmittedJobCount,
                 _state.ProcessedJobCount,
                 Environment.NewLine,
-                _state.WorkItemOutcomes.Count,
+                _state.ProcessedWorkItemCount,
                 _state.ResubmittedWorkItemCount,
-                _state.FailedWorkItemCount);
+                _state.FailedProcessedWorkItemCount);
         }
 
         public void LogNonMonitorPipelineFailure()

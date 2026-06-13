@@ -56,11 +56,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public HashSet<string> WorkItemOutcomeJobs { get; } = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
-        /// Latest known console-link information for every failed work item, keyed the same
-        /// way as <see cref="WorkItemOutcomes"/>. Cleared per key when a later incarnation
-        /// passes. Used to build the final aggregated failure report.
+        /// Latest known console-link information for every failed work item attempt, keyed by
+        /// (JobName, WorkItemName) where <c>JobName</c> is the Helix job name. Used to build
+        /// the final aggregated failure report
+        /// without collapsing failures across different jobs.
         /// </summary>
-        public Dictionary<(string ChainKey, string WorkItemName), FailedWorkItemConsoleInfo> FailedWorkItemConsoleInfo { get; }
+        public Dictionary<(string JobName, string WorkItemName), FailedWorkItemConsoleInfo> FailedWorkItemConsoleInfo { get; }
             = new(WorkItemOutcomeKeyComparer.Instance);
 
         /// <summary>
@@ -85,9 +86,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public int ResubmittedJobCount { get; set; }
         public int ResubmittedWorkItemCount { get; set; }
         public int ProcessedJobCount { get; set; }
+        public int ProcessedWorkItemCount { get; set; }
+        public int FailedProcessedWorkItemCount { get; set; }
 
-        public int FailedWorkItemCount => WorkItemOutcomes.Values.Count(passed => !passed);
-
+        /// <summary>
+        /// True when the latest logical outcome (after retry supersession within a submitter
+        /// chain) still has at least one failure. This drives monitor success/failure.
+        /// </summary>
         public bool HasFailedWorkItem => WorkItemOutcomes.Values.Any(passed => !passed);
 
         /// <summary>
@@ -198,9 +203,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// Tracks (or removes) the per-failure console-info record for a single observed
         /// work item. Removal happens when a later incarnation passes.
         /// </summary>
-        public void TrackFailedWorkItemConsoleInfo(HelixJobInfo helixJob, string chainKey, WorkItemSummary workItem)
+        public void TrackFailedWorkItemConsoleInfo(HelixJobInfo helixJob, WorkItemSummary workItem)
         {
-            var key = (chainKey, workItem.Name);
+            var key = (helixJob.JobName, workItem.Name);
             if (workItem.IsFailed)
             {
                 FailedWorkItemConsoleInfo[key] = new FailedWorkItemConsoleInfo(

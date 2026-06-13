@@ -305,7 +305,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             if (_state.WorkItemOutcomeJobs.Add(helixJob.JobName))
             {
                 string chainKey = _state.GetSubmitterChainKey(helixJob);
-                var jobWorkItems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 foreach (WorkItemSummary wi in workItems)
                 {
                     // Within the same AzDO submitter chain (i.e. resubmissions of the same
@@ -314,9 +313,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     // so identically-named work items in different AzDO jobs are tracked
                     // independently.
                     _state.WorkItemOutcomes[(chainKey, wi.Name)] = !wi.IsFailed;
-                    _state.TrackFailedWorkItemConsoleInfo(helixJob, chainKey, wi);
-                    jobWorkItems.Add(wi.Name);
+                    _state.TrackFailedWorkItemConsoleInfo(helixJob, wi);
                 }
+
+                _state.ProcessedWorkItemCount += workItems.Count;
+                _state.FailedProcessedWorkItemCount += workItems.Count(wi => wi.IsFailed);
             }
 
             if (queueUpload)
