@@ -26,11 +26,73 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var testRunId = workItem.GetMetadata("TestRunId");
                 var failed = workItem.GetMetadata("Failed") == "true";
 
-                await CreateFakeTestResultAsync(client, testRunId, jobName, workItemName, failed);
+                // Build a meaningful error message from available diagnostics
+                string errorMessage = null;
+                if (failed)
+                {
+                    errorMessage = BuildErrorMessage(workItem, jobName, workItemName);
+                }
+
+                await CreateFakeTestResultAsync(client, testRunId, jobName, workItemName, failed, errorMessage);
             }
         }
 
-        private async Task<int> CreateFakeTestResultAsync(HttpClient client, string testRunId, string jobName, string workItemFriendlyName, bool failed)
+        private static string BuildErrorMessage(ITaskItem workItem, string jobName, string workItemName)
+        {
+            var sb = new StringBuilder();
+
+            string exitCode = workItem.GetMetadata("ExitCode");
+            if (!string.IsNullOrEmpty(exitCode))
+            {
+                sb.AppendLine($"Helix work item exited with code {exitCode}.");
+            }
+
+            string helixErrors = workItem.GetMetadata("HelixErrors");
+            if (!string.IsNullOrEmpty(helixErrors))
+            {
+                try
+                {
+                    var errors = JsonConvert.DeserializeObject<string[]>(helixErrors);
+                    if (errors?.Length > 0)
+                    {
+                        sb.AppendLine("Helix errors:");
+                        foreach (var error in errors)
+                        {
+                            sb.AppendLine($"  - {error}");
+                        }
+                    }
+                }
+                catch (JsonException)
+                {
+                    // Ignore deserialization failures
+                }
+            }
+
+            string consoleErrorText = workItem.GetMetadata("ConsoleErrorText");
+            if (!string.IsNullOrEmpty(consoleErrorText))
+            {
+                sb.AppendLine();
+                sb.AppendLine("Test output:");
+                sb.AppendLine(consoleErrorText);
+            }
+
+            if (sb.Length == 0)
+            {
+                // Fallback to original generic message if we couldn't extract anything
+                sb.AppendLine("The Helix Work Item failed. Often this is due to a test crash. Please see the 'Artifacts' tab above for additional logs.");
+            }
+
+            string consoleUri = workItem.GetMetadata("ConsoleOutputUri");
+            if (!string.IsNullOrEmpty(consoleUri))
+            {
+                sb.AppendLine();
+                sb.AppendLine($"Full console log: {consoleUri}");
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+
+        private async Task<int> CreateFakeTestResultAsync(HttpClient client, string testRunId, string jobName, string workItemFriendlyName, bool failed, string errorMessage)
         {
             var testResultData = await RetryAsync(
                 async () =>
@@ -51,7 +113,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                                             ["testCaseTitle"] = $"{workItemFriendlyName} Work Item",
                                             ["outcome"] = failed ? "Failed" : "Passed",
                                             ["state"] = "Completed",
-                                            ["errorMessage"] = failed ? "The Helix Work Item failed. Often this is due to a test crash. Please see the 'Artifacts' tab above for additional logs." : null,
+                                            ["errorMessage"] = failed ? errorMessage : null,
                                             ["durationInMs"] = 60 * 1000, // Use a non-zero duration so that the graphs look better.
                                             ["comment"] = new JObject
                                             {
