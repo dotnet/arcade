@@ -267,8 +267,10 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 Log.LogMessage(MessageImportance.High, $"Sending Job to {TargetQueue}...");
                 cancellationToken.ThrowIfCancellationRequested();
-                // LogMessageFromText will take any string formatted as a canonical error or warning and convert the type of log to this
-                ISentJob job = await def.SendAsync(msg => Log.LogMessageFromText(msg, MessageImportance.Normal), cancellationToken);
+                // LogMessageFromText will take any string formatted as a canonical error or warning and convert the type of log to this.
+                // When queue-stats logging is opted in, elevate to High importance so the summary survives the default 'Minimal' build verbosity.
+                MessageImportance sendAsyncImportance = EnableShowHelixQueueStats ? MessageImportance.High : MessageImportance.Normal;
+                ISentJob job = await def.SendAsync(msg => Log.LogMessageFromText(msg, sendAsyncImportance), cancellationToken);
                 JobCorrelationId = job.CorrelationId;
                 JobCancellationToken = job.HelixCancellationToken;
                 cancellationToken.ThrowIfCancellationRequested();
