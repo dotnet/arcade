@@ -467,6 +467,7 @@ function StopProcesses {
   echo "Killing running build processes..."
   pkill -9 "dotnet" || true
   pkill -9 "vbcscompiler" || true
+  pkill -9 "msbuild" || true
   return 0
 }
 
