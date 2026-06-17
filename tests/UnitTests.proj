@@ -24,6 +24,8 @@
          instead of the in-build Python reporter. The corresponding monitor job is
          configured in the Arcade pipeline YAML. -->
     <EnableHelixJobMonitor>true</EnableHelixJobMonitor>
+
+    <EnableShowHelixQueueStats>true</EnableShowHelixQueueStats>
   </PropertyGroup>
 
   <ItemGroup>
