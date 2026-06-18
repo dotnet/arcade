@@ -433,10 +433,8 @@ function InitializeVisualStudioMSBuild([object]$vsRequirements = $null) {
 
   $local:BinFolder = Join-Path $vsInstallDir "MSBuild\$msbuildVersionDir\Bin"
 
-  # By default, use the MSBuild matching the host's process architecture (e.g. amd64 or arm64),
+  # Use the MSBuild matching the host's process architecture (e.g. amd64 or arm64),
   # falling back to the 32-bit MSBuild in the root Bin folder when no matching subfolder exists.
-  # The 'Prefer64bit' opt-out can be set to false to force the 32-bit MSBuild.
-  $local:Prefer64bit = if (Get-Member -InputObject $vsRequirements -Name 'Prefer64bit') { $vsRequirements.Prefer64bit } else { $true }
 
   # Determine the architecture of the current process, accounting for a 32-bit process
   # running on a 64-bit OS (PROCESSOR_ARCHITEW6432 holds the real machine architecture).
@@ -454,7 +452,7 @@ function InitializeVisualStudioMSBuild([object]$vsRequirements = $null) {
   }
 
   $global:_MSBuildExe = Join-Path $local:BinFolder "msbuild.exe"
-  if ($local:Prefer64bit -and $local:MSBuildArchSubFolder) {
+  if ($local:MSBuildArchSubFolder) {
     $local:ArchMSBuildExe = Join-Path $local:BinFolder (Join-Path $local:MSBuildArchSubFolder "msbuild.exe")
     if (Test-Path $local:ArchMSBuildExe) {
       $global:_MSBuildExe = $local:ArchMSBuildExe
