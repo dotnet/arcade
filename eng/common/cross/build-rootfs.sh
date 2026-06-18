@@ -88,7 +88,7 @@ __FreeBSDPackages+=" terminfo-db"
 __OpenBSDVersion="7.8"
 __OpenBSDPackages="heimdal-libs"
 __OpenBSDPackages+=" icu4c"
-__OpenBSDPackages+=" inotify-tools"
+__OpenBSDPackages+=" libinotify"
 __OpenBSDPackages+=" openssl"
 
 __IllumosPackages="icu"
