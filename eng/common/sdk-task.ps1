@@ -1,29 +1,35 @@
 [CmdletBinding(PositionalBinding=$false)]
 Param(
-  [string] $configuration = 'Debug',
+  [string] $configuration,
   [string] $task,
-  [string] $verbosity = 'minimal',
-  [string] $msbuildEngine = $null,
-  [switch] $restore,
+  [string] $verbosity,
+  [string] $msbuildEngine,
+  [switch] $noRestore,
   [switch] $prepareMachine,
   [switch][Alias('nobl')]$excludeCIBinaryLog,
   [switch]$noWarnAsError,
   [switch] $help,
-  [string] $runtimeSourceFeed = '',
-  [string] $runtimeSourceFeedKey = '',
+  [string] $runtimeSourceFeed,
+  [string] $runtimeSourceFeedKey,
   [Parameter(ValueFromRemainingArguments=$true)][String[]]$properties
 )
 
 $ci = $true
 $binaryLog = if ($excludeCIBinaryLog) { $false } else { $true }
 $warnAsError = if ($noWarnAsError) { $false } else { $true }
+$restore = -not $noRestore
+
+# Opt in to letting tools.ps1 own the CI/environment-aware defaults for the parameters it
+# manages (e.g. configuration, verbosity). The $binaryLog/$warnAsError values set above by
+# assignment are preserved, because only declared-but-unpassed parameters are unbound.
+$importerBoundParameters = $PSBoundParameters
 
 . $PSScriptRoot\tools.ps1
 
 function Print-Usage() {
   Write-Host "Common settings:"
   Write-Host "  -task <value>           Name of Arcade task (name of a project in toolset directory of the Arcade SDK package)"
-  Write-Host "  -restore                Restore dependencies"
+  Write-Host "  -noRestore              Skip restoring dependencies"
   Write-Host "  -verbosity <value>      Msbuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic]"
   Write-Host "  -help                   Print help and exit"
   Write-Host ""
@@ -34,22 +40,6 @@ function Print-Usage() {
   Write-Host "  -excludeCIBinaryLog     When running on CI, allow no binary log (short: -nobl)"
   Write-Host ""
   Write-Host "Command line arguments not listed above are passed thru to msbuild."
-}
-
-function Build([string]$target) {
-  $logSuffix = if ($target -eq 'Execute') { '' } else { ".$target" }
-  $log = Join-Path $LogDir "$task$logSuffix.binlog"
-  $binaryLogArg = if ($binaryLog) { "/bl:$log" } else { "" }
-  $outputPath = Join-Path $ToolsetDir "$task\"
-
-  MSBuild $taskProject `
-    $binaryLogArg `
-    /t:$target `
-    /p:Configuration=$configuration `
-    /p:RepoRoot=$RepoRoot `
-    /p:BaseIntermediateOutputPath=$outputPath `
-    /v:$verbosity `
-    @properties
 }
 
 try {
@@ -75,11 +65,20 @@ try {
     ExitWithExitCode 1
   }
 
-  if ($restore) {
-    Build 'Restore'
-  }
+  $log = Join-Path $LogDir "$task.binlog"
+  $binaryLogArg = if ($binaryLog) { "/bl:$log" } else { "" }
+  $restoreArg = if ($restore) { "/restore" } else { "" }
+  $outputPath = Join-Path $ToolsetDir "$task\"
 
-  Build 'Execute'
+  MSBuild $taskProject `
+    $binaryLogArg `
+    $restoreArg `
+    /t:Execute `
+    /p:Configuration=$configuration `
+    /p:RepoRoot=$RepoRoot `
+    /p:BaseIntermediateOutputPath=$outputPath `
+    /v:$verbosity `
+    @properties
 }
 catch {
   Write-Host $_.ScriptStackTrace

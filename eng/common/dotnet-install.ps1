@@ -1,12 +1,16 @@
 [CmdletBinding(PositionalBinding=$false)]
 Param(
-  [string] $verbosity = 'minimal',
+  [string] $verbosity,
   [string] $architecture = '',
   [string] $version = 'Latest',
   [string] $runtime = 'dotnet',
-  [string] $RuntimeSourceFeed = '',
-  [string] $RuntimeSourceFeedKey = ''
+  [string] $RuntimeSourceFeed,
+  [string] $RuntimeSourceFeedKey
 )
+
+# Opt in to letting tools.ps1 own the CI/environment-aware defaults for the parameters it
+# manages (e.g. verbosity, runtimeSourceFeed); see tools.ps1 for details.
+$importerBoundParameters = $PSBoundParameters
 
 . $PSScriptRoot\tools.ps1
 

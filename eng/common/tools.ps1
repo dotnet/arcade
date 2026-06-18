@@ -1,23 +1,24 @@
 # Initialize variables if they aren't already defined.
 # These may be defined as parameters of the importing script, or set after importing this script.
 
-# Determines whether a variable was explicitly provided by the importing script.
-# A [switch] parameter on the importing script always defines the variable (defaulting to
-# 'not present'), so 'Test-Path variable:' alone is not enough to tell whether a value was
-# actually supplied. Treat a non-present switch (and $null) as "not provided" so that the
-# defaults below can take effect.
-function Test-VariableProvided([string]$variableName) {
-  if (-not (Test-Path "variable:$variableName")) {
-    return $false
+# An importing script can opt in to letting tools.ps1 own the defaults for the variables below
+# by assigning its bound parameters to $importerBoundParameters before dot-sourcing this file:
+#     $importerBoundParameters = $PSBoundParameters
+#     . $PSScriptRoot\tools.ps1
+# A declared-but-unbound [switch]/[bool]/[string] parameter is still "defined", which would
+# otherwise mask the CI/environment-aware defaults computed below. For opted-in scripts, drop
+# any of these variables that the importer declares as a parameter but did not explicitly pass,
+# so the defaults below take effect. Values the importer passed explicitly, or set by assignment
+# (the other supported pattern, e.g. sdk-task.ps1 computing $binaryLog/$warnAsError), are
+# preserved because only declared-but-unpassed parameters are removed. The whole block is skipped
+# for scripts that do not opt in, so external consumers keep their current behavior unchanged.
+if (Test-Path variable:importerBoundParameters) {
+  $importerDeclaredParameters = (Get-PSCallStack)[1].InvocationInfo.MyCommand.Parameters.Keys
+  foreach ($toolsManagedDefault in @('binaryLog', 'nodeReuse', 'warnAsError', 'warnNotAsError', 'verbosity', 'configuration', 'msbuildEngine', 'runtimeSourceFeed', 'runtimeSourceFeedKey')) {
+    if (($importerDeclaredParameters -contains $toolsManagedDefault) -and -not $importerBoundParameters.ContainsKey($toolsManagedDefault)) {
+      Remove-Variable -Name $toolsManagedDefault -ErrorAction SilentlyContinue
+    }
   }
-  $value = Get-Variable -Name $variableName -ValueOnly
-  if ($null -eq $value) {
-    return $false
-  }
-  if ($value -is [System.Management.Automation.SwitchParameter]) {
-    return $value.IsPresent
-  }
-  return $true
 }
 
 # CI mode - set to true on CI server for PR validation build or official build.
@@ -30,7 +31,7 @@ function Test-VariableProvided([string]$variableName) {
 [bool]$excludeCIBinarylog = if (Test-Path variable:excludeCIBinarylog) { $excludeCIBinarylog } else { $false }
 
 # Set to true to output binary log from msbuild. Note that emitting binary log slows down the build.
-[bool]$binaryLog = if (Test-VariableProvided 'binaryLog') { [bool]$binaryLog } else { $ci -and !$excludeCIBinarylog }
+[bool]$binaryLog = if (Test-Path variable:binaryLog) { $binaryLog } else { $ci -and !$excludeCIBinarylog }
 
 # Turns on machine preparation/clean up code that changes the machine state (e.g. kills build processes).
 [bool]$prepareMachine = if (Test-Path variable:prepareMachine) { $prepareMachine } else { $false }
@@ -42,7 +43,9 @@ function Test-VariableProvided([string]$variableName) {
 [string]$verbosity = if (Test-Path variable:verbosity) { $verbosity } else { 'minimal' }
 
 # Set to true to reuse msbuild nodes. Recommended to not reuse on CI.
-[bool]$nodeReuse = if (Test-VariableProvided 'nodeReuse') { [bool]$nodeReuse } else { !$ci }
+# On CI, node reuse is disabled by default; set MSBUILD_NODEREUSE_ENABLED=1 to opt back in.
+# Internal testing only; this env var will be replaced with a switch (https://github.com/dotnet/arcade/issues/17013) and must not be depended on.
+[bool]$nodeReuse = if (Test-Path variable:nodeReuse) { $nodeReuse } else { (!$ci) -or ($env:MSBUILD_NODEREUSE_ENABLED -eq '1') }
 
 # Configures warning treatment in msbuild.
 [bool]$warnAsError = if (Test-Path variable:warnAsError) { $warnAsError } else { $true }
