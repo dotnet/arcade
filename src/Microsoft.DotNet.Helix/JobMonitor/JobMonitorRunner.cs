@@ -108,7 +108,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 // dropping results that were already in progress when the runner was cancelled.
                 // We are giving a budget where the Monitor pipeline job has about 5 minutes more to complete after cancellation.
                 using var cancelCts = new CancellationTokenSource(TimeSpan.FromMinutes(3));
-                await _uploads.DrainAsync(cancelCts.Token);
+                try
+                {
+                    await _uploads.DrainAsync(cancelCts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogWarning("Timed out while draining in-flight uploads");
+                }
 
                 _reporter.ReportTimeout();
 
@@ -369,7 +376,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return;
             }
 
-            LogWarning($"Cancellation requested. Attempting to cancel {inFlightJobs.Count} in-flight Helix job(s).");
+            LogWarning($"Cancellation requested. Attempting to cancel {inFlightJobs.Count} in-flight Helix job(s)");
 
             await Task.WhenAll(inFlightJobs.Select(async job =>
             {
@@ -388,6 +395,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     LogWarning(ex, $"Failed to cancel Helix job {job.DisplayName}.");
                 }
             }));
+
+            _logger.LogInformation("Cancellation of in-flight Helix jobs complete");
         }
 
         private bool IsInScope(HelixJobInfo job)
