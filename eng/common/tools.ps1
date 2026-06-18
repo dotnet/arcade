@@ -1,6 +1,25 @@
 # Initialize variables if they aren't already defined.
 # These may be defined as parameters of the importing script, or set after importing this script.
 
+# Determines whether a variable was explicitly provided by the importing script.
+# A [switch] parameter on the importing script always defines the variable (defaulting to
+# 'not present'), so 'Test-Path variable:' alone is not enough to tell whether a value was
+# actually supplied. Treat a non-present switch (and $null) as "not provided" so that the
+# defaults below can take effect.
+function Test-VariableProvided([string]$variableName) {
+  if (-not (Test-Path "variable:$variableName")) {
+    return $false
+  }
+  $value = Get-Variable -Name $variableName -ValueOnly
+  if ($null -eq $value) {
+    return $false
+  }
+  if ($value -is [System.Management.Automation.SwitchParameter]) {
+    return $value.IsPresent
+  }
+  return $true
+}
+
 # CI mode - set to true on CI server for PR validation build or official build.
 [bool]$ci = if (Test-Path variable:ci) { $ci } else { $false }
 
@@ -11,7 +30,7 @@
 [bool]$excludeCIBinarylog = if (Test-Path variable:excludeCIBinarylog) { $excludeCIBinarylog } else { $false }
 
 # Set to true to output binary log from msbuild. Note that emitting binary log slows down the build.
-[bool]$binaryLog = if (Test-Path variable:binaryLog) { $binaryLog } else { $ci -and !$excludeCIBinarylog }
+[bool]$binaryLog = if (Test-VariableProvided 'binaryLog') { [bool]$binaryLog } else { $ci -and !$excludeCIBinarylog }
 
 # Turns on machine preparation/clean up code that changes the machine state (e.g. kills build processes).
 [bool]$prepareMachine = if (Test-Path variable:prepareMachine) { $prepareMachine } else { $false }
@@ -23,7 +42,7 @@
 [string]$verbosity = if (Test-Path variable:verbosity) { $verbosity } else { 'minimal' }
 
 # Set to true to reuse msbuild nodes. Recommended to not reuse on CI.
-[bool]$nodeReuse = if (Test-Path variable:nodeReuse) { $nodeReuse } else { !$ci }
+[bool]$nodeReuse = if (Test-VariableProvided 'nodeReuse') { [bool]$nodeReuse } else { !$ci }
 
 # Configures warning treatment in msbuild.
 [bool]$warnAsError = if (Test-Path variable:warnAsError) { $warnAsError } else { $true }
