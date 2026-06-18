@@ -99,18 +99,18 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
             catch (OperationCanceledException)
             {
+                // Cancel any Helix jobs we know about that haven't finished yet so
+                // they don't keep consuming queue capacity after the monitor exits.
+                await CancelInFlightHelixJobsAsync(CancellationToken.None);
+
                 // Drain in-flight uploads before exiting. Uploads are started via Task.Run and are
                 // not awaited as part of the poll loop, so we need to await them here to avoid
                 // dropping results that were already in progress when the runner was cancelled.
-                await _uploads.DrainAsync(CancellationToken.None);
-                _reporter.ReportTimeout();
+                // We are giving a budget where the Monitor pipeline job has about 5 minutes more to complete after cancellation.
+                using var cancelCts = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+                await _uploads.DrainAsync(cancelCts.Token);
 
-                // Proactively cancel any Helix jobs we know about that haven't finished yet so
-                // they don't keep consuming queue capacity after the monitor exits. Bounded,
-                // independent cancellation budget because the runner's own token is already
-                // cancelled.
-                using var cancelCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-                await CancelInFlightHelixJobsAsync(cancelCts.Token);
+                _reporter.ReportTimeout();
 
                 return 1;
             }
