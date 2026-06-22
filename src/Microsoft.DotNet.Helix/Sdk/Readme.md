@@ -58,6 +58,8 @@ The job monitor is a lightweight dedicated pipeline job that:
 
 This allows the original build jobs to stop waiting on Helix execution while still preserving test visibility and pass/fail behavior in the pipeline.
 
+![Helix Job Monitor](../../../Documentation/HelixJobMonitor.png)
+
 The job is added with the template at [/eng/common/core-templates/job/helix-job-monitor.yml](/eng/common/core-templates/job/helix-job-monitor.yml).
 
 Example:
