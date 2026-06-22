@@ -40,7 +40,7 @@ steps:
       /p:EnableHelixJobMonitor=${{ parameters.UseHelixMonitor }}
       ${{ parameters.HelixProjectArguments }}
       /t:Test
-      /bl:$(Build.SourcesDirectory)/artifacts/log/$(BuildConfig)/SendToHelix.binlog
+      /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/SendToHelix.binlog
     displayName: ${{ parameters.DisplayNamePrefix }} (Windows)
     env:
       BuildConfig: $(_BuildConfig)
@@ -78,7 +78,7 @@ steps:
       /p:EnableHelixJobMonitor=${{ parameters.UseHelixMonitor }}
       ${{ parameters.HelixProjectArguments }}
       /t:Test
-      /bl:$(Build.SourcesDirectory)/artifacts/log/$(BuildConfig)/SendToHelix.binlog
+      /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/SendToHelix.binlog
     displayName: ${{ parameters.DisplayNamePrefix }} (Unix)
     env:
       BuildConfig: $(_BuildConfig)
