@@ -247,6 +247,21 @@
     This is Windows-only, idempotent, and a safe no-op when $(NetCoreSdkRoot)
     cannot be opened.
 
+    Knobs
+    -----
+    * $(DisableNetCoreSdkRootDriveCasingWorkaround)=true
+        Fully disables this workaround (the target is skipped).
+
+    * $(NetCoreSdkRootDriveCasingOverride)=lower | upper
+        Deterministic escape hatch. Forces the $(NetCoreSdkRoot) drive letter to
+        the requested casing WITHOUT probing the filesystem, bypassing the
+        GetFinalPathNameByHandle canonical-casing probe entirely. Use this when
+        the probe cannot reproduce the child's casing (e.g. the SDK path crosses
+        a junction/reparse point, or an environment where GetFinalPathNameByHandle
+        and the loader disagree on drive-letter casing), or to validate the fix
+        deterministically. Both this property and an environment variable of the
+        same name work (MSBuild surfaces environment variables as properties).
+
     Remove this workaround once BOTH the VS MSBuild host and the .NET SDK task
     host carry the bilateral salt-casing normalization from #14026.
 
@@ -268,6 +283,7 @@
              Condition="'$(MSBuildRuntimeType)' == 'Full' and '$(NetCoreSdkRoot)' != ''">
     <ParameterGroup>
       <SdkRoot ParameterType="System.String" Required="true" />
+      <Override ParameterType="System.String" />
       <Result ParameterType="System.String" Output="true" />
     </ParameterGroup>
     <Task>
@@ -282,6 +298,8 @@ public class NormalizeSdkRootDriveCasing : Task
 {
     [Required]
     public string SdkRoot { get; set; }
+
+    public string Override { get; set; }
 
     [Output]
     public string Result { get; set; }
@@ -319,6 +337,38 @@ public class NormalizeSdkRootDriveCasing : Task
             // Only handle local "X:\..." drive paths.
             if (string.IsNullOrEmpty(SdkRoot) || SdkRoot.Length < 2 || SdkRoot[1] != ':')
             {
+                return true;
+            }
+
+            // Deterministic escape hatch: $(NetCoreSdkRootDriveCasingOverride) = "lower" | "upper"
+            // forces the drive-letter casing without probing the filesystem, bypassing the
+            // GetFinalPathNameByHandle canonical-casing probe entirely. This unblocks environments
+            // where the probe cannot reproduce the child's casing (e.g. the SDK path crosses a
+            // junction, or GetFinalPathNameByHandle and the loader disagree on drive-letter casing)
+            // and provides a deterministic way to validate the workaround.
+            if (!string.IsNullOrEmpty(Override))
+            {
+                char forced = SdkRoot[0];
+                if (string.Equals(Override, "lower", StringComparison.OrdinalIgnoreCase))
+                {
+                    forced = char.ToLowerInvariant(SdkRoot[0]);
+                }
+                else if (string.Equals(Override, "upper", StringComparison.OrdinalIgnoreCase))
+                {
+                    forced = char.ToUpperInvariant(SdkRoot[0]);
+                }
+
+                if (forced != SdkRoot[0])
+                {
+                    Result = forced + SdkRoot.Substring(1);
+                    Log.LogMessage(
+                        MessageImportance.High,
+                        "Forced NetCoreSdkRoot drive casing '{0}' -> '{1}' via NetCoreSdkRootDriveCasingOverride='{2}' (#14026 workaround).",
+                        SdkRoot[0],
+                        forced,
+                        Override);
+                }
+
                 return true;
             }
 
@@ -415,8 +465,8 @@ public class NormalizeSdkRootDriveCasing : Task
   </UsingTask>
 
   <Target Name="NormalizeNetCoreSdkRootCasing"
-          Condition="'$(MSBuildRuntimeType)' == 'Full' and '$(NetCoreSdkRoot)' != ''">
-    <NormalizeSdkRootDriveCasing SdkRoot="$(NetCoreSdkRoot)">
+          Condition="'$(MSBuildRuntimeType)' == 'Full' and '$(NetCoreSdkRoot)' != '' and '$(DisableNetCoreSdkRootDriveCasingWorkaround)' != 'true'">
+    <NormalizeSdkRootDriveCasing SdkRoot="$(NetCoreSdkRoot)" Override="$(NetCoreSdkRootDriveCasingOverride)">
       <Output TaskParameter="Result" PropertyName="NetCoreSdkRoot" />
     </NormalizeSdkRootDriveCasing>
   </Target>
