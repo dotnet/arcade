@@ -90,6 +90,7 @@ __OpenBSDPackages="heimdal-libs"
 __OpenBSDPackages+=" icu4c"
 __OpenBSDPackages+=" libinotify"
 __OpenBSDPackages+=" openssl"
+__OpenBSDPackages+=" e2fsprogs"
 
 __IllumosPackages="icu"
 __IllumosPackages+=" mit-krb5"
