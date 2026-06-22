@@ -9,8 +9,8 @@ This file should be imported by eng/Versions.props
     <MicrosoftDotNetArcadeSdkPackageVersion>11.0.0-beta.26310.1</MicrosoftDotNetArcadeSdkPackageVersion>
     <MicrosoftDotNetHelixSdkPackageVersion>11.0.0-beta.26310.1</MicrosoftDotNetHelixSdkPackageVersion>
     <!-- dotnet-arcade-services dependencies -->
-    <MicrosoftDotNetDarcLibPackageVersion>1.1.0-beta.26309.4</MicrosoftDotNetDarcLibPackageVersion>
-    <MicrosoftDotNetProductConstructionServiceClientPackageVersion>1.1.0-beta.26309.4</MicrosoftDotNetProductConstructionServiceClientPackageVersion>
+    <MicrosoftDotNetDarcLibPackageVersion>1.1.0-beta.26316.3</MicrosoftDotNetDarcLibPackageVersion>
+    <MicrosoftDotNetProductConstructionServiceClientPackageVersion>1.1.0-beta.26316.3</MicrosoftDotNetProductConstructionServiceClientPackageVersion>
     <!-- dotnet-command-line-api dependencies -->
     <SystemCommandLinePackageVersion>2.0.3</SystemCommandLinePackageVersion>
     <!-- dotnet-deployment-tools dependencies -->
