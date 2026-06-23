@@ -183,6 +183,20 @@ namespace Microsoft.DotNet.Helix.Client
         IJobDefinition WithQueueStats();
 
         /// <summary>
+        /// Sets the Azure DevOps organization for queue stats lookup.
+        /// When not specified, defaults to the observer's configured default organization.
+        /// </summary>
+        /// <returns>Fluent job builder.</returns>
+        IJobDefinition WithAzureDevOpsOrganization(string organization);
+
+        /// <summary>
+        /// Sets the Azure DevOps project for queue stats lookup.
+        /// When not specified, defaults to the observer's configured default project.
+        /// </summary>
+        /// <returns>Fluent job builder.</returns>
+        IJobDefinition WithAzureDevOpsProject(string project);
+
+        /// <summary>
         /// <para>Sends the fully specified job to execution.</para>
         /// 
         /// <para>This includes upload of all the provided correlation data, but does not

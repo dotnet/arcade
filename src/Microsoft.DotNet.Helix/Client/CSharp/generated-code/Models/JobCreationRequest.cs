@@ -55,6 +55,12 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("ResultContainerPrefix")]
         public string ResultContainerPrefix { get; set; }
 
+        [JsonProperty("AzureDevOpsOrganization")]
+        public string AzureDevOpsOrganization { get; set; }
+
+        [JsonProperty("AzureDevOpsProject")]
+        public string AzureDevOpsProject { get; set; }
+
         [JsonIgnore]
         public bool IsValid
         {
