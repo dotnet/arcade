@@ -48,8 +48,6 @@ namespace Microsoft.DotNet.Helix.Client
         public IDictionary<IPayload, string> CorrelationPayloads { get; } = new Dictionary<IPayload, string>();
         public int? MaxRetryCount { get; private set; }
         public bool ShowQueueStats { get; private set; }
-        public string AzureDevOpsOrganization { get; private set; }
-        public string AzureDevOpsProject { get; private set; }
         public string StorageAccountConnectionString { get; private set; }
         public string TargetContainerName { get; set; } = DefaultContainerName;
         public string TargetResultsContainerName { get; set; } = DefaultContainerName;
@@ -228,8 +226,6 @@ namespace Microsoft.DotNet.Helix.Client
                 ResultContainerPrefix = ResultContainerPrefix,
                 DockerTag = dockerTag,
                 QueueAlias = queueAlias,
-                AzureDevOpsOrganization = AzureDevOpsOrganization,
-                AzureDevOpsProject = AzureDevOpsProject,
             };
 
             if (string.IsNullOrEmpty(Source))
@@ -463,18 +459,6 @@ namespace Microsoft.DotNet.Helix.Client
         public IJobDefinition WithQueueStats()
         {
             ShowQueueStats = true;
-            return this;
-        }
-
-        public IJobDefinition WithAzureDevOpsOrganization(string organization)
-        {
-            AzureDevOpsOrganization = organization;
-            return this;
-        }
-
-        public IJobDefinition WithAzureDevOpsProject(string project)
-        {
-            AzureDevOpsProject = project;
             return this;
         }
 
