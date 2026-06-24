@@ -67,8 +67,8 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
 
         long uploadedCount = await UploadTestResultsWithCountAsync(aggregatedResults, resultMetadata, cancellationToken);
         return new TestResultUploadSummary(
-            aggregatedResults.All(result => result.Result != "Failed"), // TODO: maybe there's a better way to find out if a test failed? Is this extensive enough?
-            uploadedCount);
+            AllPassed: aggregatedResults.All(result => result.Result != "Failed"), // TODO: maybe there's a better way to find out if a test failed? Is this extensive enough?
+            UploadedCount: uploadedCount);
     }
 
     public async Task<long> UploadTestResultsWithCountAsync(IEnumerable<AggregatedResult> results, object resultMetadata, CancellationToken cancellationToken = default)
@@ -181,17 +181,6 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             HttpMethod.Post,
             $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/attachments?api-version=7.1-preview.1",
             new TestRunAttachmentRequest(fileNameBase, base64Data),
-            cancellationToken);
-
-        string metadataUrl = await _uploadClient.UploadAsync(compressedBytes, fileNameBase, "application/gzip", cancellationToken);
-        await _eventClient.SendAsync(
-            new
-            {
-                Type = "AzureDevOpsTestRunMetadata",
-                TestRunProject = _azdoParameters.TeamProject,
-                TestRunId = _azdoParameters.TestRunId,
-                Url = metadataUrl,
-            },
             cancellationToken);
         */
     }

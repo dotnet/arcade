@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
 using Microsoft.Extensions.Logging;
@@ -26,6 +27,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly JobMonitorOptions _options;
         private readonly IAzureDevOpsService _azdo;
         private readonly IHelixService _helix;
+        private readonly MonitorState _monitorState;
         private readonly Func<CancellationToken, Task> _delay;
         private readonly List<Task> _pending = [];
 
@@ -34,12 +36,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             JobMonitorOptions options,
             IAzureDevOpsService azdo,
             IHelixService helix,
+            MonitorState monitorState,
             Func<CancellationToken, Task> delay)
         {
             _logger = logger;
             _options = options;
             _azdo = azdo;
             _helix = helix;
+            _monitorState = monitorState;
             _delay = delay;
         }
 
@@ -97,9 +101,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         _options.WorkingDirectory,
                         cancellationToken);
 
-                    int uploadedCount = await _azdo.UploadTestResultsAsync(testRunId, downloaded, cancellationToken);
+                    Dictionary<(string JobName, string WorkItemName), TestResultUploadSummary> testResults = await _azdo.UploadTestResultsAsync(testRunId, downloaded, cancellationToken);
+                    _monitorState.ObserveTestResults(testResults);
                     await CompleteTestRunAsync(testRunId, helixJob, cancellationToken);
 
+                    long uploadedCount = testResults.Values.Sum(r => r.UploadedCount);
                     _logger.LogInformation("{UploadedCount} test results for job '{JobName}' processed.",
                         uploadedCount,
                         helixJob.DisplayName);

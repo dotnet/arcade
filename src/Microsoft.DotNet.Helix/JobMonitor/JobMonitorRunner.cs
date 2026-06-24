@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 _options.SourceBranch);
 
             _reporter = new StatusReporter(_logger, _options, _helix, _state);
-            _uploads = new TestResultUploadQueue(_logger, _options, _azdo, _helix, Delay);
+            _uploads = new TestResultUploadQueue(_logger, _options, _azdo, _helix, _state, Delay);
         }
 
         public async Task<int> RunAsync(CancellationToken cancellationToken)

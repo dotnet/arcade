@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
 
@@ -99,6 +100,33 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 AssociatedJobs[job.JobName] = job;
                 KnownJobsByName[job.JobName] = job;
+            }
+        }
+
+        /// <summary>
+        /// Marks work items whose uploaded test results contained any failure as failed in
+        /// <see cref="WorkItemOutcomes"/>. Work items whose tests all passed are left alone
+        /// so the Helix-side outcome (recorded by the reconciliation pass) is preserved —
+        /// a work item that the Helix runner reported as failed must stay failed even if it
+        /// happened to produce no failed test results.
+        /// </summary>
+        public void ObserveTestResults(
+            IReadOnlyDictionary<(string JobName, string WorkItemName), TestResultUploadSummary> testResults)
+        {
+            foreach (KeyValuePair<(string JobName, string WorkItemName), TestResultUploadSummary> entry in testResults)
+            {
+                if (entry.Value.AllPassed)
+                {
+                    continue;
+                }
+
+                if (!KnownJobsByName.TryGetValue(entry.Key.JobName, out HelixJobInfo job))
+                {
+                    continue;
+                }
+
+                string chainKey = GetSubmitterChainKey(job);
+                WorkItemOutcomes[(chainKey, entry.Key.WorkItemName)] = false;
             }
         }
 

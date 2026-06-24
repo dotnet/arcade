@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
 namespace Microsoft.DotNet.Helix.JobMonitor
 {
@@ -39,8 +40,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         /// <summary>
         /// Uploads test results for the specified work items into an existing test run.
-        /// Returns the number of test results uploaded.
+        /// Returns a dictionary mapping each work item and job name to its upload summary.
         /// </summary>
-        Task<int> UploadTestResultsAsync(int testRunId, IReadOnlyList<WorkItemTestResults> results, CancellationToken cancellationToken);
+        Task<Dictionary<(string JobName, string WorkItemName), TestResultUploadSummary>> UploadTestResultsAsync(
+            int testRunId,
+            IReadOnlyList<WorkItemTestResults> results,
+            CancellationToken cancellationToken);
     }
 }

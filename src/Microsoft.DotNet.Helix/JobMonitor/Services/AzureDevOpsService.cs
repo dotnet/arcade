@@ -143,7 +143,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 cancellationToken: cancellationToken);
         }
 
-        public async Task<int> UploadTestResultsAsync(int testRunId, IReadOnlyList<WorkItemTestResults> results, CancellationToken cancellationToken)
+        public async Task<Dictionary<(string JobName, string WorkItemName), TestResultUploadSummary>> UploadTestResultsAsync(
+            int testRunId,
+            IReadOnlyList<WorkItemTestResults> results,
+            CancellationToken cancellationToken)
         {
             int uploadedCount = 0;
             using var publisher = new AzureDevOpsResultPublisher(
@@ -154,12 +157,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     _options.SystemAccessToken),
                 _logger);
 
-            async Task UploadWorkItemAsync(WorkItemTestResults workItem)
+            async Task<TestResultUploadSummary> UploadWorkItemAsync(WorkItemTestResults workItem)
             {
                 if (workItem.TestResultFiles.Count == 0)
                 {
                     _logger.LogInformation("No test results to upload for work item {WorkItemId} in job {JobName}", workItem.WorkItemName, workItem.JobName);
-                    return;
+                    return new TestResultUploadSummary(true, 0);
                 }
 
                 await _uploadSemaphore.WaitAsync(cancellationToken);
@@ -176,6 +179,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         },
                         cancellationToken);
                     Interlocked.Add(ref uploadedCount, checked((int)summary.UploadedCount));
+                    return summary;
                 }
                 finally
                 {
@@ -183,8 +187,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
             }
 
-            await Task.WhenAll(results.Select(UploadWorkItemAsync));
-            return uploadedCount;
+            (WorkItemTestResults WorkItem, TestResultUploadSummary Summary)[] testSummaries = await Task.WhenAll(results.Select(async result => (result, await UploadWorkItemAsync(result))));
+            return testSummaries.ToDictionary(t => (t.WorkItem.JobName, t.WorkItem.WorkItemName), t => t.Summary);
         }
 
         private async Task<JObject> SendAsync(HttpMethod method, string requestUri, JToken body = null, CancellationToken cancellationToken = default)
