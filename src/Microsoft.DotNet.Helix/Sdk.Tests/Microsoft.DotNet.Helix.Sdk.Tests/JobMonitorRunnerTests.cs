@@ -451,7 +451,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             exitCode.Should().Be(0);
             azdo.UploadTestResultsCallCount.Should().Be(2);
             delayCount.Should().Be(1);
-            azdo.CreatedTestRuns.Should().ContainSingle();
+            // The first attempt creates a run then fails mid-upload, orphaning it (untagged,
+            // never completed). The retry creates a second run that uploads and completes.
+            azdo.CreatedTestRuns.Should().HaveCount(2);
             azdo.CompletedTestRunIds.Should().ContainSingle();
             azdo.UploadedJobNames.Should().BeEquivalentTo(["helix-linux"]);
         }
