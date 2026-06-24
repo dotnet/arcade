@@ -1269,6 +1269,66 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         /// <summary>
+        /// Regression: on cancellation the monitor must cancel in-flight Helix jobs immediately and
+        /// must not gate that on the test-result upload queue draining. An upload that is stuck in a
+        /// non-cancellable operation when the timeout fires must neither delay nor prevent Helix job
+        /// cancellation; its unfinished results are re-uploaded by a later monitor invocation.
+        /// </summary>
+        [Fact]
+        public async Task MonitorTimesOut_DoesNotWaitForUploadDrainBeforeCancellingHelixJobs()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            // The upload of helix-finished starts but never completes and ignores cancellation,
+            // simulating an upload stuck in a non-cancellable network call when the timeout fires.
+            var uploadGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            azdo.UploadBlocker = uploadGate.Task;
+            azdo.UploadBlockerIgnoresCancellation = true;
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "inProgress"));
+
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-finished", "finished"),
+                    HelixJob("helix-running", "running"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-finished"] = PassFail(passed: ["finished-work-item"]),
+                });
+
+            using var cts = new CancellationTokenSource();
+            var runner = new JobMonitorRunner(DefaultOptions(), NullLogger.Instance, azdo, helix,
+                async (_, _) =>
+                {
+                    // Cancel once the (stuck) upload is genuinely in flight.
+                    Task started = await Task.WhenAny(azdo.UploadStarted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+                    started.Should().BeSameAs(azdo.UploadStarted.Task);
+                    cts.Cancel();
+                });
+
+            // RunAsync must return promptly even though an upload is stuck: it must not block on the
+            // drain. The WaitAsync guard fails the test (instead of hanging) if the drain is
+            // reintroduced ahead of cancellation.
+            int exitCode = await runner.RunAsync(cts.Token).WaitAsync(TimeSpan.FromSeconds(10));
+
+            exitCode.Should().Be(1);
+            // The still-running Helix job was cancelled despite the stuck in-flight upload.
+            helix.CanceledJobs.Should().BeEquivalentTo(["helix-running"]);
+            // The stuck upload never completed, so its job was not recorded as uploaded; a later
+            // monitor invocation re-uploads it.
+            azdo.UploadedJobNames.Should().BeEmpty();
+            azdo.UploadCompleted.Task.IsCompleted.Should().BeFalse();
+
+            // Release the stuck upload so the abandoned task can finish.
+            uploadGate.TrySetResult();
+        }
+
+        /// <summary>
         /// Regression: a Helix job that was "running" in the first poll and "finished" in a
         /// later poll must not be listed in the timeout error message or cancelled, because the
         /// monitor's cached snapshot has to reflect the latest Helix-side state when the
@@ -1329,6 +1389,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             // cached snapshot was overwritten with the latest (finished) state.
             string timeoutMessage = logger.Messages.Should().ContainSingle(m =>
                 m.Contains("Helix Job Monitor timed out", StringComparison.Ordinal)).Subject;
+            timeoutMessage.Should().StartWith("##vso[task.logissue type=error]");
             timeoutMessage.Should().Contain("helix-stuck");
             timeoutMessage.Should().NotContain("helix-good");
 
@@ -2639,10 +2700,14 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             logger.Messages.Should().Contain(message =>
                 message.Contains($"Work item 'wi-fail' in job 'helix-linux' failed (Finished, exit code 1).{Environment.NewLine}Console: https://helix.example/wi-fail/console", StringComparison.Ordinal));
             logger.Messages.Should().Contain(message =>
+                message.Contains("##vso[task.logissue type=warning]Work item 'wi-fail' in job 'helix-linux' failed", StringComparison.Ordinal));
+            logger.Messages.Should().Contain(message =>
                 message.Contains("Failed work item console logs:", StringComparison.Ordinal)
                 && message.Contains("Test results: https://dev.azure.com/dnceng/public/_build/results?buildId=123&view=ms.vss-test-web.build-test-results-tab", StringComparison.Ordinal)
                 && message.Contains("└─ wi-fail (Job: helix-linux) (Finished, exit code 1)", StringComparison.Ordinal)
                 && message.Contains("└─ Console: https://helix.example/wi-fail/console", StringComparison.Ordinal));
+            logger.Messages.Should().Contain(message =>
+                message.Contains("##vso[task.logissue type=error]Failed work item console logs:", StringComparison.Ordinal));
             logger.Messages.Should().NotContain(message =>
                 message.Contains("Helix job: helix-linux", StringComparison.Ordinal));
         }
@@ -2733,6 +2798,48 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 && message.Contains("   ├─ wi-10 (Running)", StringComparison.Ordinal)
                 && message.Contains("   ├─ wi-11 (Running)", StringComparison.Ordinal)
                 && message.Contains("   └─ wi-12 (Running)", StringComparison.Ordinal));
+        }
+
+        /// <summary>
+        /// When Helix work items are in the "Waiting" state, the summary should keep them in
+        /// the "waiting" work item bucket while still reporting the parent job as "Running"
+        /// because work items have already been assigned.
+        /// </summary>
+        [Fact]
+        public async Task LoopStatus_WaitingWorkItems_CountedAsWaitingWhileJobIsRunning()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+            using var cts = new CancellationTokenSource();
+
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "inProgress"));
+            helix.AddResponse(jobs: [HelixJob("helix-linux", "running")]);
+            helix.WithWorkItems(
+                "helix-linux",
+                [
+                    new WorkItemSummary("details/wi-1", "helix-linux", "wi-1", "Waiting"),
+                    new WorkItemSummary("details/wi-2", "helix-linux", "wi-2", "Waiting"),
+                ]);
+
+            JobMonitorOptions options = DefaultOptions();
+            options.Verbose = true;
+            var runner = new JobMonitorRunner(options, logger, azdo, helix,
+                (_, _) =>
+                {
+                    cts.Cancel();
+                    return Task.CompletedTask;
+                });
+
+            int exitCode = await runner.RunAsync(cts.Token);
+
+            exitCode.Should().Be(1);
+            logger.Messages.Should().Contain(message =>
+                message.Contains("0 processed / 0 completed / 1 running / 0 waiting jobs", StringComparison.Ordinal));
+            logger.Messages.Should().Contain(message =>
+                message.Contains("0 processed / 0 completed / 0 running / 2 waiting work items", StringComparison.Ordinal));
+            logger.Messages.Should().Contain(message =>
+                message.Contains("└─ 🧪 Helix job helix-linux [Running]", StringComparison.Ordinal));
         }
 
         // -----------------------------------------------------------------------

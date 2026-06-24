@@ -274,10 +274,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             // 5. Build the new job creation request, copying over Source / Properties / Creator
             //    so the resubmitted job remains discoverable (BuildId, System.StageName, TestRunName, etc.).
+            //    The QueueId / QueueAlias / DockerTag returned by Job.DetailsAsync ensure the resubmitted
+            //    work item runs in the same execution environment (e.g. the same Docker container) as the
+            //    original job.
             var creationRequest = new JobCreationRequest(details.Type, newJobListUri, details.QueueId)
             {
                 Source = details.Source,
                 Creator = details.Creator,
+                DockerTag = details.DockerTag,
+                QueueAlias = details.QueueAlias,
                 Properties = ConvertPropertiesToImmutableDictionary(details.Properties)
                     .SetItem(HelixJobInfo.PreviousHelixJobNamePropertyName, originalJobName),
             };
