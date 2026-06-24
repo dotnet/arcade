@@ -365,7 +365,7 @@ stages:
       timeoutInMinutes: 90
       # Arcade's own tests intentionally exercise failure paths, so test failures should
       # not be promoted to work-item failures or trigger resubmissions here.
-      failWorkItemsWithFailedTests: 'false'
+      failWorkItemsWithFailedTests: false
       # Install from the nupkg produced by the Build stage's Windows_NT Release job.
       toolNupkgArtifactName: Artifacts_Windows_NT_Release
       toolNupkgArtifactSubPath: packages/Release/NonShipping
