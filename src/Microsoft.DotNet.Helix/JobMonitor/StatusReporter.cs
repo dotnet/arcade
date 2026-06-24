@@ -56,6 +56,35 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _logger.LogInformation("🔁 Checking for failed Helix jobs to resubmit the failed work items...");
         }
 
+        /// <summary>
+        /// Logs the work items being resubmitted for one Helix job, grouped by why each
+        /// item is being retried (non-zero Helix exit code vs. work item that exited 0 but
+        /// whose AzDO test results contained failures recorded by a prior monitor invocation).
+        /// </summary>
+        public void LogRetryPassResubmission(
+            HelixJobInfo helixJob,
+            IReadOnlyCollection<WorkItemSummary> exitCodeFailures,
+            IReadOnlyCollection<WorkItemSummary> testOnlyFailures)
+        {
+            int total = exitCodeFailures.Count + testOnlyFailures.Count;
+            IEnumerable<string> lines = exitCodeFailures
+                .OrderBy(wi => wi.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(wi => $"{wi.Name} (Helix exit code {wi.ExitCode?.ToString() ?? "?"})")
+                .Concat(testOnlyFailures
+                    .OrderBy(wi => wi.Name, StringComparer.OrdinalIgnoreCase)
+                    .Select(wi => $"{wi.Name} (exit code 0, failed AzDO tests)"));
+
+            _logger.LogInformation(
+                "🔁 Resubmitting {Total} work item(s) for job '{JobName}' " +
+                "({ExitCodeCount} by Helix exit code, {TestOnlyCount} by failed AzDO tests):{nl}- {WorkItems}",
+                total,
+                helixJob.DisplayName,
+                exitCodeFailures.Count,
+                testOnlyFailures.Count,
+                Environment.NewLine,
+                string.Join(Environment.NewLine + "- ", lines));
+        }
+
         public void LogJobCompleted(HelixJobInfo helixJob, IReadOnlyCollection<WorkItemSummary> workItems)
         {
             int failedWorkItemCount = workItems.Count(wi => wi.IsFailed);

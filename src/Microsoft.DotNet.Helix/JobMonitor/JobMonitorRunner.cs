@@ -156,15 +156,22 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 failedTestWorkItemsByJob.TryGetValue(completedJob.JobName, out IReadOnlySet<string> testFailedNames);
 
-                IReadOnlyCollection<WorkItemSummary> failedWorkItems =
+                IReadOnlyList<WorkItemSummary> exitCodeFailures = [..jobWorkItems.Where(wi => wi.IsFailed)];
+                IReadOnlyList<WorkItemSummary> testOnlyFailures =
                 [
-                    ..jobWorkItems.Where(wi => wi.IsFailed || (testFailedNames is not null && testFailedNames.Contains(wi.Name)))
+                    ..jobWorkItems.Where(wi => !wi.IsFailed
+                        && testFailedNames is not null
+                        && testFailedNames.Contains(wi.Name))
                 ];
 
-                if (failedWorkItems.Count == 0)
+                if (exitCodeFailures.Count + testOnlyFailures.Count == 0)
                 {
                     continue;
                 }
+
+                _reporter.LogRetryPassResubmission(completedJob, exitCodeFailures, testOnlyFailures);
+
+                IReadOnlyCollection<WorkItemSummary> failedWorkItems = [..exitCodeFailures, ..testOnlyFailures];
 
                 HelixJobInfo resubmitted = await _helix.ResubmitWorkItemsAsync(completedJob, failedWorkItems, cancellationToken);
                 if (resubmitted is null)

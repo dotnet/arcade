@@ -2963,6 +2963,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         {
             var azdo = new FakeAzureDevOpsService();
             var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
 
             // The original work item exit code is 0, but AzDO already has a failed test
             // recorded for it from a prior monitor invocation.
@@ -2995,7 +2996,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 });
             helix.ConfigureResubmission("helix-linux", "helix-linux-resub");
 
-            var runner = CreateRunner(azdo, helix);
+            var runner = CreateRunner(azdo, helix, logger: logger);
             int exitCode = await runner.RunAsync(CancellationToken.None);
 
             helix.Resubmissions.Should().ContainSingle();
@@ -3006,6 +3007,63 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             // passed so the monitor exits 0.
             azdo.UploadedJobNames.Should().BeEquivalentTo(["helix-linux", "helix-linux-resub"]);
             exitCode.Should().Be(0);
+
+            // The retry log distinguishes the resubmission reason.
+            logger.Messages.Should().Contain(message =>
+                message.Contains("Resubmitting 1 work item(s)", StringComparison.Ordinal)
+                && message.Contains("0 by Helix exit code, 1 by failed AzDO tests", StringComparison.Ordinal)
+                && message.Contains("workitem-1 (exit code 0, failed AzDO tests)", StringComparison.Ordinal));
+        }
+
+        /// <summary>
+        /// One completed Helix job has two failed work items for different reasons: one with a
+        /// non-zero Helix exit code and another that exited 0 but whose AzDO test results were
+        /// previously recorded as failed. The retry-pass log should distinguish each reason.
+        /// </summary>
+        [Fact]
+        public async Task RetryPass_LogDistinguishesExitCodeAndTestFailureReasons()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+
+            azdo.WithRecordedFailedTest("helix-linux", "wi-test-only");
+
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["wi-test-only"], failed: ["wi-exit-fail"]),
+                });
+
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-linux", "finished"),
+                    HelixJob("helix-linux-resub", "finished", previousHelixJobName: "helix-linux"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["wi-test-only"], failed: ["wi-exit-fail"]),
+                    ["helix-linux-resub"] = PassFail(passed: ["wi-test-only", "wi-exit-fail"]),
+                });
+            helix.ConfigureResubmission("helix-linux", "helix-linux-resub");
+
+            var runner = CreateRunner(azdo, helix, logger: logger);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(0);
+            helix.Resubmissions.Should().ContainSingle();
+            helix.Resubmissions[0].FailedItems.Should().BeEquivalentTo(["wi-exit-fail", "wi-test-only"]);
+
+            logger.Messages.Should().Contain(message =>
+                message.Contains("Resubmitting 2 work item(s)", StringComparison.Ordinal)
+                && message.Contains("1 by Helix exit code, 1 by failed AzDO tests", StringComparison.Ordinal)
+                && message.Contains("wi-exit-fail (Helix exit code 1)", StringComparison.Ordinal)
+                && message.Contains("wi-test-only (exit code 0, failed AzDO tests)", StringComparison.Ordinal));
         }
 
         // -----------------------------------------------------------------------
