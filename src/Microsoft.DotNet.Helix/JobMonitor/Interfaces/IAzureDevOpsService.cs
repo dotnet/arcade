@@ -27,6 +27,16 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         Task<IReadOnlySet<string>> GetProcessedHelixJobNamesAsync(CancellationToken cancellationToken);
 
         /// <summary>
+        /// Returns the set of Helix (job name, work item name) pairs for which a prior
+        /// monitor invocation uploaded at least one failed test result. Keyed by Helix
+        /// job name with the value being the set of work item names that had at least
+        /// one failed test. Used by the retry pass so that work items whose Helix exit
+        /// code was zero but whose tests failed are still resubmitted on a fresh monitor
+        /// invocation.
+        /// </summary>
+        Task<IReadOnlyDictionary<string, IReadOnlySet<string>>> GetFailedTestWorkItemsAsync(CancellationToken cancellationToken);
+
+        /// <summary>
         /// Creates a new test run in Azure DevOps and returns its ID.
         /// If a test run with this name already exists in-progress (orphaned from a prior crash),
         /// the implementation may reuse it.

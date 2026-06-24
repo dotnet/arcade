@@ -138,15 +138,27 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     .Where(IsInScope)
             ];
 
+            // Surfacing work items that passed by exit code but whose AzDO test results contain
+            // failures: a prior monitor invocation may have uploaded failed tests for a job
+            // before being cancelled / crashing. Without this, the retry pass would only
+            // resubmit work items whose Helix exit code was non-zero and would silently leave
+            // test-only failures in place.
+            IReadOnlyDictionary<string, IReadOnlySet<string>> failedTestWorkItemsByJob =
+                await _azdo.GetFailedTestWorkItemsAsync(cancellationToken);
+
             var resubmittedJobs = new List<HelixJobInfo>();
 
             foreach (HelixJobInfo completedJob in MonitorState.GetLatestHelixJobAttempts(scopedJobs)
                                                               .Where(j => j.IsCompleted))
             {
+                IReadOnlyCollection<WorkItemSummary> jobWorkItems =
+                    await _helix.ListWorkItemsAsync(completedJob.JobName, cancellationToken);
+
+                failedTestWorkItemsByJob.TryGetValue(completedJob.JobName, out IReadOnlySet<string> testFailedNames);
+
                 IReadOnlyCollection<WorkItemSummary> failedWorkItems =
                 [
-                    ..(await _helix.ListWorkItemsAsync(completedJob.JobName, cancellationToken))
-                        .Where(wi => wi.IsFailed)
+                    ..jobWorkItems.Where(wi => wi.IsFailed || (testFailedNames is not null && testFailedNames.Contains(wi.Name)))
                 ];
 
                 if (failedWorkItems.Count == 0)

@@ -92,6 +92,104 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return processed;
         }
 
+        public async Task<IReadOnlyDictionary<string, IReadOnlySet<string>>> GetFailedTestWorkItemsAsync(CancellationToken cancellationToken)
+        {
+            string buildUri = Uri.EscapeDataString($"vstfs:///Build/Build/{_options.BuildId}");
+            JObject data = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs?buildUri={buildUri}&$top=1000&api-version=7.1", cancellationToken: cancellationToken);
+
+            var failedByJob = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (JObject run in (data?["value"] as JArray ?? []).Cast<JObject>())
+            {
+                if (!string.Equals(run.Value<string>("state"), "Completed", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                string helixJobName = ExtractHelixJobNameFromRunName(run.Value<string>("name"));
+                if (string.IsNullOrEmpty(helixJobName))
+                {
+                    continue;
+                }
+
+                int? runId = run.Value<int?>("id");
+                if (runId is null)
+                {
+                    continue;
+                }
+
+                if (!failedByJob.TryGetValue(helixJobName, out HashSet<string> workItems))
+                {
+                    workItems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    failedByJob[helixJobName] = workItems;
+                }
+
+                await ForEachFailedResultAsync(runId.Value, result =>
+                {
+                    string workItemName = ExtractWorkItemNameFromResultComment(result.Value<string>("comment"));
+                    if (!string.IsNullOrEmpty(workItemName))
+                    {
+                        workItems.Add(workItemName);
+                    }
+                }, cancellationToken);
+            }
+
+            return failedByJob.ToDictionary(
+                kvp => kvp.Key,
+                kvp => (IReadOnlySet<string>)kvp.Value,
+                StringComparer.OrdinalIgnoreCase);
+        }
+
+        private async Task ForEachFailedResultAsync(int testRunId, Action<JObject> handler, CancellationToken cancellationToken)
+        {
+            const int pageSize = 1000;
+            int skip = 0;
+
+            while (true)
+            {
+                JObject page = await SendAsync(
+                    HttpMethod.Get,
+                    $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}/results?outcomes=Failed&$top={pageSize}&$skip={skip}&api-version=7.1",
+                    cancellationToken: cancellationToken);
+
+                JArray results = page?["value"] as JArray;
+                if (results is null || results.Count == 0)
+                {
+                    return;
+                }
+
+                foreach (JObject result in results.OfType<JObject>())
+                {
+                    handler(result);
+                }
+
+                if (results.Count < pageSize)
+                {
+                    return;
+                }
+
+                skip += results.Count;
+            }
+        }
+
+        internal static string ExtractWorkItemNameFromResultComment(string comment)
+        {
+            if (string.IsNullOrWhiteSpace(comment))
+            {
+                return null;
+            }
+
+            try
+            {
+                JObject parsed = JObject.Parse(comment);
+                return parsed.Value<string>("HelixWorkItemName");
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+        }
+
         internal static string EncodeRunName(string name, string helixJobName)
         {
             if (string.IsNullOrEmpty(helixJobName))
