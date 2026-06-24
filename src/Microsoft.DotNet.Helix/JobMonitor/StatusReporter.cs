@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 _options.BuildId);
 
             _logger.LogInformation(
-                "📖 Helix Job Monitor documentation (what this job does, how reruns work, UX changes): {DocsUri}",
+                "📖 Read more about what this monitor job does: {DocsUri}",
                 DocumentationUri);
         }
 
@@ -168,7 +168,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 _state.FailedWorkItemCount);
 
             _logger.LogInformation(
-                "📖 Helix Job Monitor documentation (what this job does, how reruns work, UX changes): {DocsUri}",
+                "📖 Read more about what this monitor job does: {DocsUri}",
                 DocumentationUri);
         }
 
