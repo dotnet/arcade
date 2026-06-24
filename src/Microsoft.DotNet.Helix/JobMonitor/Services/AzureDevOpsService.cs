@@ -241,12 +241,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 cancellationToken: cancellationToken);
         }
 
-        public async Task<Dictionary<(string JobName, string WorkItemName), TestResultUploadSummary>> UploadTestResultsAsync(
+        public async Task<IReadOnlyDictionary<(string JobName, string WorkItemName), TestResultUploadSummary>> UploadTestResultsAsync(
             int testRunId,
             IReadOnlyList<WorkItemTestResults> results,
             CancellationToken cancellationToken)
         {
-            int uploadedCount = 0;
+            long uploadedCount = 0;
             using var publisher = new AzureDevOpsResultPublisher(
                 new AzureDevOpsReportingParameters(
                     new Uri(_options.CollectionUri, UriKind.Absolute),
@@ -276,7 +276,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                             HelixWorkItemName = workItem.WorkItemName
                         },
                         cancellationToken);
-                    Interlocked.Add(ref uploadedCount, checked((int)summary.UploadedCount));
+                    Interlocked.Add(ref uploadedCount, summary.UploadedCount);
                     return summary;
                 }
                 finally

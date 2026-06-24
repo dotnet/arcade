@@ -190,7 +190,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             }
         }
 
-        public async Task<Dictionary<(string JobName, string WorkItemName), TestResultUploadSummary>> UploadTestResultsAsync(
+        public async Task<IReadOnlyDictionary<(string JobName, string WorkItemName), TestResultUploadSummary>> UploadTestResultsAsync(
             int testRunId,
             IReadOnlyList<WorkItemTestResults> results,
             CancellationToken cancellationToken)

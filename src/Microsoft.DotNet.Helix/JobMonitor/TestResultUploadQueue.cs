@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         _options.WorkingDirectory,
                         cancellationToken);
 
-                    Dictionary<(string JobName, string WorkItemName), TestResultUploadSummary> testResults = await _azdo.UploadTestResultsAsync(testRunId, downloaded, cancellationToken);
+                    IReadOnlyDictionary<(string JobName, string WorkItemName), TestResultUploadSummary> testResults = await _azdo.UploadTestResultsAsync(testRunId, downloaded, cancellationToken);
                     if (_options.FailWorkItemsWithFailedTests)
                     {
                         _monitorState.ObserveTestResults(testResults);
