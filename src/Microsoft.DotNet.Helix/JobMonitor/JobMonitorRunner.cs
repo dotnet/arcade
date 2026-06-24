@@ -87,10 +87,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             _reporter.LogMonitorStart();
 
-            foreach (string job in await _azdo.GetProcessedHelixJobNamesAsync(cancellationToken))
-            {
-                _state.ProcessedHelixJobs.Add(job);
-            }
+            _state.AddProcessedHelixJobs(await _azdo.GetProcessedHelixJobNamesAsync(cancellationToken));
 
             try
             {
@@ -184,12 +181,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
 
                 resubmittedJobs.Add(resubmitted);
-                _state.ResubmittedJobCount++;
-                _state.ResubmittedWorkItemCount += failedWorkItems.Count;
-                if (!string.IsNullOrEmpty(completedJob.SubmitterJobName))
-                {
-                    _state.RetryingHelixSubmitterJobs.Add(completedJob.SubmitterJobName);
-                }
+                _state.RecordResubmission(completedJob.SubmitterJobName, failedWorkItems.Count);
             }
 
             if (resubmittedJobs.Count == 0)
@@ -241,8 +233,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     .Where(IsInScope)
             ];
 
-            _state.LatestTimelineRecords.Clear();
-            _state.LatestTimelineRecords.AddRange(timelineRecords);
+            _state.SetTimelineRecords(timelineRecords);
             _state.ObserveJobs(scopedJobs);
 
             // Helix job summaries can omit Finished for failed jobs even after all work
@@ -253,11 +244,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 StringComparer.OrdinalIgnoreCase);
 
             // First pass: upload + reconcile for any newly-completed jobs.
-            foreach (HelixJobInfo job in completedJobs.Where(j => !_state.ProcessedHelixJobs.Contains(j.JobName)))
+            foreach (HelixJobInfo job in completedJobs.Where(j => !_state.IsHelixJobProcessed(j.JobName)))
             {
                 await ReconcileCompletedJobAsync(job, queueUpload: true, cancellationToken);
-                _state.ProcessedHelixJobs.Add(job.JobName);
-                _state.ProcessedJobCount++;
+                _state.TryMarkHelixJobProcessed(job.JobName);
             }
 
             // Second pass: ensure outcomes for every completed scoped job are reflected in
@@ -288,7 +278,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             bool anyNonMonitorFailure = HelixJobMonitorUtilities.HasFailedNonMonitorJobs(
                 timelineRecords,
                 _options.JobMonitorName,
-                _state.RetryingHelixSubmitterJobs);
+                _state.SnapshotRetryingHelixSubmitterJobs());
             bool allPipelineJobsComplete = HelixJobMonitorUtilities.AreNonMonitorJobsComplete(timelineRecords, _options.JobMonitorName);
             bool allHelixJobsComplete = scopedJobs.Count == 0 || scopedJobs.All(j => completedJobNames.Contains(j.JobName));
 
@@ -299,7 +289,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             await _uploads.DrainAsync(cancellationToken);
             _reporter.LogFinalFailedWorkItems();
-            _reporter.LogFinalSummary(_state.AssociatedJobs.Count);
+            _reporter.LogFinalSummary(_state.AssociatedJobsCount);
 
             if (anyNonMonitorFailure)
             {
@@ -326,8 +316,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             // AzDO test-run name markers). Without this, a retried monitor invocation
             // re-logs "Job X completed" and re-reports failed work-item console links for
             // every job the prior attempt already finished, which is noisy and misleading.
-            if (_state.WorkItemOutcomeJobs.Contains(helixJob.JobName)
-                || _state.ProcessedHelixJobs.Contains(helixJob.JobName))
+            if (_state.IsWorkItemOutcomesRecorded(helixJob.JobName)
+                || _state.IsHelixJobProcessed(helixJob.JobName))
             {
                 return;
             }
@@ -338,22 +328,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 await _helix.ListWorkItemsAsync(helixJob.JobName, cancellationToken);
             _reporter.LogFailedWorkItemConsoleLinks(helixJob, workItems.Where(wi => wi.IsFailed));
 
-            if (_state.WorkItemOutcomeJobs.Add(helixJob.JobName))
-            {
-                string chainKey = _state.GetSubmitterChainKey(helixJob);
-                var jobWorkItems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                foreach (WorkItemSummary wi in workItems)
-                {
-                    // Within the same AzDO submitter chain (i.e. resubmissions of the same
-                    // logical AzDO job), the latest result overwrites the prior one for the
-                    // same work item name. Across different submitter chains the key differs,
-                    // so identically-named work items in different AzDO jobs are tracked
-                    // independently.
-                    _state.WorkItemOutcomes[(chainKey, wi.Name)] = !wi.IsFailed;
-                    _state.TrackFailedWorkItemConsoleInfo(helixJob, chainKey, wi);
-                    jobWorkItems.Add(wi.Name);
-                }
-            }
+            _state.TryRecordWorkItemOutcomes(helixJob, workItems);
 
             if (queueUpload)
             {
@@ -395,8 +370,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             List<HelixJobInfo> inFlightJobs =
             [
-                ..MonitorState.GetLatestHelixJobAttempts(_state.AssociatedJobs.Values)
-                    .Where(j => !j.IsCompleted && !_state.ProcessedHelixJobs.Contains(j.JobName))
+                ..MonitorState.GetLatestHelixJobAttempts(_state.SnapshotAssociatedJobs())
+                    .Where(j => !j.IsCompleted && !_state.IsHelixJobProcessed(j.JobName))
                     .OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
             ];
 

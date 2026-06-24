@@ -115,7 +115,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             foreach (WorkItemSummary workItem in workItems.OrderBy(wi => wi.Name, StringComparer.OrdinalIgnoreCase))
             {
-                if (!_state.ReportedFailedWorkItemConsoleLinks.Add($"{helixJob.JobName}/{workItem.Name}"))
+                if (!_state.TryReportFailedWorkItemConsoleLink($"{helixJob.JobName}/{workItem.Name}"))
                 {
                     continue;
                 }
@@ -179,7 +179,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 _state.ResubmittedJobCount,
                 _state.ProcessedJobCount,
                 Environment.NewLine,
-                _state.WorkItemOutcomes.Count,
+                _state.WorkItemOutcomeCount,
                 _state.ResubmittedWorkItemCount,
                 _state.FailedWorkItemCount);
         }
@@ -195,14 +195,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// </summary>
         public void LogFinalFailedWorkItems()
         {
-            if (_state.FailedWorkItemConsoleInfo.Count == 0)
+            IReadOnlyList<FailedWorkItemConsoleInfo> snapshot = _state.SnapshotFailedWorkItemConsoleInfo();
+            if (snapshot.Count == 0)
             {
                 return;
             }
 
             List<FailedWorkItemConsoleInfo> failures =
             [
-                .._state.FailedWorkItemConsoleInfo.Values
+                ..snapshot
                     .OrderBy(failure => failure.WorkItemName, StringComparer.OrdinalIgnoreCase)
             ];
 
@@ -230,15 +231,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             List<HelixJobInfo> unfinishedHelixJobs =
             [
-                ..MonitorState.GetLatestHelixJobAttempts(_state.AssociatedJobs.Values)
-                    .Where(j => !j.IsCompleted || !_state.ProcessedHelixJobs.Contains(j.JobName))
+                ..MonitorState.GetLatestHelixJobAttempts(_state.SnapshotAssociatedJobs())
+                    .Where(j => !j.IsCompleted || !_state.IsHelixJobProcessed(j.JobName))
                     .OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
             ];
 
             List<AzureDevOpsTimelineRecord> inProgressPipelineJobs =
             [
                 ..HelixJobMonitorUtilities
-                    .GetRelevantNonMonitorJobRecords(_state.LatestTimelineRecords, _options.JobMonitorName)
+                    .GetRelevantNonMonitorJobRecords(_state.SnapshotTimelineRecords(), _options.JobMonitorName)
                     .Where(r => !string.Equals(r.State, "completed", StringComparison.OrdinalIgnoreCase))
                     .OrderBy(r => r.Name ?? r.ReferenceName ?? r.Identifier ?? string.Empty, StringComparer.OrdinalIgnoreCase)
             ];
@@ -337,7 +338,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             IReadOnlyCollection<WorkItemSummary> workItems,
             IReadOnlySet<string> completedJobNames)
         {
-            if (_state.ProcessedHelixJobs.Contains(job.JobName))
+            if (_state.IsHelixJobProcessed(job.JobName))
             {
                 return "Processed";
             }
@@ -364,7 +365,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 IReadOnlyCollection<WorkItemSummary> workItems = workItemsByJob[job.JobName];
 
-                if (_state.ProcessedHelixJobs.Contains(job.JobName))
+                if (_state.IsHelixJobProcessed(job.JobName))
                 {
                     processedJobs++;
                     processedWorkItems += workItems.Count;
