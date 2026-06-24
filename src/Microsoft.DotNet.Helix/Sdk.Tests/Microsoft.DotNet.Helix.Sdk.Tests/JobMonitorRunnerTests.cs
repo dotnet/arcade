@@ -3066,6 +3066,48 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 && message.Contains("wi-test-only (exit code 0, failed AzDO tests)", StringComparison.Ordinal));
         }
 
+        /// <summary>
+        /// When <see cref="JobMonitorOptions.FailWorkItemsWithFailedTests"/> is false, neither
+        /// the retry pass nor <see cref="MonitorState.ObserveTestResults"/> should promote
+        /// test failures to work-item failures. The monitor exits 0 even though the upload
+        /// reports failed tests and AzDO has prior failed tests recorded for the same item.
+        /// </summary>
+        [Fact]
+        public async Task FailOnFailedTestsDisabled_TestFailuresIgnoredForOutcomeAndRetry()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.WithRecordedFailedTest("helix-linux", "workitem-1");
+            azdo.WithFailedUpload("helix-linux", "workitem-1");
+
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["workitem-1"]),
+                },
+                testResultsByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] =
+                    [
+                        new WorkItemTestResults("helix-linux", "workitem-1", ["results.trx"])
+                    ],
+                });
+
+            JobMonitorOptions options = DefaultOptions();
+            options.FailWorkItemsWithFailedTests = false;
+            var runner = new JobMonitorRunner(options, NullLogger.Instance, azdo, helix, NoDelay);
+
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(0);
+            helix.Resubmissions.Should().BeEmpty();
+            azdo.UploadedJobNames.Should().BeEquivalentTo(["helix-linux"]);
+        }
+
         // -----------------------------------------------------------------------
         // Helpers
         // -----------------------------------------------------------------------

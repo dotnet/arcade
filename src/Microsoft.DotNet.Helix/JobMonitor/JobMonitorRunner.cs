@@ -142,9 +142,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             // failures: a prior monitor invocation may have uploaded failed tests for a job
             // before being cancelled / crashing. Without this, the retry pass would only
             // resubmit work items whose Helix exit code was non-zero and would silently leave
-            // test-only failures in place.
+            // test-only failures in place. The lookup is skipped (and a noop dictionary used)
+            // when --fail-on-failed-tests is disabled so AzDO test results no longer influence
+            // retry decisions.
             IReadOnlyDictionary<string, IReadOnlySet<string>> failedTestWorkItemsByJob =
-                await _azdo.GetFailedTestWorkItemsAsync(cancellationToken);
+                _options.FailWorkItemsWithFailedTests
+                    ? await _azdo.GetFailedTestWorkItemsAsync(cancellationToken)
+                    : new Dictionary<string, IReadOnlySet<string>>(StringComparer.OrdinalIgnoreCase);
 
             var resubmittedJobs = new List<HelixJobInfo>();
 

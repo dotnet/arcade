@@ -102,7 +102,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         cancellationToken);
 
                     Dictionary<(string JobName, string WorkItemName), TestResultUploadSummary> testResults = await _azdo.UploadTestResultsAsync(testRunId, downloaded, cancellationToken);
-                    _monitorState.ObserveTestResults(testResults);
+                    if (_options.FailWorkItemsWithFailedTests)
+                    {
+                        _monitorState.ObserveTestResults(testResults);
+                    }
                     await CompleteTestRunAsync(testRunId, helixJob, cancellationToken);
 
                     long uploadedCount = testResults.Values.Sum(r => r.UploadedCount);
