@@ -39,6 +39,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         //     subsequent attempt re-uploads.
         private const string HelixJobTagPrefix = "helixjob";
 
+        // Name of the JSON attachment uploaded to each completed test run that lists the
+        // Helix work items whose tests failed during that run. The payload schema is:
+        //   { "failedWorkItems": ["wi-1", "wi-2", ...] }
+        // The Helix job name itself is recovered from the run's helix-job tag (see
+        // EncodeHelixJobTag / GetHelixJobNameFromRunTagsAsync); the attachment exists solely
+        // to replace the previous paginated scan of /test/runs/{id}/results?outcomes=Failed
+        // with a single fixed-cost call per run.
+        private const string FailedWorkItemsAttachmentFileName = "helix-failed-workitems.json";
+
         private readonly JobMonitorOptions _options;
         private readonly ILogger _logger;
         private readonly HttpClient _azdoClient;
@@ -116,15 +125,22 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     continue;
                 }
 
-                // Test runs created by the monitor are tagged with their originating Helix
-                // job name on completion (see CompleteTestRunAsync). Tags are not returned
-                // inline by the /test/runs endpoint, so they are fetched per run from the
-                // vstmr per-run tags endpoint. This costs one extra HTTP call per completed
-                // run on a re-run but is needed to associate failed test results back to
-                // their Helix work items so the retry pass can resubmit work items whose
-                // exit code was zero but whose tests failed.
+                // The Helix job name for the run comes from the per-run helix-job tag (the
+                // same encoding used by GetProcessedHelixJobNamesAsync). Tags are not returned
+                // inline by the /test/runs endpoint, so a single vstmr tags call per completed
+                // run is required to map the run to its Helix job.
                 string helixJobName = await GetHelixJobNameFromRunTagsAsync(runId.Value, cancellationToken);
                 if (string.IsNullOrEmpty(helixJobName))
+                {
+                    continue;
+                }
+
+                // The list of work items whose tests failed is recovered from a well-known
+                // JSON attachment uploaded alongside the run's completion. A single small
+                // attachment-list + attachment-download replaces the previous paginated scan
+                // of /test/runs/{id}/results?outcomes=Failed.
+                FailedWorkItemsAttachment payload = await TryReadFailedWorkItemsAttachmentAsync(runId.Value, cancellationToken);
+                if (payload is null)
                 {
                     continue;
                 }
@@ -135,20 +151,30 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     failedByJob[helixJobName] = workItems;
                 }
 
-                await ForEachFailedResultAsync(runId.Value, result =>
+                foreach (string workItemName in payload.FailedWorkItems ?? [])
                 {
-                    string workItemName = ExtractWorkItemNameFromResultComment(result.Value<string>("comment"));
                     if (!string.IsNullOrEmpty(workItemName))
                     {
                         workItems.Add(workItemName);
                     }
-                }, cancellationToken);
+                }
             }
 
             return failedByJob.ToDictionary(
                 kvp => kvp.Key,
                 kvp => (IReadOnlySet<string>)kvp.Value,
                 StringComparer.OrdinalIgnoreCase);
+        }
+
+        // Schema of the JSON attachment uploaded to each completed test run that records
+        // the names of work items whose tests failed. Designed to be forward-compatible:
+        // unknown fields are ignored, and an absent failedWorkItems array is treated as
+        // "no failures recorded". The Helix job name is intentionally NOT included here —
+        // it is recovered from the run's helix-job tag.
+        private sealed class FailedWorkItemsAttachment
+        {
+            [JsonProperty("failedWorkItems")]
+            public string[] FailedWorkItems { get; set; }
         }
 
         // Looks up the Helix job tag attached to a single completed test run via the vstmr
@@ -171,52 +197,58 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return null;
         }
 
-        private async Task ForEachFailedResultAsync(int testRunId, Action<JObject> handler, CancellationToken cancellationToken)
-        {
-            const int pageSize = 1000;
-            int skip = 0;
+        // Reads the failed-work-items JSON attachment from a completed test run. Returns null
+        // when the run carries no such attachment (for example a run created by another tool
+        // in the same build, or a monitor run whose upload never finished). Issues at most two
+        // HTTP calls per run regardless of how many failures it contains.
+        private async Task<FailedWorkItemsAttachment> TryReadFailedWorkItemsAttachmentAsync(int testRunId, CancellationToken cancellationToken)        {
+            JObject listing = await SendAsync(
+                HttpMethod.Get,
+                $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/Runs/{testRunId}/attachments?api-version=7.1",
+                cancellationToken: cancellationToken);
 
-            while (true)
+            int? attachmentId = null;
+            foreach (JObject attachment in (listing?["value"] as JArray ?? []).OfType<JObject>())
             {
-                JObject page = await SendAsync(
-                    HttpMethod.Get,
-                    $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}/results?outcomes=Failed&$top={pageSize}&$skip={skip}&api-version=7.1",
-                    cancellationToken: cancellationToken);
-
-                JArray results = page?["value"] as JArray;
-                if (results is null || results.Count == 0)
+                if (string.Equals(
+                    attachment.Value<string>("fileName"),
+                    FailedWorkItemsAttachmentFileName,
+                    StringComparison.OrdinalIgnoreCase))
                 {
-                    return;
+                    attachmentId = attachment.Value<int?>("id");
+                    if (attachmentId.HasValue)
+                    {
+                        break;
+                    }
                 }
-
-                foreach (JObject result in results.OfType<JObject>())
-                {
-                    handler(result);
-                }
-
-                if (results.Count < pageSize)
-                {
-                    return;
-                }
-
-                skip += results.Count;
             }
-        }
 
-        internal static string ExtractWorkItemNameFromResultComment(string comment)
-        {
-            if (string.IsNullOrWhiteSpace(comment))
+            if (attachmentId is null)
+            {
+                return null;
+            }
+
+            string content = await SendForStringAsync(
+                HttpMethod.Get,
+                $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/Runs/{testRunId}/attachments/{attachmentId.Value}?api-version=7.1",
+                cancellationToken: cancellationToken);
+
+            if (string.IsNullOrWhiteSpace(content))
             {
                 return null;
             }
 
             try
             {
-                JObject parsed = JObject.Parse(comment);
-                return parsed.Value<string>("HelixWorkItemName");
+                return JsonConvert.DeserializeObject<FailedWorkItemsAttachment>(content);
             }
-            catch (JsonException)
+            catch (JsonException ex)
             {
+                _logger.LogWarning(
+                    ex,
+                    "Failed to parse '{FileName}' attachment on Azure DevOps test run {TestRunId}; ignoring.",
+                    FailedWorkItemsAttachmentFileName,
+                    testRunId);
                 return null;
             }
         }
@@ -288,8 +320,24 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return result?["id"]?.ToObject<int>() ?? 0;
         }
 
-        public async Task CompleteTestRunAsync(int testRunId, string helixJobName, CancellationToken cancellationToken)
+        public async Task CompleteTestRunAsync(
+            int testRunId,
+            string helixJobName,
+            IReadOnlyCollection<string> failedWorkItems,
+            CancellationToken cancellationToken)
         {
+            // Upload the failed-work-items attachment BEFORE marking the run Completed (and
+            // before applying the helix-job tag). The tag is the canonical "this run is fully
+            // processed" marker — if we crashed between the PATCH and the attachment upload,
+            // a later monitor invocation would treat the job as done but have no list of
+            // failed work items, silently dropping resubmissions. Uploading the attachment
+            // first preserves the existing crash-resilience invariant: a crash leaves the run
+            // un-tagged, so the next invocation re-uploads everything in full.
+            if (failedWorkItems is { Count: > 0 })
+            {
+                await UploadFailedWorkItemsAttachmentAsync(testRunId, failedWorkItems, cancellationToken);
+            }
+
             var body = new JObject { ["state"] = "Completed" };
 
             // Tag the completed run with the Helix job name so a subsequent monitor attempt can tell
@@ -309,6 +357,37 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             await SendAsync(new HttpMethod("PATCH"),
                 $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}?api-version=7.1",
+                body,
+                cancellationToken: cancellationToken);
+        }
+
+        // Uploads the failed-work-items JSON attachment to a test run. The payload is the
+        // canonical mechanism by which a later monitor invocation rediscovers the set of work
+        // items whose tests failed and therefore need resubmission, replacing the previous
+        // approach of paginating /test/runs/{id}/results?outcomes=Failed and parsing the
+        // per-result comment JSON. See GetFailedTestWorkItemsAsync for the read side.
+        private async Task UploadFailedWorkItemsAttachmentAsync(
+            int testRunId,
+            IReadOnlyCollection<string> failedWorkItems,
+            CancellationToken cancellationToken)
+        {
+            var payload = new JObject
+            {
+                ["failedWorkItems"] = new JArray(failedWorkItems.Where(w => !string.IsNullOrEmpty(w)).Cast<object>().ToArray()),
+            };
+
+            byte[] bytes = Encoding.UTF8.GetBytes(payload.ToString(Formatting.None));
+            var body = new JObject
+            {
+                ["stream"] = Convert.ToBase64String(bytes),
+                ["fileName"] = FailedWorkItemsAttachmentFileName,
+                ["comment"] = "Helix work items whose tests failed during this run; consumed by the Helix job monitor retry pass.",
+                ["attachmentType"] = "GeneralAttachment",
+            };
+
+            await SendAsync(
+                HttpMethod.Post,
+                $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/Runs/{testRunId}/attachments?api-version=7.1",
                 body,
                 cancellationToken: cancellationToken);
         }
@@ -363,6 +442,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task<JObject> SendAsync(HttpMethod method, string requestUri, JToken body = null, CancellationToken cancellationToken = default)
         {
+            string content = await SendForStringAsync(method, requestUri, body, cancellationToken);
+            return string.IsNullOrWhiteSpace(content) ? [] : JObject.Parse(content);
+        }
+
+        // Sends a request and returns the raw response body as a string. Used for endpoints
+        // (such as test-run attachment downloads) that do not return JSON, where SendAsync's
+        // JObject parsing would fail or discard the payload.
+        private async Task<string> SendForStringAsync(HttpMethod method, string requestUri, JToken body = null, CancellationToken cancellationToken = default)
+        {
             return await RetryHelper.RetryAsync(async () =>
             {
                 using var request = new HttpRequestMessage(method, requestUri);
@@ -380,7 +468,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
 
                 await HonorRateLimitAsync(response, requestUri, cancellationToken);
-                return string.IsNullOrWhiteSpace(content) ? [] : JObject.Parse(content);
+                return content;
             }, cancellationToken);
         }
 

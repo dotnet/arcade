@@ -46,8 +46,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// <summary>
         /// Marks a test run as completed and tags it with the Helix job name so a subsequent
         /// monitor invocation can tell the job's results have already been uploaded.
+        /// When <paramref name="failedWorkItems"/> is non-empty, also persists the list of
+        /// work item names that had failed tests as a structured attachment on the run so a
+        /// later monitor invocation can recover the set of work items needing resubmission in
+        /// a small fixed number of REST calls instead of paginating through individual failed
+        /// test results.
         /// </summary>
-        Task CompleteTestRunAsync(int testRunId, string helixJobName, CancellationToken cancellationToken);
+        Task CompleteTestRunAsync(
+            int testRunId,
+            string helixJobName,
+            IReadOnlyCollection<string> failedWorkItems,
+            CancellationToken cancellationToken);
 
         /// <summary>
         /// Uploads test results for the specified work items into an existing test run.

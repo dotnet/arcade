@@ -169,11 +169,18 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             }
         }
 
-        public Task CompleteTestRunAsync(int testRunId, string helixJobName, CancellationToken cancellationToken)
+        public Task CompleteTestRunAsync(int testRunId, string helixJobName, IReadOnlyCollection<string> failedWorkItems, CancellationToken cancellationToken)
         {
             lock (_sync)
             {
                 CompletedTestRunIds.Add(testRunId);
+                foreach (string workItemName in failedWorkItems ?? [])
+                {
+                    if (!string.IsNullOrEmpty(workItemName))
+                    {
+                        _recordedFailedTests.Add((helixJobName, workItemName));
+                    }
+                }
                 return Task.CompletedTask;
             }
         }
