@@ -2514,6 +2514,42 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         /// <summary>
+        /// A previously-uploaded failed Helix job that cannot be resubmitted must still have its
+        /// work-item outcomes reconciled so it contributes to a non-zero final exit code. The
+        /// processed/uploaded state only suppresses the duplicate upload and the noisy
+        /// completion/console-link logs — it must never omit the job from pass/fail.
+        /// </summary>
+        [Fact]
+        public async Task PreviouslyProcessedFailedJob_WithoutResubmission_StillFailsBuild()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            azdo.WithPreviouslyProcessedJob("helix-linux");
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(failed: ["wi-fail"]),
+                });
+            // The failed work item cannot be resubmitted (e.g. resubmission limit reached).
+            helix.ConfigureNullResubmission("helix-linux");
+
+            var runner = CreateRunner(azdo, helix);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(1);
+            // The resubmission was attempted but produced no new job, so nothing was retried.
+            helix.Resubmissions.Should().ContainSingle()
+                .Which.NewJob.Should().BeNull();
+            // The job was already uploaded by the prior attempt, so it is not re-uploaded.
+            azdo.UploadedJobNames.Should().BeEmpty();
+        }
+
+        /// <summary>
         /// On a second monitor attempt within the same build, jobs that already have an
         /// uploaded test run (tracked via ProcessedHelixJobs, seeded from AzDO test-run
         /// tags) must not be re-logged as completed and must not have their failed

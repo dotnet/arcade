@@ -318,32 +318,40 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             bool queueUpload,
             CancellationToken cancellationToken)
         {
-            // Skip jobs whose results have already been uploaded — either earlier in this
-            // invocation (tracked via IsWorkItemOutcomesRecorded) or by a previous monitor
-            // attempt for the same build (tracked via IsHelixJobProcessed, seeded on entry
-            // from the AzDO test-run tags). Without this, a retried monitor invocation
-            // re-logs "Job X completed" and re-reports failed work-item console links for
-            // every job the prior attempt already finished, which is noisy and misleading.
-            if (_state.IsWorkItemOutcomesRecorded(helixJob.JobName)
-                || _state.IsHelixJobProcessed(helixJob.JobName))
+            // Already reconciled earlier in this invocation — nothing more to do (idempotent).
+            if (_state.IsWorkItemOutcomesRecorded(helixJob.JobName))
             {
                 return;
             }
 
-            _reporter.LogJobProcessingStart(helixJob);
-
             IReadOnlyCollection<WorkItemSummary> workItems =
                 await _helix.ListWorkItemsAsync(helixJob.JobName, cancellationToken);
-            _reporter.LogFailedWorkItemConsoleLinks(helixJob, workItems.Where(wi => wi.IsFailed));
+
+            // A previous monitor attempt for the same build already uploaded this job's results
+            // (tracked via IsHelixJobProcessed, seeded on entry from the AzDO test-run tags). Its
+            // work-item outcomes must still be reconciled so the final exit code accounts for
+            // previously-uploaded failures that were never resubmitted — otherwise the monitor
+            // could exit 0 despite a prior failed job. Only the re-upload and the noisy
+            // completion / console-link logs are suppressed for such jobs.
+            bool alreadyUploadedByPriorAttempt = _state.IsHelixJobProcessed(helixJob.JobName);
+
+            if (!alreadyUploadedByPriorAttempt)
+            {
+                _reporter.LogJobProcessingStart(helixJob);
+                _reporter.LogFailedWorkItemConsoleLinks(helixJob, workItems.Where(wi => wi.IsFailed));
+            }
 
             _state.TryRecordWorkItemOutcomes(helixJob, workItems);
 
-            if (queueUpload)
+            if (queueUpload && !alreadyUploadedByPriorAttempt)
             {
                 _uploads.Enqueue(helixJob, workItems, cancellationToken);
             }
 
-            _reporter.LogJobCompleted(helixJob, workItems);
+            if (!alreadyUploadedByPriorAttempt)
+            {
+                _reporter.LogJobCompleted(helixJob, workItems);
+            }
         }
 
         private async Task<IReadOnlyCollection<HelixJobInfo>> GetCompletedJobsAsync(
