@@ -39,8 +39,8 @@ jobs:
           done
 
           # If none of the entries in the pool have values, emit a warning
-          # and do not set an output value. The consumer can fall back to
-          # using COPILOT_GITHUB_TOKEN.
+          # and do not set an output value. Consumers should either define a
+          # fallback `COPILOT_GITHUB_TOKEN` or treat an empty pool as a failure.
           if [ ${#PAT_NUMBERS[@]} -eq 0 ]; then
             warning_message="::warning::None of the PAT pool entries had values "
             warning_message+="(checked COPILOT_PAT_0 through COPILOT_PAT_9)"

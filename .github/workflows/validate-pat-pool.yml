@@ -23,12 +23,12 @@ jobs:
         else echo "status=invalid" >> "$GITHUB_OUTPUT"; fi
     steps:
       - name: Setup gh-aw scripts
-        uses: github/gh-aw-actions/setup@ba90f2186d7ad780ec640f364005fa24e797b360 # v0.68.3
+        uses: github/gh-aw-actions/setup@c0338fef4749d08c21f8f975fb0e37efa17dda47 # v0.79.8
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
 
       - name: Install Copilot CLI
-        run: bash "${RUNNER_TEMP}/gh-aw/actions/install_copilot_cli.sh" 1.0.21
+        run: bash "${RUNNER_TEMP}/gh-aw/actions/install_copilot_cli.sh" 1.0.60
 
       # -----------------------------------------------------------
       # Make a Copilot CLI request with each PAT.
@@ -177,7 +177,7 @@ jobs:
 
             if [ $invalid -eq 0 ] && [ $unknown -eq 0 ] && [ $valid -eq 0 ]; then
               echo "> [!WARNING]"
-              echo "> **Empty PAT pool** — agentic workflows will fall back to the default \`COPILOT_GITHUB_TOKEN\`."
+              echo "> **Empty PAT pool** — agentic workflows using the PAT pool will fail until at least one \`COPILOT_PAT_#\` secret is configured."
               echo ""
             fi
 
