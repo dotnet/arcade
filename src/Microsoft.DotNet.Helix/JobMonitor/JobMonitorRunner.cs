@@ -172,7 +172,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 _reporter.LogRetryPassResubmission(completedJob, exitCodeFailures, testOnlyFailures);
 
-                IReadOnlyCollection<WorkItemSummary> failedWorkItems = [..exitCodeFailures, ..testOnlyFailures];
+                // exitCodeFailures and testOnlyFailures are disjoint by construction (one
+                // requires IsFailed, the other !IsFailed), but guard against duplicate work
+                // item names within a job so each item is only resubmitted once.
+                IReadOnlyCollection<WorkItemSummary> failedWorkItems =
+                [
+                    ..exitCodeFailures
+                        .Concat(testOnlyFailures)
+                        .DistinctBy(wi => wi.Name, StringComparer.OrdinalIgnoreCase)
+                ];
 
                 HelixJobInfo resubmitted = await _helix.ResubmitWorkItemsAsync(completedJob, failedWorkItems, cancellationToken);
                 if (resubmitted is null)
@@ -311,9 +319,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             CancellationToken cancellationToken)
         {
             // Skip jobs whose results have already been uploaded — either earlier in this
-            // invocation (tracked via WorkItemOutcomeJobs) or by a previous monitor attempt
-            // for the same build (tracked via ProcessedHelixJobs, seeded on entry from the
-            // AzDO test-run tags). Without this, a retried monitor invocation
+            // invocation (tracked via IsWorkItemOutcomesRecorded) or by a previous monitor
+            // attempt for the same build (tracked via IsHelixJobProcessed, seeded on entry
+            // from the AzDO test-run tags). Without this, a retried monitor invocation
             // re-logs "Job X completed" and re-reports failed work-item console links for
             // every job the prior attempt already finished, which is noisy and misleading.
             if (_state.IsWorkItemOutcomesRecorded(helixJob.JobName)
