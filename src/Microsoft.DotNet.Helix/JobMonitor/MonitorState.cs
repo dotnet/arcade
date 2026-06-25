@@ -24,12 +24,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         // All Helix jobs the monitor has observed for this build, keyed by Helix job name.
         // Overwritten per poll so the cached entry reflects the latest Helix-side state
-        // (in particular the Finished timestamp transitioning from null to a value).
+        // (in particular the Finished timestamp transitioning from null to a value). Also used
+        // by GetSubmitterChainKey to walk back through PreviousHelixJobName links across polls.
         private readonly Dictionary<string, HelixJobInfo> _associatedJobs = new(StringComparer.OrdinalIgnoreCase);
-
-        // Cache of every Helix job we have seen this run, indexed by job name, so that
-        // GetSubmitterChainKey can walk back through PreviousHelixJobName links across polls.
-        private readonly Dictionary<string, HelixJobInfo> _knownJobsByName = new(StringComparer.OrdinalIgnoreCase);
 
         // Helix jobs whose results have been uploaded to Azure DevOps in this or a prior
         // monitor invocation. Seeded on entry from the AzDO test-run tags.
@@ -133,7 +130,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 foreach (HelixJobInfo job in jobs)
                 {
                     _associatedJobs[job.JobName] = job;
-                    _knownJobsByName[job.JobName] = job;
                 }
             }
         }
@@ -249,7 +245,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         continue;
                     }
 
-                    if (!_knownJobsByName.TryGetValue(entry.Key.JobName, out HelixJobInfo job))
+                    if (!_associatedJobs.TryGetValue(entry.Key.JobName, out HelixJobInfo job))
                     {
                         continue;
                     }
@@ -356,7 +352,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 && !string.IsNullOrEmpty(current.PreviousHelixJobName)
                 && visited.Add(current.JobName))
             {
-                if (!_knownJobsByName.TryGetValue(current.PreviousHelixJobName, out HelixJobInfo previous))
+                if (!_associatedJobs.TryGetValue(current.PreviousHelixJobName, out HelixJobInfo previous))
                 {
                     return $"helix:{current.PreviousHelixJobName}";
                 }
