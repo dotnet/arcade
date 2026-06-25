@@ -251,7 +251,18 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     }
 
                     string chainKey = GetSubmitterChainKeyLocked(job);
-                    _workItemOutcomes[(chainKey, entry.Key.WorkItemName)] = false;
+                    var key = (chainKey, entry.Key.WorkItemName);
+                    _workItemOutcomes[key] = false;
+
+                    // Ensure the final failure report includes test-only failures too.
+                    if (!_failedWorkItemConsoleInfo.ContainsKey(key))
+                    {
+                        _failedWorkItemConsoleInfo[key] = new FailedWorkItemConsoleInfo(
+                            job.DisplayName,
+                            entry.Key.WorkItemName,
+                            "Failed (AzDO tests)",
+                            "see Azure DevOps test run results");
+                    }
                 }
             }
         }
