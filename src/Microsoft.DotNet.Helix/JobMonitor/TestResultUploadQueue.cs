@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 try
                 {
-                    testRunId = await _azdo.CreateTestRunAsync(helixJob.TestRunName, helixJob.JobName, cancellationToken);
+                    testRunId = await _azdo.CreateTestRunAsync(helixJob.TestRunName, cancellationToken);
                     IReadOnlyList<WorkItemTestResults> downloaded = await _helix.DownloadTestResultsAsync(
                         helixJob.JobName,
                         workItemNames,
@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 try
                 {
-                    await _azdo.CompleteTestRunAsync(testRunId, cancellationToken);
+                    await _azdo.CompleteTestRunAsync(testRunId, helixJob.JobName, cancellationToken);
                     return;
                 }
                 catch (OperationCanceledException)

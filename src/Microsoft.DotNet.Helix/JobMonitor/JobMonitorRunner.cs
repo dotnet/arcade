@@ -313,7 +313,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             // Skip jobs whose results have already been uploaded — either earlier in this
             // invocation (tracked via WorkItemOutcomeJobs) or by a previous monitor attempt
             // for the same build (tracked via ProcessedHelixJobs, seeded on entry from the
-            // AzDO test-run name markers). Without this, a retried monitor invocation
+            // AzDO test-run tags). Without this, a retried monitor invocation
             // re-logs "Job X completed" and re-reports failed work-item console links for
             // every job the prior attempt already finished, which is noisy and misleading.
             if (_state.IsWorkItemOutcomesRecorded(helixJob.JobName)

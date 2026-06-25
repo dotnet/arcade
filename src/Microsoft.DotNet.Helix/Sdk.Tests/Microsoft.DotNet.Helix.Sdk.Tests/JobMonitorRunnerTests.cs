@@ -451,7 +451,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             exitCode.Should().Be(0);
             azdo.UploadTestResultsCallCount.Should().Be(2);
             delayCount.Should().Be(1);
-            azdo.CreatedTestRuns.Should().ContainSingle();
+            // The first attempt creates a run then fails mid-upload, orphaning it (untagged,
+            // never completed). The retry creates a second run that uploads and completes.
+            azdo.CreatedTestRuns.Should().HaveCount(2);
             azdo.CompletedTestRunIds.Should().ContainSingle();
             azdo.UploadedJobNames.Should().BeEquivalentTo(["helix-linux"]);
         }
@@ -2513,8 +2515,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
         /// <summary>
         /// On a second monitor attempt within the same build, jobs that already have an
-        /// uploaded test run (tracked via ProcessedHelixJobs, seeded from AzDO test-run name
-        /// markers) must not be re-logged as completed and must not have their failed
+        /// uploaded test run (tracked via ProcessedHelixJobs, seeded from AzDO test-run
+        /// tags) must not be re-logged as completed and must not have their failed
         /// work-item console links re-emitted, nor must their results be re-uploaded.
         /// </summary>
         [Fact]

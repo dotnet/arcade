@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly Dictionary<string, HelixJobInfo> _knownJobsByName = new(StringComparer.OrdinalIgnoreCase);
 
         // Helix jobs whose results have been uploaded to Azure DevOps in this or a prior
-        // monitor invocation. Seeded on entry from the AzDO test-run name markers.
+        // monitor invocation. Seeded on entry from the AzDO test-run tags.
         private readonly HashSet<string> _processedHelixJobs = new(StringComparer.OrdinalIgnoreCase);
 
         // Tracks the latest outcome for each logical work item, keyed by
