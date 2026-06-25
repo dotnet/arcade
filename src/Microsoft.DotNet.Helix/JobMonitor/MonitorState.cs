@@ -250,6 +250,18 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         continue;
                     }
 
+                    // If this job has been superseded by a later attempt whose outcomes were
+                    // already reconciled, ignore late-arriving summaries from the older attempt
+                    // so they cannot overwrite the newer outcome.
+                    bool supersededByReconciledAttempt = _associatedJobs.Values.Any(j =>
+                        !string.IsNullOrEmpty(j.PreviousHelixJobName)
+                        && StringComparer.OrdinalIgnoreCase.Equals(j.PreviousHelixJobName, job.JobName)
+                        && _workItemOutcomeJobs.Contains(j.JobName));
+                    if (supersededByReconciledAttempt)
+                    {
+                        continue;
+                    }
+
                     string chainKey = GetSubmitterChainKeyLocked(job);
                     var key = (chainKey, entry.Key.WorkItemName);
                     _workItemOutcomes[key] = false;
