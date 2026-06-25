@@ -397,7 +397,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             IReadOnlyList<WorkItemTestResults> results,
             CancellationToken cancellationToken)
         {
-            long uploadedCount = 0;
             using var publisher = new AzureDevOpsResultPublisher(
                 new AzureDevOpsReportingParameters(
                     new Uri(_options.CollectionUri, UriKind.Absolute),
@@ -427,7 +426,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                             HelixWorkItemName = workItem.WorkItemName
                         },
                         cancellationToken);
-                    Interlocked.Add(ref uploadedCount, summary.UploadedCount);
                     return summary;
                 }
                 finally
