@@ -182,6 +182,17 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/attachments?api-version=7.1-preview.1",
             new TestRunAttachmentRequest(fileNameBase, base64Data),
             cancellationToken);
+
+        string metadataUrl = await _uploadClient.UploadAsync(compressedBytes, fileNameBase, "application/gzip", cancellationToken);
+        await _eventClient.SendAsync(
+            new
+            {
+                Type = "AzureDevOpsTestRunMetadata",
+                TestRunProject = _azdoParameters.TeamProject,
+                TestRunId = _azdoParameters.TestRunId,
+                Url = metadataUrl,
+            },
+            cancellationToken);
         */
     }
 
