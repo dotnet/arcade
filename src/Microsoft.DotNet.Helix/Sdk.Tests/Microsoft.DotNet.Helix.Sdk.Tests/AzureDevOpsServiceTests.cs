@@ -158,13 +158,16 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     };
                 }
 
-                // 2. Per-run tags lookup on the vstmr host.
+                // 2. Per-run Get-Run lookup on the vstmr host (with includeTags=true). The
+                // dedicated /tags sub-resource is PATCH/DELETE only, so tags are read inline
+                // from the TestRun payload.
                 if (request.Method == HttpMethod.Get
-                    && path.EndsWith($"/_apis/testresults/runs/{testRunId}/tags", StringComparison.OrdinalIgnoreCase))
+                    && path.EndsWith($"/_apis/testresults/runs/{testRunId}", StringComparison.OrdinalIgnoreCase)
+                    && query.Contains("includeTags=true", StringComparison.OrdinalIgnoreCase))
                 {
                     return new HttpResponseMessage(HttpStatusCode.OK)
                     {
-                        Content = new StringContent(@"{""value"":[{""name"":""" + HelixJobTag + @"""}]}")
+                        Content = new StringContent(@"{""id"":" + testRunId + @",""tags"":[{""name"":""" + HelixJobTag + @"""}]}")
                     };
                 }
 
@@ -226,11 +229,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 }
 
                 if (request.Method == HttpMethod.Get
-                    && path.EndsWith($"/_apis/testresults/runs/{testRunId}/tags", StringComparison.OrdinalIgnoreCase))
+                    && path.EndsWith($"/_apis/testresults/runs/{testRunId}", StringComparison.OrdinalIgnoreCase)
+                    && query.Contains("includeTags=true", StringComparison.OrdinalIgnoreCase))
                 {
                     return new HttpResponseMessage(HttpStatusCode.OK)
                     {
-                        Content = new StringContent(@"{""value"":[{""name"":""" + HelixJobTag + @"""}]}")
+                        Content = new StringContent(@"{""id"":" + testRunId + @",""tags"":[{""name"":""" + HelixJobTag + @"""}]}")
                     };
                 }
 

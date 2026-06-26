@@ -178,14 +178,16 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         }
 
         // Looks up the Helix job tag attached to a single completed test run via the vstmr
-        // per-run tags endpoint and decodes it back to the Helix job GUID. Returns null when
-        // the run carries no Helix job tag (e.g. runs created by other tools or runs that
-        // never reached completion).
+        // Get-Run endpoint with includeTags=true. The dedicated /testresults/runs/{id}/tags
+        // sub-resource only supports add/remove (PATCH/DELETE) and returns 405 for GET, so
+        // we read tags inline off the TestRun payload instead. Returns null when the run
+        // carries no Helix job tag (e.g. runs created by other tools or runs that never
+        // reached completion).
         private async Task<string> GetHelixJobNameFromRunTagsAsync(int runId, CancellationToken cancellationToken)
         {
-            string uri = $"{GetVstmrCollectionUri()}{_options.TeamProject}/_apis/testresults/runs/{runId}/tags?api-version=7.1-preview.1";
+            string uri = $"{GetVstmrCollectionUri()}{_options.TeamProject}/_apis/testresults/runs/{runId}?includeTags=true&api-version=7.1-preview.1";
             JObject data = await SendAsync(HttpMethod.Get, uri, cancellationToken: cancellationToken);
-            foreach (JObject tag in (data?["value"] as JArray ?? []).OfType<JObject>())
+            foreach (JObject tag in (data?["tags"] as JArray ?? []).OfType<JObject>())
             {
                 string helixJobName = DecodeHelixJobTag(tag.Value<string>("name"));
                 if (!string.IsNullOrEmpty(helixJobName))
