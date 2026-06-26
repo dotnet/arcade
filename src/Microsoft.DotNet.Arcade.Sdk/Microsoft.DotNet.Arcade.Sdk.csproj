@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(BundledNETCoreAppTargetFramework)</TargetFramework>
+    <TargetFramework>$(NetMinimum)</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <IsPackable>true</IsPackable>
@@ -17,7 +17,7 @@
 
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
     <_GeneratedVersionFilePath>$(IntermediateOutputPath)DefaultVersions.Generated.props</_GeneratedVersionFilePath>
-    <NoWarn>$(NoWarn);3021;NU5105;NU5111;SYSLIB0013</NoWarn>
+    <NoWarn>$(NoWarn);3021;NU5100;NU5105;NU5111;SYSLIB0013</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,17 +40,13 @@
     <None Include="$(_GeneratedVersionFilePath)"
           Pack="true"
           PackagePath="tools\DefaultVersions.Generated.props" />
+    <None Include="toolset/**/*.*"
+          Pack="true"
+          PackagePath="toolset/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Common\Microsoft.Arcade.Common\Microsoft.Arcade.Common.csproj" />
-    <ProjectReference Include="..\Microsoft.DotNet.ArcadeLogging\Microsoft.DotNet.ArcadeLogging.csproj"
-      ReferenceOutputAssembly="false"
-      SkipGetTargetFrameworkProperties="true"
-      Publish="false"
-      Private="false"
-      PrivateAssets="all"
-      ExcludeAssets="runtime" />
   </ItemGroup>
 
   <Target Name="_GenerateSdkVersionFile" Inputs="$(MSBuildAllProjects)" Outputs="$(_GeneratedVersionFilePath)" BeforeTargets="GenerateNuSpec">
@@ -67,7 +63,6 @@
     <MicrosoftDotNetXliffTasksVersion>$(PackageVersion)</MicrosoftDotNetXliffTasksVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion>$(MicrosoftSymbolUploaderBuildTaskVersion)</MicrosoftSymbolUploaderBuildTaskVersion>
     <MicrosoftTemplateEngineAuthoringTasksVersion>$(MicrosoftTemplateEngineAuthoringTasksVersion)</MicrosoftTemplateEngineAuthoringTasksVersion>
-    <MicrosoftDotNetXUnitAssertVersion>$(PackageVersion)</MicrosoftDotNetXUnitAssertVersion>
   </PropertyGroup>
 
 </Project>]]>
@@ -80,15 +75,5 @@
       <FileWrites Include="$(_GeneratedVersionFilePath)" />
     </ItemGroup>
   </Target>
-
-  <ItemGroup>
-    <None Include="$(ArtifactsBinDir)Microsoft.DotNet.ArcadeLogging\$(Configuration)\$(BundledNETCoreAppTargetFramework)\Microsoft.DotNet.ArcadeLogging.dll"
-          Pack="true"
-          PackagePath="tools\net\Microsoft.DotNet.ArcadeLogging.dll" />
-    <None Include="$(ArtifactsBinDir)Microsoft.DotNet.ArcadeLogging\$(Configuration)\$(NetFrameworkToolCurrent)\Microsoft.DotNet.ArcadeLogging.dll"
-          Pack="true"
-          PackagePath="tools\netframework\Microsoft.DotNet.ArcadeLogging.dll"
-          Condition="'$(DotNetBuildSourceOnly)' != 'true'" />
-  </ItemGroup>
 
 </Project>

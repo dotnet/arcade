@@ -252,18 +252,23 @@ namespace Microsoft.DotNet.RemoteExecutor
                             description.AppendLine("\tThreads:");
                             foreach (ClrThread thread in runtime.Threads.Where(t => t.IsAlive))
                             {
+                                ClrThreadState state = thread.State;
+                                // ClrMD v4 no longer exposes gate/timer/wait thread pool flags, so only the
+                                // completion port and worker kinds remain detectable via ClrThreadState.
                                 string threadKind =
-                                    thread.IsGc ? "[Thread that started suspension]" :
+                                    (state & ClrThreadState.TS_CompletionPortThread) != 0 ? "[Thread pool completion port]" :
+                                    (state & ClrThreadState.TS_TPWorkerThread) != 0 ? "[Thread pool worker]" :
                                     thread.IsFinalizer ? "[Finalizer]" :
-                                    "Unknown";
+                                    thread.IsGc ? "[GC]" :
+                                    "";
 
-                                string isBackground = thread.State.HasFlag(ClrThreadState.TS_Background) ? "[Background]" : "";
-                                string apartmentModel = thread.State.HasFlag(ClrThreadState.TS_InMTA) ? "[MTA]" :
-                                                        thread.State.HasFlag(ClrThreadState.TS_InSTA) ? "[STA]" :
+                                string isBackground = (state & ClrThreadState.TS_Background) != 0 ? "[Background]" : "";
+                                string apartmentModel = (state & ClrThreadState.TS_InMTA) != 0 ? "[MTA]" :
+                                                        (state & ClrThreadState.TS_InSTA) != 0 ? "[STA]" :
                                                         "";
 
                                 description.AppendLine($"\t\tThread #{thread.ManagedThreadId} (OS 0x{thread.OSThreadId:X}) {threadKind} {isBackground} {apartmentModel}");
-                                foreach (ClrStackFrame frame in thread.EnumerateStackTrace())
+                                foreach (ClrStackFrame frame in thread.EnumerateStackTrace(includeContext: false))
                                 {
                                     description.AppendLine($"\t\t\t{frame}");
                                 }

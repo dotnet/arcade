@@ -8,8 +8,6 @@
       SemanticVersioningV1        "true" if the Version needs to respect SemVer 1.0. Default is false, which means format following SemVer 2.0.
   -->
 
-  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.CalculateAssemblyAndFileVersions" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" Runtime="NET" />
-  
   <Target Name="_InitializeAssemblyVersion" BeforeTargets="GetAssemblyVersion">
     <Warning Text="AssemblyVersion '$(AssemblyVersion)' overridden by auto-generated version" Condition="'$(AssemblyVersion)' != '' and '$(AutoGenerateAssemblyVersion)' == 'true'"/>
     
@@ -120,7 +118,12 @@
       -->
       <_NativeVersionFileContents>
 <![CDATA[
-static char sccsid[] __attribute__((used)) = "@(#)Version $(FileVersion)$(_SourceBuildInfo)";
+#if defined(__GNUC__) && !defined(__clang__) && defined(TARGET_SUNOS) && defined(TARGET_AMD64)
+char sccsid[] __attribute__((used, weak)) = "@(#)Version $(FileVersion)$(_SourceBuildInfo)";
+__asm__(".pushsection .init_array; .reloc ., R_X86_64_NONE, sccsid; .popsection");
+#else
+static char sccsid[] __attribute__((used, retain)) = "@(#)Version $(FileVersion)$(_SourceBuildInfo)";
+#endif
  ]]>
       </_NativeVersionFileContents>
     </PropertyGroup>
