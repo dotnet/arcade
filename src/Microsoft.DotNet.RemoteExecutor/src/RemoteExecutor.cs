@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -462,7 +463,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             else if (options.CrashDumpCollectionType.HasValue)
             {
                 psi.Environment["DOTNET_DbgEnableMiniDump"] = "1";
-                psi.Environment["DOTNET_DbgMiniDumpType"] = ((int)options.CrashDumpCollectionType.Value).ToString();
+                psi.Environment["DOTNET_DbgMiniDumpType"] = ((int)options.CrashDumpCollectionType.Value).ToString(CultureInfo.InvariantCulture);
                 if (!string.IsNullOrWhiteSpace(options.CrashDumpPath))
                 {
                     psi.Environment["DOTNET_DbgMiniDumpName"] = options.CrashDumpPath;

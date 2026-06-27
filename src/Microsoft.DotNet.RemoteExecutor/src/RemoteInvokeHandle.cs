@@ -217,7 +217,9 @@ namespace Microsoft.DotNet.RemoteExecutor
 #if NETCOREAPP
                     // These define guards assume that harness running on .NET Framework implies test process runs on .NET Framework.
                     var client = new DiagnosticsClient(Process.Id);
-                    client.WriteDump(DumpType.Full, dumpPath, logDumpGeneration: false);
+                    // Heap dumps capture managed state needed for diagnosis while staying far smaller than a
+                    // full dump, which keeps the timeout path fast and avoids bloating Helix upload artifacts.
+                    client.WriteDump(DumpType.WithHeap, dumpPath, logDumpGeneration: false);
 #else
                     MiniDump.Create(Process, dumpPath);
 #endif

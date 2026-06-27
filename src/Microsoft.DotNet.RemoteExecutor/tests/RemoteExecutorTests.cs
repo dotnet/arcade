@@ -203,15 +203,22 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
         [Fact]
         public void CrashDumpCollection_DefaultLeavesEnvVarsUntouched()
         {
-            // When neither option is set, env vars should pass through from the parent unchanged
-            using RemoteInvokeHandle h = RemoteExecutor.Invoke(() =>
+            // When CrashDumpCollectionType is left unset, the env vars must pass through to the child unchanged.
+            const string expectedEnable = "1";
+            const string expectedType = "4";
+            const string expectedName = "/tmp/passthrough.dmp";
+
+            var options = new RemoteInvokeOptions { RollForward = "Major" };
+            options.StartInfo.Environment["DOTNET_DbgEnableMiniDump"] = expectedEnable;
+            options.StartInfo.Environment["DOTNET_DbgMiniDumpType"] = expectedType;
+            options.StartInfo.Environment["DOTNET_DbgMiniDumpName"] = expectedName;
+
+            using RemoteInvokeHandle h = RemoteExecutor.Invoke((enable, type, name) =>
             {
-                // Without explicit config, the child inherits whatever the parent has.
-                // The parent test process shouldn't have DOTNET_DbgEnableMiniDump set,
-                // so the child shouldn't either.
-                string parentValue = Environment.GetEnvironmentVariable("DOTNET_DbgEnableMiniDump");
-                Assert.Null(parentValue);
-            }, new RemoteInvokeOptions { RollForward = "Major" });
+                Assert.Equal(enable, Environment.GetEnvironmentVariable("DOTNET_DbgEnableMiniDump"));
+                Assert.Equal(type, Environment.GetEnvironmentVariable("DOTNET_DbgMiniDumpType"));
+                Assert.Equal(name, Environment.GetEnvironmentVariable("DOTNET_DbgMiniDumpName"));
+            }, expectedEnable, expectedType, expectedName, options);
         }
 
         [Fact]
