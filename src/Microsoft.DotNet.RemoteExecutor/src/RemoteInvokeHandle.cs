@@ -216,16 +216,9 @@ namespace Microsoft.DotNet.RemoteExecutor
                     string dumpPath = Path.Combine(uploadPath, $"{Process.Id}.{Path.GetRandomFileName()}.dmp");
 #if NETCOREAPP
                     // These define guards assume that harness running on .NET Framework implies test process runs on .NET Framework.
-                    if (Options.CrashDumpCollectionType == CrashDumpCollectionType.None)
-                    {
-                        description.AppendLine("Skipping timeout dump because CrashDumpCollectionType is None.");
-                    }
-                    else
-                    {
-                        var client = new DiagnosticsClient(Process.Id);
-                        client.WriteDump(MapTimeoutDumpType(Options.CrashDumpCollectionType), dumpPath, logDumpGeneration: false);
-                        description.AppendLine($"Wrote dump to: {dumpPath}");
-                    }
+                    var client = new DiagnosticsClient(Process.Id);
+                    client.WriteDump(MapTimeoutDumpType(Options.CrashDumpCollectionType), dumpPath, logDumpGeneration: false);
+                    description.AppendLine($"Wrote dump to: {dumpPath}");
 #else
                     MiniDump.Create(Process, dumpPath);
                     description.AppendLine($"Wrote dump to: {dumpPath}");
@@ -300,9 +293,11 @@ namespace Microsoft.DotNet.RemoteExecutor
             => crashDumpCollectionType switch
             {
                 CrashDumpCollectionType.Mini => DumpType.Normal,
+                CrashDumpCollectionType.Heap => DumpType.WithHeap,
                 CrashDumpCollectionType.Triage => DumpType.Triage,
                 CrashDumpCollectionType.Full => DumpType.Full,
-                // Use heap dump by default to balance diagnostic value and artifact size.
+                // CrashDumpCollectionType.None only controls crash-time env vars. Timeout dump collection
+                // is controlled by EnableTimeoutDumpCollection, so use the timeout default here.
                 _ => DumpType.WithHeap,
             };
 #endif

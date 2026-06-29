@@ -105,7 +105,11 @@ namespace Microsoft.DotNet.RemoteExecutor
         /// When null (default), the environment variables are left as-is.
         /// </summary>
         /// <remarks>
-        /// Only applies to .NET Core subprocesses.
+        /// Only applies to .NET Core subprocesses. When timeout dump collection is enabled,
+        /// values other than <see cref="CrashDumpCollectionType.None"/> also select the
+        /// timeout dump type. <see cref="CrashDumpCollectionType.None"/> only disables
+        /// crash-time environment variable configuration; use <see cref="EnableTimeoutDumpCollection"/>
+        /// to disable timeout diagnostics.
         /// </remarks>
         public CrashDumpCollectionType? CrashDumpCollectionType { get; set; }
 
