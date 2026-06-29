@@ -240,14 +240,20 @@ namespace Microsoft.DotNet.RemoteExecutor
                     string dumpPath = Path.Combine(uploadPath, $"{Process.Id}.{Path.GetRandomFileName()}.dmp");
 #if NETCOREAPP
                     // These define guards assume that harness running on .NET Framework implies test process runs on .NET Framework.
-                    var client = new DiagnosticsClient(Process.Id);
-                    // Heap dumps capture managed state needed for diagnosis while staying far smaller than a
-                    // full dump, which keeps the timeout path fast and avoids bloating Helix upload artifacts.
-                    client.WriteDump(DumpType.WithHeap, dumpPath, logDumpGeneration: false);
+                    if (Options.CrashDumpCollectionType == CrashDumpCollectionType.None)
+                    {
+                        description.AppendLine("Skipping timeout dump because CrashDumpCollectionType is None.");
+                    }
+                    else
+                    {
+                        var client = new DiagnosticsClient(Process.Id);
+                        client.WriteDump(MapTimeoutDumpType(Options.CrashDumpCollectionType), dumpPath, logDumpGeneration: false);
+                        description.AppendLine($"Wrote dump to: {dumpPath}");
+                    }
 #else
                     MiniDump.Create(Process, dumpPath);
-#endif
                     description.AppendLine($"Wrote dump to: {dumpPath}");
+#endif
                 }
                 catch (Exception exc)
                 {
@@ -259,7 +265,6 @@ namespace Microsoft.DotNet.RemoteExecutor
             try
             {
                 description.AppendLine($"\tProcess ID: {Process.Id}");
-                description.AppendLine($"\tHandle: {Process.Handle}");
                 description.AppendLine($"\tName: {Process.ProcessName}");
                 description.AppendLine($"\tMainModule: {Process.MainModule?.FileName}");
                 description.AppendLine($"\tStartTime: {Process.StartTime}");
@@ -306,9 +311,25 @@ namespace Microsoft.DotNet.RemoteExecutor
                         Interlocked.Exchange(ref s_clrMdLock, 0);
                     }
                 }
+                else
+                {
+                    description.AppendLine("\tSkipping ClrMD thread inspection because another timeout diagnostics collection is already in progress.");
+                }
             }
             catch { }
         }
+
+#if NETCOREAPP
+        private static DumpType MapTimeoutDumpType(CrashDumpCollectionType? crashDumpCollectionType)
+            => crashDumpCollectionType switch
+            {
+                CrashDumpCollectionType.Mini => DumpType.Normal,
+                CrashDumpCollectionType.Triage => DumpType.Triage,
+                CrashDumpCollectionType.Full => DumpType.Full,
+                // Use heap dump by default to balance diagnostic value and artifact size.
+                _ => DumpType.WithHeap,
+            };
+#endif
 
         ~RemoteInvokeHandle()
         {
