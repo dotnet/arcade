@@ -9,7 +9,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 #if NETCOREAPP
 using Microsoft.Diagnostics.NETCore.Client;
 #endif
@@ -208,29 +207,6 @@ namespace Microsoft.DotNet.RemoteExecutor
         /// Collects diagnostic information (dump + thread stacks) from the timed-out remote process.
         /// </summary>
         private void CollectTimeoutDiagnostics(StringBuilder description)
-        {
-            const int diagnosticsTimeoutMilliseconds = 20_000;
-            var diagnostics = new StringBuilder();
-
-            try
-            {
-                Task diagnosticsTask = Task.Run(() => CollectTimeoutDiagnosticsCore(diagnostics));
-                if (diagnosticsTask.Wait(diagnosticsTimeoutMilliseconds))
-                {
-                    description.Append(diagnostics);
-                }
-                else
-                {
-                    description.AppendLine($"Timed out after {diagnosticsTimeoutMilliseconds}ms while collecting timeout diagnostics.");
-                }
-            }
-            catch (Exception exc)
-            {
-                description.AppendLine($"Failed to collect timeout diagnostics: {exc.Message}");
-            }
-        }
-
-        private void CollectTimeoutDiagnosticsCore(StringBuilder description)
         {
             string uploadPath = Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT");
             if (!string.IsNullOrWhiteSpace(uploadPath))
