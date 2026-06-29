@@ -215,7 +215,8 @@ namespace Microsoft.DotNet.RemoteExecutor
                 {
                     string dumpPath = Path.Combine(uploadPath, $"{Process.Id}.{Path.GetRandomFileName()}.dmp");
 #if NETCOREAPP
-                    // These define guards assume that harness running on .NET Framework implies test process runs on .NET Framework.
+                    // DiagnosticsClient is only available when this library is built for .NET (Core).
+                    // The .NET Framework build (#else) falls back to the MiniDump helper.
                     var client = new DiagnosticsClient(Process.Id);
                     client.WriteDump(MapTimeoutDumpType(Options.CrashDumpCollectionType), dumpPath, logDumpGeneration: false);
                     description.AppendLine($"Wrote dump to: {dumpPath}");
