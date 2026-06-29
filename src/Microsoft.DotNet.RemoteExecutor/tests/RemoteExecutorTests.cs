@@ -168,7 +168,7 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
         [InlineData(CrashDumpCollectionType.Full, "4")]
         public void CrashDumpCollection_SetsEnvVars(CrashDumpCollectionType dumpType, string expectedTypeValue)
         {
-            using RemoteInvokeHandle h = RemoteExecutor.Invoke(expectedType =>
+            RemoteExecutor.Invoke(expectedType =>
             {
                 Assert.Equal("1", Environment.GetEnvironmentVariable("DOTNET_DbgEnableMiniDump"));
                 Assert.Equal(expectedType, Environment.GetEnvironmentVariable("DOTNET_DbgMiniDumpType"));
@@ -177,7 +177,7 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
             {
                 RollForward = "Major",
                 CrashDumpCollectionType = dumpType
-            });
+            }).Dispose();
         }
 
         [Fact]
@@ -193,12 +193,12 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
             options.StartInfo.Environment["DOTNET_DbgMiniDumpType"] = "4";
             options.StartInfo.Environment["DOTNET_DbgMiniDumpName"] = "/tmp/test.dmp";
 
-            using RemoteInvokeHandle h = RemoteExecutor.Invoke(() =>
+            RemoteExecutor.Invoke(() =>
             {
                 Assert.Null(Environment.GetEnvironmentVariable("DOTNET_DbgEnableMiniDump"));
                 Assert.Null(Environment.GetEnvironmentVariable("DOTNET_DbgMiniDumpType"));
                 Assert.Null(Environment.GetEnvironmentVariable("DOTNET_DbgMiniDumpName"));
-            }, options);
+            }, options).Dispose();
         }
 
         [Fact]
@@ -214,12 +214,12 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
             options.StartInfo.Environment["DOTNET_DbgMiniDumpType"] = expectedType;
             options.StartInfo.Environment["DOTNET_DbgMiniDumpName"] = expectedName;
 
-            using RemoteInvokeHandle h = RemoteExecutor.Invoke((enable, type, name) =>
+            RemoteExecutor.Invoke((enable, type, name) =>
             {
                 Assert.Equal(enable, Environment.GetEnvironmentVariable("DOTNET_DbgEnableMiniDump"));
                 Assert.Equal(type, Environment.GetEnvironmentVariable("DOTNET_DbgMiniDumpType"));
                 Assert.Equal(name, Environment.GetEnvironmentVariable("DOTNET_DbgMiniDumpName"));
-            }, expectedEnable, expectedType, expectedName, options);
+            }, expectedEnable, expectedType, expectedName, options).Dispose();
         }
 
         [Fact]
@@ -245,12 +245,9 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
                     *(int*)0x10000 = 0;
                 }, options).Dispose();
 
-                string[] dumpFiles = Array.Empty<string>();
-                bool dumpCreated = SpinWait.SpinUntil(() =>
-                {
-                    dumpFiles = Directory.GetFiles(dumpDir, "*.dmp");
-                    return dumpFiles.Length > 0;
-                }, TimeSpan.FromSeconds(10));
+                bool dumpCreated = SpinWait.SpinUntil(
+                    () => Directory.GetFiles(dumpDir, "*.dmp").Length > 0,
+                    TimeSpan.FromSeconds(10));
 
                 Assert.True(dumpCreated, "Expected a crash dump file to be created within 10 seconds.");
             }
