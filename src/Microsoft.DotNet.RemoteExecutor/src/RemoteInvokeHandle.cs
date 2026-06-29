@@ -9,7 +9,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 #if NETCOREAPP
 using Microsoft.Diagnostics.NETCore.Client;
 #endif
@@ -209,29 +208,6 @@ namespace Microsoft.DotNet.RemoteExecutor
         /// </summary>
         private void CollectTimeoutDiagnostics(StringBuilder description)
         {
-            const int diagnosticsTimeoutMilliseconds = 20_000;
-            var diagnostics = new StringBuilder();
-
-            try
-            {
-                Task diagnosticsTask = Task.Run(() => CollectTimeoutDiagnosticsCore(diagnostics));
-                if (diagnosticsTask.Wait(diagnosticsTimeoutMilliseconds))
-                {
-                    description.Append(diagnostics);
-                }
-                else
-                {
-                    description.AppendLine($"Timed out after {diagnosticsTimeoutMilliseconds}ms while collecting timeout diagnostics.");
-                }
-            }
-            catch (Exception exc)
-            {
-                description.AppendLine($"Failed to collect timeout diagnostics: {exc.Message}");
-            }
-        }
-
-        private void CollectTimeoutDiagnosticsCore(StringBuilder description)
-        {
             string uploadPath = Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT");
             if (!string.IsNullOrWhiteSpace(uploadPath))
             {
@@ -241,11 +217,12 @@ namespace Microsoft.DotNet.RemoteExecutor
 #if NETCOREAPP
                     // These define guards assume that harness running on .NET Framework implies test process runs on .NET Framework.
                     var client = new DiagnosticsClient(Process.Id);
-                    client.WriteDump(DumpType.WithHeap, dumpPath, logDumpGeneration: false);
+                    client.WriteDump(MapTimeoutDumpType(Options.CrashDumpCollectionType), dumpPath, logDumpGeneration: false);
+                    description.AppendLine($"Wrote dump to: {dumpPath}");
 #else
                     MiniDump.Create(Process, dumpPath);
-#endif
                     description.AppendLine($"Wrote dump to: {dumpPath}");
+#endif
                 }
                 catch (Exception exc)
                 {
@@ -257,7 +234,6 @@ namespace Microsoft.DotNet.RemoteExecutor
             try
             {
                 description.AppendLine($"\tProcess ID: {Process.Id}");
-                description.AppendLine($"\tHandle: {Process.Handle}");
                 description.AppendLine($"\tName: {Process.ProcessName}");
                 description.AppendLine($"\tMainModule: {Process.MainModule?.FileName}");
                 description.AppendLine($"\tStartTime: {Process.StartTime}");
@@ -304,9 +280,27 @@ namespace Microsoft.DotNet.RemoteExecutor
                         Interlocked.Exchange(ref s_clrMdLock, 0);
                     }
                 }
+                else
+                {
+                    description.AppendLine("\tSkipping ClrMD thread inspection because another timeout diagnostics collection is already in progress.");
+                }
             }
             catch { }
         }
+
+#if NETCOREAPP
+        private static DumpType MapTimeoutDumpType(CrashDumpCollectionType? crashDumpCollectionType)
+            => crashDumpCollectionType switch
+            {
+                CrashDumpCollectionType.Mini => DumpType.Normal,
+                CrashDumpCollectionType.Heap => DumpType.WithHeap,
+                CrashDumpCollectionType.Triage => DumpType.Triage,
+                CrashDumpCollectionType.Full => DumpType.Full,
+                // CrashDumpCollectionType.None only controls crash-time env vars. Timeout dump collection
+                // is controlled by EnableTimeoutDumpCollection, so use the timeout default here.
+                _ => DumpType.WithHeap,
+            };
+#endif
 
         ~RemoteInvokeHandle()
         {

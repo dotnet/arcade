@@ -20,9 +20,22 @@ namespace Microsoft.DotNet.RemoteExecutor
         /// DOTNET_DbgMiniDumpType, and DOTNET_DbgMiniDumpName environment variables from the subprocess.
         /// </summary>
         None = 0,
+        /// <summary>
+        /// A small dump containing module lists, thread lists, exception information, and all stacks.
+        /// </summary>
         Mini = 1,
+        /// <summary>
+        /// A large and relatively comprehensive dump containing module lists, thread lists, all stacks,
+        /// exception information, handle information, and all memory except for mapped images.
+        /// </summary>
         Heap = 2,
+        /// <summary>
+        /// Same as <see cref="Mini"/>, but removes personal user information, such as paths and passwords.
+        /// </summary>
         Triage = 3,
+        /// <summary>
+        /// The largest dump containing all memory including the module images.
+        /// </summary>
         Full = 4
     }
 
@@ -92,7 +105,11 @@ namespace Microsoft.DotNet.RemoteExecutor
         /// When null (default), the environment variables are left as-is.
         /// </summary>
         /// <remarks>
-        /// Only applies to .NET Core subprocesses.
+        /// Only applies to .NET Core subprocesses. When timeout dump collection is enabled,
+        /// values other than <see cref="CrashDumpCollectionType.None"/> also select the
+        /// timeout dump type. <see cref="CrashDumpCollectionType.None"/> only disables
+        /// crash-time environment variable configuration; use <see cref="EnableTimeoutDumpCollection"/>
+        /// to disable timeout diagnostics.
         /// </remarks>
         public CrashDumpCollectionType? CrashDumpCollectionType { get; set; }
 

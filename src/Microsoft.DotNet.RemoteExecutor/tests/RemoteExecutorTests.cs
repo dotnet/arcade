@@ -204,21 +204,22 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
         [Fact]
         public void CrashDumpCollection_DefaultLeavesEnvVarsUntouched()
         {
-            // When CrashDumpCollectionType is not set, RemoteExecutor should neither add nor remove
-            // the DOTNET_Dbg* env vars: whatever is on the StartInfo passes through to the child unchanged.
-            // Set known values explicitly so the assertion is deterministic regardless of the parent's environment.
-            var options = new RemoteInvokeOptions { RollForward = "Major" };
-            options.StartInfo.Environment["DOTNET_DbgEnableMiniDump"] = "1";
-            options.StartInfo.Environment["DOTNET_DbgMiniDumpType"] = "4";
-            options.StartInfo.Environment["DOTNET_DbgMiniDumpName"] = "/tmp/passthrough.dmp";
+            // When CrashDumpCollectionType is left unset, the env vars must pass through to the child unchanged.
+            const string expectedEnable = "1";
+            const string expectedType = "4";
+            const string expectedName = "/tmp/passthrough.dmp";
 
-            using RemoteInvokeHandle h = RemoteExecutor.Invoke(() =>
+            var options = new RemoteInvokeOptions { RollForward = "Major" };
+            options.StartInfo.Environment["DOTNET_DbgEnableMiniDump"] = expectedEnable;
+            options.StartInfo.Environment["DOTNET_DbgMiniDumpType"] = expectedType;
+            options.StartInfo.Environment["DOTNET_DbgMiniDumpName"] = expectedName;
+
+            using RemoteInvokeHandle h = RemoteExecutor.Invoke((enable, type, name) =>
             {
-                // The child should observe exactly the values set on the parent's StartInfo.
-                Assert.Equal("1", Environment.GetEnvironmentVariable("DOTNET_DbgEnableMiniDump"));
-                Assert.Equal("4", Environment.GetEnvironmentVariable("DOTNET_DbgMiniDumpType"));
-                Assert.Equal("/tmp/passthrough.dmp", Environment.GetEnvironmentVariable("DOTNET_DbgMiniDumpName"));
-            }, options);
+                Assert.Equal(enable, Environment.GetEnvironmentVariable("DOTNET_DbgEnableMiniDump"));
+                Assert.Equal(type, Environment.GetEnvironmentVariable("DOTNET_DbgMiniDumpType"));
+                Assert.Equal(name, Environment.GetEnvironmentVariable("DOTNET_DbgMiniDumpName"));
+            }, expectedEnable, expectedType, expectedName, options);
         }
 
         [Fact]
