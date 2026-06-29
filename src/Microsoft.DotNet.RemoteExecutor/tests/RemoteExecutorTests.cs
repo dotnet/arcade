@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Sdk;
@@ -243,8 +244,14 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
                     *(int*)0x10000 = 0;
                 }, options).Dispose();
 
-                string[] dumpFiles = Directory.GetFiles(dumpDir, "*.dmp");
-                Assert.NotEmpty(dumpFiles);
+                string[] dumpFiles = Array.Empty<string>();
+                bool dumpCreated = SpinWait.SpinUntil(() =>
+                {
+                    dumpFiles = Directory.GetFiles(dumpDir, "*.dmp");
+                    return dumpFiles.Length > 0;
+                }, TimeSpan.FromSeconds(10));
+
+                Assert.True(dumpCreated, "Expected a crash dump file to be created within 10 seconds.");
             }
             finally
             {
