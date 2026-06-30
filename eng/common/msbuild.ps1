@@ -1,26 +1,22 @@
 [CmdletBinding(PositionalBinding=$false)]
 Param(
-  [string] $verbosity = 'minimal',
-  [bool] $warnAsError = $true,
-  [bool] $nodeReuse = $true,
+  [string] $verbosity,
+  [bool] $warnAsError,
+  [bool] $nodeReuse,
   [switch] $ci,
   [switch] $prepareMachine,
   [switch] $excludePrereleaseVS,
-  [string] $msbuildEngine = $null,
+  [string] $msbuildEngine,
   [Parameter(ValueFromRemainingArguments=$true)][String[]]$extraArgs
 )
+
+# Opt in to letting tools.ps1 own the CI/environment-aware defaults for the parameters it
+# manages (e.g. nodeReuse, warnAsError, verbosity); see tools.ps1 for details.
+$importerBoundParameters = $PSBoundParameters
 
 . $PSScriptRoot\tools.ps1
 
 try {
-  if ($ci) {
-    # Disable node reuse on CI unless explicitly opted in via MSBUILD_NODEREUSE_ENABLED.
-    # Internal testing only; this env var will be replaced with a switch (https://github.com/dotnet/arcade/issues/17013) and must not be depended on.
-    if ($env:MSBUILD_NODEREUSE_ENABLED -ne "1") {
-      $nodeReuse = $false
-    }
-  }
-
   MSBuild @extraArgs
 } 
 catch {

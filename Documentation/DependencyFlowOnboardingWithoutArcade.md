@@ -80,8 +80,6 @@ If you only have one Azure DevOps job that publishes assets, then you can add th
     scriptLocation: scriptPath
     scriptPath: $(System.DefaultWorkingDirectory)/eng/common/sdk-task.ps1
     arguments: -task PublishBuildAssets
-      -restore
-      -msbuildEngine dotnet
       /p:ManifestsPath='$(Build.StagingDirectory)/Download/AssetManifests'
       /p:MaestroApiEndpoint=https://maestro.dot.net"
 ```

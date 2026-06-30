@@ -1,13 +1,13 @@
 [CmdletBinding(PositionalBinding=$false)]
 Param(
-  [string][Alias('c')]$configuration = "Debug",
-  [string]$platform = $null,
+  [string][Alias('c')]$configuration,
+  [string]$platform,
   [string] $projects,
-  [string][Alias('v')]$verbosity = "minimal",
-  [string] $msbuildEngine = $null,
-  [bool] $warnAsError = $true,
-  [string] $warnNotAsError = '',
-  [bool] $nodeReuse = $true,
+  [string][Alias('v')]$verbosity,
+  [string] $msbuildEngine,
+  [bool] $warnAsError,
+  [string] $warnNotAsError,
+  [bool] $nodeReuse,
   [switch] $buildCheck = $false,
   [switch][Alias('r')]$restore,
   [switch] $deployDeps,
@@ -28,8 +28,8 @@ Param(
   [switch][Alias('nobl')]$excludeCIBinarylog,
   [switch] $ci,
   [switch] $prepareMachine,
-  [string] $runtimeSourceFeed = '',
-  [string] $runtimeSourceFeedKey = '',
+  [string] $runtimeSourceFeed,
+  [string] $runtimeSourceFeedKey,
   [switch] $excludePrereleaseVS,
   [switch] $nativeToolsOnMachine,
   [switch] $help,
@@ -85,6 +85,10 @@ function Print-Usage() {
   Write-Host "Command line arguments not listed above are passed thru to msbuild."
   Write-Host "The above arguments can be shortened as much as to be unambiguous (e.g. -co for configuration, -t for test, etc.)."
 }
+
+# Opt in to letting tools.ps1 own the CI/environment-aware defaults for the parameters it
+# manages (e.g. binaryLog, nodeReuse, configuration); see tools.ps1 for details.
+$importerBoundParameters = $PSBoundParameters
 
 . $PSScriptRoot\tools.ps1
 
@@ -167,17 +171,6 @@ try {
   if ($help -or (($null -ne $properties) -and ($properties.Contains('/help') -or $properties.Contains('/?')))) {
     Print-Usage
     exit 0
-  }
-
-  if ($ci) {
-    if (-not $excludeCIBinarylog) {
-      $binaryLog = $true
-    }
-    # Disable node reuse on CI unless explicitly opted in via MSBUILD_NODEREUSE_ENABLED.
-    # Internal testing only; this env var will be replaced with a switch (https://github.com/dotnet/arcade/issues/17013) and must not be depended on.
-    if ($env:MSBUILD_NODEREUSE_ENABLED -ne "1") {
-      $nodeReuse = $false
-    }
   }
 
   if (-not [string]::IsNullOrEmpty($binaryLogName)) {

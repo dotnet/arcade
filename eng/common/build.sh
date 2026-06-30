@@ -67,7 +67,6 @@ restore=false
 build=false
 source_build=false
 product_build=false
-from_vmr=false
 rebuild=false
 test=false
 integration_test=false
@@ -76,23 +75,12 @@ pack=false
 publish=false
 sign=false
 public=false
-ci=false
 clean=false
 
-warn_as_error=true
-warn_not_as_error=''
-node_reuse=true
 build_check=false
-binary_log=false
 binary_log_name=''
-exclude_ci_binary_log=false
 
 projects=''
-configuration=''
-prepare_machine=false
-verbosity='minimal'
-runtime_source_feed=''
-runtime_source_feed_key=''
 
 properties=()
 while [[ $# -gt 0 ]]; do
@@ -207,21 +195,6 @@ while [[ $# -gt 0 ]]; do
 
   shift
 done
-
-if [[ -z "$configuration" ]]; then
-  if [[ "$source_build" = true ]]; then configuration="Release"; else configuration="Debug"; fi
-fi
-
-if [[ "$ci" == true ]]; then
-  # Disable node reuse on CI unless explicitly opted in via MSBUILD_NODEREUSE_ENABLED.
-  # Internal testing only; this env var will be replaced with a switch (https://github.com/dotnet/arcade/issues/17013) and must not be depended on.
-  if [[ "${MSBUILD_NODEREUSE_ENABLED:-}" != "1" ]]; then
-    node_reuse=false
-  fi
-  if [[ "$exclude_ci_binary_log" == false ]]; then
-    binary_log=true
-  fi
-fi
 
 . "$scriptroot/tools.sh"
 

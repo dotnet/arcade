@@ -1,9 +1,13 @@
 param (
     $darcVersion = $null,
     $versionEndpoint = 'https://maestro.dot.net/api/assets/darc-version?api-version=2020-02-20',
-    $verbosity = 'minimal',
+    $verbosity,
     $toolpath = $null
 )
+
+# Opt in to letting tools.ps1 own the CI/environment-aware defaults for the parameters it
+# manages (e.g. verbosity); see tools.ps1 for details.
+$importerBoundParameters = $PSBoundParameters
 
 . $PSScriptRoot\tools.ps1
 
