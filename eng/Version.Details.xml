@@ -16,21 +16,21 @@
       <Uri>https://github.com/dotnet/templating</Uri>
       <Sha>43b5827697e501c442eb75ffff832cd4df2514fe</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="11.0.0-beta.26310.1">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="11.0.0-beta.26325.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>0a80b038bcc0d76b2f26c7f22062942de75779e6</Sha>
+      <Sha>b076228a542025c4f879f254d38adb5cf34a2475</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="11.0.0-beta.26310.1">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="11.0.0-beta.26325.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>0a80b038bcc0d76b2f26c7f22062942de75779e6</Sha>
+      <Sha>b076228a542025c4f879f254d38adb5cf34a2475</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.ProductConstructionService.Client" Version="1.1.0-beta.26316.3">
+    <Dependency Name="Microsoft.DotNet.ProductConstructionService.Client" Version="1.1.0-beta.26322.2">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>4dd67f5726cc76505c5f295fb0fbb215081e4d0d</Sha>
+      <Sha>72c48c9c2974198389890628901c6f3d0267c830</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.DarcLib" Version="1.1.0-beta.26316.3">
+    <Dependency Name="Microsoft.DotNet.DarcLib" Version="1.1.0-beta.26322.2">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>4dd67f5726cc76505c5f295fb0fbb215081e4d0d</Sha>
+      <Sha>72c48c9c2974198389890628901c6f3d0267c830</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="11.0.0-prerelease.26312.1">
       <Uri>https://github.com/dotnet/xharness</Uri>
@@ -124,9 +124,9 @@
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>dc5fd7a8dce8309e4add8fd4bd5d8718f221b15a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DncEng.SecretManager" Version="1.1.0-beta.26317.1">
+    <Dependency Name="Microsoft.DncEng.SecretManager" Version="1.1.0-beta.26325.1">
       <Uri>https://github.com/dotnet/dnceng</Uri>
-      <Sha>6ce8806ebc79691a02042a85f099d255bcdc4491</Sha>
+      <Sha>bd64de5d46f9e0203b057a4e34cb1e8bcf45692a</Sha>
     </Dependency>
     <!-- Dependencies required for source build to lift to the previously-source-built version. -->
     <Dependency Name="Microsoft.Build" Version="17.12.50">
