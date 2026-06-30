@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Validation tests ported from dotnet/arcade-validation (src/Validation/tests).
+
+    These tests build small synthetic repositories using the Arcade SDK and assert
+    on Arcade's signing/build infrastructure behavior. They are intended to validate
+    the *newly produced* Arcade SDK rather than the bootstrap SDK pinned in global.json.
+
+    To validate the new SDK, the test host reads the following environment variables
+    (see RepoResources.Create); when unset, the tests fall back to the version pinned
+    in the copied global.json and the default public feeds:
+      - ARCADE_VALIDATION_SDK_VERSION   : Arcade/Helix SDK version to inject into the synthetic repo's global.json.
+      - ARCADE_VALIDATION_DOTNET_VERSION: Optional .NET SDK version override for the synthetic repo.
+      - ARCADE_VALIDATION_LOCAL_FEEDS   : ';'-separated local package feed directories (e.g. artifacts/packages/<config>/NonShipping).
+
+    This project is deliberately excluded from the Helix unit-test submission in
+    tests/UnitTests.proj: it spawns full build.ps1/build.sh sub-builds and must run on
+    a build agent that has the freshly built packages available in a local feed.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>$(NetCurrent)</TargetFramework>
+    <UseDotNetXUnitAssert>true</UseDotNetXUnitAssert>
+    <!-- Heavy integration tests; never submit to Helix. -->
+    <EnableHelixJobMonitor>false</EnableHelixJobMonitor>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AwesomeAssertions" />
+    <PackageReference Include="Microsoft.Build" />
+    <PackageReference Include="MSBuild.ProjectCreation" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Include the eng/common directory so the synthetic repos use this repo's build scripts. -->
+    <None Include="$(RepositoryEngineeringDir)common\**" Link="inputs\eng\common\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- Include global.json so the harness can read the fallback Arcade/.NET versions. -->
+    <None Include="$(RepoRoot)global.json" Link="inputs\%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
