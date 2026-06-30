@@ -8,5 +8,20 @@
   <ItemGroup>
     <ProjectReference Include="..\src\Microsoft.DotNet.RemoteExecutor.csproj" />
   </ItemGroup>
+
+  <!--
+    Mirror of the VersionOverride set in the src project. With central transitive pinning enabled, this
+    test project's restore graph must also override the transitive Azure / .NET 10 packages dragged in by
+    Microsoft.Diagnostics.Runtime 4.x; otherwise they would be pinned to the lower central versions. Kept
+    local to this project so the rest of the repo is unaffected.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" VersionOverride="1.21.0" />
+    <PackageReference Include="Azure.Core" VersionOverride="1.53.0" />
+    <PackageReference Include="Microsoft.Identity.Client" VersionOverride="4.83.1" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" VersionOverride="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" VersionOverride="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Abstractions" VersionOverride="10.0.3" />
+  </ItemGroup>
  
 </Project>

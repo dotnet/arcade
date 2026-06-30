@@ -12,8 +12,33 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Diagnostics.NETCore.Client" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
     <PackageReference Include="Microsoft.Diagnostics.Runtime" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
+    <Compile Remove="MiniDump.cs" />
+  </ItemGroup>
+
+  <!--
+    Microsoft.Diagnostics.Runtime 4.x pulls Azure.Identity >= 1.21.0 -> Azure.Core >= 1.53.0, which in turn
+    requires the .NET 10 (10.0.x) versions of System.Text.Json/Encodings.Web/Bcl.AsyncInterfaces/Extensions.*
+    and Microsoft.Identity.Client. On release/10.0 the central versions of those packages are intentionally
+    pinned lower (servicing / build-task binding-redirect constraints), so we override them locally for this
+    project only via VersionOverride instead of bumping the central versions repo-wide. This keeps the upgrade
+    isolated to RemoteExecutor and leaves all other consumers (Feed, Helix, SymbolHelper, ArcadeAzureIntegration,
+    netfx build tasks) untouched.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" VersionOverride="1.21.0" />
+    <PackageReference Include="Azure.Core" VersionOverride="1.53.0" />
+    <PackageReference Include="Microsoft.Identity.Client" VersionOverride="4.83.1" />
+    <PackageReference Include="System.Text.Json" VersionOverride="10.0.3" />
+    <PackageReference Include="System.Text.Encodings.Web" VersionOverride="10.0.3" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" VersionOverride="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" VersionOverride="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Abstractions" VersionOverride="10.0.3" />
   </ItemGroup>
 
   <ItemGroup>
