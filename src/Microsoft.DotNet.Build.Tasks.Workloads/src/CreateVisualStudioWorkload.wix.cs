@@ -338,6 +338,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 Log.LogMessage(MessageImportance.Low, string.Format(Strings.BuildExtractingPackage, data.Package.PackagePath));
                 data.Package.Extract();
 
+                // Generate a catalog (.cat) file for any .js files in the extracted package.
+                // JS files are customer-modifiable and cannot be directly Authenticode-signed.
+                // The .cat provides integrity verification and is signed via FileExtensionSignInfo.
+                CatalogFileGenerator.GenerateCatalog(data.Package.DestinationDirectory,
+                    data.Package.ShortName, Log);
+
                 // Enumerate over the platforms and build each MSI once.
                 _ = Parallel.ForEach(data.FeatureBands.Keys, platform =>
                 {
@@ -384,6 +390,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 foreach (var pack in packGroup.Packs)
                 {
                     pack.Extract();
+
+                    // Generate catalog for .js files in each pack of the group.
+                    CatalogFileGenerator.GenerateCatalog(pack.DestinationDirectory,
+                        pack.ShortName, Log);
                 }
 
                 foreach (var platform in packGroup.ManifestsPerPlatform.Keys)
