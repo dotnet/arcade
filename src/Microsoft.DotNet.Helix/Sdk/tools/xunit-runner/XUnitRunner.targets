@@ -19,6 +19,23 @@
     </HelixCorrelationPayload>
   </ItemGroup>
 
+  <!--
+    Phase 1 of the test-runner consolidation effort. XUnitProject is
+    scheduled for removal in favour of MTPProject + CreateMTPWorkItems,
+    which covers xUnit v3, MSTest 4.x, NUnit, TUnit and any other
+    Microsoft.Testing.Platform based framework. See
+    Documentation/TestRunnerConsolidation.md.
+
+    Suppress by setting:
+      <SuppressArcadeXUnitProjectDeprecationWarning>true</SuppressArcadeXUnitProjectDeprecationWarning>
+  -->
+  <Target Name="_WarnXUnitProjectDeprecated"
+          Condition="'@(XUnitProject)' != '' AND '$(SuppressArcadeXUnitProjectDeprecationWarning)' != 'true'"
+          BeforeTargets="Restore;Build">
+    <Warning Code="ARCADE0010"
+             Text="The 'XUnitProject' item and the xunit.runner.console-based Helix work-item generator are deprecated and will be removed in a future Arcade release. Migrate to 'MTPProject' (see src/Microsoft.DotNet.Helix/Sdk/Readme.md and Documentation/TestRunnerConsolidation.md)." />
+  </Target>
+
   <Target Name="RestoreXUnitProjects"
           Condition="'@(XUnitProject)' != ''"
           BeforeTargets="Restore"
