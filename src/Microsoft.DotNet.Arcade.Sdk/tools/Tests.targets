@@ -74,6 +74,7 @@
         <IsTestingPlatformApplication>$(IsTestingPlatformApplication)</IsTestingPlatformApplication>
         <RunArguments>$(RunArguments)</RunArguments>
         <RunCommand>$(RunCommand)</RunCommand>
+        <CollectCoverage>$(CollectCoverage)</CollectCoverage>
       </TestToRun>
     </ItemGroup>
   </Target>
