@@ -13,7 +13,7 @@
     <!-- Overwrite XUnitVersion/XUnitAnalyzersVersion/XUnitRunnerConsoleVersion/XUnitRunnerVisualStudioVersion/MicrosoftTestingPlatformVersion that comes from the Arcade SDK to be in sync as Arcade doesn't use a live Arcade SDK.
          Keep in sync with DefaultVersions.props. -->
     <XUnitVersion>2.9.3</XUnitVersion>
-    <XUnitV3Version>4.0.0-pre.81</XUnitV3Version>
+    <XUnitV3Version>4.0.0-pre.108</XUnitV3Version>
     <XUnitAnalyzersVersion>2.0.0-pre.51</XUnitAnalyzersVersion>
     <XUnitRunnerConsoleVersion>$(XUnitVersion)</XUnitRunnerConsoleVersion>
     <XUnitRunnerVisualStudioVersion>4.0.0-pre.4</XUnitRunnerVisualStudioVersion>
