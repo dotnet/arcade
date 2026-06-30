@@ -80,4 +80,4 @@ compat text eol=lf
 # Set file behavior to:
 #   treat compiled agentic workflow lock files as generated
 ###############################################################################
-.github/workflows/*.lock.yml linguist-generated=true
+.github/workflows/*.lock.yml linguist-generated=true merge=ours
