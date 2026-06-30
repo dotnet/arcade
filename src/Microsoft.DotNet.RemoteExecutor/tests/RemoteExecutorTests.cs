@@ -253,7 +253,8 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
             }
             finally
             {
-                Directory.Delete(dumpDir, recursive: true);
+                try { Directory.Delete(dumpDir, recursive: true); }
+                catch { }
             }
         }
     }
