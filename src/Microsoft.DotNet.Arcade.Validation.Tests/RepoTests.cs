@@ -10,7 +10,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Validation.Tests
 {
@@ -29,7 +28,6 @@ namespace Validation.Tests
         [Fact]
         public async Task BasicRepoBuild()
         {
-            var envVars = Environment.GetEnvironmentVariables();
             using (var builder = new TestRepoBuilder(nameof(BasicRepoBuild), _commonRepoResourcesFixture.CommonResources))
             {
                 await builder.AddDefaultRepoSetupAsync();
@@ -65,13 +63,12 @@ namespace Validation.Tests
         /// We should get an error if AllowEmptySignList is set to false, or
         /// if it is not set at all (default behavior), and there are no items to sign.
         /// </summary>
-        /// <param name="propertyIsSet">Is the property set or are we using the expecte ddefault?</param>
+        /// <param name="propertyIsSet">Is the property set or are we using the expected default?</param>
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
         public async Task BuildShouldErrorIfNoItemsToSignAndNonEmptySignList(bool propertyIsSet)
         {
-            var envVars = Environment.GetEnvironmentVariables();
             using (var builder = new TestRepoBuilder(nameof(BuildShouldErrorIfNoItemsToSignAndNonEmptySignList), _commonRepoResourcesFixture.CommonResources))
             {
                 await builder.AddDefaultRepoSetupAsync();
@@ -115,7 +112,6 @@ namespace Validation.Tests
         [InlineData(null)]
         public async Task BuildShouldUseDotNetCertifcateIfSet(bool? useDotNetCert)
         {
-            var envVars = Environment.GetEnvironmentVariables();
             using (var builder = new TestRepoBuilder(nameof(BuildShouldUseDotNetCertifcateIfSet), _commonRepoResourcesFixture.CommonResources))
             {
                 await builder.AddDefaultRepoSetupAsync();
@@ -174,7 +170,6 @@ namespace Validation.Tests
         [Fact]
         public async Task BuildShouldNotChangeNonMicrosoft400CertsWhenSigning()
         {
-            var envVars = Environment.GetEnvironmentVariables();
             using (var builder = new TestRepoBuilder(nameof(BuildShouldNotChangeNonMicrosoft400CertsWhenSigning), _commonRepoResourcesFixture.CommonResources))
             {
                 await builder.AddDefaultRepoSetupAsync();

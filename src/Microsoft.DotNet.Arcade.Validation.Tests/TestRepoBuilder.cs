@@ -204,11 +204,14 @@ namespace Validation.Tests
 
         public void Dispose()
         {
-            if (string.IsNullOrEmpty(CommonRoot) && Directory.Exists(CommonRoot))
+            if (!string.IsNullOrEmpty(CommonRoot) && Directory.Exists(CommonRoot))
             {
-                TestRepoUtils.KillSpecificExecutable(Path.Combine(CommonDotnetRoot, TestRepoUtils.DotNetHostExecutableName));
-                // Delete the main root
-                Directory.Delete(Directory.GetParent(CommonRoot).FullName, true);
+                if (!string.IsNullOrEmpty(CommonDotnetRoot))
+                {
+                    TestRepoUtils.KillSpecificExecutable(Path.Combine(CommonDotnetRoot, TestRepoUtils.DotNetHostExecutableName));
+                }
+                // Delete the common root
+                Directory.Delete(CommonRoot, true);
             }
         }
     }

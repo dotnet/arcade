@@ -35,6 +35,6 @@ eng\run-arcade-validation-tests.ps1 -configuration Release
 
 This project is intentionally **excluded** from the Helix unit-test submission in
 `tests/UnitTests.proj`: the tests spawn full `build.ps1`/`build.sh` sub-builds and must run on a
-build agent that has the freshly built packages available in a local feed. They are executed by
-the PR build (`azure-pipelines-pr.yml`) and the official build's `ValidateSdk` stage
-(`eng/validate-sdk.yml`).
+build agent that has the freshly built packages available in a local feed. They are **not** run by
+any pipeline yet — wiring them into the PR build (`azure-pipelines-pr.yml`) and the official build's
+`ValidateSdk` stage (`eng/validate-sdk.yml`) follows in a subsequent increment.

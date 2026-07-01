@@ -38,7 +38,12 @@ if ([string]::IsNullOrEmpty($packageFeeds)) {
 }
 
 if ($feedList.Count -eq 0) {
-  Write-PipelineTelemetryError -Category 'ArcadeValidation' -Message "No local package feeds were found. Looked for: $packageFeeds"
+  if ([string]::IsNullOrEmpty($packageFeeds)) {
+    $lookedFor = "$shipping;$nonShipping"
+  } else {
+    $lookedFor = $packageFeeds
+  }
+  Write-PipelineTelemetryError -Category 'ArcadeValidation' -Message "No local package feeds were found. Looked for: $lookedFor"
   ExitWithExitCode 1
 }
 
