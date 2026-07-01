@@ -8,6 +8,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Validation.Tests
@@ -69,6 +70,40 @@ namespace Validation.Tests
         {
             get => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
         }
+
+        /// <summary>
+        /// Best-effort recursive delete of a temporary directory. Synthetic repo builds spawn
+        /// persistent build server nodes (MSBuild worker nodes, VBCSCompiler) that can keep assemblies
+        /// loaded briefly after the build completes, so a straight <see cref="Directory.Delete(string, bool)"/>
+        /// can intermittently fail with <see cref="IOException"/>/<see cref="UnauthorizedAccessException"/>.
+        /// Since the directory is throwaway, retry a few times and then give up rather than failing the run.
+        /// </summary>
+        public static void TryDeleteDirectory(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
+            {
+                return;
+            }
+
+            for (int attempt = 0; ; attempt++)
+            {
+                try
+                {
+                    Directory.Delete(path, true);
+                    return;
+                }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+                {
+                    if (attempt >= 4)
+                    {
+                        // Best effort: leave the temp directory behind rather than failing teardown.
+                        return;
+                    }
+
+                    Thread.Sleep(500);
+                }
+            }
+        }
     }
 
     public class RepoResources : IDisposable
@@ -94,12 +129,14 @@ namespace Validation.Tests
 
         private RepoResources() { }
 
-        // Environment variables used to point the validation tests at the newly produced Arcade SDK
-        // and packages instead of the bootstrap versions pinned in global.json. When unset, the tests
-        // fall back to the global.json versions and the default public feeds.
-        internal const string ArcadeVersionOverrideEnvVar = "ARCADE_VALIDATION_SDK_VERSION";
-        internal const string DotNetVersionOverrideEnvVar = "ARCADE_VALIDATION_DOTNET_VERSION";
-        internal const string LocalFeedsEnvVar = "ARCADE_VALIDATION_LOCAL_FEEDS";
+        // Runtime configuration options (set via this project's runtimeconfig.json — see the .csproj)
+        // point the validation tests at the newly produced Arcade SDK version and packages instead of
+        // the bootstrap versions pinned in global.json. When unset, the tests fall back to the
+        // global.json versions and the default public feeds.
+        internal const string ArcadeVersionConfigKey = "Microsoft.DotNet.Arcade.Validation.Tests.ArcadeSdkVersion";
+        internal const string LocalFeedsConfigKey = "Microsoft.DotNet.Arcade.Validation.Tests.LocalPackageFeeds";
+
+        private static string GetRuntimeConfigValue(string key) => AppContext.GetData(key) as string;
 
         /// <summary>
         /// Create a set of repo resources.
@@ -128,19 +165,13 @@ namespace Validation.Tests
 
             // Override the versions/feeds so the synthetic repos validate the newly produced Arcade SDK
             // (the version in global.json is the bootstrap SDK, not the one this build produces).
-            var arcadeVersionOverride = Environment.GetEnvironmentVariable(ArcadeVersionOverrideEnvVar);
+            var arcadeVersionOverride = GetRuntimeConfigValue(ArcadeVersionConfigKey);
             if (!string.IsNullOrEmpty(arcadeVersionOverride))
             {
                 arcadeVersion = arcadeVersionOverride;
             }
 
-            var dotnetVersionOverride = Environment.GetEnvironmentVariable(DotNetVersionOverrideEnvVar);
-            if (!string.IsNullOrEmpty(dotnetVersionOverride))
-            {
-                dotnetVersion = dotnetVersionOverride;
-            }
-
-            var localPackageFeeds = Environment.GetEnvironmentVariable(LocalFeedsEnvVar);
+            var localPackageFeeds = GetRuntimeConfigValue(LocalFeedsConfigKey);
 
             // If not using isolated roots, create a quick test repo builder
             // to restore things.
@@ -211,7 +242,7 @@ namespace Validation.Tests
                     TestRepoUtils.KillSpecificExecutable(Path.Combine(CommonDotnetRoot, TestRepoUtils.DotNetHostExecutableName));
                 }
                 // Delete the common root
-                Directory.Delete(CommonRoot, true);
+                TestRepoUtils.TryDeleteDirectory(CommonRoot);
             }
         }
     }
@@ -330,6 +361,14 @@ SOFTWARE.";
                 {
                     var trimmedFeed = feed.Trim();
                     if (trimmedFeed.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    // Skip feed directories that don't exist. NuGet fails restore with NU1301 when a
+                    // configured local source path is missing, and not every configured feed (e.g. the
+                    // Shipping vs NonShipping packages dir) is necessarily materialized for a given build.
+                    if (!Directory.Exists(trimmedFeed))
                     {
                         continue;
                     }
@@ -516,7 +555,7 @@ namespace HelloWorld
 
             if (DeleteOnDispose)
             {
-                Directory.Delete(TestRepoRoot, true);
+                TestRepoUtils.TryDeleteDirectory(TestRepoRoot);
             }
         }
 

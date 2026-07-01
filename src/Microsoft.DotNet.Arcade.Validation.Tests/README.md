@@ -13,25 +13,38 @@ validate the newly produced Arcade SDK directly**, replacing the old
 
 By default the synthetic repos use the Arcade/Helix SDK version pinned in the copied `global.json`
 and restore from the public dnceng feeds. In CI we instead want to validate the SDK that the
-current build just produced. The test host therefore reads these environment variables
-(see `RepoResources.Create`):
+current build just produced. The project therefore flows the produced version and the local
+package feeds to the test host through `runtimeconfig.json` (read via `AppContext.GetData` in
+`RepoResources.Create`); the values are set by the `SetValidationRuntimeConfigOptions` target in
+the `.csproj`:
 
-| Variable | Purpose |
-| --- | --- |
-| `ARCADE_VALIDATION_SDK_VERSION` | Arcade/Helix SDK version injected into each synthetic repo's `global.json`. |
-| `ARCADE_VALIDATION_DOTNET_VERSION` | Optional .NET SDK version override for the synthetic repo. |
-| `ARCADE_VALIDATION_LOCAL_FEEDS` | `;`-separated local package feed directories (e.g. `artifacts/packages/<config>/Shipping` and `.../NonShipping`) injected with priority into each synthetic repo's `NuGet.config`. |
+| Runtime config option | Default | Purpose |
+| --- | --- | --- |
+| `Microsoft.DotNet.Arcade.Validation.Tests.ArcadeSdkVersion` | `$(PackageVersion)` | Arcade/Helix SDK version injected into each synthetic repo's `global.json`. |
+| `Microsoft.DotNet.Arcade.Validation.Tests.LocalPackageFeeds` | `$(ArtifactsNonShippingPackagesDir)` | `;`-separated local package feed directories injected with priority into each synthetic repo's `NuGet.config`. |
+
+The defaults come from the build that produces the SDK. To validate a different SDK version or feed,
+override them on the command line via the `ValidationArcadeSdkVersion` and `ValidationLocalPackageFeeds`
+MSBuild properties (the underlying `$(PackageVersion)` / `$(ArtifactsNonShippingPackagesDir)` are
+reserved, hence the separate property names):
+
+```powershell
+build.cmd -test -projects src\Microsoft.DotNet.Arcade.Validation.Tests\Microsoft.DotNet.Arcade.Validation.Tests.csproj /p:ValidationArcadeSdkVersion=11.0.0-beta.25123.4 /p:ValidationLocalPackageFeeds=C:\feed
+```
 
 When these are unset, the tests fall back to the `global.json` versions and public feeds, which is
 convenient for local development against an already-published SDK.
 
 ## Running
 
-Use the helper script, which discovers the produced version and local feeds automatically:
+The project references the Arcade and Helix SDK projects for build ordering, so the freshly built
+packages are produced first. Run it like any other test project:
 
 ```powershell
-eng\run-arcade-validation-tests.ps1 -configuration Release
+build.cmd -test -projects src\Microsoft.DotNet.Arcade.Validation.Tests\Microsoft.DotNet.Arcade.Validation.Tests.csproj
 ```
+
+or, once built, with `dotnet test` directly.
 
 This project is intentionally **excluded** from the Helix unit-test submission in
 `tests/UnitTests.proj`: the tests spawn full `build.ps1`/`build.sh` sub-builds and must run on a
