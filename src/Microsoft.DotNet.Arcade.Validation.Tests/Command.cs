@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace Validation.Tests
 {
@@ -136,20 +137,43 @@ namespace Validation.Tests
             ThrowIfRunning();
             _running = true;
 
+            // Signaled when each redirected stream sends its terminating null line, so we can guarantee
+            // the asynchronous stdout/stderr readers have fully drained before reading captured output.
+            var stdOutDrained = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var stdErrDrained = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
             if (_process.StartInfo.RedirectStandardOutput)
             {
                 _process.OutputDataReceived += (sender, args) =>
                 {
+                    if (args.Data == null)
+                    {
+                        stdOutDrained.TrySetResult(true);
+                        return;
+                    }
                     ProcessData(args.Data, _stdOutCapture, _stdOutForward, _stdOutHandler);
                 };
+            }
+            else
+            {
+                stdOutDrained.TrySetResult(true);
             }
 
             if (_process.StartInfo.RedirectStandardError)
             {
                 _process.ErrorDataReceived += (sender, args) =>
                 {
+                    if (args.Data == null)
+                    {
+                        stdErrDrained.TrySetResult(true);
+                        return;
+                    }
                     ProcessData(args.Data, _stdErrCapture, _stdErrForward, _stdErrHandler);
                 };
+            }
+            else
+            {
+                stdErrDrained.TrySetResult(true);
             }
 
             _process.EnableRaisingEvents = true;
@@ -178,6 +202,11 @@ namespace Validation.Tests
 
             _process.WaitForExit();
 
+            // WaitForExit() returns once the process has exited, but the asynchronous read handlers may
+            // still be draining. Wait for both terminating null lines so captured output is complete.
+            stdOutDrained.Task.GetAwaiter().GetResult();
+            stdErrDrained.Task.GetAwaiter().GetResult();
+
             var exitCode = _process.ExitCode;
 
             ReportExecEnd(exitCode);
@@ -197,11 +226,23 @@ namespace Validation.Tests
 
         public Command EnvironmentVariable(string name, string value)
         {
+            // Remove the variable when no value is provided rather than setting a null/empty entry:
+            // a null entry can throw at process start, and callers pass null (e.g. CommonDotnetRoot /
+            // CommonPackagesRoot) specifically to *not* set the variable.
 #if NET45
-            _process.StartInfo.EnvironmentVariables[name] = value;
+            var environment = _process.StartInfo.EnvironmentVariables;
 #else
-            _process.StartInfo.Environment[name] = value;
+            var environment = _process.StartInfo.Environment;
 #endif
+            if (string.IsNullOrEmpty(value))
+            {
+                environment.Remove(name);
+            }
+            else
+            {
+                environment[name] = value;
+            }
+
             _process.StartInfo.UseShellExecute = false;
             return this;
         }

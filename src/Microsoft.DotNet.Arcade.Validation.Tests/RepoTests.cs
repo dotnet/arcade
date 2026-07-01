@@ -110,9 +110,9 @@ namespace Validation.Tests
         [InlineData(true)]
         [InlineData(false)]
         [InlineData(null)]
-        public async Task BuildShouldUseDotNetCertifcateIfSet(bool? useDotNetCert)
+        public async Task BuildShouldUseDotNetCertificateIfSet(bool? useDotNetCert)
         {
-            using (var builder = new TestRepoBuilder(nameof(BuildShouldUseDotNetCertifcateIfSet), _commonRepoResourcesFixture.CommonResources))
+            using (var builder = new TestRepoBuilder(nameof(BuildShouldUseDotNetCertificateIfSet), _commonRepoResourcesFixture.CommonResources))
             {
                 await builder.AddDefaultRepoSetupAsync();
 
@@ -233,7 +233,7 @@ namespace Validation.Tests
         {
             // Now, go find the asset manifest. Since we don't know exactly where it will be and what it will
             // be named (configuration and OS names end up influencing the path), just find an asset manifest under
-            // artifacts/log/**/AssetManifests/*. There should only be one.
+            // artifacts/log/**/AssetManifest/*. There should only be one.
             string logsDirectory = Path.Combine(builder.TestRepoRoot, "artifacts", "log");
             string[] logFiles = Directory.GetFiles(logsDirectory, "*.xml", SearchOption.AllDirectories);
             string escapedDirSeparator = Regex.Escape($"{Path.DirectorySeparatorChar}");

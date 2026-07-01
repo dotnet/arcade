@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -373,7 +374,8 @@ SOFTWARE.";
                         continue;
                     }
 
-                    localFeedEntries.AppendLine($"    <add key=\"arcade-local-{index}\" value=\"{trimmedFeed}\" />");
+                    // Escape the path so paths containing XML-special characters (e.g. '&') produce valid config.
+                    localFeedEntries.AppendLine($"    <add key=\"arcade-local-{index}\" value=\"{SecurityElement.Escape(trimmedFeed)}\" />");
                     index++;
                 }
             }
