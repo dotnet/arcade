@@ -511,8 +511,8 @@ namespace HelloWorld
 
             if (isWindows)
             {
-                executable = "powershell";
-                allArgs.Add("./eng/common/build.ps1");
+                executable = "powershell.exe";
+                allArgs.AddRange(new[] { "-ExecutionPolicy", "ByPass", "-NoProfile", "-File", "./eng/common/build.ps1" });
             }
             else
             {
