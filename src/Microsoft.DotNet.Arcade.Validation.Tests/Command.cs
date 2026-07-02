@@ -266,11 +266,7 @@ namespace Validation.Tests
             // Remove the variable when no value is provided rather than setting a null/empty entry:
             // a null entry can throw at process start, and callers pass null (e.g. CommonDotnetRoot /
             // CommonPackagesRoot) specifically to *not* set the variable.
-#if NET45
-            var environment = _process.StartInfo.EnvironmentVariables;
-#else
             var environment = _process.StartInfo.Environment;
-#endif
             if (string.IsNullOrEmpty(value))
             {
                 environment.Remove(name);
