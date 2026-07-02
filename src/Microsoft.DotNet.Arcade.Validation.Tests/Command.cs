@@ -33,6 +33,11 @@ namespace Validation.Tests
         private bool _running = false;
         private bool _quietBuildReporter = false;
 
+        // Default upper bound on how long a spawned build sub-process may run. These validation tests
+        // shell out to full build.ps1/build.sh builds; without a timeout a hung child build would hang
+        // the entire CI job. Callers can override via Timeout().
+        private TimeSpan _timeout = TimeSpan.FromMinutes(15);
+
         private Command(string executable, string args)
         {
             // Set the things we need
@@ -132,6 +137,17 @@ namespace Validation.Tests
             return this;
         }
 
+        /// <summary>
+        /// Overrides the default maximum time the spawned process may run before it is killed and
+        /// <see cref="Execute"/> throws a <see cref="TimeoutException"/>.
+        /// </summary>
+        public Command Timeout(TimeSpan timeout)
+        {
+            ThrowIfRunning();
+            _timeout = timeout;
+            return this;
+        }
+
         public CommandResult Execute()
         {
             ThrowIfRunning();
@@ -200,7 +216,25 @@ namespace Validation.Tests
                 _process.BeginErrorReadLine();
             }
 
-            _process.WaitForExit();
+            if (!_process.WaitForExit((int)_timeout.TotalMilliseconds))
+            {
+                // The child build hung. Kill the whole process tree and fail fast with a clear message
+                // rather than letting the test (and the CI job) hang indefinitely.
+                string commandLine = $"{_process.StartInfo.FileName} {_process.StartInfo.Arguments}";
+                try
+                {
+                    _process.Kill(entireProcessTree: true);
+                    // Give the async readers a brief chance to drain after the kill.
+                    _process.WaitForExit((int)TimeSpan.FromSeconds(30).TotalMilliseconds);
+                }
+                catch { } // Best effort.
+
+                ReportExecEnd(-1);
+                _process.Dispose();
+
+                throw new TimeoutException(
+                    $"Command '{commandLine}' did not exit within {_timeout.TotalMinutes:0.#} minutes and was terminated.");
+            }
 
             // WaitForExit() returns once the process has exited, but the asynchronous read handlers may
             // still be draining. Wait for both terminating null lines so captured output is complete.
