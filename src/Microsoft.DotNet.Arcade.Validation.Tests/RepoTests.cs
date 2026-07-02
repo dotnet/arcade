@@ -25,10 +25,15 @@ namespace Validation.Tests
             _commonRepoResourcesFixture = commonResourcesFixture;
         }
 
+        /// <summary>
+        /// Restore + sign with AllowEmptySignList=true should succeed. This intentionally does not pass
+        /// --build: in Arcade's Build.proj, Sign is not part of the solution build targets, so this
+        /// exercises the sign path with an empty sign list rather than compiling the repo.
+        /// </summary>
         [Fact]
-        public async Task BasicRepoBuild()
+        public async Task RestoreAndSignSucceedsWithAllowEmptySignList()
         {
-            using (var builder = new TestRepoBuilder(nameof(BasicRepoBuild), _commonRepoResourcesFixture.CommonResources))
+            using (var builder = new TestRepoBuilder(nameof(RestoreAndSignSucceedsWithAllowEmptySignList), _commonRepoResourcesFixture.CommonResources))
             {
                 await builder.AddDefaultRepoSetupAsync();
 
@@ -52,7 +57,6 @@ namespace Validation.Tests
                     TestRepoUtils.BuildArg("configuration"),
                     "Release",
                     TestRepoUtils.BuildArg("restore"),
-                    TestRepoUtils.BuildArg("build"),
                     TestRepoUtils.BuildArg("sign"),
                     TestRepoUtils.BuildArg("projects"),
                     Path.Combine(builder.TestRepoRoot, "src/FooPackage/FooPackage.csproj"))
