@@ -208,7 +208,7 @@ namespace Validation.Tests
                         "./src/FooPackage/FooPackage.csproj");
                     await builder.AddSimpleCSFile("./src/FooPackage/Program.cs");
 
-                    builder.Build(
+                    await builder.Build(
                         TestRepoUtils.BuildArg("restore"),
                         TestRepoUtils.BuildArg("ci"),
                         TestRepoUtils.BuildArg("projects"),
@@ -510,7 +510,7 @@ namespace HelloWorld
             }
         }
 
-        public Action Build(params string[] args)
+        public Func<Task> Build(params string[] args)
         {
             var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             var allArgs = new List<string>();
@@ -541,7 +541,9 @@ namespace HelloWorld
             }
 
             // Invokes eng/common/build.ps1 with provided options
-            return () => Command.Create(executable, allArgs)
+            return async () =>
+            {
+                CommandResult result = await Command.Create(executable, allArgs)
                     .EnvironmentVariable("DOTNET_INSTALL_DIR", RepoResources.CommonDotnetRoot)
                     .EnvironmentVariable("NUGET_PACKAGES", RepoResources.CommonPackagesRoot)
                     .EnvironmentVariable("BUILD_REPOSITORY_URI", "https://localhost")
@@ -552,8 +554,11 @@ namespace HelloWorld
                     .WorkingDirectory(TestRepoRoot)
                     .CaptureStdErr()
                     .CaptureStdOut()
-                    .Execute()
-                    .EnsureSuccessful();
+                    .ExecuteAsync()
+                    .ConfigureAwait(false);
+
+                result.EnsureSuccessful();
+            };
         }
 
         public void Cleanup()

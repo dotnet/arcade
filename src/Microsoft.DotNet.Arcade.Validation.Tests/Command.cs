@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Validation.Tests
@@ -139,7 +140,7 @@ namespace Validation.Tests
 
         /// <summary>
         /// Overrides the default maximum time the spawned process may run before it is killed and
-        /// <see cref="Execute"/> throws a <see cref="TimeoutException"/>.
+        /// <see cref="ExecuteAsync"/> throws a <see cref="TimeoutException"/>.
         /// </summary>
         public Command Timeout(TimeSpan timeout)
         {
@@ -148,7 +149,7 @@ namespace Validation.Tests
             return this;
         }
 
-        public CommandResult Execute()
+        public async Task<CommandResult> ExecuteAsync()
         {
             ThrowIfRunning();
             _running = true;
@@ -201,7 +202,6 @@ namespace Validation.Tests
                 _process.StartInfo.UseShellExecute = false;
             }
 
-            var sw = Stopwatch.StartNew();
             ReportExecBegin();
 
             _process.Start();
@@ -216,30 +216,39 @@ namespace Validation.Tests
                 _process.BeginErrorReadLine();
             }
 
-            if (!_process.WaitForExit((int)_timeout.TotalMilliseconds))
+            using (var timeoutCts = new CancellationTokenSource(_timeout))
             {
-                // The child build hung. Kill the whole process tree and fail fast with a clear message
-                // rather than letting the test (and the CI job) hang indefinitely.
-                string commandLine = $"{_process.StartInfo.FileName} {_process.StartInfo.Arguments}";
                 try
                 {
-                    _process.Kill(entireProcessTree: true);
-                    // Give the async readers a brief chance to drain after the kill.
-                    _process.WaitForExit((int)TimeSpan.FromSeconds(30).TotalMilliseconds);
+                    await _process.WaitForExitAsync(timeoutCts.Token).ConfigureAwait(false);
                 }
-                catch { } // Best effort.
+                catch (OperationCanceledException)
+                {
+                    // The child build hung. Kill the whole process tree and fail fast with a clear message
+                    // rather than letting the test (and the CI job) hang indefinitely.
+                    string commandLine = $"{_process.StartInfo.FileName} {_process.StartInfo.Arguments}";
+                    try
+                    {
+                        _process.Kill(entireProcessTree: true);
 
-                ReportExecEnd(-1);
-                _process.Dispose();
+                        // Give the async readers a bounded chance to drain after the kill.
+                        using var killWaitCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                        await _process.WaitForExitAsync(killWaitCts.Token).ConfigureAwait(false);
+                    }
+                    catch { } // Best effort.
 
-                throw new TimeoutException(
-                    $"Command '{commandLine}' did not exit within {_timeout.TotalMinutes:0.#} minutes and was terminated.");
+                    ReportExecEnd(-1);
+                    _process.Dispose();
+
+                    throw new TimeoutException(
+                        $"Command '{commandLine}' did not exit within {_timeout.TotalMinutes:0.#} minutes and was terminated.");
+                }
             }
 
-            // WaitForExit() returns once the process has exited, but the asynchronous read handlers may
+            // WaitForExitAsync returns once the process has exited, but the asynchronous read handlers may
             // still be draining. Wait for both terminating null lines so captured output is complete.
-            stdOutDrained.Task.GetAwaiter().GetResult();
-            stdErrDrained.Task.GetAwaiter().GetResult();
+            await stdOutDrained.Task.ConfigureAwait(false);
+            await stdErrDrained.Task.ConfigureAwait(false);
 
             var exitCode = _process.ExitCode;
 

@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using AwesomeAssertions;
@@ -48,14 +48,14 @@ namespace Validation.Tests
                     "./src/FooPackage/FooPackage.csproj");
                 await builder.AddSimpleCSFile("src/FooPackage/Program.cs");
 
-                builder.Build(
+                await builder.Build(
                     TestRepoUtils.BuildArg("configuration"),
                     "Release",
                     TestRepoUtils.BuildArg("restore"),
                     TestRepoUtils.BuildArg("sign"),
                     TestRepoUtils.BuildArg("projects"),
                     Path.Combine(builder.TestRepoRoot, "src/FooPackage/FooPackage.csproj"))
-                    .Should().NotThrow();
+                    .Should().NotThrowAsync();
             }
         }
 
@@ -92,14 +92,14 @@ namespace Validation.Tests
                     "./src/FooPackage/FooPackage.csproj");
                 await builder.AddSimpleCSFile("src/FooPackage/Program.cs");
 
-                builder.Build(
+                await builder.Build(
                     TestRepoUtils.BuildArg("configuration"),
                     "Release",
                     TestRepoUtils.BuildArg("restore"),
                     TestRepoUtils.BuildArg("sign"),
                     TestRepoUtils.BuildArg("projects"),
                     Path.Combine(builder.TestRepoRoot, "src/FooPackage/FooPackage.csproj"))
-                    .Should().Throw<Exception>().WithMessage("*error : List of files to sign is empty. Make sure that ItemsToSign is configured correctly*");
+                    .Should().ThrowAsync<Exception>().WithMessage("*error : List of files to sign is empty. Make sure that ItemsToSign is configured correctly*");
             }
         }
 
@@ -139,7 +139,7 @@ namespace Validation.Tests
                     "./src/FooPackage/FooPackage.csproj");
                 await builder.AddSimpleCSFile("src/FooPackage/Program.cs");
 
-                builder.Build(
+                await builder.Build(
                     TestRepoUtils.BuildArg("configuration"),
                     "Release",
                     TestRepoUtils.BuildArg("restore"),
@@ -149,7 +149,7 @@ namespace Validation.Tests
                     TestRepoUtils.BuildArg("projects"),
                     Path.Combine(builder.TestRepoRoot, "src/FooPackage/FooPackage.csproj"),
                     "/p:AutoGenerateSymbolPackages=false")
-                    .Should().NotThrow();
+                    .Should().NotThrowAsync();
 
                 // Now, go find the Round0 signing project and ensure that the certificate names were set properly.
                 // The arcade default for an exe is Microsoft400
@@ -200,7 +200,7 @@ namespace Validation.Tests
                     "./src/FooPackage/FooPackage.csproj");
                 await builder.AddSimpleCSFile("src/FooPackage/Program.cs");
 
-                builder.Build(
+                await builder.Build(
                     TestRepoUtils.BuildArg("configuration"),
                     "Release",
                     TestRepoUtils.BuildArg("restore"),
@@ -210,7 +210,7 @@ namespace Validation.Tests
                     TestRepoUtils.BuildArg("projects"),
                     Path.Combine(builder.TestRepoRoot, "src/FooPackage/FooPackage.csproj"),
                     "/p:AutoGenerateSymbolPackages=false")
-                    .Should().NotThrow();
+                    .Should().NotThrowAsync();
 
                 // Now, go find the Round0 signing project and ensure that the certificate names were set properly.
                 // The arcade default for an exe is Microsoft400
