@@ -211,11 +211,14 @@ namespace Validation.Tests
 
             ReportExecEnd(exitCode);
 
-            return new CommandResult(
+            CommandResult result = new(
                 _process.StartInfo,
                 exitCode,
                 _stdOutCapture?.GetStringBuilder()?.ToString(),
                 _stdErrCapture?.GetStringBuilder()?.ToString());
+            _process.Dispose();
+
+            return result;
         }
 
         public Command WorkingDirectory(string projectDirectory)
