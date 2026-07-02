@@ -162,7 +162,7 @@ namespace Validation.Tests
                 string round0ProjectText = File.ReadAllText(round0FilePath);
                 string expectedCert = useDotNetCert.GetValueOrDefault() ? DotNetCertificate : MicrosoftCertificate;
 
-                Regex authenticodeRegex = new Regex("<Authenticode>(.*)</Authenticode>");
+                Regex authenticodeRegex = new Regex("<Authenticode>([^<]*)</Authenticode>");
                 var matches = authenticodeRegex.Matches(round0ProjectText);
                 matches.Count.Should().Be(1);
                 matches[0].Groups[1].Value.Should().Be(expectedCert);
@@ -222,7 +222,7 @@ namespace Validation.Tests
                 string round0FilePath = Path.Combine(builder.TestRepoRoot, "artifacts", "tmp", "Release", "Signing", "Round0-Sign.proj");
                 string round0ProjectText = File.ReadAllText(round0FilePath);
 
-                Regex authenticodeRegex = new Regex("<Authenticode>(.*)</Authenticode>");
+                Regex authenticodeRegex = new Regex("<Authenticode>([^<]*)</Authenticode>");
                 var matches = authenticodeRegex.Matches(round0ProjectText);
                 matches.Count.Should().Be(1);
                 matches[0].Groups[1].Value.Should().Be(certOverride);
