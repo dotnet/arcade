@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using XliffTasks.Model;
@@ -71,35 +72,47 @@ namespace XliffTasks.Tests
         }
 
         [Fact]
-        public void RewriteHrefOfImageToAbsoluteInDestinyFolder()
+        public void RewriteHrefOfImageToRelativePathFromOutputFolder()
         {
-            string sourceFolder = Directory.GetCurrentDirectory();
-            string expectedAbsoluteLocation = Path.Combine(
-              Directory.GetCurrentDirectory(), 
-              @"Resources\Images.png".Replace('\\', Path.DirectorySeparatorChar));
+            // Simulates: source .vsct is in src/MyProject/, translated output is in artifacts/obj/MyProject.xlf/
+            string tempBase = Path.Combine(Path.GetTempPath(), "xliff-vsct-test-" + Path.GetRandomFileName());
+            string sourceFolder = Path.Combine(tempBase, "src", "MyProject");
+            string outputFolder = Path.Combine(tempBase, "artifacts", "obj", "MyProject.xlf");
+            string sourceFullPath = Path.Combine(sourceFolder, "MyPackage.vsct");
+            string outputFullPath = Path.Combine(outputFolder, "MyPackage.vsct");
+
+            string resourceRelativePath = Path.Combine("Resources", "Images.png");
+            string resourceAbsolutePath = Path.GetFullPath(Path.Combine(sourceFolder, resourceRelativePath));
+
+            Uri fromUri = new Uri(outputFolder.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar);
+            Uri toUri = new Uri(resourceAbsolutePath);
+            string expectedRelativePath = Uri.UnescapeDataString(fromUri.MakeRelativeUri(toUri).ToString())
+                .Replace('/', Path.DirectorySeparatorChar);
 
             string source =
-@"<CommandTable xmlns=""http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable"" xmlns:xs=""http://www.w3.org/2001/XMLSchema"">
+$@"<CommandTable xmlns=""http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable"" xmlns:xs=""http://www.w3.org/2001/XMLSchema"">
   <Bitmaps>
-    <Bitmap guid=""guidImages"" href=""Resources\Images.png"" usedList=""bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows"" />
+    <Bitmap guid=""guidImages"" href=""{resourceRelativePath}"" usedList=""bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows"" />
   </Bitmaps>
 </CommandTable>";
 
             string expectedTranslation =
-@"<CommandTable xmlns=""http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable"" xmlns:xs=""http://www.w3.org/2001/XMLSchema"">
+$@"<CommandTable xmlns=""http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable"" xmlns:xs=""http://www.w3.org/2001/XMLSchema"">
   <Bitmaps>
-    <Bitmap guid=""guidImages"" href=""ABSOLUTEPATH"" usedList=""bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows"" />
+    <Bitmap guid=""guidImages"" href=""{expectedRelativePath}"" usedList=""bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows"" />
   </Bitmaps>
-</CommandTable>".Replace("ABSOLUTEPATH", expectedAbsoluteLocation);
+</CommandTable>";
 
             VsctDocument document = new();
             StringWriter writer = new();
             document.Load(new StringReader(source));
-            document.RewriteRelativePathsToAbsolute(
-                        Path.Combine(sourceFolder, "Resources.resx"));
+            document.RewriteRelativePathsForOutputPath(sourceFullPath, outputFullPath);
             document.Save(writer);
 
             AssertEx.EqualIgnoringLineEndings(expectedTranslation, writer.ToString());
+
+            // The path in the output must NOT be absolute
+            Assert.DoesNotContain(tempBase, writer.ToString());
         }
 
         [Fact]
@@ -112,11 +125,12 @@ namespace XliffTasks.Tests
   </Bitmaps>
 </CommandTable>";
 
+            string sourceFullPath = Path.Combine(Directory.GetCurrentDirectory(), "Resources.vsct");
+
             VsctDocument document = new();
             StringWriter writer = new();
             document.Load(new StringReader(source));
-            document.RewriteRelativePathsToAbsolute(
-                        Path.Combine(Directory.GetCurrentDirectory(), "Resources.resx"));
+            document.RewriteRelativePathsForOutputPath(sourceFullPath, sourceFullPath);
             document.Save(writer);
 
             AssertEx.EqualIgnoringLineEndings(source, writer.ToString());

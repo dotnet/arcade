@@ -62,9 +62,37 @@ namespace XliffTasks.Model
        }
 
         // rewrite nodes that point to external files (used often for icons, etc.)
-        // these will have relative paths adjusted to absolute path.
-        public virtual void RewriteRelativePathsToAbsolute(string sourceFullPath)
+        // these will have relative paths adjusted to a path relative to the output file.
+        public virtual void RewriteRelativePathsForOutputPath(string sourceFullPath, string outputFullPath)
         {
+        }
+
+        /// <summary>
+        /// Computes a relative path from <paramref name="fromDirectory"/> to <paramref name="toPath"/>.
+        /// Falls back to an absolute path if the paths are on different drives.
+        /// </summary>
+        protected static string MakeRelativePath(string fromDirectory, string toPath)
+        {
+            // Ensure fromDirectory ends with a separator so Uri treats it as a directory
+            if (!fromDirectory.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal) &&
+                !fromDirectory.EndsWith(Path.AltDirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+            {
+                fromDirectory += Path.DirectorySeparatorChar;
+            }
+
+            Uri fromUri = new Uri(fromDirectory);
+            Uri toUri = new Uri(toPath);
+
+            // If on different drives (Windows), fall back to absolute path
+            if (fromUri.Scheme != toUri.Scheme || fromUri.Host != toUri.Host)
+            {
+                return toPath;
+            }
+
+            Uri relativeUri = fromUri.MakeRelativeUri(toUri);
+            string relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+
+            return relativePath.Replace('/', Path.DirectorySeparatorChar);
         }
 
         protected abstract void LoadCore(TextReader reader);
