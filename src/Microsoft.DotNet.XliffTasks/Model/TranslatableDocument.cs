@@ -74,8 +74,8 @@ namespace XliffTasks.Model
         protected static string MakeRelativePath(string fromDirectory, string toPath)
         {
             // Ensure fromDirectory ends with a separator so Uri treats it as a directory
-            if (!fromDirectory.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal) &&
-                !fromDirectory.EndsWith(Path.AltDirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+            if (!fromDirectory.EndsWith(Path.DirectorySeparatorChar) &&
+                !fromDirectory.EndsWith(Path.AltDirectorySeparatorChar))
             {
                 fromDirectory += Path.DirectorySeparatorChar;
             }
