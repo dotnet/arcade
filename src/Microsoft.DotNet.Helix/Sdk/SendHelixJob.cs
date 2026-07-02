@@ -268,9 +268,14 @@ namespace Microsoft.DotNet.Helix.Sdk
                 Log.LogMessage(MessageImportance.High, $"Sending Job to {TargetQueue}...");
                 cancellationToken.ThrowIfCancellationRequested();
                 // LogMessageFromText recognizes canonical "error :" / "warning :" prefixes and logs them as MSBuild errors/warnings.
-                // When queue-stats logging is opted in, elevate to High importance so the summary shows up at the default 'Minimal' verbosity.
-                MessageImportance sendAsyncImportance = EnableShowHelixQueueStats ? MessageImportance.High : MessageImportance.Normal;
-                ISentJob job = await def.SendAsync(msg => Log.LogMessageFromText(msg, sendAsyncImportance), cancellationToken);
+                // Route routine submission progress at Normal importance, but surface the opt-in queue health
+                // summary at High importance so it survives the default 'Minimal' build verbosity - without
+                // elevating the rest of the submission logging.
+                Action<string> logNormal = msg => Log.LogMessageFromText(msg, MessageImportance.Normal);
+                Action<string> logQueueStats = EnableShowHelixQueueStats
+                    ? msg => Log.LogMessageFromText(msg, MessageImportance.High)
+                    : logNormal;
+                ISentJob job = await def.SendAsync(logNormal, logQueueStats, cancellationToken);
                 JobCorrelationId = job.CorrelationId;
                 JobCancellationToken = job.HelixCancellationToken;
                 cancellationToken.ThrowIfCancellationRequested();
