@@ -52,6 +52,7 @@ namespace Validation.Tests
                     TestRepoUtils.BuildArg("configuration"),
                     "Release",
                     TestRepoUtils.BuildArg("restore"),
+                    TestRepoUtils.BuildArg("build"),
                     TestRepoUtils.BuildArg("sign"),
                     TestRepoUtils.BuildArg("projects"),
                     Path.Combine(builder.TestRepoRoot, "src/FooPackage/FooPackage.csproj"))
