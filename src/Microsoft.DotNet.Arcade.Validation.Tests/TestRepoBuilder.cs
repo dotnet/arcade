@@ -54,16 +54,24 @@ namespace Validation.Tests
             string justProcessName = Path.GetFileNameWithoutExtension(Path.GetFileName(fileName));
             System.Diagnostics.Process[] processes = System.Diagnostics.Process.GetProcessesByName(justProcessName);
 
+            // File paths are case-insensitive on Windows/macOS but case-sensitive on Linux.
+            var pathComparison = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                ? StringComparison.Ordinal
+                : StringComparison.OrdinalIgnoreCase;
+
             foreach (var process in processes)
             {
-                try
+                using (process)
                 {
-                    if (process.MainModule.FileName == fileName)
+                    try
                     {
-                        process.Kill(true);
+                        if (string.Equals(process.MainModule.FileName, fileName, pathComparison))
+                        {
+                            process.Kill(true);
+                        }
                     }
+                    catch { } // Ignored
                 }
-                catch { } // Ignored
             }
         }
 

@@ -44,7 +44,7 @@ packages are produced first. Run it like any other test project:
 build.cmd -test -projects src\Microsoft.DotNet.Arcade.Validation.Tests\Microsoft.DotNet.Arcade.Validation.Tests.csproj
 ```
 
-or, once built, with `dotnet test` directly.
+or, if `dotnet` is available, with `dotnet test` directly.
 
 This project is intentionally **excluded** from the Helix unit-test submission in
 `tests/UnitTests.proj`: the tests spawn full `build.ps1`/`build.sh` sub-builds and must run on a
