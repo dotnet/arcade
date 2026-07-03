@@ -427,14 +427,7 @@ while :; do
             fi
             __AlpineRepoOverride="$1"
             ;;
-
-            shift
-            __DebianRepoOverride="$1"
-            ;;
-        --alpine-repo|-alpine-repo)
-            shift
-            __AlpineRepoOverride="$1"
-            ;;
+        # Removed duplicate/invalid option handling block (was breaking case statement parsing).
         --use-jobs)
             shift
             MAXJOBS=$1
