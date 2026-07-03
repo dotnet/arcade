@@ -271,10 +271,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                 // Route routine submission progress at Normal importance, but surface the opt-in queue health
                 // summary at High importance so it survives the default 'Minimal' build verbosity - without
                 // elevating the rest of the submission logging.
-                Action<string> logNormal = msg => Log.LogMessageFromText(msg, MessageImportance.Normal);
-                Action<string> logQueueStats = EnableShowHelixQueueStats
-                    ? msg => Log.LogMessageFromText(msg, MessageImportance.High)
-                    : logNormal;
+                var (logNormal, logQueueStats) = CreateSubmissionLoggers(
+                    EnableShowHelixQueueStats,
+                    (msg, importance) => Log.LogMessageFromText(msg, importance));
                 ISentJob job = await def.SendAsync(logNormal, logQueueStats, cancellationToken);
                 JobCorrelationId = job.CorrelationId;
                 JobCancellationToken = job.HelixCancellationToken;
@@ -282,6 +281,26 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             cancellationToken.ThrowIfCancellationRequested();
+        }
+
+        /// <summary>
+        /// Builds the pair of log callbacks used when submitting a Helix job. Routine submission
+        /// progress is logged at <see cref="MessageImportance.Normal"/>; the opt-in queue-health
+        /// summary is elevated to <see cref="MessageImportance.High"/> when
+        /// <paramref name="enableShowHelixQueueStats"/> is set so it survives the default 'Minimal'
+        /// build verbosity, and stays at Normal otherwise to avoid log noise. Both callbacks forward
+        /// to <paramref name="logSink"/> with the chosen importance.
+        /// </summary>
+        internal static (Action<string> logNormal, Action<string> logQueueStats) CreateSubmissionLoggers(
+            bool enableShowHelixQueueStats,
+            Action<string, MessageImportance> logSink)
+        {
+            Action<string> logNormal = msg => logSink(msg, MessageImportance.Normal);
+            MessageImportance queueStatsImportance = enableShowHelixQueueStats
+                ? MessageImportance.High
+                : MessageImportance.Normal;
+            Action<string> logQueueStats = msg => logSink(msg, queueStatsImportance);
+            return (logNormal, logQueueStats);
         }
 
         private IJobDefinition AddBuildVariableProperty(IJobDefinition def, string key, string azdoVariableName)
