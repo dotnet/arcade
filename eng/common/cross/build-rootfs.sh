@@ -405,9 +405,29 @@ while :; do
             ;;
         --ubuntu-repo|-ubuntu-repo)
             shift
+            if [[ "$#" -le 0 ]]; then
+                echo "ERROR: --ubuntu-repo requires a URL argument."
+                usage
+            fi
             __UbuntuRepoOverride="$1"
             ;;
         --debian-repo|-debian-repo)
+            shift
+            if [[ "$#" -le 0 ]]; then
+                echo "ERROR: --debian-repo requires a URL argument."
+                usage
+            fi
+            __DebianRepoOverride="$1"
+            ;;
+        --alpine-repo|-alpine-repo)
+            shift
+            if [[ "$#" -le 0 ]]; then
+                echo "ERROR: --alpine-repo requires a URL argument."
+                usage
+            fi
+            __AlpineRepoOverride="$1"
+            ;;
+
             shift
             __DebianRepoOverride="$1"
             ;;
