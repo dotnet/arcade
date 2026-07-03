@@ -21,7 +21,7 @@ usage()
     echo "--ubuntu-repo <url> - optional, override the Ubuntu apt repository base URL."
     echo "--debian-repo <url> - optional, override the Debian apt repository base URL."
     echo "--alpine-repo <url> - optional, override the Alpine Linux repository base URL."
-    echo "--jobs N - optional, restrict to N jobs."
+    echo "--jobs N (or --use-jobs N) - optional, restrict to N jobs."
     exit 1
 }
 
