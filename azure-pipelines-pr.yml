@@ -151,12 +151,18 @@ stages:
         - checkout: self
           clean: true
         steps:
+        # The Test stage build runs the non-Helix unit tests inline, which includes the ported
+        # Arcade SDK validation RepoTests (excluded from the Helix submission below). Passing
+        # RunNonHelixTestsOnly skips the inline execution of the Helix-routed unit tests so only the
+        # non-Helix tests run here. The validation tests are credential-free: the project defaults
+        # its Arcade SDK version + local feed to the freshly built $(PackageVersion) /
+        # $(ArtifactsNonShippingPackagesDir).
         - script: eng\common\cibuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
             $(_InternalBuildArgs)
-            /p:Test=false
-          displayName: Windows Build / Publish
+            /p:RunNonHelixTestsOnly=true
+          displayName: Windows Build / Publish + non-Helix tests
 
         - powershell: eng\common\build.ps1
             -configuration $(_BuildConfig)
@@ -188,11 +194,13 @@ stages:
         - checkout: self
           clean: true
         steps:
+        # See the Windows job: run the non-Helix unit tests (incl. the Arcade SDK validation
+        # RepoTests) inline; RunNonHelixTestsOnly skips inline execution of the Helix-routed tests.
         - script: eng/common/cibuild.sh
             --configuration $(_BuildConfig)
             --prepareMachine
-            /p:Test=false
-          displayName: Unix Build / Publish
+            /p:RunNonHelixTestsOnly=true
+          displayName: Unix Build / Publish + non-Helix tests
 
         - script: eng/common/build.sh
             --configuration $(_BuildConfig)
