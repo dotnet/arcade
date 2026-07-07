@@ -5,6 +5,12 @@ parameters:
 - name: microbuildUseESRP
   default: false
   type: boolean
+# When true (default), run the in-build Arcade SDK validation stage (self-bootstrap with the newly
+# produced SDK + RepoTests). Set to false as a bootstrap-breakage escape hatch to ship a new Arcade
+# when the current one cannot self-validate; publishing then no longer depends on ValidateSdk.
+- name: runValidateSdk
+  default: true
+  type: boolean
 
 stages:
 - stage: build
@@ -49,17 +55,20 @@ stages:
             /p:Test=false
           displayName: Windows Build / Publish
 
-- stage: ValidateSdk
-  displayName: Validate Arcade SDK
-  dependsOn: build
-  jobs:
-  - template: /eng/validate-sdk.yml@self
-    parameters:
-      microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
-      buildArgs: -configuration $(_BuildConfig)
-        -prepareMachine
-        $(_InternalBuildArgs)
-        /p:Test=false
+- ${{ if eq(parameters.runValidateSdk, true) }}:
+  - stage: ValidateSdk
+    displayName: Validate Arcade SDK
+    dependsOn: build
+    jobs:
+    - template: /eng/validate-sdk.yml@self
+      parameters:
+        microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
+        # Self-bootstrap with the newly produced SDK, then run the non-Helix validation RepoTests
+        # against it (RunNonHelixTestsOnly skips the Helix-routed unit tests' inline execution).
+        buildArgs: -configuration $(_BuildConfig)
+          -prepareMachine
+          $(_InternalBuildArgs)
+          /p:RunNonHelixTestsOnly=true
 
 - template: /eng/common/templates-official/post-build/post-build.yml@self
   parameters:
@@ -68,4 +77,5 @@ stages:
     enableSigningValidation: false
     publishDependsOn:
     - Validate
-    - ValidateSdk
+    - ${{ if eq(parameters.runValidateSdk, true) }}:
+      - ValidateSdk
