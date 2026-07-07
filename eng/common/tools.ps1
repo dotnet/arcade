@@ -432,11 +432,31 @@ function InitializeVisualStudioMSBuild([object]$vsRequirements = $null) {
   $msbuildVersionDir = if ([int]$vsMajorVersion -lt 16) { "$vsMajorVersion.0" } else { "Current" }
 
   $local:BinFolder = Join-Path $vsInstallDir "MSBuild\$msbuildVersionDir\Bin"
-  $local:Prefer64bit = if (Get-Member -InputObject $vsRequirements -Name 'Prefer64bit') { $vsRequirements.Prefer64bit } else { $false }
-  if ($local:Prefer64bit -and (Test-Path(Join-Path $local:BinFolder "amd64"))) {
-    $global:_MSBuildExe = Join-Path $local:BinFolder "amd64\msbuild.exe"
-  } else {
-    $global:_MSBuildExe = Join-Path $local:BinFolder "msbuild.exe"
+
+  # Use the MSBuild matching the host's process architecture (e.g. amd64 or arm64),
+  # falling back to the 32-bit MSBuild in the root Bin folder when no matching subfolder exists.
+
+  # Determine the architecture of the current process, accounting for a 32-bit process
+  # running on a 64-bit OS (PROCESSOR_ARCHITEW6432 holds the real machine architecture).
+  $local:ProcessArchitecture = $env:PROCESSOR_ARCHITECTURE
+  if (($local:ProcessArchitecture -eq 'x86') -and ($env:PROCESSOR_ARCHITEW6432)) {
+    $local:ProcessArchitecture = $env:PROCESSOR_ARCHITEW6432
+  }
+
+  # Map the architecture to the corresponding MSBuild subfolder. The 32-bit MSBuild lives in the
+  # root Bin folder, so x86 maps to an empty subfolder.
+  $local:MSBuildArchSubFolder = switch ($local:ProcessArchitecture) {
+    'AMD64' { 'amd64' }
+    'ARM64' { 'arm64' }
+    default { '' }
+  }
+
+  $global:_MSBuildExe = Join-Path $local:BinFolder "msbuild.exe"
+  if ($local:MSBuildArchSubFolder) {
+    $local:ArchMSBuildExe = Join-Path $local:BinFolder (Join-Path $local:MSBuildArchSubFolder "msbuild.exe")
+    if (Test-Path $local:ArchMSBuildExe) {
+      $global:_MSBuildExe = $local:ArchMSBuildExe
+    }
   }
 
   return $global:_MSBuildExe
@@ -742,7 +762,9 @@ function MSBuild() {
       ExitWithExitCode 1
     }
 
-    if ($nodeReuse) {
+    # Node reuse must be disabled in CI builds unless explicitly opted in via MSBUILD_NODEREUSE_ENABLED.
+    # Internal testing only; this env var will be replaced with a switch (https://github.com/dotnet/arcade/issues/17013) and must not be depended on.
+    if ($nodeReuse -and $env:MSBUILD_NODEREUSE_ENABLED -ne "1") {
       Write-PipelineTelemetryError -Category 'Build' -Message 'Node reuse must be disabled in CI build.'
       ExitWithExitCode 1
     }
