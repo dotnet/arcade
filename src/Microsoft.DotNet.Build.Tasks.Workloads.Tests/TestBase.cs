@@ -227,7 +227,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 
             if (!File.Exists(vswhere))
             {
-                Assert.Skip("Skipping because vswhere.exe is unavailable on this machine.");
+                Console.WriteLine("Skipping because vswhere.exe is unavailable on this machine.");
+                return;
             }
 
             var vsPath = Process.Start(new ProcessStartInfo(vswhere,
