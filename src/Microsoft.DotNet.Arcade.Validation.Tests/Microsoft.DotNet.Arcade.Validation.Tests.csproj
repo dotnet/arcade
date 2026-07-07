@@ -21,6 +21,9 @@
     <TargetFramework>$(BundledNETCoreAppTargetFramework)</TargetFramework>
     <!-- Heavy integration tests; never submit to Helix. -->
     <EnableHelixJobMonitor>false</EnableHelixJobMonitor>
+    <!-- These are non-Helix tests: run them inline (via `build -test`) even when the pipeline sets
+         RunNonHelixTestsOnly=true to skip the inline execution of the Helix-routed unit tests. -->
+    <SkipTests>false</SkipTests>
   </PropertyGroup>
 
   <ItemGroup>
