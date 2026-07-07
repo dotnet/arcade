@@ -239,15 +239,29 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
                     CrashDumpPath = Path.Combine(dumpDir, "crashdump.%p.dmp")
                 };
 
-                RemoteExecutor.Invoke(() =>
+                using (RemoteInvokeHandle handle = RemoteExecutor.Invoke(() =>
                 {
                     // Trigger an access violation to crash the process
                     *(int*)0x10000 = 0;
-                }, options).Dispose();
+                }, options))
+                {
+                    // The process is expected to crash, so it should not return the success exit code.
+                    Assert.NotEqual(RemoteExecutor.SuccessExitCode, handle.ExitCode);
+                }
 
-                bool dumpCreated = SpinWait.SpinUntil(
-                    () => Directory.GetFiles(dumpDir, "*.dmp").Length > 0,
-                    TimeSpan.FromSeconds(10));
+                // Poll for the dump file with a short sleep between checks rather than busy-spinning.
+                bool dumpCreated = false;
+                DateTime deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+                while (DateTime.UtcNow < deadline)
+                {
+                    if (Directory.GetFiles(dumpDir, "*.dmp").Length > 0)
+                    {
+                        dumpCreated = true;
+                        break;
+                    }
+
+                    Thread.Sleep(100);
+                }
 
                 Assert.True(dumpCreated, "Expected a crash dump file to be created within 10 seconds.");
             }

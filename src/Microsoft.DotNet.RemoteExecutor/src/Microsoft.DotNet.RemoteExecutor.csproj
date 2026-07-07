@@ -29,7 +29,14 @@
     project only via VersionOverride instead of bumping the central versions repo-wide. This keeps the upgrade
     isolated to RemoteExecutor and leaves all other consumers (Feed, Helix, SymbolHelper, ArcadeAzureIntegration,
     netfx build tasks) untouched.
+    System.Collections.Immutable: CLRMD 4.x requires >= 10.0.7. On .NET Framework this is a real package
+    reference; on .NETCoreApp it ships in the shared framework and is pruned at restore, which raises the
+    NU1510 "unnecessary reference" diagnostic, so we suppress NU1510 for the .NETCoreApp build only.
   -->
+  <PropertyGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
+    <NoWarn>$(NoWarn);NU1510</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Azure.Identity" VersionOverride="1.21.0" />
     <PackageReference Include="Azure.Core" VersionOverride="1.53.0" />
@@ -37,6 +44,7 @@
     <PackageReference Include="System.Text.Json" VersionOverride="10.0.3" />
     <PackageReference Include="System.Text.Encodings.Web" VersionOverride="10.0.3" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" VersionOverride="10.0.3" />
+    <PackageReference Include="System.Collections.Immutable" VersionOverride="10.0.7" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" VersionOverride="10.0.3" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Abstractions" VersionOverride="10.0.3" />
   </ItemGroup>
