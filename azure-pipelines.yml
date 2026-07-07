@@ -28,6 +28,10 @@ parameters:
   displayName: Run the Validate Arcade SDK stage (self-bootstrap + RepoTests)
   type: boolean
   default: true
+- name: usePrebuiltArcadeForPublishing
+  displayName: Validate promotion with the newly built Arcade (main only)
+  type: boolean
+  default: true
 
 variables:
 - template: /eng/common-variables.yml@self
@@ -69,3 +73,4 @@ extends:
           oneLocEnabled: true
         microbuildUseESRP: true
         runValidateSdk: ${{ parameters.runValidateSdk }}
+        usePrebuiltArcadeForPublishing: ${{ parameters.usePrebuiltArcadeForPublishing }}
