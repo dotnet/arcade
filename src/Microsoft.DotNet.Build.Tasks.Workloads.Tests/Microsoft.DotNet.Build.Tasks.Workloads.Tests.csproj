@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <!-- Sample packages -->
-  <ItemGroup>    
+  <ItemGroup>
     <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.200" Version="[$(MicrosoftNETWorkloadMonoToolChainManifest_60200Version)];[$(MicrosoftNETWorkloadMonoToolChainManifest_60200Version_604)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.300" Version="[$(MicrosoftNETWorkloadMonoToolChainManifest_60300Version_6021)];[$(MicrosoftNETWorkloadMonoToolChainManifest_60300Version_6022)]" />
     <PackageDownload Include="Microsoft.iOS.Templates" Version="[$(MicrosoftiOSTemplatesVersion)];[$(MicrosoftiOSTemplatesVersion160527)]" />
@@ -87,7 +87,13 @@
   
   <ItemGroup>
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(NuGetPackageRoot)microsoft.signed.wix\$(MicrosoftSignedWixVersion)\tools\**\*" Link="testassets\wix\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <!-- Create a local copy of the toolset in the output folder for running tests on Helix -->
+    <Content Include="$(NuGetPackageRoot)microsoft.wix\$(MicrosoftWixToolsetSdkVersion)\tools\**\*" Link="testassets\wix\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <Content Include="$(NuGetPackageRoot)microsoft.wixtoolset.heat\$(MicrosoftWixToolsetSdkVersion)\tools\**\*" Link="testassets\wix\heat\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <Content Include="$(NuGetPackageRoot)microsoft.wixtoolset.dependency.wixext\$(MicrosoftWixToolsetSdkVersion)\wixext6\**\*" Link="testassets\wixext\dependency\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <Content Include="$(NuGetPackageRoot)microsoft.wixtoolset.util.wixext\$(MicrosoftWixToolsetSdkVersion)\wixext6\**\*" Link="testassets\wixext\util\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <Content Include="$(NuGetPackageRoot)microsoft.wixtoolset.ui.wixext\$(MicrosoftWixToolsetSdkVersion)\wixext6\**\*" Link="testassets\wixext\ui\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+
     <Content Include="$(NuGetPackageRoot)microsoft.net.workload.mono.toolchain.manifest-6.0.200\$(MicrosoftNETWorkloadMonoToolChainManifest_60200Version)\*.nupkg" Link="testassets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
     <Content Include="$(NuGetPackageRoot)microsoft.net.workload.mono.toolchain.manifest-6.0.200\$(MicrosoftNETWorkloadMonoToolChainManifest_60200Version_604)\*.nupkg" Link="testassets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
     <Content Include="$(NuGetPackageRoot)microsoft.net.workload.mono.toolchain.manifest-6.0.300\$(MicrosoftNETWorkloadMonoToolChainManifest_60300Version_6022)\*.nupkg" Link="testassets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
