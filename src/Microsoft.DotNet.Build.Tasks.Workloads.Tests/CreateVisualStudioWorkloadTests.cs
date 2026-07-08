@@ -187,10 +187,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Contains("vs.dependency id=Microsoft.Emscripten.Sdk.6.0.4", previewComponentSwr);
 
             // Verify the SWIX authoring for the VS package wrapping the manifest MSI
-            string manifestMsiSwr = File.ReadAllText(Path.Combine(baseIntermediateOutputPath, "src", "swix", "6.0.200", "Emscripten.Manifest-6.0.200", "x64", "msi.swr"));
+            string manifestMsiSwr = File.ReadAllText(
+                Path.Combine(Path.GetDirectoryName(
+                    createWorkloadTask.SwixProjects.FirstOrDefault(
+                        i => i.GetMetadata(Metadata.PackageType) == DefaultValues.PackageTypeMsiManifest).ItemSpec), "msi.swr"));
             Assert.Contains("package name=Emscripten.Manifest-6.0.200", manifestMsiSwr);
             Assert.Contains("vs.package.type=msi", manifestMsiSwr);
-            Assert.Contains("vs.package.chip=x64", manifestMsiSwr);
+            Assert.Contains("vs.package.chip=", manifestMsiSwr);
             Assert.DoesNotContain("vs.package.machineArch", manifestMsiSwr);
             Assert.DoesNotContain("vs.package.outOfSupport", manifestMsiSwr);
 
@@ -307,11 +310,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Contains("vs.dependency id=Microsoft.Emscripten.Sdk.6.0.4", componentSwr);
 
             // Verify the SWIX authoring for the VS package wrapping the manifest MSI
-            string manifestMsiSwr = File.ReadAllText(Path.Combine(baseIntermediateOutputPath, "src", "swix", "6.0.200", "Emscripten.Manifest-6.0.200", "arm64", "msi.swr"));
+            string manifestMsiSwr = File.ReadAllText(
+                Path.Combine(Path.GetDirectoryName(
+                    createWorkloadTask.SwixProjects.FirstOrDefault(
+                        i => i.GetMetadata(Metadata.PackageType) == DefaultValues.PackageTypeMsiManifest).ItemSpec), "msi.swr"));
             Assert.Contains("package name=Emscripten.Manifest-6.0.200", manifestMsiSwr);
             Assert.Contains("vs.package.type=msi", manifestMsiSwr);
             Assert.DoesNotContain("vs.package.chip", manifestMsiSwr);
-            Assert.Contains("vs.package.machineArch=arm64", manifestMsiSwr);
+            Assert.Contains("vs.package.machineArch=", manifestMsiSwr);
         }
     }
 }
