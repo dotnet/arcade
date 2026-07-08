@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -254,7 +255,7 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
                 DateTime deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
                 while (DateTime.UtcNow < deadline)
                 {
-                    if (Directory.GetFiles(dumpDir, "*.dmp").Length > 0)
+                    if (Directory.EnumerateFiles(dumpDir, "*.dmp").Any())
                     {
                         dumpCreated = true;
                         break;
