@@ -22,31 +22,24 @@
   </ItemGroup>
 
   <!--
-    Microsoft.Diagnostics.Runtime 4.x pulls Azure.Identity >= 1.21.0 -> Azure.Core >= 1.53.0, which in turn
-    requires the .NET 10 (10.0.x) versions of System.Text.Json/Encodings.Web/Bcl.AsyncInterfaces/Extensions.*
-    and Microsoft.Identity.Client. On release/10.0 the central versions of those packages are intentionally
-    pinned lower (servicing / build-task binding-redirect constraints), so we override them locally for this
-    project only via VersionOverride instead of bumping the central versions repo-wide. This keeps the upgrade
-    isolated to RemoteExecutor and leaves all other consumers (Feed, Helix, SymbolHelper, ArcadeAzureIntegration,
-    netfx build tasks) untouched.
-    System.Collections.Immutable: CLRMD 4.x requires >= 10.0.7. On .NET Framework this is a real package
-    reference; on .NETCoreApp it ships in the shared framework and is pruned at restore, which raises the
-    NU1510 "unnecessary reference" diagnostic, so we suppress NU1510 for the .NETCoreApp build only.
+    Microsoft.Diagnostics.Runtime 4.x and Microsoft.Diagnostics.NETCore.Client pull a small set of
+    stable 9.0.x runtime packages (System.Collections.Immutable, Microsoft.Bcl.AsyncInterfaces,
+    Microsoft.Extensions.DependencyInjection.Abstractions) that are newer than release/10.0's central
+    versions, which are still flowed at 9.0.0-rc.2. We bump just those three transitive packages up to
+    the referenced GA versions via VersionOverride, isolated to this project, instead of raising the
+    central (Maestro-flowed) versions repo-wide. No Azure / 10.0.x overrides are needed because CLRMD
+    4.0.725402 is satisfied by the repo's existing Azure.Core/Azure.Identity versions.
+    On .NETCoreApp these three ship in the shared framework, so the explicit references are pruned at
+    restore and raise NU1510 ("unnecessary reference"); suppress that for the .NETCoreApp build only.
   -->
   <PropertyGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
     <NoWarn>$(NoWarn);NU1510</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Identity" VersionOverride="1.21.0" />
-    <PackageReference Include="Azure.Core" VersionOverride="1.53.0" />
-    <PackageReference Include="Microsoft.Identity.Client" VersionOverride="4.83.1" />
-    <PackageReference Include="System.Text.Json" VersionOverride="10.0.3" />
-    <PackageReference Include="System.Text.Encodings.Web" VersionOverride="10.0.3" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" VersionOverride="10.0.3" />
-    <PackageReference Include="System.Collections.Immutable" VersionOverride="10.0.7" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" VersionOverride="10.0.3" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Abstractions" VersionOverride="10.0.3" />
+    <PackageReference Include="System.Collections.Immutable" VersionOverride="9.0.10" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" VersionOverride="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" VersionOverride="9.0.8" />
   </ItemGroup>
 
   <ItemGroup>
