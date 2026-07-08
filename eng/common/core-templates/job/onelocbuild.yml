@@ -8,6 +8,11 @@ parameters:
   CeapexPat: $(dn-bot-ceapex-package-r) # PAT for the loc AzDO instance https://dev.azure.com/ceapex
   GithubPat: $(BotAccount-dotnet-bot-repo-PAT)
 
+  # Service connection for WIF-based Entra authentication to ceapex feeds (replaces CeapexPat).
+  # When set, uses AzureCLI@2 to obtain an Entra token instead of a PAT.
+  # Set to '' to fall back to PAT-based auth via CeapexPat parameter.
+  CeapexServiceConnection: 'dnceng-onelocbuild-ceapex'
+
   SourcesDirectory: $(System.DefaultWorkingDirectory)
   CreatePr: true
   AutoCompletePr: false
@@ -73,7 +78,21 @@ jobs:
         displayName: Generate LocProject.json
         condition: ${{ parameters.condition }}
 
-    - task: OneLocBuild@2
+    # Acquire Entra token for ceapex feed access when using WIF-based auth
+    - ${{ if ne(parameters.CeapexServiceConnection, '') }}:
+      - task: AzureCLI@2
+        displayName: 'Acquire Entra token for ceapex feed access'
+        inputs:
+          azureSubscription: ${{ parameters.CeapexServiceConnection }}
+          scriptType: 'pscore'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            $token = az account get-access-token --query accessToken --resource 499b84ac-1321-427f-aa17-267ca6975798 -o tsv
+            if (-not $token) { Write-Error "Failed to acquire AzDO token"; exit 1 }
+            Write-Host "##vso[task.setvariable variable=CeapexEntraToken;issecret=true]${token}"
+        condition: ${{ parameters.condition }}
+
+    - task: OneLocBuild@3
       displayName: OneLocBuild
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -88,7 +107,10 @@ jobs:
           isUseLfLineEndingsSelected: ${{ parameters.UseLfLineEndings }}
           isShouldReusePrSelected: ${{ parameters.ReusePr }}
         packageSourceAuth: patAuth
-        patVariable: ${{ parameters.CeapexPat }}
+        ${{ if ne(parameters.CeapexServiceConnection, '') }}:
+          patVariable: $(CeapexEntraToken)
+        ${{ if eq(parameters.CeapexServiceConnection, '') }}:
+          patVariable: ${{ parameters.CeapexPat }}
         ${{ if eq(parameters.RepoType, 'gitHub') }}:
           repoType: ${{ parameters.RepoType }}
           gitHubPatVariable: "${{ parameters.GithubPat }}"
