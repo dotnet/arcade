@@ -9,20 +9,4 @@
     <ProjectReference Include="..\src\Microsoft.DotNet.RemoteExecutor.csproj" />
   </ItemGroup>
 
-  <!--
-    Mirror of the transitive 9.0.x overrides in the src project. The test project (net10.0) pulls the
-    same Microsoft.Diagnostics.* transitive packages through the project reference; override them up to
-    the referenced GA versions so central pinning does not force them back down to 9.0.0-rc.2. These
-    ship in the shared framework, so suppress the NU1510 pruning warning.
-  -->
-  <PropertyGroup>
-    <NoWarn>$(NoWarn);NU1510</NoWarn>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Collections.Immutable" VersionOverride="9.0.10" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" VersionOverride="9.0.8" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" VersionOverride="9.0.8" />
-  </ItemGroup>
-
 </Project>
