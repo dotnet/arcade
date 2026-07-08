@@ -18,8 +18,7 @@ steps:
       if (-not $token) { Write-Error "FAILED: Could not acquire token"; exit 1 }
       Write-Host "SUCCESS: Got Entra token (length: $($token.Length))"
 
-      Write-Host "
-Step 2: Testing ceapex feed access..."
+      Write-Host "`nStep 2: Testing ceapex feed access..."
       $feedHeaders = @{ Authorization = "Bearer $token" }
       try {
         $resp = Invoke-RestMethod -Uri "https://feeds.dev.azure.com/ceapex/_apis/packaging/feeds?api-version=7.0" -Headers $feedHeaders
@@ -29,5 +28,4 @@ Step 2: Testing ceapex feed access..."
         Write-Error "FAILED: Could not access ceapex feeds: $($_.Exception.Message)"
         exit 1
       }
-      Write-Host "
-All validations passed!"
+      Write-Host "`nAll validations passed!"
