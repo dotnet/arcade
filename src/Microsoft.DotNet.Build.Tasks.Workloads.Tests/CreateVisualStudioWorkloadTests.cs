@@ -197,20 +197,25 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.DoesNotContain("vs.package.machineArch", manifestMsiSwr);
             Assert.DoesNotContain("vs.package.outOfSupport", manifestMsiSwr);
 
-            // Verify that no arm64 MSI authoring for VS. EMSDK doesn't define RIDs for arm64, but manifests always generate
-            // arm64 MSIs for the CLI based installs so we should not see that.
-            string swixRootDirectory = Path.Combine(baseIntermediateOutputPath, "src", "swix", "6.0.200");
-            IEnumerable<string> arm64Directories = Directory.EnumerateDirectories(swixRootDirectory, "arm64", SearchOption.AllDirectories);
-            Assert.DoesNotContain(arm64Directories, s => s.Contains("arm64"));
+            // There should be no SWIX projects generated targeting arm64 when VS does not support it.
+            createWorkloadTask.SwixProjects.Where(s => s.GetMetadata(Metadata.Platform) == "arm64").Should().BeEmpty();
 
             // Verify the SWIX authoring for one of the workload pack MSIs. Packs get assigned random sub-folders so we
             // need to filter out the SWIX project output items the task produced.
-            ITaskItem pythonPackSwixItem = createWorkloadTask.SwixProjects.Where(s => s.ItemSpec.Contains(@"Microsoft.Emscripten.Python.6.0.4\x64")).FirstOrDefault();
+            ITaskItem pythonPackSwixItem = createWorkloadTask.SwixProjects.FirstOrDefault(s =>
+                s.GetMetadata(Metadata.PackageType) == DefaultValues.PackageTypeMsiPack &&
+                s.GetMetadata(Metadata.Platform) == "x64" &&
+                s.GetMetadata(Metadata.SwixPackageId).Contains("Python"));
             string packMsiSwr = File.ReadAllText(Path.Combine(Path.GetDirectoryName(pythonPackSwixItem.ItemSpec), "msi.swr"));
             Assert.Contains("package name=Microsoft.Emscripten.Python.6.0.4", packMsiSwr);
             Assert.Contains("vs.package.chip=x64", packMsiSwr);
             Assert.Contains("vs.package.outOfSupport=yes", packMsiSwr);
             Assert.DoesNotContain("vs.package.machineArch", packMsiSwr);
+
+            string m = File.ReadAllText(
+                Path.Combine(Path.GetDirectoryName(
+                    createWorkloadTask.SwixProjects.FirstOrDefault(
+                        i => i.GetMetadata(Metadata.PackageType) == DefaultValues.PackageTypeMsiManifest).ItemSpec), "msi.swr"));
 
             // Verify the swix project items for components. The project files names always contain the major.minor suffix, so we'll end up
             // with microsoft.net.sdk.emscripten.5.6.swixproj and microsoft.net.sdk.emscripten.pre.5.6.swixproj
