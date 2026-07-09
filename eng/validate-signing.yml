@@ -1,0 +1,198 @@
+# Validates that the *newly built* Arcade SDK's SignTool can sign a curated set of artifact types
+# (packages, VSIXes, .deb/.rpm/.pkg, loose assemblies, nested containers, ...). Ported from
+# dotnet/arcade-validation's Validate_Signing_{Windows,Linux,MacOS} jobs, with an added step that
+# bootstraps the newly produced SDK (update-packagesource) before signing so the new SignTool is used.
+#
+# One of the parallel jobs of the official build's ValidateSdk stage.
+#
+# NOTE: real signing uses MicroBuild/ESRP and only runs in the internal official build; not testable
+# locally or in PR. Needs @dotnet/dnceng review and a real official-build run to confirm (especially
+# the cross-platform update-packagesource and Mac/Linux real-signing wiring).
+
+parameters:
+  microbuildUseESRP: false
+
+jobs:
+- template: /eng/common/templates-official/job/job.yml@self
+  parameters:
+    name: Validate_Signing_Windows
+    displayName: Validate Signing (Windows)
+    enableMicrobuild: true
+    microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
+    artifacts:
+      download:
+        path: build_stage_artifacts
+      publish:
+        logs:
+          name: Logs_ValidateSigning_Windows_$(_BuildConfig)
+    timeoutInMinutes: 90
+    variables:
+    - group: Publish-Build-Assets
+    - name: _TeamName
+      value: DotNetCore
+    - template: /eng/common/templates-official/variables/pool-providers.yml@self
+    pool:
+      name: $(DncEngInternalBuildPool)
+      demands: ImageOverride -equals windows.vs2026.amd64
+    strategy:
+      matrix:
+        Test_Signing:
+          _BuildConfig: Debug
+          _SignType: test
+        Real_Signing:
+          _BuildConfig: Release
+          _SignType: real
+    preSteps:
+    - checkout: self
+      clean: true
+    steps:
+    # Bootstrap the newly produced SDK so the sign below uses the new SignTool.
+    - task: AzureCLI@2
+      displayName: Update package source (use newly built SDK)
+      inputs:
+        azureSubscription: "Darc: Maestro Production"
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: >
+          .\eng\update-packagesource.ps1
+          -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT)
+          -packagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
+    - task: CopyFiles@2
+      displayName: Stage signing test packages
+      inputs:
+        sourceFolder: $(Build.SourcesDirectory)\eng\validation\resources
+        targetFolder: $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\NonShipping
+    - task: CopyFiles@2
+      displayName: Stage signing test VSIXes
+      inputs:
+        sourceFolder: $(Build.SourcesDirectory)\eng\validation\resources
+        targetFolder: $(Build.SourcesDirectory)\artifacts\VSSetup\$(_BuildConfig)
+        contents: '*.vsix'
+    - powershell: eng\common\build.ps1
+        -configuration $(_BuildConfig)
+        -restore
+        -prepareMachine
+        -sign
+        -ci
+        /p:DotNetSignType=$(_SignType)
+        /p:TeamName=$(_TeamName)
+        /p:OfficialBuildId=$(Build.BuildNumber)
+      displayName: Sign with the newly built SignTool
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+- template: /eng/common/templates-official/job/job.yml@self
+  parameters:
+    name: Validate_Signing_Linux
+    displayName: Validate Signing (Linux)
+    enableMicrobuild: true
+    enableMicrobuildForMacAndLinux: true
+    microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
+    artifacts:
+      download:
+        path: build_stage_artifacts
+      publish:
+        logs:
+          name: Logs_ValidateSigning_Linux_$(_BuildConfig)
+    timeoutInMinutes: 90
+    variables:
+    - group: Publish-Build-Assets
+    - name: _TeamName
+      value: DotNetCore
+    - name: _BuildConfig
+      value: Release
+    - name: _SignType
+      value: real
+    - template: /eng/common/templates-official/variables/pool-providers.yml@self
+    pool:
+      name: $(DncEngInternalBuildPool)
+      demands: ImageOverride -equals build.azurelinux.3.amd64
+    preSteps:
+    - checkout: self
+      clean: true
+    steps:
+    - task: AzureCLI@2
+      displayName: Update package source (use newly built SDK)
+      inputs:
+        azureSubscription: "Darc: Maestro Production"
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: >
+          ./eng/update-packagesource.ps1
+          -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT)
+          -packagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
+    - task: CopyFiles@2
+      displayName: Stage signing test packages
+      inputs:
+        sourceFolder: $(Build.SourcesDirectory)/eng/validation/resources
+        targetFolder: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping
+    - script: eng/common/build.sh
+        --configuration $(_BuildConfig)
+        --restore
+        --prepareMachine
+        --sign
+        --ci
+        /p:DotNetSignType=$(_SignType)
+        /p:TeamName=$(_TeamName)
+        /p:OfficialBuildId=$(Build.BuildNumber)
+      displayName: Sign with the newly built SignTool
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+- template: /eng/common/templates-official/job/job.yml@self
+  parameters:
+    name: Validate_Signing_MacOS
+    displayName: Validate Signing (macOS)
+    enableMicrobuild: true
+    enableMicrobuildForMacAndLinux: true
+    microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
+    artifacts:
+      download:
+        path: build_stage_artifacts
+      publish:
+        logs:
+          name: Logs_ValidateSigning_MacOS_$(_BuildConfig)
+    timeoutInMinutes: 90
+    variables:
+    - group: Publish-Build-Assets
+    - name: _TeamName
+      value: DotNetCore
+    - name: _BuildConfig
+      value: Release
+    - name: _SignType
+      value: real
+    pool:
+      name: Azure Pipelines
+      image: macos-latest
+      os: macOS
+    preSteps:
+    - checkout: self
+      clean: true
+    steps:
+    - task: AzureCLI@2
+      displayName: Update package source (use newly built SDK)
+      inputs:
+        azureSubscription: "Darc: Maestro Production"
+        scriptType: pscore
+        scriptLocation: inlineScript
+        inlineScript: >
+          ./eng/update-packagesource.ps1
+          -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT)
+          -packagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
+    - task: CopyFiles@2
+      displayName: Stage signing test packages
+      inputs:
+        sourceFolder: $(Build.SourcesDirectory)/eng/validation/resources
+        targetFolder: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping
+    - script: eng/common/build.sh
+        --configuration $(_BuildConfig)
+        --restore
+        --prepareMachine
+        --sign
+        --ci
+        /p:DotNetSignType=$(_SignType)
+        /p:TeamName=$(_TeamName)
+        /p:OfficialBuildId=$(Build.BuildNumber)
+      displayName: Sign with the newly built SignTool
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)

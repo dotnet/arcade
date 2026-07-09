@@ -1,0 +1,2 @@
+# Signing-validation test inputs. These must be committed even though *.nupkg is ignored repo-wide.
+!*.nupkg

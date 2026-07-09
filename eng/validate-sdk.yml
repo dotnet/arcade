@@ -12,8 +12,6 @@ jobs:
     displayName: Validate Arcade SDK
     enableMicrobuild: false
     microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
-    # Upload the non-Helix (inline) validation RepoTests results from artifacts/TestResults.
-    enablePublishTestResults: true
     artifacts:
       download:
         path: build_stage_artifacts

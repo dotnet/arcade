@@ -5,16 +5,12 @@ parameters:
 - name: microbuildUseESRP
   default: false
   type: boolean
-# When true (default), run the in-build Arcade SDK validation stage (self-bootstrap with the newly
-# produced SDK + RepoTests). Set to false as a bootstrap-breakage escape hatch to ship a new Arcade
-# when the current one cannot self-validate; publishing then no longer depends on ValidateSdk.
+# When true (default), run the Validate Arcade SDK stage: three parallel validations of the newly
+# produced SDK - signing validation, self-build (self-bootstrap), and promotion to a test channel
+# with the new Arcade. Set to false as a bootstrap-breakage escape hatch to ship a new Arcade when
+# the current one cannot self-validate; the promotion to '.NET Eng - Latest' still runs on build
+# success.
 - name: runValidateSdk
-  default: true
-  type: boolean
-# When true (default), the main-branch promotion validates that promotion works when driven by the
-# newly built Arcade (promote to a test channel from a branch bumped to the new Arcade) before adding
-# the build to '.NET Eng - Latest'. Set to false to promote with the current (global.json) Arcade.
-- name: usePrebuiltArcadeForPublishing
   default: true
   type: boolean
 
@@ -66,15 +62,20 @@ stages:
     displayName: Validate Arcade SDK
     dependsOn: build
     jobs:
+    # Self-bootstrap: rebuild arcade with the newly produced SDK (build + sign + pack + publish).
     - template: /eng/validate-sdk.yml@self
       parameters:
         microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
-        # Self-bootstrap with the newly produced SDK, then run the non-Helix validation RepoTests
-        # against it (RunNonHelixTestsOnly skips the Helix-routed unit tests' inline execution).
         buildArgs: -configuration $(_BuildConfig)
           -prepareMachine
           $(_InternalBuildArgs)
-          /p:RunNonHelixTestsOnly=true
+          /p:Test=false
+    # Sign a curated set of artifact types with the newly built SignTool.
+    - template: /eng/validate-signing.yml@self
+      parameters:
+        microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
+    # Validate that build promotion works when driven by the newly built Arcade.
+    - template: /eng/validate-promotion.yml@self
 
 - template: /eng/common/templates-official/post-build/post-build.yml@self
   parameters:
@@ -86,12 +87,14 @@ stages:
     - ${{ if eq(parameters.runValidateSdk, true) }}:
       - ValidateSdk
 
-# Promotion to '.NET Eng - Latest', validating that promotion works with the newly built Arcade.
-# Main only: release branches keep using dotnet/arcade-validation for this gate (see #17046). The
-# build's assets are already published to '.NET Eng - Validation' by the post-build publish stage.
+# Promote the build to '.NET Eng - Latest' using the current/default Arcade. Runs after a successful
+# build, and - when validation is enabled - after ValidateSdk passes, so a build can still be promoted
+# when validation is disabled. Main only: release branches keep using dotnet/arcade-validation for
+# this gate (see #17046). The assets were already published to '.NET Eng - Validation' by the
+# post-build publish stage, so this uses --skip-assets-publishing.
 - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
-  - stage: PromoteWithNewArcade
-    displayName: Promote using the newly built Arcade
+  - stage: PromoteToLatest
+    displayName: Promote to '.NET Eng - Latest'
     dependsOn:
     - publish_using_darc
     - ${{ if eq(parameters.runValidateSdk, true) }}:
@@ -99,10 +102,11 @@ stages:
     jobs:
     - template: /eng/common/templates-official/job/job.yml@self
       parameters:
-        name: PromoteWithNewArcade
-        displayName: Promote using the newly built Arcade
+        name: PromoteToLatest
+        displayName: Promote to '.NET Eng - Latest'
         enableMicrobuild: false
-        timeoutInMinutes: 120
+        timeoutInMinutes: 60
+        # The publish-build-assets job writes the BAR build id as the first line of ReleaseConfigs.txt.
         artifacts:
           download:
             name: ReleaseConfigs
@@ -117,7 +121,6 @@ stages:
         - checkout: self
           clean: true
         steps:
-        # The publish-build-assets job writes the BAR build id as the first line of ReleaseConfigs.txt.
         - powershell: |
             $releaseConfigs = Get-Content "$(System.DefaultWorkingDirectory)/release_configs/ReleaseConfigs.txt"
             $barId = ($releaseConfigs | Select-Object -First 1).Trim()
@@ -125,7 +128,6 @@ stages:
             Write-Host "BAR build id: $barId"
             Write-Host "##vso[task.setvariable variable=BARBuildId]$barId"
           displayName: Read BAR build id
-        # Token with code read/write on the internal AzDO mirror, to push the update-dependencies branch.
         - task: AzureCLI@2
           displayName: Get AzDO token (WIF)
           name: GetAzDoToken
@@ -138,13 +140,12 @@ stages:
               if ($LASTEXITCODE -ne 0) { Write-Error "Failed to get AzDO token"; exit 1 }
               Write-Host "##vso[task.setvariable variable=WifAzDoToken;issecret=true]$azdoToken"
         - task: AzureCLI@2
-          displayName: Promote using the newly built Arcade
+          displayName: Promote to '.NET Eng - Latest'
           inputs:
             azureSubscription: "Darc: Maestro Production"
             scriptType: ps
             scriptLocation: scriptPath
-            scriptPath: $(System.DefaultWorkingDirectory)/eng/validation/promote-with-new-arcade.ps1
+            scriptPath: $(System.DefaultWorkingDirectory)/eng/validation/promote-to-latest.ps1
             arguments: >
               -BuildId $(BARBuildId)
               -AzdoToken $(WifAzDoToken)
-              -UsePrebuiltArcade ${{ parameters.usePrebuiltArcadeForPublishing }}

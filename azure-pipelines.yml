@@ -25,11 +25,7 @@ parameters:
 # produced SDK and runs the validation RepoTests; publishing depends on it. Override to false at
 # queue time to ship a new Arcade when the current one cannot self-validate.
 - name: runValidateSdk
-  displayName: Run the Validate Arcade SDK stage (self-bootstrap + RepoTests)
-  type: boolean
-  default: true
-- name: usePrebuiltArcadeForPublishing
-  displayName: Validate promotion with the newly built Arcade (main only)
+  displayName: Run the Validate Arcade SDK stage (signing + self-build + promotion validation)
   type: boolean
   default: true
 
@@ -73,4 +69,3 @@ extends:
           oneLocEnabled: true
         microbuildUseESRP: true
         runValidateSdk: ${{ parameters.runValidateSdk }}
-        usePrebuiltArcadeForPublishing: ${{ parameters.usePrebuiltArcadeForPublishing }}
