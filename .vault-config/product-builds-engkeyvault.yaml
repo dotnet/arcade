@@ -34,6 +34,15 @@ secrets:
       gitHubBotAccountSecret: BotAccount-dotnet-maestro-bot
       gitHubBotAccountName: dotnet-maestro-bot
 
+  # Mirror-Credentials - used by dotnet-mirroring pipelines (mirror-dnceng, mirror-devdiv)
+  # Must be a fine-grained PAT scoped to public repositories only (Contents: read).
+  # Set expiration to 30 days.
+  BotAccount-dotnet-maestro-bot-mirroring-PAT:
+    type: github-access-token
+    parameters:
+      gitHubBotAccountSecret: BotAccount-dotnet-maestro-bot
+      gitHubBotAccountName: dotnet-maestro-bot
+
   BotAccount-dotnet-bot-repo-PAT:
     type: github-access-token
     parameters:
