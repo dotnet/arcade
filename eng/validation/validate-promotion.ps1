@@ -46,7 +46,12 @@ $buildJson = & $darc get-build --id $BuildId --output-format json --ci | Convert
 if ($LASTEXITCODE -ne 0 -or $null -eq $buildJson) {
   throw "Could not retrieve BAR build $BuildId."
 }
-$channels = @($buildJson.channels)
+# darc get-build may return an array; take the first element. Access 'channels' via PSObject so we
+# don't throw under StrictMode when the property is omitted (darc omits it when the build is on no
+# channel - which is precisely the dev/PR-branch skip case we want to detect).
+$build = if ($buildJson -is [System.Array]) { $buildJson | Select-Object -First 1 } else { $buildJson }
+$channelsProperty = $build.PSObject.Properties['channels']
+$channels = if ($channelsProperty -and $channelsProperty.Value) { @($channelsProperty.Value) } else { @() }
 if ($channels.Count -eq 0) {
   Write-Host "Build $BuildId is not assigned to any channel; skipping promotion validation (no restorable feed for the build's assets)."
   ExitWithExitCode 0
