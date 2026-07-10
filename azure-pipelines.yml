@@ -22,8 +22,8 @@ pr: none
 
 parameters:
 # Bootstrap-breakage escape hatch. The ValidateSdk stage self-bootstraps arcade with the newly
-# produced SDK and runs the validation RepoTests; publishing depends on it. Override to false at
-# queue time to ship a new Arcade when the current one cannot self-validate.
+# produced SDK and validates signing + promotion using that SDK; publishing depends on it.
+# Override to false at queue time to ship a new Arcade when the current one cannot self-validate.
 - name: runValidateSdk
   displayName: Run the Validate Arcade SDK stage (signing + self-build + promotion validation)
   type: boolean
