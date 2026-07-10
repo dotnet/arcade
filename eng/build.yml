@@ -144,8 +144,12 @@ stages:
           inputs:
             azureSubscription: "Darc: Maestro Production"
             scriptType: ps
-            scriptLocation: scriptPath
-            scriptPath: $(System.DefaultWorkingDirectory)/eng/validation/promote-to-latest.ps1
-            arguments: >
-              -BuildId $(BARBuildId)
-              -AzdoToken $(WifAzDoToken)
+            scriptLocation: inlineScript
+            inlineScript: |
+              $ci = $true
+              $disableConfigureToolsetImport = $true
+              . $(Build.SourcesDirectory)/eng/common/tools.ps1
+              $darc = Get-Darc
+              # Assets were already published to '.NET Eng - Validation'; this is the promotion gate.
+              & $darc add-build-to-channel --id $(BARBuildId) --channel '.NET Eng - Latest' --azdev-pat $(WifAzDoToken) --ci --skip-assets-publishing
+              if ($LASTEXITCODE -ne 0) { Write-Error "Failed to promote build $(BARBuildId) to '.NET Eng - Latest'."; exit 1 }

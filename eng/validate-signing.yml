@@ -5,8 +5,9 @@
 #
 # The signing inputs are the existing SignTool unit-test resources
 # (src/Microsoft.DotNet.SignTool.Tests/Resources) - a superset of arcade-validation's - so no binary
-# assets are duplicated here. The explicit file list is the curated set of clean, signable inputs
-# (that folder also holds deliberately-malformed/non-signable inputs used by the unit tests).
+# assets are duplicated here. The signingTestPackages / signingTestVSIXes lists below are the curated
+# set of clean, signable inputs (that folder also holds deliberately-malformed/non-signable inputs
+# used by the unit tests), defined once and shared by all three jobs.
 #
 # One of the parallel jobs of the official build's ValidateSdk stage.
 #
@@ -16,6 +17,25 @@
 
 parameters:
   microbuildUseESRP: false
+  # Curated, clean signable inputs from src/Microsoft.DotNet.SignTool.Tests/Resources, shared by all
+  # jobs (CopyFiles 'contents' minimatch, one pattern per line).
+  signingTestPackages: |
+    ContainerOne.1.0.0.nupkg
+    CustomTargetFrameworkAttribute.dll
+    EmptyPKT.dll
+    NestedContainer.1.0.0.nupkg
+    NestedZip.zip
+    PackageWithZip.nupkg
+    SignedLibrary.dll
+    test.deb
+    test.mpack
+    test.pkg
+    test.rpm
+    test.tgz
+    test.zip
+  signingTestVSIXes: |
+    PackageWithRelationships.vsix
+    test.vsix
 
 jobs:
 - template: /eng/common/templates-official/job/job.yml@self
@@ -67,28 +87,13 @@ jobs:
       inputs:
         sourceFolder: $(Build.SourcesDirectory)\src\Microsoft.DotNet.SignTool.Tests\Resources
         targetFolder: $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\NonShipping
-        contents: |
-          ContainerOne.1.0.0.nupkg
-          CustomTargetFrameworkAttribute.dll
-          EmptyPKT.dll
-          NestedContainer.1.0.0.nupkg
-          NestedZip.zip
-          PackageWithZip.nupkg
-          SignedLibrary.dll
-          test.deb
-          test.mpack
-          test.pkg
-          test.rpm
-          test.tgz
-          test.zip
+        contents: ${{ parameters.signingTestPackages }}
     - task: CopyFiles@2
       displayName: Stage signing test VSIXes
       inputs:
         sourceFolder: $(Build.SourcesDirectory)\src\Microsoft.DotNet.SignTool.Tests\Resources
         targetFolder: $(Build.SourcesDirectory)\artifacts\VSSetup\$(_BuildConfig)
-        contents: |
-          PackageWithRelationships.vsix
-          test.vsix
+        contents: ${{ parameters.signingTestVSIXes }}
     - powershell: eng\common\build.ps1
         -configuration $(_BuildConfig)
         -restore
@@ -147,28 +152,13 @@ jobs:
       inputs:
         sourceFolder: $(Build.SourcesDirectory)/src/Microsoft.DotNet.SignTool.Tests/Resources
         targetFolder: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping
-        contents: |
-          ContainerOne.1.0.0.nupkg
-          CustomTargetFrameworkAttribute.dll
-          EmptyPKT.dll
-          NestedContainer.1.0.0.nupkg
-          NestedZip.zip
-          PackageWithZip.nupkg
-          SignedLibrary.dll
-          test.deb
-          test.mpack
-          test.pkg
-          test.rpm
-          test.tgz
-          test.zip
+        contents: ${{ parameters.signingTestPackages }}
     - task: CopyFiles@2
       displayName: Stage signing test VSIXes
       inputs:
         sourceFolder: $(Build.SourcesDirectory)/src/Microsoft.DotNet.SignTool.Tests/Resources
         targetFolder: $(Build.SourcesDirectory)/artifacts/VSSetup/$(_BuildConfig)
-        contents: |
-          PackageWithRelationships.vsix
-          test.vsix
+        contents: ${{ parameters.signingTestVSIXes }}
     - script: eng/common/build.sh
         --configuration $(_BuildConfig)
         --restore
@@ -227,28 +217,13 @@ jobs:
       inputs:
         sourceFolder: $(Build.SourcesDirectory)/src/Microsoft.DotNet.SignTool.Tests/Resources
         targetFolder: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping
-        contents: |
-          ContainerOne.1.0.0.nupkg
-          CustomTargetFrameworkAttribute.dll
-          EmptyPKT.dll
-          NestedContainer.1.0.0.nupkg
-          NestedZip.zip
-          PackageWithZip.nupkg
-          SignedLibrary.dll
-          test.deb
-          test.mpack
-          test.pkg
-          test.rpm
-          test.tgz
-          test.zip
+        contents: ${{ parameters.signingTestPackages }}
     - task: CopyFiles@2
       displayName: Stage signing test VSIXes
       inputs:
         sourceFolder: $(Build.SourcesDirectory)/src/Microsoft.DotNet.SignTool.Tests/Resources
         targetFolder: $(Build.SourcesDirectory)/artifacts/VSSetup/$(_BuildConfig)
-        contents: |
-          PackageWithRelationships.vsix
-          test.vsix
+        contents: ${{ parameters.signingTestVSIXes }}
     - script: eng/common/build.sh
         --configuration $(_BuildConfig)
         --restore
