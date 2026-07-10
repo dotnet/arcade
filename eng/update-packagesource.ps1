@@ -68,8 +68,9 @@ try {
   CheckExitCode "Running darc-init"
 
   $Env:dotnet_root = $dotnetRoot
-  # darc is 'darc.exe' on Windows and 'darc' on Linux/macOS ($IsWindows is undefined in Windows PowerShell 5.1).
-  $darcExecutable = if ($IsWindows -eq $false) { "darc" } else { "darc.exe" }
+  # darc is 'darc.exe' on Windows and 'darc' on Linux/macOS. Use a StrictMode-safe OS check
+  # ($IsWindows is unset in Windows PowerShell 5.1 and throws under Set-StrictMode).
+  $darcExecutable = if ([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)) { "darc.exe" } else { "darc" }
   # Note: --github-pat is only needed for coherency updates, which this does not perform.
   & (Join-Path $DarcExe $darcExecutable) update-dependencies `
     --packages-folder "$packagesSource" `
