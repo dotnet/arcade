@@ -802,11 +802,6 @@ function MSBuild() {
     # The build already logged an error, that's the reason it failed. Producing an error here only adds noise.
     Write-Host "Build failed with exit code $exitCode. Check errors above." -ForegroundColor Red
 
-    $buildLog = GetMSBuildBinaryLogCommandLineArgument $args
-    if ($null -ne $buildLog) {
-      Write-Host "See log: $buildLog" -ForegroundColor DarkGray
-    }
-
     # When running on Azure Pipelines, override the returned exit code to avoid double logging.
     # Skip this when the build is a child of the VMR build.
     if ($ci -and $env:SYSTEM_TEAMPROJECT -ne $null -and !$fromVMR) {
@@ -852,23 +847,6 @@ function DotNet() {
       ExitWithExitCode $exitCode
     }
   }
-}
-
-function GetMSBuildBinaryLogCommandLineArgument($arguments) {
-  foreach ($argument in $arguments) {
-    if ($argument -ne $null) {
-      $arg = $argument.Trim()
-      if ($arg.StartsWith('/bl:', "OrdinalIgnoreCase")) {
-        return $arg.Substring('/bl:'.Length)
-      }
-
-      if ($arg.StartsWith('/binaryLogger:', 'OrdinalIgnoreCase')) {
-        return $arg.Substring('/binaryLogger:'.Length)
-      }
-    }
-  }
-
-  return $null
 }
 
 function GetExecutableFileName($baseName) {
