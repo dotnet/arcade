@@ -19,7 +19,7 @@
 Param(
   [Parameter(Mandatory=$true)][int]    $BuildId,     # BAR build id of the build being validated.
   [Parameter(Mandatory=$true)][string] $Commit,      # The commit that produced this build (Build.SourceVersion).
-  [Parameter(Mandatory=$true)][string] $AzdoToken,   # AzDO token with code read/write on the mirror.
+  [Parameter(Mandatory=$true)][string] $AzdoToken,   # AzDO OAuth/AAD access token (WIF), not a PAT; needs code read/write on the mirror.
   [string] $AzdoOrg      = 'dnceng',
   [string] $AzdoProject  = 'internal',
   [string] $AzdoRepoName = 'dotnet-arcade',
@@ -32,7 +32,7 @@ $ErrorActionPreference = 'Stop'
 . $PSScriptRoot\..\common\tools.ps1
 
 # Install a private copy of darc so we don't disturb the repo's tool manifest.
-$darcPath = Join-Path $PSScriptRoot "darc\$(New-Guid)"
+$darcPath = Join-Path $PSScriptRoot "darc\$([guid]::NewGuid())"
 & $PSScriptRoot\..\common\darc-init.ps1 -toolpath $darcPath | Out-Host
 $darc = Join-Path $darcPath 'darc.exe'
 
@@ -40,7 +40,7 @@ $targetBranch = "validation/promote-arcade-$BuildId"
 $repoUri = "https://dev.azure.com/$AzdoOrg/$AzdoProject/_git/$AzdoRepoName"
 
 # Push using the AzDO token via an http extraheader so we don't persist credentials on disk.
-$authHeader = "AUTHORIZATION: bearer $AzdoToken"
+$authHeader = "Authorization: Bearer $AzdoToken"
 
 # Work in an agent-local scratch directory.
 $scratchBase = if ($env:AGENT_TEMPDIRECTORY) { $env:AGENT_TEMPDIRECTORY } else { [System.IO.Path]::GetTempPath() }
@@ -63,10 +63,16 @@ try {
     & $darc update-dependencies --id $BuildId --azdev-pat $AzdoToken --ci
     if ($LASTEXITCODE -ne 0) { throw "darc update-dependencies failed." }
 
-    & git commit -am "Update Arcade to the newly built version for promotion validation (BAR $BuildId)"
+    # A no-op update means darc produced the same versions already pinned, which is unexpected for a
+    # new build - treat it as an error rather than silently promoting an unchanged branch.
+    & git add -A
+    if ([string]::IsNullOrWhiteSpace((& git status --porcelain))) {
+      throw "darc update-dependencies produced no changes; the build produced the same versions already pinned."
+    }
+    & git commit -m "Update Arcade to the newly built version for promotion validation (BAR $BuildId)"
     if ($LASTEXITCODE -ne 0) { throw "git commit failed." }
 
-    & git -c "http.extraheader=$authHeader" push origin HEAD
+    & git -c "http.extraheader=$authHeader" push origin "HEAD:refs/heads/$targetBranch"
     if ($LASTEXITCODE -ne 0) { throw "git push of '$targetBranch' failed." }
   }
   finally {

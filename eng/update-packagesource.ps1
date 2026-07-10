@@ -3,7 +3,7 @@ Param(
 )
 
 $ErrorActionPreference = "Stop"
-. $PSScriptRoot\common\tools.ps1
+. "$PSScriptRoot/common/tools.ps1"
 
 # Batch and executable files exit and define $LASTEXITCODE.  Powershell commands exit and define $?
 function CheckExitCode ([string]$stage, [bool]$commandExitCode = $True)
@@ -61,15 +61,17 @@ try {
 
   Write-Host "Updating dependencies using Darc..."
   $dotnetRoot = InitializeDotNetCli -install:$true
-  $DarcExe = "$dotnetRoot\tools"
+  $DarcExe = Join-Path $dotnetRoot "tools"
   Create-Directory $DarcExe
   $DarcExe = Resolve-Path $DarcExe
-  . .\common\darc-init.ps1 -toolpath $DarcExe
+  . "$PSScriptRoot/common/darc-init.ps1" -toolpath $DarcExe
   CheckExitCode "Running darc-init"
 
   $Env:dotnet_root = $dotnetRoot
+  # darc is 'darc.exe' on Windows and 'darc' on Linux/macOS ($IsWindows is undefined in Windows PowerShell 5.1).
+  $darcExecutable = if ($IsWindows -eq $false) { "darc" } else { "darc.exe" }
   # Note: --github-pat is only needed for coherency updates, which this does not perform.
-  & $DarcExe\darc.exe update-dependencies `
+  & (Join-Path $DarcExe $darcExecutable) update-dependencies `
     --packages-folder "$packagesSource" `
     --channel ".NET Tools - Latest" `
     --ci
