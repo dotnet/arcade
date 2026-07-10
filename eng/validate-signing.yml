@@ -5,7 +5,8 @@
 #
 # The signing inputs are the existing SignTool unit-test resources
 # (src/Microsoft.DotNet.SignTool.Tests/Resources) - a superset of arcade-validation's - so no binary
-# assets are duplicated here.
+# assets are duplicated here. The explicit file list is the curated set of clean, signable inputs
+# (that folder also holds deliberately-malformed/non-signable inputs used by the unit tests).
 #
 # One of the parallel jobs of the official build's ValidateSdk stage.
 #
@@ -160,6 +161,14 @@ jobs:
           test.rpm
           test.tgz
           test.zip
+    - task: CopyFiles@2
+      displayName: Stage signing test VSIXes
+      inputs:
+        sourceFolder: $(Build.SourcesDirectory)/src/Microsoft.DotNet.SignTool.Tests/Resources
+        targetFolder: $(Build.SourcesDirectory)/artifacts/VSSetup/$(_BuildConfig)
+        contents: |
+          PackageWithRelationships.vsix
+          test.vsix
     - script: eng/common/build.sh
         --configuration $(_BuildConfig)
         --restore
@@ -232,6 +241,14 @@ jobs:
           test.rpm
           test.tgz
           test.zip
+    - task: CopyFiles@2
+      displayName: Stage signing test VSIXes
+      inputs:
+        sourceFolder: $(Build.SourcesDirectory)/src/Microsoft.DotNet.SignTool.Tests/Resources
+        targetFolder: $(Build.SourcesDirectory)/artifacts/VSSetup/$(_BuildConfig)
+        contents: |
+          PackageWithRelationships.vsix
+          test.vsix
     - script: eng/common/build.sh
         --configuration $(_BuildConfig)
         --restore
