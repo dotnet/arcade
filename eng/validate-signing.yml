@@ -131,7 +131,8 @@ jobs:
     - template: /eng/common/templates-official/variables/pool-providers.yml@self
     pool:
       name: $(DncEngInternalBuildPool)
-      demands: ImageOverride -equals build.azurelinux.3.amd64
+      image: build.azurelinux.3.amd64
+      os: linux
     preSteps:
     - checkout: self
       clean: true
