@@ -1,6 +1,26 @@
 # Initialize variables if they aren't already defined.
 # These may be defined as parameters of the importing script, or set after importing this script.
 
+# An importing script can opt in to letting tools.ps1 own the defaults for the variables below
+# by assigning its bound parameters to $importerBoundParameters before dot-sourcing this file:
+#     $importerBoundParameters = $PSBoundParameters
+#     . $PSScriptRoot\tools.ps1
+# A declared-but-unbound [switch]/[bool]/[string] parameter is still "defined", which would
+# otherwise mask the CI/environment-aware defaults computed below. For opted-in scripts, drop
+# any of these variables that the importer declares as a parameter but did not explicitly pass,
+# so the defaults below take effect. Values the importer passed explicitly, or set by assignment
+# (the other supported pattern, e.g. sdk-task.ps1 computing $binaryLog/$warnAsError), are
+# preserved because only declared-but-unpassed parameters are removed. The whole block is skipped
+# for scripts that do not opt in, so external consumers keep their current behavior unchanged.
+if (Test-Path variable:importerBoundParameters) {
+  $importerDeclaredParameters = (Get-PSCallStack)[1].InvocationInfo.MyCommand.Parameters.Keys
+  foreach ($toolsManagedDefault in @('binaryLog', 'nodeReuse', 'warnAsError', 'warnNotAsError', 'verbosity', 'configuration', 'msbuildEngine', 'runtimeSourceFeed', 'runtimeSourceFeedKey')) {
+    if (($importerDeclaredParameters -contains $toolsManagedDefault) -and -not $importerBoundParameters.ContainsKey($toolsManagedDefault)) {
+      Remove-Variable -Name $toolsManagedDefault -ErrorAction SilentlyContinue
+    }
+  }
+}
+
 # CI mode - set to true on CI server for PR validation build or official build.
 [bool]$ci = if (Test-Path variable:ci) { $ci } else { $false }
 
@@ -23,7 +43,9 @@
 [string]$verbosity = if (Test-Path variable:verbosity) { $verbosity } else { 'minimal' }
 
 # Set to true to reuse msbuild nodes. Recommended to not reuse on CI.
-[bool]$nodeReuse = if (Test-Path variable:nodeReuse) { $nodeReuse } else { !$ci }
+# On CI, node reuse is disabled by default; set MSBUILD_NODEREUSE_ENABLED=1 to opt back in.
+# Internal testing only; this env var will be replaced with a switch (https://github.com/dotnet/arcade/issues/17013) and must not be depended on.
+[bool]$nodeReuse = if (Test-Path variable:nodeReuse) { $nodeReuse } else { (!$ci) -or ($env:MSBUILD_NODEREUSE_ENABLED -eq '1') }
 
 # Configures warning treatment in msbuild.
 [bool]$warnAsError = if (Test-Path variable:warnAsError) { $warnAsError } else { $true }

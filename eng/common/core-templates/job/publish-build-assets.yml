@@ -132,7 +132,7 @@ jobs:
         scriptType: ps
         scriptLocation: scriptPath
         scriptPath: $(System.DefaultWorkingDirectory)/eng/common/sdk-task.ps1
-        arguments: -task PublishBuildAssets -restore -msbuildEngine dotnet
+        arguments: -task PublishBuildAssets -msbuildEngine dotnet
           /p:ManifestsPath='$(Build.StagingDirectory)/AssetManifests'
           /p:IsAssetlessBuild=${{ parameters.isAssetlessBuild }}
           /p:MaestroApiEndpoint=https://maestro.dot.net

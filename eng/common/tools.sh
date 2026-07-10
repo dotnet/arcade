@@ -9,7 +9,12 @@ ci=${ci:-false}
 source_build=${source_build:-false}
 
 # Build configuration. Common values include 'Debug' and 'Release', but the repository may use other names.
-configuration=${configuration:-'Debug'}
+# When building from source, default to 'Release'; otherwise default to 'Debug'.
+if [[ "$source_build" == true ]]; then
+  configuration=${configuration:-'Release'}
+else
+  configuration=${configuration:-'Debug'}
+fi
 
 # Set to true to opt out of outputting binary log while running in CI
 exclude_ci_binary_log=${exclude_ci_binary_log:-false}
@@ -33,7 +38,9 @@ restore=${restore:-true}
 verbosity=${verbosity:-'minimal'}
 
 # Set to true to reuse msbuild nodes. Recommended to not reuse on CI.
-if [[ "$ci" == true ]]; then
+# On CI, node reuse is disabled by default; set MSBUILD_NODEREUSE_ENABLED=1 to opt back in.
+# Internal testing only; this env var will be replaced with a switch (https://github.com/dotnet/arcade/issues/17013) and must not be depended on.
+if [[ "$ci" == true && "${MSBUILD_NODEREUSE_ENABLED:-}" != "1" ]]; then
   node_reuse=${node_reuse:-false}
 else
   node_reuse=${node_reuse:-true}
