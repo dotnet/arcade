@@ -34,21 +34,34 @@ $globalJson = $globalJson -replace '("Microsoft\.DotNet\.Helix\.Sdk"\s*:\s*")[^"
 Set-Content -Path $globalJsonPath -Value $globalJson -NoNewline
 Write-Host "Updated Arcade/Helix SDK versions in '$globalJsonPath'."
 
-# Add the local package feed to NuGet.config so the new SDK resolves.
+# Add the local package feed(s) to NuGet.config so the new SDK resolves. Add each distinct directory
+# that actually contains *.nupkg (e.g. packages/<config>/Shipping and .../NonShipping) as a flat
+# feed - a NuGet folder source pointing at the artifacts root does not reliably resolve the nested
+# packages (and the MSBuild SDK resolver needs the SDK package findable at a source root).
+$feedDirs = @(Get-ChildItem -Path $PackagesSource -Recurse -Filter '*.nupkg' -ErrorAction SilentlyContinue |
+  Select-Object -ExpandProperty DirectoryName -Unique)
+if ($feedDirs.Count -eq 0) {
+  throw "No *.nupkg found under '$PackagesSource'."
+}
+
 $nugetConfigPath = Join-Path $repoRoot 'NuGet.config'
-Write-Host "Adding '$PackagesSource' to '$nugetConfigPath'..."
 $nugetConfig = New-Object System.Xml.XmlDocument
 $nugetConfig.PreserveWhitespace = $true
 $nugetConfig.Load($nugetConfigPath)
 $packageSources = $nugetConfig.SelectSingleNode("//packageSources")
-$newSource = $nugetConfig.CreateElement("add")
-$keyAttribute = $nugetConfig.CreateAttribute("key")
-$keyAttribute.Value = "arcade-local"
-$valueAttribute = $nugetConfig.CreateAttribute("value")
-$valueAttribute.Value = $PackagesSource
-$newSource.Attributes.Append($keyAttribute) | Out-Null
-$newSource.Attributes.Append($valueAttribute) | Out-Null
-$packageSources.AppendChild($newSource) | Out-Null
+$index = 0
+foreach ($dir in $feedDirs) {
+  Write-Host "Adding local feed '$dir' to '$nugetConfigPath'."
+  $newSource = $nugetConfig.CreateElement("add")
+  $keyAttribute = $nugetConfig.CreateAttribute("key")
+  $keyAttribute.Value = "arcade-local-$index"
+  $valueAttribute = $nugetConfig.CreateAttribute("value")
+  $valueAttribute.Value = $dir
+  $newSource.Attributes.Append($keyAttribute) | Out-Null
+  $newSource.Attributes.Append($valueAttribute) | Out-Null
+  $packageSources.AppendChild($newSource) | Out-Null
+  $index++
+}
 $nugetConfig.Save($nugetConfigPath)
 
 Write-Host "done."
