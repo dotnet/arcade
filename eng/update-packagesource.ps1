@@ -1,5 +1,4 @@
 Param(
-  [string] $gitHubPat,
   [string] $packagesSource
 )
 
@@ -69,9 +68,9 @@ try {
   CheckExitCode "Running darc-init"
 
   $Env:dotnet_root = $dotnetRoot
+  # Note: --github-pat is only needed for coherency updates, which this does not perform.
   & $DarcExe\darc.exe update-dependencies `
     --packages-folder "$packagesSource" `
-    --github-pat "$gitHubPat" `
     --channel ".NET Tools - Latest" `
     --ci
 

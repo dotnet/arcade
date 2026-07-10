@@ -80,7 +80,6 @@ jobs:
         scriptLocation: inlineScript
         inlineScript: >
           .\eng\update-packagesource.ps1
-          -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT)
           -packagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
     - task: CopyFiles@2
       displayName: Stage signing test packages
@@ -145,7 +144,6 @@ jobs:
         scriptLocation: inlineScript
         inlineScript: >
           ./eng/update-packagesource.ps1
-          -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT)
           -packagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
     - task: CopyFiles@2
       displayName: Stage signing test packages
@@ -210,7 +208,6 @@ jobs:
         scriptLocation: inlineScript
         inlineScript: >
           ./eng/update-packagesource.ps1
-          -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT)
           -packagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
     - task: CopyFiles@2
       displayName: Stage signing test packages
