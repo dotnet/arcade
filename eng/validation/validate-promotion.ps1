@@ -37,6 +37,22 @@ $darcPath = Join-Path $PSScriptRoot "darc\$([guid]::NewGuid())"
 & $PSScriptRoot\..\common\darc-init.ps1 -toolpath $darcPath | Out-Host
 $darc = Join-Path $darcPath 'darc.exe'
 
+# The promotion validation re-publishes this build via darc from a branch bumped to the newly built
+# Arcade; that publishing pipeline restores the new Arcade toolset from the build's channel feed. If
+# the build is not assigned to any channel (e.g. dev/PR branches have no default channel), its assets
+# are registered in BAR but not available on a restorable feed, so promotion can't be validated -
+# skip it in that case.
+$buildJson = & $darc get-build --id $BuildId --output-format json --ci | ConvertFrom-Json
+if ($LASTEXITCODE -ne 0 -or $null -eq $buildJson) {
+  throw "Could not retrieve BAR build $BuildId."
+}
+$channels = @($buildJson.channels)
+if ($channels.Count -eq 0) {
+  Write-Host "Build $BuildId is not assigned to any channel; skipping promotion validation (no restorable feed for the build's assets)."
+  ExitWithExitCode 0
+}
+Write-Host "Build $BuildId is assigned to channel(s): $($channels -join ', '). Proceeding with promotion validation."
+
 $targetBranch = "validation/promote-arcade-$BuildId"
 $repoUri = "https://dev.azure.com/$AzdoOrg/$AzdoProject/_git/$AzdoRepoName"
 
