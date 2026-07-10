@@ -43,7 +43,23 @@ namespace Microsoft.DotNet.Build.Tasks.FileCatalog
         /// Optional explicit 16-byte list identifier. When null (the default), a deterministic
         /// identifier is derived from the catalog members so output stays reproducible.
         /// </summary>
-        public byte[]? ListIdentifier { get; set; }
+        public byte[]? ListIdentifier
+        {
+            get => _listIdentifier;
+            set
+            {
+                if (value is not null && value.Length != ListIdentifierLength)
+                {
+                    throw new ArgumentException(
+                        $"List identifier must be exactly {ListIdentifierLength} bytes.", nameof(value));
+                }
+
+                _listIdentifier = value;
+            }
+        }
+        private byte[]? _listIdentifier;
+
+        private const int ListIdentifierLength = 16;
 
         /// <summary>Read-only view of the entries that have been added.</summary>
         public IReadOnlyList<CatalogEntry> Entries => _entries;
@@ -101,14 +117,12 @@ namespace Microsoft.DotNet.Build.Tasks.FileCatalog
                 // digest, so SHA-1's cryptographic weakness (collision attacks) is irrelevant:
                 // trust comes solely from the Authenticode signature applied over the whole
                 // catalog afterward, which uses SHA-256.
-                byte[] sha1 = SHA1.HashData(entry.Content.Span);
-                byte[] sha256 = SHA256.HashData(entry.Content.Span);
 
                 // SHA-1 member: identified by the raw SHA-1 hash, marker attribute only.
-                members.Add(new Member(sha1, sha256Digest: null));
+                members.Add(new Member(entry.Sha1, sha256Digest: null));
 
                 // SHA-256 member: identified by the raw SHA-256 hash, carries the digest.
-                members.Add(new Member(sha256, sha256Digest: sha256));
+                members.Add(new Member(entry.Sha256, sha256Digest: entry.Sha256));
             }
 
             // makecat emits members sorted ascending by their raw identifier bytes,
@@ -232,8 +246,8 @@ namespace Microsoft.DotNet.Build.Tasks.FileCatalog
 
             sha256.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
 
-            byte[] identifier = new byte[16];
-            Array.Copy(sha256.Hash!, identifier, 16);
+            byte[] identifier = new byte[ListIdentifierLength];
+            Array.Copy(sha256.Hash!, identifier, ListIdentifierLength);
             return identifier;
         }
 

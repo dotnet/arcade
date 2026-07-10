@@ -48,7 +48,14 @@ namespace Microsoft.DotNet.Build.Tasks.FileCatalog
             var builder = new CatalogBuilder();
             foreach (ITaskItem file in Files)
             {
+                // Prefer the computed FullPath, but fall back to ItemSpec for custom ITaskItem
+                // implementations that don't populate FullPath metadata.
                 string path = file.GetMetadata("FullPath");
+                if (string.IsNullOrEmpty(path))
+                {
+                    path = file.ItemSpec;
+                }
+
                 if (!File.Exists(path))
                 {
                     Log.LogError("File not found: '{0}'.", path);

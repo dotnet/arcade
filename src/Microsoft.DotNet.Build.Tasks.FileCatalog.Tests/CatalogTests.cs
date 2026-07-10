@@ -149,6 +149,38 @@ namespace Microsoft.DotNet.Build.Tasks.FileCatalog.Tests
         }
 
         [Fact]
+        public void FromFile_ProducesSameCatalogAsInMemoryContent()
+        {
+            string path = Path.Combine(Path.GetTempPath(), "catalog-fromfile-" + Guid.NewGuid().ToString("N") + ".js");
+            try
+            {
+                File.WriteAllBytes(path, s_registerJsContent);
+
+                byte[] fromFile = new CatalogBuilder().AddFile(path, "register.js").Build();
+                byte[] fromMemory = new CatalogBuilder().Add(new CatalogEntry("register.js", s_registerJsContent)).Build();
+
+                fromFile.Should().Equal(fromMemory);
+            }
+            finally
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+        }
+
+        [Fact]
+        public void ListIdentifier_WithWrongLength_Throws()
+        {
+            var builder = new CatalogBuilder();
+
+            Action act = () => builder.ListIdentifier = new byte[8];
+
+            act.Should().Throw<ArgumentException>();
+        }
+
+        [Fact]
         public void GenerateCatalogTask_WritesCatalogAndCreatesDirectory()
         {
             string root = Path.Combine(Path.GetTempPath(), "catalog-tests-" + Guid.NewGuid().ToString("N"));
