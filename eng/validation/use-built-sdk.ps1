@@ -49,17 +49,44 @@ $nugetConfig = New-Object System.Xml.XmlDocument
 $nugetConfig.PreserveWhitespace = $true
 $nugetConfig.Load($nugetConfigPath)
 $packageSources = $nugetConfig.SelectSingleNode("//packageSources")
+
+# If the config uses packageSourceMapping, a bare <add> source is never consulted for a package
+# whose ID is claimed by a more/equally specific pattern on another source. The newly built SDK is
+# 'Microsoft.DotNet.Arcade.Sdk', which matches the remote feeds' 'microsoft.*' mapping, so without a
+# matching mapping entry NuGet would never look at our local feed. Mirror the broad patterns
+# ('microsoft.*' and '*') on each local feed so it *ties* with the remotes: the local feed becomes
+# eligible for the new SDK (which only it has) but, because it only ties (never exceeds) the remote
+# patterns, it never blocks resolution of packages it does not contain.
+$packageSourceMapping = $nugetConfig.SelectSingleNode("//packageSourceMapping")
+
 $index = 0
 foreach ($dir in $feedDirs) {
-  Write-Host "Adding local feed '$dir' to '$nugetConfigPath'."
+  $key = "arcade-local-$index"
+  Write-Host "Adding local feed '$dir' (key '$key') to '$nugetConfigPath'."
   $newSource = $nugetConfig.CreateElement("add")
   $keyAttribute = $nugetConfig.CreateAttribute("key")
-  $keyAttribute.Value = "arcade-local-$index"
+  $keyAttribute.Value = $key
   $valueAttribute = $nugetConfig.CreateAttribute("value")
   $valueAttribute.Value = $dir
   $newSource.Attributes.Append($keyAttribute) | Out-Null
   $newSource.Attributes.Append($valueAttribute) | Out-Null
   $packageSources.AppendChild($newSource) | Out-Null
+
+  if ($null -ne $packageSourceMapping) {
+    $mappingSource = $nugetConfig.CreateElement("packageSource")
+    $mappingKey = $nugetConfig.CreateAttribute("key")
+    $mappingKey.Value = $key
+    $mappingSource.Attributes.Append($mappingKey) | Out-Null
+    foreach ($pattern in @('microsoft.*', '*')) {
+      $pkg = $nugetConfig.CreateElement("package")
+      $patternAttribute = $nugetConfig.CreateAttribute("pattern")
+      $patternAttribute.Value = $pattern
+      $pkg.Attributes.Append($patternAttribute) | Out-Null
+      $mappingSource.AppendChild($pkg) | Out-Null
+    }
+    $packageSourceMapping.AppendChild($mappingSource) | Out-Null
+  }
+
   $index++
 }
 $nugetConfig.Save($nugetConfigPath)
