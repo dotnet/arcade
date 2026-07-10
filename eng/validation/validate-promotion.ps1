@@ -20,6 +20,7 @@ Param(
   [Parameter(Mandatory=$true)][int]    $BuildId,     # BAR build id of the build being validated.
   [Parameter(Mandatory=$true)][string] $Commit,      # The commit that produced this build (Build.SourceVersion).
   [Parameter(Mandatory=$true)][string] $AzdoToken,   # AzDO OAuth/AAD access token (WIF), not a PAT; needs code read/write on the mirror.
+  [Parameter(Mandatory=$true)][string] $GitHubPat,   # GitHub PAT; darc update-dependencies --id needs it for coherency updates.
   [string] $AzdoOrg      = 'dnceng',
   [string] $AzdoProject  = 'internal',
   [string] $AzdoRepoName = 'dotnet-arcade',
@@ -59,8 +60,9 @@ try {
     & git checkout -b $targetBranch $Commit
     if ($LASTEXITCODE -ne 0) { throw "git checkout of $Commit failed." }
 
-    # Bump Arcade (and coherent dependencies) to the versions this build produced.
-    & $darc update-dependencies --id $BuildId --azdev-pat $AzdoToken --ci
+    # Bump Arcade (and coherent dependencies) to the versions this build produced. The --id form
+    # performs coherency updates, which require a GitHub PAT.
+    & $darc update-dependencies --id $BuildId --azdev-pat $AzdoToken --github-pat $GitHubPat --ci
     if ($LASTEXITCODE -ne 0) { throw "darc update-dependencies failed." }
 
     # A no-op update means darc produced the same versions already pinned, which is unexpected for a

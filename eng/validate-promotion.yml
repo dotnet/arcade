@@ -56,3 +56,4 @@ jobs:
           -BuildId $(BARBuildId)
           -Commit $(Build.SourceVersion)
           -AzdoToken $(WifAzDoToken)
+          -GitHubPat $(BotAccount-dotnet-maestro-bot-PAT)

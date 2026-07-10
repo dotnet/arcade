@@ -46,6 +46,7 @@ jobs:
     microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
     artifacts:
       download:
+        name: Artifacts_Windows_NT_Release
         path: build_stage_artifacts
       publish:
         logs:
@@ -115,6 +116,7 @@ jobs:
     microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
     artifacts:
       download:
+        name: Artifacts_Windows_NT_Release
         path: build_stage_artifacts
       publish:
         logs:
@@ -180,6 +182,7 @@ jobs:
     microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
     artifacts:
       download:
+        name: Artifacts_Windows_NT_Release
         path: build_stage_artifacts
       publish:
         logs:
