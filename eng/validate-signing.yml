@@ -3,6 +3,10 @@
 # dotnet/arcade-validation's Validate_Signing_{Windows,Linux,MacOS} jobs, with an added step that
 # bootstraps the newly produced SDK (update-packagesource) before signing so the new SignTool is used.
 #
+# The signing inputs are the existing SignTool unit-test resources
+# (src/Microsoft.DotNet.SignTool.Tests/Resources) - a superset of arcade-validation's - so no binary
+# assets are duplicated here.
+#
 # One of the parallel jobs of the official build's ValidateSdk stage.
 #
 # NOTE: real signing uses MicroBuild/ESRP and only runs in the internal official build; not testable
@@ -60,14 +64,30 @@ jobs:
     - task: CopyFiles@2
       displayName: Stage signing test packages
       inputs:
-        sourceFolder: $(Build.SourcesDirectory)\eng\validation\resources
+        sourceFolder: $(Build.SourcesDirectory)\src\Microsoft.DotNet.SignTool.Tests\Resources
         targetFolder: $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\NonShipping
+        contents: |
+          ContainerOne.1.0.0.nupkg
+          CustomTargetFrameworkAttribute.dll
+          EmptyPKT.dll
+          NestedContainer.1.0.0.nupkg
+          NestedZip.zip
+          PackageWithZip.nupkg
+          SignedLibrary.dll
+          test.deb
+          test.mpack
+          test.pkg
+          test.rpm
+          test.tgz
+          test.zip
     - task: CopyFiles@2
       displayName: Stage signing test VSIXes
       inputs:
-        sourceFolder: $(Build.SourcesDirectory)\eng\validation\resources
+        sourceFolder: $(Build.SourcesDirectory)\src\Microsoft.DotNet.SignTool.Tests\Resources
         targetFolder: $(Build.SourcesDirectory)\artifacts\VSSetup\$(_BuildConfig)
-        contents: '*.vsix'
+        contents: |
+          PackageWithRelationships.vsix
+          test.vsix
     - powershell: eng\common\build.ps1
         -configuration $(_BuildConfig)
         -restore
@@ -124,8 +144,22 @@ jobs:
     - task: CopyFiles@2
       displayName: Stage signing test packages
       inputs:
-        sourceFolder: $(Build.SourcesDirectory)/eng/validation/resources
+        sourceFolder: $(Build.SourcesDirectory)/src/Microsoft.DotNet.SignTool.Tests/Resources
         targetFolder: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping
+        contents: |
+          ContainerOne.1.0.0.nupkg
+          CustomTargetFrameworkAttribute.dll
+          EmptyPKT.dll
+          NestedContainer.1.0.0.nupkg
+          NestedZip.zip
+          PackageWithZip.nupkg
+          SignedLibrary.dll
+          test.deb
+          test.mpack
+          test.pkg
+          test.rpm
+          test.tgz
+          test.zip
     - script: eng/common/build.sh
         --configuration $(_BuildConfig)
         --restore
@@ -182,8 +216,22 @@ jobs:
     - task: CopyFiles@2
       displayName: Stage signing test packages
       inputs:
-        sourceFolder: $(Build.SourcesDirectory)/eng/validation/resources
+        sourceFolder: $(Build.SourcesDirectory)/src/Microsoft.DotNet.SignTool.Tests/Resources
         targetFolder: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping
+        contents: |
+          ContainerOne.1.0.0.nupkg
+          CustomTargetFrameworkAttribute.dll
+          EmptyPKT.dll
+          NestedContainer.1.0.0.nupkg
+          NestedZip.zip
+          PackageWithZip.nupkg
+          SignedLibrary.dll
+          test.deb
+          test.mpack
+          test.pkg
+          test.rpm
+          test.tgz
+          test.zip
     - script: eng/common/build.sh
         --configuration $(_BuildConfig)
         --restore
