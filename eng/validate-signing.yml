@@ -80,8 +80,8 @@ jobs:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: >
-          .\eng\update-packagesource.ps1
-          -packagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
+          .\eng\validation\use-built-sdk.ps1
+          -PackagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
     - task: CopyFiles@2
       displayName: Stage signing test packages
       inputs:
@@ -146,8 +146,8 @@ jobs:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: >
-          ./eng/update-packagesource.ps1
-          -packagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
+          ./eng/validation/use-built-sdk.ps1
+          -PackagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
     - task: CopyFiles@2
       displayName: Stage signing test packages
       inputs:
@@ -211,8 +211,8 @@ jobs:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: >
-          ./eng/update-packagesource.ps1
-          -packagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
+          ./eng/validation/use-built-sdk.ps1
+          -PackagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
     - task: CopyFiles@2
       displayName: Stage signing test packages
       inputs:
