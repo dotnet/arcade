@@ -50,9 +50,13 @@ if ($LASTEXITCODE -ne 0 -or $null -eq $buildJson) {
 # don't throw under StrictMode when the property is omitted (darc omits it when the build is on no
 # channel - which is precisely the dev/PR-branch skip case we want to detect).
 $build = if ($buildJson -is [System.Array]) { $buildJson | Select-Object -First 1 } else { $buildJson }
+# Note: an empty @() emitted from inside an if/else block yields $null (nothing on the output
+# stream), which then throws under StrictMode on the .Count access below. Initialize to an empty
+# array up front and only reassign when channels are actually present, and read Count via @(...).
+$channels = @()
 $channelsProperty = $build.PSObject.Properties['channels']
-$channels = if ($channelsProperty -and $channelsProperty.Value) { @($channelsProperty.Value) } else { @() }
-if ($channels.Count -eq 0) {
+if ($channelsProperty -and $channelsProperty.Value) { $channels = @($channelsProperty.Value) }
+if (@($channels).Count -eq 0) {
   Write-Host "Build $BuildId is not assigned to any channel; skipping promotion validation (no restorable feed for the build's assets)."
   ExitWithExitCode 0
 }
