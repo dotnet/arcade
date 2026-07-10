@@ -736,7 +736,7 @@ function InitializeToolset() {
 }
 
 function ExitWithExitCode([int] $exitCode) {
-  if ($ci -and $prepareMachine) {
+  if ($prepareMachine) {
     Stop-Processes
   }
   exit $exitCode

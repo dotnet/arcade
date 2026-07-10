@@ -466,7 +466,7 @@ function InitializeToolset {
 }
 
 function ExitWithExitCode {
-  if [[ "$ci" == true && "$prepare_machine" == true ]]; then
+  if [[ "$prepare_machine" == true ]]; then
     StopProcesses
   fi
   exit $1
