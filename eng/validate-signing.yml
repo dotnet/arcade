@@ -1,7 +1,7 @@
 # Validates that the *newly built* Arcade SDK's SignTool can sign a curated set of artifact types
 # (packages, VSIXes, .deb/.rpm/.pkg, loose assemblies, nested containers, ...). Ported from
 # dotnet/arcade-validation's Validate_Signing_{Windows,Linux,MacOS} jobs, with an added step that
-# bootstraps the newly produced SDK (update-packagesource) before signing so the new SignTool is used.
+# bootstraps the newly produced SDK (use-built-sdk.ps1) before signing so the new SignTool is used.
 #
 # The signing inputs are the existing SignTool unit-test resources
 # (src/Microsoft.DotNet.SignTool.Tests/Resources) - a superset of arcade-validation's - so no binary
@@ -13,7 +13,7 @@
 #
 # NOTE: real signing uses MicroBuild/ESRP and only runs in the internal official build; not testable
 # locally or in PR. Needs @dotnet/dnceng review and a real official-build run to confirm (especially
-# the cross-platform update-packagesource and Mac/Linux real-signing wiring).
+# the cross-platform use-built-sdk and Mac/Linux real-signing wiring).
 
 parameters:
   microbuildUseESRP: false

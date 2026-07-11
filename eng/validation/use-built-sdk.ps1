@@ -1,11 +1,11 @@
-# Points the repo at a locally built Arcade/Helix SDK so a subsequent `build -sign` uses the newly
-# built SignTool. Cross-platform and dependency-free (pure file edits): it does NOT run dotnet or
-# darc, so it works on the Windows/Linux/macOS signing agents (unlike eng/update-packagesource.ps1,
-# which relies on Windows-oriented tools.ps1 helpers).
+# Points the repo at a locally built Arcade/Helix SDK (bumps the msbuild-sdks versions in global.json
+# and adds the local package feed) so a subsequent `build` uses the newly built SDK - both the
+# signing validation (`build -sign`, exercising the new SignTool) and the self-build validation.
 #
-# Unlike the self-build's full `darc update-dependencies`, the signing validation only needs the
-# Arcade/Helix SDK versions bumped and the local feed added; it does not need a coherent update of
-# the rest of Version.Details.
+# Cross-platform and dependency-free (pure file edits): it does NOT run dotnet or darc, so it works
+# on the Windows/Linux/macOS agents. darc update-dependencies is deliberately not used: arcade does
+# not track its own Arcade/Helix SDK in Version.Details.xml, so darc would find nothing to update and
+# would leave global.json (and therefore the SDK actually used) unchanged.
 
 Param(
   [Parameter(Mandatory=$true)][string] $PackagesSource  # Folder containing the freshly built *.nupkg (e.g. the downloaded build artifacts).
