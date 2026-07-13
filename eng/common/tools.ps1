@@ -13,6 +13,12 @@
 # Set to true to output binary log from msbuild. Note that emitting binary log slows down the build.
 [bool]$binaryLog = if (Test-Path variable:binaryLog) { $binaryLog } else { $ci -and !$excludeCIBinarylog }
 
+# Set to true to use the pipelines logger which will enable Azure logging output.
+# https://github.com/Microsoft/azure-pipelines-tasks/blob/master/docs/authoring/commands.md
+# This flag is meant as a temporary opt-in for the feature while validating it across
+# our consumers. It will be deleted in the future.
+[bool]$pipelinesLog = if (Test-Path variable:pipelinesLog) { $pipelinesLog } else { $ci }
+
 # Turns on machine preparation/clean up code that changes the machine state (e.g. kills build processes).
 [bool]$prepareMachine = if (Test-Path variable:prepareMachine) { $prepareMachine } else { $false }
 
@@ -551,6 +557,16 @@ function LocateVisualStudio([object]$vsRequirements = $null){
 }
 
 function InitializeBuildTool() {
+  # Allow a caller (e.g. a bootstrap script running out-of-proc) to inject the build tool via
+  # environment variables instead of the in-proc $global:_BuildTool variable. Only Path and
+  # Command are consumed by the MSBuild function below, so those are all that's needed.
+  if ($env:_BuildToolPath) {
+    return $global:_BuildTool = @{
+      Path    = $env:_BuildToolPath
+      Command = $env:_BuildToolCommand
+    }
+  }
+
   if (Test-Path variable:global:_BuildTool) {
     # If the requested msbuild parameters do not match, clear the cached variables.
     if($global:_BuildTool.Contains('ExcludePrereleaseVS') -and $global:_BuildTool.ExcludePrereleaseVS -ne $excludePrereleaseVS) {
@@ -578,7 +594,7 @@ function InitializeBuildTool() {
     }
     $dotnetPath = Join-Path $dotnetRoot (GetExecutableFileName 'dotnet')
 
-    $buildTool = @{ Path = $dotnetPath; Command = 'msbuild'; Tool = 'dotnet'; Framework = 'net' }
+    $buildTool = @{ Path = $dotnetPath; Command = 'msbuild' }
   } elseif ($msbuildEngine -eq "vs") {
     try {
       $msbuildPath = InitializeVisualStudioMSBuild
@@ -587,7 +603,7 @@ function InitializeBuildTool() {
       ExitWithExitCode 1
     }
 
-    $buildTool = @{ Path = $msbuildPath; Command = ""; Tool = "vs"; Framework = "netframework"; ExcludePrereleaseVS = $excludePrereleaseVS }
+    $buildTool = @{ Path = $msbuildPath; Command = ""; ExcludePrereleaseVS = $excludePrereleaseVS }
   } else {
     Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Unexpected value of -msbuildEngine: '$msbuildEngine'."
     ExitWithExitCode 1
@@ -726,7 +742,7 @@ function InitializeToolset() {
 }
 
 function ExitWithExitCode([int] $exitCode) {
-  if ($ci -and $prepareMachine) {
+  if ($prepareMachine) {
     Stop-Processes
   }
   exit $exitCode
@@ -765,6 +781,19 @@ function MSBuild() {
 
   $buildTool = InitializeBuildTool
 
+  if ($pipelinesLog) {
+    $toolsetBuildProject = InitializeToolset
+    $basePath = Split-Path -parent $toolsetBuildProject
+    $selectedPath = Join-Path $basePath (Join-Path 'net' 'Microsoft.DotNet.ArcadeLogging.dll')
+
+    # Only inject the logger when it's present. A last-known-good Arcade used to bootstrap
+    # the build may not ship the logger yet, so its absence must not be a hard error.
+    # Specify the logger type explicitly so loading is deterministic.
+    if (Test-Path $selectedPath) {
+      $args += "/logger:Microsoft.DotNet.ArcadeLogging.PipelinesLogger,$selectedPath"
+    }
+  }
+
   $cmdArgs = "$($buildTool.Command) /m /nologo /clp:Summary /v:$verbosity /nr:$nodeReuse /p:ContinuousIntegrationBuild=$ci"
 
   # Add -mt flag for MSBuild multithreaded mode if enabled via environment variable
@@ -801,11 +830,6 @@ function MSBuild() {
     # We should not Write-PipelineTaskError here because that message shows up in the build summary
     # The build already logged an error, that's the reason it failed. Producing an error here only adds noise.
     Write-Host "Build failed with exit code $exitCode. Check errors above." -ForegroundColor Red
-
-    $buildLog = GetMSBuildBinaryLogCommandLineArgument $args
-    if ($null -ne $buildLog) {
-      Write-Host "See log: $buildLog" -ForegroundColor DarkGray
-    }
 
     # When running on Azure Pipelines, override the returned exit code to avoid double logging.
     # Skip this when the build is a child of the VMR build.
@@ -852,23 +876,6 @@ function DotNet() {
       ExitWithExitCode $exitCode
     }
   }
-}
-
-function GetMSBuildBinaryLogCommandLineArgument($arguments) {
-  foreach ($argument in $arguments) {
-    if ($argument -ne $null) {
-      $arg = $argument.Trim()
-      if ($arg.StartsWith('/bl:', "OrdinalIgnoreCase")) {
-        return $arg.Substring('/bl:'.Length)
-      }
-
-      if ($arg.StartsWith('/binaryLogger:', 'OrdinalIgnoreCase')) {
-        return $arg.Substring('/binaryLogger:'.Length)
-      }
-    }
-  }
-
-  return $null
 }
 
 function GetExecutableFileName($baseName) {
