@@ -8,7 +8,9 @@
 # use-built-sdk.ps1 -AddFeedOnly), since darc does not touch NuGet.config.
 #
 # Windows-only (uses darc via Get-Darc); the signing validation, which runs cross-platform, uses the
-# pure-file-edit path in use-built-sdk.ps1 instead.
+# pure-file-edit path in use-built-sdk.ps1 instead. Must run with Maestro/BAR authentication available
+# (darc update-dependencies resolves asset locations from BAR) - the pipeline runs it under AzureCLI
+# with the Maestro service connection so darc's AzureCliCredential can get a token.
 
 Param(
   [Parameter(Mandatory=$true)][string] $PackagesSource  # Folder containing the freshly built *.nupkg (the downloaded build artifacts).
