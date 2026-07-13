@@ -30,6 +30,11 @@ Param(
 set-strictmode -version 2.0
 $ErrorActionPreference = 'Stop'
 
+# Set CI defaults and skip the toolset-configuration import before dot-sourcing tools.ps1:
+# tools.ps1 otherwise imports eng/configure-toolset.ps1, which ends with `exit` and can terminate
+# this script during import. (Same pattern other post-build scripts use.)
+$ci = $true
+$disableConfigureToolsetImport = $true
 . $PSScriptRoot\..\common\tools.ps1
 
 # Work in an agent-local scratch directory (outside the repo tree) so nothing - neither the private

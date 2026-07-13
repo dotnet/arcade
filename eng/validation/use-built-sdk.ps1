@@ -33,8 +33,15 @@ $globalJsonPath = Join-Path $repoRoot 'global.json'
 $globalJson = Get-Content -Path $globalJsonPath -Raw
 $globalJson = $globalJson -replace '("Microsoft\.DotNet\.Arcade\.Sdk"\s*:\s*")[^"]*(")', "`${1}$version`${2}"
 $globalJson = $globalJson -replace '("Microsoft\.DotNet\.Helix\.Sdk"\s*:\s*")[^"]*(")', "`${1}$version`${2}"
-# Write UTF-8 without a BOM explicitly: Set-Content defaults to UTF-16 in Windows PowerShell 5.1
-# (this runs under AzureCLI@2 scriptType: ps on Windows), which the .NET SDK JSON reader can choke on.
+# Verify the replacements actually took effect. If global.json's formatting/keys ever change (or the
+# regex stops matching), fail loudly instead of silently proceeding to build with the bootstrap SDK.
+foreach ($sdk in @('Microsoft.DotNet.Arcade.Sdk', 'Microsoft.DotNet.Helix.Sdk')) {
+  if ($globalJson -notmatch ([regex]::Escape("`"$sdk`"") + '\s*:\s*"' + [regex]::Escape($version) + '"')) {
+    throw "Failed to update '$sdk' to '$version' in '$globalJsonPath' (entry not found after replacement)."
+  }
+}
+# Write UTF-8 without a BOM explicitly: Set-Content defaults to UTF-16 in Windows PowerShell 5.1,
+# which the .NET SDK JSON reader can choke on.
 [System.IO.File]::WriteAllText($globalJsonPath, $globalJson, (New-Object System.Text.UTF8Encoding $false))
 Write-Host "Updated Arcade/Helix SDK versions in '$globalJsonPath'."
 
