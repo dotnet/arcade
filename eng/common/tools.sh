@@ -529,8 +529,9 @@ function MSBuild {
 
     # Only inject the logger when it's present. A last-known-good Arcade used to bootstrap
     # the build may not ship the logger yet, so its absence must not be a hard error.
+    # Specify the logger type explicitly so loading is deterministic.
     if [[ -f "$selectedPath" ]]; then
-      logger_switch="-logger:$selectedPath"
+      logger_switch="-logger:Microsoft.DotNet.ArcadeLogging.PipelinesLogger,$selectedPath"
     fi
   fi
 
