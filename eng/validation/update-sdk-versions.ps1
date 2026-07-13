@@ -24,46 +24,29 @@ $ErrorActionPreference = 'Stop'
 
 $darc = Get-Darc
 
-# darc's --packages-folder scan is NON-recursive (Directory.GetFiles(path, "*.nupkg")), but the build
-# artifacts nest the packages under packages/<config>/{Shipping,NonShipping}. Gather the produced
-# Arcade/Helix SDK packages into a single flat folder so darc actually finds them. (Only these two are
-# arcade-produced dependencies tracked in Version.Details.xml; other tracked deps come from other repos
-# and aren't in these artifacts.)
-$flatFolder = Join-Path ([System.IO.Path]::GetTempPath()) "darc-packages-$([guid]::NewGuid())"
-New-Item -ItemType Directory -Force -Path $flatFolder | Out-Null
-$sdkPkgs = @(Get-ChildItem -Path $PackagesSource -Recurse -Include 'Microsoft.DotNet.Arcade.Sdk.*.nupkg', 'Microsoft.DotNet.Helix.Sdk.*.nupkg' -ErrorAction SilentlyContinue |
-  Where-Object { $_.Name -notlike '*.symbols.nupkg' })
-if ($sdkPkgs.Count -eq 0) {
-  Write-PipelineTelemetryError -Category 'SelfBuild' -Message "No Arcade/Helix SDK packages found under '$PackagesSource'."
+# arcade produces ONLY nonshipping packages, so Microsoft.DotNet.Arcade.Sdk and Microsoft.DotNet.Helix.Sdk
+# both live in the same packages/<config>/NonShipping folder. darc's --packages-folder scan is
+# NON-recursive (Directory.GetFiles(path, "*.nupkg")), so point it at that folder - i.e. the directory
+# containing the produced Arcade SDK package - rather than at the artifacts root (which nests the
+# packages and would make darc report "Found no dependencies to update").
+$arcadePkg = Get-ChildItem -Path $PackagesSource -Recurse -Filter 'Microsoft.DotNet.Arcade.Sdk.*.nupkg' -ErrorAction SilentlyContinue |
+  Where-Object { $_.Name -notlike '*.symbols.nupkg' } | Select-Object -First 1
+if (-not $arcadePkg -or $arcadePkg.Name -notmatch '^Microsoft\.DotNet\.Arcade\.Sdk\.(.+)\.nupkg$') {
+  Write-PipelineTelemetryError -Category 'SelfBuild' -Message "Could not find Microsoft.DotNet.Arcade.Sdk.*.nupkg under '$PackagesSource'."
   ExitWithExitCode 1
 }
-foreach ($p in $sdkPkgs) {
-  $dest = Join-Path $flatFolder $p.Name
-  if (-not (Test-Path $dest)) { Copy-Item -Path $p.FullName -Destination $dest }
-}
-Write-Host "Gathered $($sdkPkgs.Count) SDK package(s) into '$flatFolder' for darc:"
-Get-ChildItem $flatFolder | ForEach-Object { Write-Host "  $($_.Name)" }
+$version = $Matches[1]
+$packagesFolder = $arcadePkg.DirectoryName
 
-Write-Host "Updating dependencies from packages folder '$flatFolder' using darc..."
-& $darc update-dependencies --packages-folder $flatFolder --ci
-$darcExit = $LASTEXITCODE
-Remove-Item -Recurse -Force $flatFolder -ErrorAction SilentlyContinue
-if ($darcExit -ne 0) {
+Write-Host "Updating dependencies from packages folder '$packagesFolder' using darc..."
+& $darc update-dependencies --packages-folder $packagesFolder --ci
+if ($LASTEXITCODE -ne 0) {
   Write-PipelineTelemetryError -Category 'SelfBuild' -Message "darc update-dependencies --packages-folder failed."
   ExitWithExitCode 1
 }
 
 # Verify global.json now references the produced Arcade SDK version, so we fail loudly rather than
-# silently building with the bootstrap SDK if darc updated nothing (e.g. a version match or a change
-# in how arcade tracks its SDK).
-$arcadePkg = Get-ChildItem -Path $PackagesSource -Recurse -Filter 'Microsoft.DotNet.Arcade.Sdk.*.nupkg' -ErrorAction SilentlyContinue |
-  Where-Object { $_.Name -notlike '*.symbols.nupkg' } | Select-Object -First 1
-if (-not $arcadePkg -or $arcadePkg.Name -notmatch '^Microsoft\.DotNet\.Arcade\.Sdk\.(.+)\.nupkg$') {
-  Write-PipelineTelemetryError -Category 'SelfBuild' -Message "Could not determine the produced Arcade SDK version from '$PackagesSource'."
-  ExitWithExitCode 1
-}
-$version = $Matches[1]
-
+# silently building with the bootstrap SDK if darc updated nothing.
 $globalJsonPath = Join-Path $RepoRoot 'global.json'
 $globalJson = Get-Content -Path $globalJsonPath -Raw
 if ($globalJson -notmatch ([regex]::Escape('"Microsoft.DotNet.Arcade.Sdk"') + '\s*:\s*"' + [regex]::Escape($version) + '"')) {
