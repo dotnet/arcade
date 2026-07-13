@@ -55,6 +55,9 @@ if ($LASTEXITCODE -ne 0 -or $null -eq $buildJson) {
 # don't throw under StrictMode when the property is omitted (darc omits it when the build is on no
 # channel - which is precisely the dev/PR-branch skip case we want to detect).
 $build = if ($buildJson -is [System.Array]) { $buildJson | Select-Object -First 1 } else { $buildJson }
+if ($null -eq $build) {
+  throw "darc get-build returned no build for BAR id $BuildId."
+}
 # Note: an empty @() emitted from inside an if/else block yields $null (nothing on the output
 # stream), which then throws under StrictMode on the .Count access below. Initialize to an empty
 # array up front and only reassign when channels are actually present, and read Count via @(...).
@@ -104,7 +107,9 @@ try {
     & git commit -m "Update Arcade to the newly built version for promotion validation (BAR $BuildId)"
     if ($LASTEXITCODE -ne 0) { throw "git commit failed." }
 
-    & git -c "http.extraheader=$authHeader" push origin "HEAD:refs/heads/$targetBranch"
+    # Force-push: this throwaway validation branch is unique per BAR build id, but a prior failed run
+    # may have left it behind on the mirror, so overwrite rather than fail with a non-fast-forward.
+    & git -c "http.extraheader=$authHeader" push --force origin "HEAD:refs/heads/$targetBranch"
     if ($LASTEXITCODE -ne 0) { throw "git push of '$targetBranch' failed." }
   }
   finally {

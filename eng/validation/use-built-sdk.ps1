@@ -62,6 +62,9 @@ $nugetConfig = New-Object System.Xml.XmlDocument
 $nugetConfig.PreserveWhitespace = $true
 $nugetConfig.Load($nugetConfigPath)
 $packageSources = $nugetConfig.SelectSingleNode("//packageSources")
+if ($null -eq $packageSources) {
+  throw "'$nugetConfigPath' has no <packageSources> element; cannot add the local feed."
+}
 
 # If the config uses packageSourceMapping, a bare <add> source is never consulted for a package
 # whose ID is claimed by a more/equally specific pattern on another source. The newly built SDK
@@ -72,6 +75,17 @@ $packageSources = $nugetConfig.SelectSingleNode("//packageSources")
 # only ties (never exceeds) the remote patterns and is scoped to microsoft.*, it neither blocks
 # resolution of microsoft.* packages it lacks nor gets consulted for unrelated (non-microsoft) IDs.
 $packageSourceMapping = $nugetConfig.SelectSingleNode("//packageSourceMapping")
+
+# Idempotency: remove any 'arcade-local-*' entries a previous run may have added, so re-running in the
+# same workspace doesn't create duplicate keys (which NuGet rejects).
+foreach ($node in @($packageSources.SelectNodes("add[starts-with(@key,'arcade-local-')]"))) {
+  $packageSources.RemoveChild($node) | Out-Null
+}
+if ($null -ne $packageSourceMapping) {
+  foreach ($node in @($packageSourceMapping.SelectNodes("packageSource[starts-with(@key,'arcade-local-')]"))) {
+    $packageSourceMapping.RemoveChild($node) | Out-Null
+  }
+}
 
 $index = 0
 foreach ($dir in $feedDirs) {
