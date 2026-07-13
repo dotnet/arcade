@@ -72,16 +72,12 @@ jobs:
     - checkout: self
       clean: true
     steps:
-    # Bootstrap the newly produced SDK so the sign below uses the new SignTool.
-    - task: AzureCLI@2
-      displayName: Update package source (use newly built SDK)
-      inputs:
-        azureSubscription: "Darc: Maestro Production"
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: >
-          .\eng\validation\use-built-sdk.ps1
-          -PackagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
+    # Point the repo at the newly produced Arcade/Helix SDK so the sign below uses the new SignTool.
+    # Pure file edit (no darc / no az), so a plain PowerShell step is enough - no service connection.
+    - powershell: >
+        .\eng\validation\use-built-sdk.ps1
+        -PackagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
+      displayName: Use newly built SDK
     - task: CopyFiles@2
       displayName: Stage signing test packages
       inputs:
@@ -139,15 +135,12 @@ jobs:
     - checkout: self
       clean: true
     steps:
-    - task: AzureCLI@2
-      displayName: Update package source (use newly built SDK)
-      inputs:
-        azureSubscription: "Darc: Maestro Production"
-        scriptType: pscore
-        scriptLocation: inlineScript
-        inlineScript: >
-          ./eng/validation/use-built-sdk.ps1
-          -PackagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
+    # Point the repo at the newly produced Arcade/Helix SDK so the sign below uses the new SignTool.
+    # Pure file edit (no darc / no az), so a plain PowerShell step is enough - no service connection.
+    - pwsh: >
+        ./eng/validation/use-built-sdk.ps1
+        -PackagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
+      displayName: Use newly built SDK
     - task: CopyFiles@2
       displayName: Stage signing test packages
       inputs:
@@ -204,15 +197,12 @@ jobs:
     - checkout: self
       clean: true
     steps:
-    - task: AzureCLI@2
-      displayName: Update package source (use newly built SDK)
-      inputs:
-        azureSubscription: "Darc: Maestro Production"
-        scriptType: pscore
-        scriptLocation: inlineScript
-        inlineScript: >
-          ./eng/validation/use-built-sdk.ps1
-          -PackagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
+    # Point the repo at the newly produced Arcade/Helix SDK so the sign below uses the new SignTool.
+    # Pure file edit (no darc / no az), so a plain PowerShell step is enough - no service connection.
+    - pwsh: >
+        ./eng/validation/use-built-sdk.ps1
+        -PackagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
+      displayName: Use newly built SDK
     - task: CopyFiles@2
       displayName: Stage signing test packages
       inputs:
