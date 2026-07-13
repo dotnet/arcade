@@ -784,7 +784,7 @@ function MSBuild() {
   if ($pipelinesLog) {
     $toolsetBuildProject = InitializeToolset
     $basePath = Split-Path -parent $toolsetBuildProject
-    $selectedPath = Join-Path $basePath (Join-Path $buildTool.Framework 'Microsoft.DotNet.ArcadeLogging.dll')
+    $selectedPath = Join-Path $basePath (Join-Path 'net' 'Microsoft.DotNet.ArcadeLogging.dll')
 
     if (-not $selectedPath) {
       Write-PipelineTelemetryError -Category 'Build' -Message "Unable to find arcade sdk logger assembly: $selectedPath"

@@ -113,13 +113,9 @@
   </Target>
 
   <ItemGroup>
-    <None Include="$(ArtifactsBinDir)Microsoft.DotNet.ArcadeLogging\$(Configuration)\$(NetMinimum)\Microsoft.DotNet.ArcadeLogging.dll"
+    <None Include="$(ArtifactsBinDir)Microsoft.DotNet.ArcadeLogging\$(Configuration)\netstandard2.0\Microsoft.DotNet.ArcadeLogging.dll"
           Pack="true"
           PackagePath="toolset\net\Microsoft.DotNet.ArcadeLogging.dll" />
-    <None Include="$(ArtifactsBinDir)Microsoft.DotNet.ArcadeLogging\$(Configuration)\$(NetFrameworkToolCurrent)\Microsoft.DotNet.ArcadeLogging.dll"
-          Pack="true"
-          PackagePath="toolset\netframework\Microsoft.DotNet.ArcadeLogging.dll"
-          Condition="'$(DotNetBuildSourceOnly)' != 'true'" />
   </ItemGroup>
 
 </Project>
