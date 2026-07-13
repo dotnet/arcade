@@ -75,7 +75,7 @@
     <PackageVersion Include="Microsoft.ApplicationInsights" Version="3.1.2" />
     <PackageVersion Include="Microsoft.Data.OData" Version="5.8.5" />
     <PackageVersion Include="Microsoft.Data.Services.Client" Version="5.8.5" />
-    <PackageVersion Include="Microsoft.Diagnostics.NETCore.Client" Version="0.2.721401" />
+    <PackageVersion Include="Microsoft.Diagnostics.NETCore.Client" Version="0.2.736201" />
     <PackageVersion Include="Microsoft.Diagnostics.Runtime" Version="4.1.732901" />
     <PackageVersion Include="Microsoft.Identity.Client" Version="4.85.0" />
     <PackageVersion Include="Microsoft.OpenApi" Version="3.7.0" />
