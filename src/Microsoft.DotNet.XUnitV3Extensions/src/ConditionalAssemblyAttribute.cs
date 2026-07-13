@@ -10,7 +10,7 @@ using Xunit.Sdk;
 namespace Xunit
 {
     /// <summary>
-    /// An assembly-level attribute that conditionally marks all tests in the assembly to be skipped
+    /// An assembly-level attribute that conditionally marks all tests in the assembly with a trait
     /// based on the evaluation of one or more static boolean members. When any of the referenced
     /// condition members evaluates to <c>false</c>, the attribute contributes a <c>category=failing</c>
     /// trait so that the test runner can exclude the affected tests.
@@ -33,7 +33,7 @@ namespace Xunit
 
         public IReadOnlyCollection<KeyValuePair<string, string>> GetTraits()
         {
-            // If evaluated to false, skip all tests in the assembly.
+            // If evaluated to false, mark all tests in the assembly with the failing category so the runner can exclude them.
             if (!EvaluateParameterHelper())
             {
                 return [new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing)];
