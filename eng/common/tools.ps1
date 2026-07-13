@@ -786,12 +786,11 @@ function MSBuild() {
     $basePath = Split-Path -parent $toolsetBuildProject
     $selectedPath = Join-Path $basePath (Join-Path 'net' 'Microsoft.DotNet.ArcadeLogging.dll')
 
-    if (-not (Test-Path $selectedPath)) {
-      Write-PipelineTelemetryError -Category 'Build' -Message "Unable to find arcade sdk logger assembly: $selectedPath"
-      ExitWithExitCode 1
+    # Only inject the logger when it's present. A last-known-good Arcade used to bootstrap
+    # the build may not ship the logger yet, so its absence must not be a hard error.
+    if (Test-Path $selectedPath) {
+      $args += "/logger:$selectedPath"
     }
-
-    $args += "/logger:$selectedPath"
   }
 
   $cmdArgs = "$($buildTool.Command) /m /nologo /clp:Summary /v:$verbosity /nr:$nodeReuse /p:ContinuousIntegrationBuild=$ci"

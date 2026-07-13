@@ -527,12 +527,11 @@ function MSBuild {
     local toolset_dir="${_InitializeToolset%/*}"
     local selectedPath="$toolset_dir/net/Microsoft.DotNet.ArcadeLogging.dll"
 
-    if [[ ! -f "$selectedPath" ]]; then
-      Write-PipelineTelemetryError -category 'Build'  "Unable to find arcade sdk logger assembly: $selectedPath"
-      ExitWithExitCode 1
+    # Only inject the logger when it's present. A last-known-good Arcade used to bootstrap
+    # the build may not ship the logger yet, so its absence must not be a hard error.
+    if [[ -f "$selectedPath" ]]; then
+      logger_switch="-logger:$selectedPath"
     fi
-
-    logger_switch="-logger:$selectedPath"
   fi
 
   local warnaserror_switch=""

@@ -66,6 +66,9 @@ namespace Microsoft.DotNet.ArcadeLogging
             {
                 switch (c)
                 {
+                    case '%':
+                        result.Append("%25");
+                        break;
                     case ';':
                         result.Append("%3B");
                         break;
