@@ -15,8 +15,10 @@ $ErrorActionPreference = 'Stop'
 
 $repoRoot = (Resolve-Path "$PSScriptRoot/../..").Path
 
-# Discover the produced Arcade SDK version from the built package.
-$arcadePkg = Get-ChildItem -Path $PackagesSource -Recurse -Filter 'Microsoft.DotNet.Arcade.Sdk.*.nupkg' -ErrorAction SilentlyContinue | Select-Object -First 1
+# Discover the produced Arcade SDK version from the built package. Exclude *.symbols.nupkg so we don't
+# pick a symbols package and extract a bogus version (e.g. '11.0.0-beta.xxx.symbols').
+$arcadePkg = Get-ChildItem -Path $PackagesSource -Recurse -Filter 'Microsoft.DotNet.Arcade.Sdk.*.nupkg' -ErrorAction SilentlyContinue |
+  Where-Object { $_.Name -notlike '*.symbols.nupkg' } | Select-Object -First 1
 if (-not $arcadePkg) {
   throw "Could not find Microsoft.DotNet.Arcade.Sdk.*.nupkg under '$PackagesSource'."
 }
