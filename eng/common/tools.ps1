@@ -15,7 +15,7 @@
 
 # Set to true to use the pipelines logger which will enable Azure logging output.
 # https://github.com/Microsoft/azure-pipelines-tasks/blob/master/docs/authoring/commands.md
-# This flag is meant as a temporary opt-opt for the feature while validate it across
+# This flag is meant as a temporary opt-in for the feature while validating it across
 # our consumers. It will be deleted in the future.
 [bool]$pipelinesLog = if (Test-Path variable:pipelinesLog) { $pipelinesLog } else { $ci }
 
@@ -784,9 +784,11 @@ function MSBuild() {
   if ($pipelinesLog) {
     $toolsetBuildProject = InitializeToolset
     $basePath = Split-Path -parent $toolsetBuildProject
-    $selectedPath = Join-Path $basePath (Join-Path $buildTool.Framework 'Microsoft.DotNet.ArcadeLogging.dll')
+    # The logger assembly is packed under 'net' for the .NET (Core) msbuild and 'netframework' for VS msbuild.
+    $loggerFramework = if ($buildTool.Command -eq 'msbuild') { 'net' } else { 'netframework' }
+    $selectedPath = Join-Path $basePath (Join-Path $loggerFramework 'Microsoft.DotNet.ArcadeLogging.dll')
 
-    if (-not $selectedPath) {
+    if (-not (Test-Path $selectedPath)) {
       Write-PipelineTelemetryError -Category 'Build' -Message "Unable to find arcade sdk logger assembly: $selectedPath"
       ExitWithExitCode 1
     }

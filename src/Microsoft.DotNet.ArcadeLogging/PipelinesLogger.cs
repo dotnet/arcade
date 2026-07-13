@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Text;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.DotNet.ArcadeLogging
@@ -14,8 +15,6 @@ namespace Microsoft.DotNet.ArcadeLogging
     /// </summary>
     public sealed class PipelinesLogger : ILogger
     {
-        private readonly MessageBuilder _builder = new MessageBuilder();
-
         public LoggerVerbosity Verbosity { get; set; }
         public string Parameters { get; set; }
 
@@ -29,7 +28,7 @@ namespace Microsoft.DotNet.ArcadeLogging
         {
         }
 
-        private void LogIssue(
+        private static void LogIssue(
             bool isError,
             string sourceFilePath,
             int line,
@@ -37,14 +36,16 @@ namespace Microsoft.DotNet.ArcadeLogging
             string code,
             string message)
         {
-            _builder.Start("logissue");
-            _builder.AddProperty("type", isError ? "error" : "warning");
-            _builder.AddProperty("sourcepath", sourceFilePath);
-            _builder.AddProperty("linenumber", line);
-            _builder.AddProperty("columnnumber", column);
-            _builder.AddProperty("code", code);
-            _builder.Finish(message);
-            Console.WriteLine(_builder.GetMessage());
+            var builder = new StringBuilder();
+            builder.Append("##vso[task.logissue ");
+            builder.Append($"type={(isError ? "error" : "warning")};");
+            builder.Append($"sourcepath={Escape(sourceFilePath)};");
+            builder.Append($"linenumber={line};");
+            builder.Append($"columnnumber={column};");
+            builder.Append($"code={Escape(code)};");
+            builder.Append("]");
+            builder.Append(Escape(message));
+            Console.WriteLine(builder.ToString());
         }
 
         private void OnErrorRaised(object sender, BuildErrorEventArgs e) =>
@@ -52,5 +53,38 @@ namespace Microsoft.DotNet.ArcadeLogging
 
         private void OnWarningRaised(object sender, BuildWarningEventArgs e) =>
             LogIssue(isError: false, e.File, e.LineNumber, e.ColumnNumber, e.Code, e.Message);
+
+        private static string Escape(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+
+            var result = new StringBuilder(value.Length);
+            foreach (char c in value)
+            {
+                switch (c)
+                {
+                    case ';':
+                        result.Append("%3B");
+                        break;
+                    case '\r':
+                        result.Append("%0D");
+                        break;
+                    case '\n':
+                        result.Append("%0A");
+                        break;
+                    case ']':
+                        result.Append("%5D");
+                        break;
+                    default:
+                        result.Append(c);
+                        break;
+                }
+            }
+
+            return result.ToString();
+        }
     }
 }
