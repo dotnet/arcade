@@ -31,7 +31,9 @@ $globalJsonPath = Join-Path $repoRoot 'global.json'
 $globalJson = Get-Content -Path $globalJsonPath -Raw
 $globalJson = $globalJson -replace '("Microsoft\.DotNet\.Arcade\.Sdk"\s*:\s*")[^"]*(")', "`${1}$version`${2}"
 $globalJson = $globalJson -replace '("Microsoft\.DotNet\.Helix\.Sdk"\s*:\s*")[^"]*(")', "`${1}$version`${2}"
-Set-Content -Path $globalJsonPath -Value $globalJson -NoNewline
+# Write UTF-8 without a BOM explicitly: Set-Content defaults to UTF-16 in Windows PowerShell 5.1
+# (this runs under AzureCLI@2 scriptType: ps on Windows), which the .NET SDK JSON reader can choke on.
+[System.IO.File]::WriteAllText($globalJsonPath, $globalJson, (New-Object System.Text.UTF8Encoding $false))
 Write-Host "Updated Arcade/Helix SDK versions in '$globalJsonPath'."
 
 # Add the local package feed(s) to NuGet.config so the new SDK resolves. Add each distinct directory
@@ -51,12 +53,13 @@ $nugetConfig.Load($nugetConfigPath)
 $packageSources = $nugetConfig.SelectSingleNode("//packageSources")
 
 # If the config uses packageSourceMapping, a bare <add> source is never consulted for a package
-# whose ID is claimed by a more/equally specific pattern on another source. The newly built SDK is
-# 'Microsoft.DotNet.Arcade.Sdk', which matches the remote feeds' 'microsoft.*' mapping, so without a
-# matching mapping entry NuGet would never look at our local feed. Mirror the broad patterns
-# ('microsoft.*' and '*') on each local feed so it *ties* with the remotes: the local feed becomes
-# eligible for the new SDK (which only it has) but, because it only ties (never exceeds) the remote
-# patterns, it never blocks resolution of packages it does not contain.
+# whose ID is claimed by a more/equally specific pattern on another source. The newly built SDK
+# packages ('Microsoft.DotNet.Arcade.Sdk' / 'Microsoft.DotNet.Helix.Sdk') match the remote feeds'
+# 'microsoft.*' mapping, so without a matching mapping entry NuGet would never look at our local feed.
+# Mirror just the 'microsoft.*' pattern on each local feed so it *ties* with the remotes for
+# microsoft.* IDs: the local feed becomes eligible for the new SDK (which only it has) but, because it
+# only ties (never exceeds) the remote patterns and is scoped to microsoft.*, it neither blocks
+# resolution of microsoft.* packages it lacks nor gets consulted for unrelated (non-microsoft) IDs.
 $packageSourceMapping = $nugetConfig.SelectSingleNode("//packageSourceMapping")
 
 $index = 0
@@ -77,13 +80,11 @@ foreach ($dir in $feedDirs) {
     $mappingKey = $nugetConfig.CreateAttribute("key")
     $mappingKey.Value = $key
     $mappingSource.Attributes.Append($mappingKey) | Out-Null
-    foreach ($pattern in @('microsoft.*', '*')) {
-      $pkg = $nugetConfig.CreateElement("package")
-      $patternAttribute = $nugetConfig.CreateAttribute("pattern")
-      $patternAttribute.Value = $pattern
-      $pkg.Attributes.Append($patternAttribute) | Out-Null
-      $mappingSource.AppendChild($pkg) | Out-Null
-    }
+    $pkg = $nugetConfig.CreateElement("package")
+    $patternAttribute = $nugetConfig.CreateAttribute("pattern")
+    $patternAttribute.Value = 'microsoft.*'
+    $pkg.Attributes.Append($patternAttribute) | Out-Null
+    $mappingSource.AppendChild($pkg) | Out-Null
     $packageSourceMapping.AppendChild($mappingSource) | Out-Null
   }
 
