@@ -7,7 +7,9 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Azure.Core;
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.ArcadeAzureIntegration;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.ProductConstructionService.Client.Models;
 using NuGet.Packaging;
@@ -47,13 +49,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             _httpClient = new HttpClient(new HttpClientHandler {CheckCertificateRevocationList = true})
             {
                 Timeout = GeneralUtils.NugetFeedPublisherHttpClientTimeout,
-                DefaultRequestHeaders =
-                {
-                    Authorization = new AuthenticationHeaderValue(
-                        "Basic",
-                        Convert.ToBase64String(Encoding.ASCII.GetBytes($":{_accessToken}")))
-                },
             };
+
+            if (!string.IsNullOrEmpty(_accessToken))
+            {
+                // Legacy PAT-based authentication
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                    "Basic",
+                    Convert.ToBase64String(Encoding.ASCII.GetBytes($":{_accessToken}")));
+            }
+            else
+            {
+                // Entra-based authentication using DefaultIdentityTokenCredential
+                var credential = new DefaultIdentityTokenCredential(
+                    new DefaultIdentityTokenCredentialOptions
+                    {
+                        ManagedIdentityClientId = task.ManagedIdentityClientId
+                    });
+                var tokenRequestContext = new TokenRequestContext(new[] { "499b84ac-1321-427f-aa17-267ca6975798/.default" });
+                var token = credential.GetToken(tokenRequestContext, CancellationToken.None);
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+            }
         }
 
         public void Dispose()
