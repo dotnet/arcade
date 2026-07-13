@@ -37,14 +37,10 @@ $ci = $true
 $disableConfigureToolsetImport = $true
 . $PSScriptRoot\..\common\tools.ps1
 
-# Work in an agent-local scratch directory (outside the repo tree) so nothing - neither the private
-# darc install nor the temporary clone - is left behind under the repo.
-$scratchBase = if ($env:AGENT_TEMPDIRECTORY) { $env:AGENT_TEMPDIRECTORY } else { [System.IO.Path]::GetTempPath() }
-
-# Install a private copy of darc so we don't disturb the repo's tool manifest.
-$darcPath = Join-Path $scratchBase "darc-$BuildId-$([guid]::NewGuid())"
-& $PSScriptRoot\..\common\darc-init.ps1 -toolpath $darcPath | Out-Host
-$darc = Join-Path $darcPath 'darc.exe'
+# Acquire darc via the standard helper. It installs darc to an isolated temp tool-path using
+# `dotnet tool install --tool-path`, which does not modify the repo's tool manifest or the machine's
+# global tools - so there's no tool-manifest disruption and nothing to restore afterward.
+$darc = Get-Darc
 
 # The promotion validation re-publishes this build via darc from a branch bumped to the newly built
 # Arcade; that publishing pipeline restores the new Arcade toolset from the build's channel feed. If
@@ -67,7 +63,6 @@ $channelsProperty = $build.PSObject.Properties['channels']
 if ($channelsProperty -and $channelsProperty.Value) { $channels = @($channelsProperty.Value) }
 if (@($channels).Count -eq 0) {
   Write-Host "Build $BuildId is not assigned to any channel; skipping promotion validation (no restorable feed for the build's assets)."
-  Remove-Item -Recurse -Force $darcPath -ErrorAction SilentlyContinue
   ExitWithExitCode 0
 }
 Write-Host "Build $BuildId is assigned to channel(s): $($channels -join ', '). Proceeding with promotion validation."
@@ -78,7 +73,8 @@ $repoUri = "https://dev.azure.com/$AzdoOrg/$AzdoProject/_git/$AzdoRepoName"
 # Push using the AzDO token via an http extraheader so we don't persist credentials on disk.
 $authHeader = "Authorization: Bearer $AzdoToken"
 
-# Work in an agent-local scratch directory.
+# Work in an agent-local scratch directory for the temporary clone.
+$scratchBase = if ($env:AGENT_TEMPDIRECTORY) { $env:AGENT_TEMPDIRECTORY } else { [System.IO.Path]::GetTempPath() }
 $repoRoot = Join-Path $scratchBase "promote-$BuildId"
 if (Test-Path $repoRoot) { Remove-Item -Recurse -Force $repoRoot }
 
@@ -146,8 +142,8 @@ catch {
   ExitWithExitCode 1
 }
 finally {
-  # Remove the private darc install and the temporary clone (both under the agent scratch dir).
-  Remove-Item -Recurse -Force $darcPath -ErrorAction SilentlyContinue
+  # Remove the temporary clone. (darc was installed by Get-Darc into an isolated temp tool-path that
+  # the agent cleans up between jobs, so there's nothing else to remove here.)
   Remove-Item -Recurse -Force $repoRoot -ErrorAction SilentlyContinue
 }
 
