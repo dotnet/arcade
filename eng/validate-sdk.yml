@@ -34,14 +34,19 @@ jobs:
     - checkout: self
       clean: true
     steps:
-    # Point the repo at the newly produced Arcade/Helix SDK (bump global.json + add the local feed)
-    # so the build below actually validates the SDK this build produced, not the bootstrap SDK. This
-    # is a pure file edit (no darc / no auth); darc update-dependencies is not used because arcade
-    # does not track its own SDK in Version.Details.xml, so it would have nothing to update.
+    # Point the repo at the newly produced Arcade/Helix SDK so the build below validates the SDK this
+    # build produced (not the bootstrap SDK). First add the produced packages as a local NuGet feed,
+    # then let darc bump the versions (arcade tracks Arcade.Sdk/Helix.Sdk in Version.Details.xml, so
+    # `darc update-dependencies --packages-folder` updates global.json's msbuild-sdks).
     - powershell: >
         .\eng\validation\use-built-sdk.ps1
         -PackagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
-      displayName: Use newly built SDK
+        -AddFeedOnly
+      displayName: Add local package feed (new SDK)
+    - powershell: >
+        .\eng\validation\update-sdk-versions.ps1
+        -PackagesSource $(System.DefaultWorkingDirectory)/build_stage_artifacts
+      displayName: Update SDK versions with darc
     - script: eng\common\cibuild.cmd
         $(_BuildArgs)
       displayName: Build / Validate
