@@ -122,7 +122,10 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                     {
                                         string normalizedVersion = version.ToNormalizedString();
                                         string runtime = runtimeItem.Key;
-                                        string arguments = $"-runtime \"{runtime}\" -version \"{normalizedVersion}\" -dotnetPath \"{DotNetPath}\"";
+                                        // Trim any trailing directory separators. On Windows a trailing backslash would escape the
+                                        // closing quote when passed as -dotnetPath "{DotNetPath}\", resulting in a double backslash.
+                                        string dotNetPath = DotNetPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                                        string arguments = $"-runtime \"{runtime}\" -version \"{normalizedVersion}\" -dotnetPath \"{dotNetPath}\"";
                                         if (!string.IsNullOrEmpty(architecture))
                                         {
                                             arguments += $" -architecture {architecture}";
@@ -183,7 +186,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                         process.WaitForExit();
                                         if (process.ExitCode != 0)
                                         {
-                                            Log.LogError("dotnet-install failed");
+                                            Log.LogError($"dotnet-install failed for runtime '{runtime}' version '{normalizedVersion}' (exit code {process.ExitCode}). Command: {DotNetInstallScript} {arguments}");
                                         }
                                     }
                                 }
