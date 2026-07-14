@@ -65,7 +65,6 @@ while (($# > 0)); do
       shift 2
       ;;
     --restore)
-      restore=true
       shift 1
       ;;
     --norestore)
