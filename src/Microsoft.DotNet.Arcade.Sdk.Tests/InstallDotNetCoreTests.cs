@@ -16,9 +16,9 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                 DotNetPath = "C:\\",
             };
 
-            MethodInfo buildInstallArguments = typeof(InstallDotNetCore).GetMethod("BuildInstallArguments", BindingFlags.NonPublic | BindingFlags.Instance);
-            Assert.NotNull(buildInstallArguments);
-            string arguments = Assert.IsType<string>(buildInstallArguments.Invoke(task, ["aspnetcore", "1.2.3", "x64", true]));
+            MethodInfo buildInstallArgumentsMethod = typeof(InstallDotNetCore).GetMethod("BuildInstallArguments", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(buildInstallArgumentsMethod);
+            string arguments = Assert.IsType<string>(buildInstallArgumentsMethod.Invoke(task, ["aspnetcore", "1.2.3", "x64", true]));
 
             Assert.Contains("-dotnetPath \"C:\\\\\"", arguments);
         }
@@ -33,9 +33,9 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                 RuntimeSourceFeedKey = "secret-key",
             };
 
-            MethodInfo buildInstallArguments = typeof(InstallDotNetCore).GetMethod("BuildInstallArguments", BindingFlags.NonPublic | BindingFlags.Instance);
-            Assert.NotNull(buildInstallArguments);
-            string arguments = Assert.IsType<string>(buildInstallArguments.Invoke(task, ["aspnetcore", "1.2.3", "x64", false]));
+            MethodInfo buildInstallArgumentsMethod = typeof(InstallDotNetCore).GetMethod("BuildInstallArguments", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(buildInstallArgumentsMethod);
+            string arguments = Assert.IsType<string>(buildInstallArgumentsMethod.Invoke(task, ["aspnetcore", "1.2.3", "x64", false]));
 
             Assert.DoesNotContain(task.RuntimeSourceFeed, arguments);
             Assert.DoesNotContain(task.RuntimeSourceFeedKey, arguments);
