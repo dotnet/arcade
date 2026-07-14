@@ -55,7 +55,7 @@ exclude_ci_binary_log=false
 restore=true
 help=false
 properties=''
-warnAsError=true
+warn_as_error=true
 
 while (($# > 0)); do
   lowerI="$(echo $1 | tr "[:upper:]" "[:lower:]")"
@@ -81,7 +81,7 @@ while (($# > 0)); do
       shift 1
       ;;
     --nowarnaserror)
-      warnAsError=false
+      warn_as_error=false
       shift 1
       ;;
     --help)
