@@ -123,8 +123,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                         string normalizedVersion = version.ToNormalizedString();
                                         string runtime = runtimeItem.Key;
                                         string arguments = BuildInstallArguments(runtime, normalizedVersion, architecture, includeRuntimeSourceOptions: true);
-                                        string safeArguments = BuildInstallArguments(runtime, normalizedVersion, architecture, includeRuntimeSourceOptions: false);
-
                                         // Null architecture means that the script should infer it, we don't want to re-implement too much logic here,
                                         // so we skip the quick check.
                                         if (architecture != null)
@@ -169,6 +167,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                         process.WaitForExit();
                                         if (process.ExitCode != 0)
                                         {
+                                            string safeArguments = BuildInstallArguments(runtime, normalizedVersion, architecture, includeRuntimeSourceOptions: false);
                                             Log.LogError($"dotnet-install failed for runtime '{runtime}' version '{normalizedVersion}' (exit code {process.ExitCode}). Command: {DotNetInstallScript} {safeArguments}");
                                         }
                                     }
