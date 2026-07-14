@@ -80,7 +80,7 @@ while (($# > 0)); do
       exclude_ci_binary_log=true
       shift 1
       ;;
-    --noWarnAsError)
+    --nowarnaserror)
       warnAsError=false
       shift 1
       ;;
