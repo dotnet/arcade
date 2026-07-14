@@ -20,6 +20,11 @@ $ci = $true
 $binaryLog = if ($excludeCIBinaryLog) { $false } else { $true }
 $warnAsError = if ($noWarnAsError) { $false } else { $true }
 
+# sdk-task runs a standalone Arcade SDK task and does not need repo-specific toolset setup.
+# Skip importing configure-toolset.ps1 so its side effects (e.g. a repo's configure-toolset.ps1
+# calling exit) don't terminate this script before the task runs.
+$disableConfigureToolsetImport = $true
+
 . $PSScriptRoot\tools.ps1
 
 function Print-Usage() {
