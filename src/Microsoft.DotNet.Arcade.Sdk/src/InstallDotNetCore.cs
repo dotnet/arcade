@@ -182,7 +182,15 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         private string BuildInstallArguments(string runtime, string version, string architecture, bool includeRuntimeSourceOptions)
         {
-            string dotNetPath = GetDotNetPathArgumentValue(DotNetPath);
+            string dotNetPath = Path.TrimEndingDirectorySeparator(DotNetPath);
+
+            // Preserve root paths and double a trailing backslash so it doesn't escape the closing quote
+            // in the raw command-line string passed to dotnet-install on Windows.
+            if (dotNetPath.EndsWith('\\'))
+            {
+                dotNetPath += '\\';
+            }
+
             string arguments = $"-runtime \"{runtime}\" -version \"{version}\" -dotnetPath \"{dotNetPath}\"";
             if (!string.IsNullOrEmpty(architecture))
             {
@@ -201,15 +209,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
 
             return arguments;
-        }
-
-        private static string GetDotNetPathArgumentValue(string dotNetPath)
-        {
-            string trimmedPath = Path.TrimEndingDirectorySeparator(dotNetPath);
-
-            // Preserve root paths and double a trailing backslash so it doesn't escape the closing quote
-            // in the raw command-line string passed to dotnet-install on Windows.
-            return trimmedPath.EndsWith('\\') ? $"{trimmedPath}\\" : trimmedPath;
         }
 
         private string GetArchitecture(string architecture)
