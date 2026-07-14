@@ -20,6 +20,11 @@ $ci = $true
 $binaryLog = if ($excludeCIBinaryLog) { $false } else { $true }
 $warnAsError = if ($noWarnAsError) { $false } else { $true }
 
+# Reconcile the restore state before importing tools.ps1: it reads $restore at import time to
+# decide whether toolset/SDK acquisition installs. -norestore must win so that skipping restore
+# also skips toolset initialization, not just the explicit Restore build below.
+if ($norestore) { $restore = $false }
+
 # sdk-task runs a standalone Arcade SDK task and does not need repo-specific toolset setup.
 # Skip importing configure-toolset.ps1 so its side effects (e.g. a repo's configure-toolset.ps1
 # calling exit) don't terminate this script before the task runs.
@@ -83,7 +88,7 @@ try {
     ExitWithExitCode 1
   }
 
-  if (-not $norestore) {
+  if ($restore) {
     Build 'Restore'
   }
 
