@@ -3,7 +3,7 @@
 show_usage() {
     echo "Common settings:"
     echo "  --task <value>           Name of Arcade task (name of a project in toolset directory of the Arcade SDK package)"
-    echo "  --restore                (Legacy/no-op) Restore is always on; retained for backward compatibility"
+    echo "  --restore                (Legacy) Restore runs by default; retained for backward compatibility. Use --norestore to skip"
     echo "  --norestore              Skip restoring dependencies"
     echo "  --verbosity <value>      Msbuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic]"
     echo "  --help                   Print help and exit"
@@ -51,7 +51,7 @@ binary_log=true
 configuration="Debug"
 verbosity="minimal"
 exclude_ci_binary_log=false
-# restore is always on now; --restore is retained only so existing consumers that pass it don't break. Use --norestore to opt out.
+# restore defaults to on; --restore is retained only so existing consumers that pass it don't break. Use --norestore to opt out.
 restore=true
 help=false
 properties=''
