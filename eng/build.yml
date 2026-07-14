@@ -13,6 +13,14 @@ parameters:
 - name: runValidateSdk
   default: true
   type: boolean
+# The channel successful builds are promoted to, and the source branch the promotion gate runs on.
+# Defined once here so they aren't duplicated throughout the promotion stage below.
+- name: promotionChannel
+  default: '.NET Eng - Latest'
+  type: string
+- name: promotionSourceBranch
+  default: 'refs/heads/main'
+  type: string
 
 stages:
 - stage: build
@@ -92,9 +100,9 @@ stages:
 # when validation is disabled. Main only: release branches keep using dotnet/arcade-validation for
 # this gate (see #17046). The assets were already published to '.NET Eng - Validation' by the
 # post-build publish stage, so this uses --skip-assets-publishing.
-- ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+- ${{ if eq(variables['Build.SourceBranch'], parameters.promotionSourceBranch) }}:
   - stage: PromoteToLatest
-    displayName: Promote to '.NET Eng - Latest'
+    displayName: Promote to '${{ parameters.promotionChannel }}'
     dependsOn:
     - publish_using_darc
     - ${{ if eq(parameters.runValidateSdk, true) }}:
@@ -103,7 +111,7 @@ stages:
     - template: /eng/common/templates-official/job/job.yml@self
       parameters:
         name: PromoteToLatest
-        displayName: Promote to '.NET Eng - Latest'
+        displayName: Promote to '${{ parameters.promotionChannel }}'
         enableMicrobuild: false
         timeoutInMinutes: 60
         # The publish-build-assets job writes the BAR build id as the first line of ReleaseConfigs.txt.
@@ -140,7 +148,7 @@ stages:
               if ($LASTEXITCODE -ne 0) { Write-Error "Failed to get AzDO token"; exit 1 }
               Write-Host "##vso[task.setvariable variable=WifAzDoToken;issecret=true]$azdoToken"
         - task: AzureCLI@2
-          displayName: Promote to '.NET Eng - Latest'
+          displayName: Promote to '${{ parameters.promotionChannel }}'
           inputs:
             azureSubscription: "Darc: Maestro Production"
             scriptType: ps
@@ -151,5 +159,5 @@ stages:
               . $(Build.SourcesDirectory)/eng/common/tools.ps1
               $darc = Get-Darc
               # Assets were already published to '.NET Eng - Validation'; this is the promotion gate.
-              & $darc add-build-to-channel --id $(BARBuildId) --channel '.NET Eng - Latest' --azdev-pat $(WifAzDoToken) --ci --skip-assets-publishing
-              if ($LASTEXITCODE -ne 0) { Write-Error "Failed to promote build $(BARBuildId) to '.NET Eng - Latest'."; exit 1 }
+              & $darc add-build-to-channel --id $(BARBuildId) --channel '${{ parameters.promotionChannel }}' --azdev-pat $(WifAzDoToken) --ci --skip-assets-publishing
+              if ($LASTEXITCODE -ne 0) { Write-Error "Failed to promote build $(BARBuildId) to '${{ parameters.promotionChannel }}'."; exit 1 }
