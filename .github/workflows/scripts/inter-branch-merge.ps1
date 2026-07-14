@@ -112,6 +112,77 @@ function GetCommitterGitHubName($sha) {
     return $null
 }
 
+function Get-NonBotExtraCommits($localRef, $remoteRef) {
+    # Returns commit SHAs reachable from $remoteRef but not from $localRef
+    # that were NOT authored by github-actions[bot]. This lets us safely
+    # force-push over our own prior bot merge commits while still protecting
+    # human-pushed commits.
+    #
+    # Fails closed: if `git rev-list` errors (bad ref, transient git failure,
+    # partial fetch), we throw rather than treat the result as "no extra
+    # commits" — otherwise the caller would silently force-push without the
+    # safety check this function is designed to provide.
+    [string[]] $extraShas = & git rev-list "$localRef..$remoteRef" 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw "git rev-list '$localRef..$remoteRef' failed (exit code $LASTEXITCODE). Refusing to proceed with force-push without a reliable view of remote commits. Output: $($extraShas -join "`n")"
+    }
+    if (-not $extraShas -or $extraShas.Count -eq 0) {
+        return @()
+    }
+
+    $botEmail = '41898282+github-actions[bot]@users.noreply.github.com'
+    $nonBot = @()
+    foreach ($sha in $extraShas) {
+        $authorEmail = & git show -s --format='%ae' $sha 2>$null
+        if ($LASTEXITCODE -ne 0 -or -not $authorEmail) {
+            # Couldn't read commit metadata — be conservative and treat as non-bot.
+            $nonBot += $sha
+            continue
+        }
+        if ($authorEmail.Trim() -ne $botEmail) {
+            $nonBot += $sha
+        }
+    }
+    return $nonBot
+}
+
+function Update-RemoteBranchInfo($remoteName, $branchName) {
+    # Returns @{ Exists = <bool>; Sha = <string-or-null> }. When Exists is true,
+    # Sha is the SHA the remote branch points at after a fresh fetch; this is the
+    # value the caller should pass to `--force-with-lease=<ref>:<sha>` so that a
+    # concurrent push between our fetch and our push is detected atomically by git.
+    #
+    # Fails closed: if ls-remote says the branch exists but the fetch itself fails
+    # (network, auth, etc.) we throw rather than push with a stale view.
+    & git ls-remote --exit-code --heads $remoteName $branchName 2>$null | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        return @{ Exists = $false; Sha = $null }
+    }
+
+    & git fetch $remoteName $branchName 2>&1 | Write-Host
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to fetch '$branchName' from $remoteName (exit code $LASTEXITCODE). Refusing to push without an up-to-date view of the remote branch."
+    }
+
+    $sha = (& git rev-parse "$remoteName/$branchName" 2>&1).Trim()
+    if ($LASTEXITCODE -ne 0 -or -not $sha) {
+        throw "Failed to resolve SHA for $remoteName/$branchName after fetch."
+    }
+    return @{ Exists = $true; Sha = $sha }
+}
+
+function Assert-NoHumanCommitsOnRemote($localRef, $remoteRef) {
+    # Throws if the remote has commits that aren't reachable from $localRef AND
+    # weren't authored by the bot. Use immediately before any force-push to
+    # protect manual conflict-resolution pushes from being overwritten.
+    [string[]] $extraCommits = Get-NonBotExtraCommits $localRef $remoteRef
+    if ($extraCommits -and $extraCommits.Count -gt 0) {
+        Write-Warning "Remote branch '$remoteRef' has $($extraCommits.Count) non-bot commit(s) not in the local branch. Skipping force push to avoid overwriting manual changes."
+        $extraCommits | % { Write-Warning "  $_" }
+        throw "Remote branch has unmerged human commits"
+    }
+}
+
 function ResetFilesToTargetBranch($patterns, $targetBranch) {
     if (-not $patterns -or $patterns.Count -eq 0) {
         return
@@ -126,10 +197,7 @@ function ResetFilesToTargetBranch($patterns, $targetBranch) {
         return
     }
 
-    # Configure git user for the commit
-    # Use GitHub Actions bot identity
-    Invoke-Block { & git config user.name "github-actions[bot]" }
-    Invoke-Block { & git config user.email "41898282+github-actions[bot]@users.noreply.github.com" }
+    # Note: git user.name/email must already be configured by the caller
 
     # Track which patterns had changes
     $processedPatterns = @()
@@ -220,12 +288,73 @@ try {
     Write-Host $committersList
 
     $mergeBranchName = "merge/$MergeFromBranch-to-$MergeToBranch"
-    Invoke-Block { & git checkout -B $mergeBranchName  }
 
-    # Reset specified files to target branch if ResetToTargetPaths is configured
+    # Track whether we created a merge commit (affects push strategy and PR comment).
+    # A merge commit is only created when the merge is conflict-free; if ANY file
+    # outside the ResetToTargetPaths patterns conflicts, we fall back to a
+    # source-only branch so GitHub's merge button surfaces those conflicts to the
+    # reviewer. Files INSIDE the ResetToTargetPaths patterns are always reset to
+    # the target branch version after the merge step — that is the documented
+    # opt-in behavior of the parameter (see the .PARAMETER block above). We do
+    # NOT use `-X ours` / `-X theirs` or any other merge-strategy option to
+    # auto-resolve conflicts in files outside those patterns.
+    $createdMergeCommit = $false
+    [string[]] $conflictFiles = @()
+
+    # When ResetToTargetPaths is configured, we attempt to create a proper merge commit
+    # so that the target branch content is included. If the merge has any conflicts we
+    # fall back to the original source-only behavior so GitHub's merge button surfaces
+    # them to the reviewer.
     if ($ResetToTargetPaths) {
-        $patterns = $ResetToTargetPaths -split ";"
+        # Configure git user for the merge commit
+        Invoke-Block { & git config user.name "github-actions[bot]" }
+        Invoke-Block { & git config user.email "41898282+github-actions[bot]@users.noreply.github.com" }
+
+        $patterns = ($ResetToTargetPaths -split ";") | % { $_.Trim() } | ? { $_ }
+
+        # Start from the target branch and merge source into it
+        Invoke-Block { & git checkout -B $mergeBranchName "origin/$MergeToBranch" }
+
+        # Try a clean merge. We do NOT pass -X ours / -X theirs anywhere in this
+        # script — any conflict must surface to the reviewer via the source-only
+        # fallback below.
+        $mergeOutput = & git merge --no-ff "origin/$MergeFromBranch" -m "Merge branch '$MergeFromBranch' into $MergeToBranch" 2>&1
+        $mergeExitCode = $LASTEXITCODE
+
+        # Always log merge output for CI diagnostics
+        if ($mergeOutput) {
+            $mergeOutput | Write-Host
+        }
+
+        if ($mergeExitCode -eq 0) {
+            $createdMergeCommit = $true
+        } else {
+            # Capture conflict file list before aborting so we can surface it.
+            [string[]] $conflictFiles = & git -c core.quotePath=false diff --name-only --diff-filter=U
+
+            # Abort the conflicted merge before proceeding.
+            # Use plain call (not Invoke-Block) because git merge --abort exits 128
+            # if there is no merge-in-progress (e.g. a non-conflict git failure).
+            & git merge --abort 2>&1 | Write-Host
+
+            if (-not $conflictFiles -or $conflictFiles.Count -eq 0) {
+                Write-Host -f Yellow "Merge failed with exit code $mergeExitCode but no conflicts were detected."
+                Write-Host -f Yellow "Falling back to source-only branch."
+            } else {
+                Write-Host -f Yellow "Merge produced conflicts in the following files:"
+                $conflictFiles | % { Write-Host -f Yellow "  - $_" }
+                Write-Host -f Yellow "Falling back to source-only branch so GitHub surfaces these conflicts in the PR."
+            }
+
+            Invoke-Block { & git checkout -B $mergeBranchName "origin/$MergeFromBranch" }
+        }
+
         ResetFilesToTargetBranch $patterns $MergeToBranch
+    }
+    else {
+        # Without ResetToTargetPaths, the original behavior is fine: create a branch
+        # from the source and let GitHub's merge button do the actual merge.
+        Invoke-Block { & git checkout -B $mergeBranchName "origin/$MergeFromBranch" }
     }
 
     $remoteName = 'origin'
@@ -277,18 +406,94 @@ try {
 
         try {
             if ($PSCmdlet.ShouldProcess("Update remote branch $mergeBranchName on $remoteName")) {
-                Invoke-Block { & git push $remoteName "${mergeBranchName}:${mergeBranchName}" }
+                # Refresh remote tracking info and capture the current remote SHA so
+                # we can pass it to --force-with-lease later. Update-RemoteBranchInfo
+                # fails closed on any fetch error other than "branch doesn't exist".
+                $remoteInfo = Update-RemoteBranchInfo $remoteName $mergeBranchName
+                $remoteBranchExists = $remoteInfo.Exists
+                $remoteSha = $remoteInfo.Sha
+
+                if ($createdMergeCommit) {
+                    # Merge commits create non-fast-forwardable history on each run,
+                    # so we need --force to update the branch. Before force-pushing,
+                    # check the remote for commits that aren't reachable from our
+                    # local branch AND weren't authored by the bot — those would be
+                    # manual changes a contributor pushed to the PR branch.
+                    if ($remoteBranchExists) {
+                        Assert-NoHumanCommitsOnRemote $mergeBranchName "origin/$mergeBranchName"
+                        # --force-with-lease closes the TOCTOU window between our
+                        # fetch and our push: if anyone (human or bot) pushes to the
+                        # remote between Update-RemoteBranchInfo and this push, git
+                        # rejects our push instead of silently overwriting them.
+                        Invoke-Block { & git push --force-with-lease="refs/heads/${mergeBranchName}:${remoteSha}" $remoteName "${mergeBranchName}:${mergeBranchName}" }
+                    } else {
+                        # First push to this branch — nothing to lease against.
+                        Invoke-Block { & git push $remoteName "${mergeBranchName}:${mergeBranchName}" }
+                    }
+                } else {
+                    # Source-only branch path. Try a non-force push first — if the
+                    # branch is brand new or strictly ahead of the remote, this
+                    # succeeds. Only retry with --force-with-lease if the failure
+                    # looks like a non-fast-forward; any other failure (auth,
+                    # network, permission) must NOT silently escalate to force.
+                    $pushOutput = & git push $remoteName "${mergeBranchName}:${mergeBranchName}" 2>&1
+                    $pushExit = $LASTEXITCODE
+                    if ($pushOutput) {
+                        $pushOutput | Write-Host
+                    }
+                    if ($pushExit -ne 0) {
+                        $pushOutputText = ($pushOutput | Out-String)
+                        $isNonFastForward = $pushOutputText -match '(?i)non-fast-forward|failed to push some refs|tip of your.*is behind|Updates were rejected'
+                        if (-not $isNonFastForward) {
+                            throw "git push failed with exit code $pushExit and the failure does not look like a non-fast-forward (auth/network/permission?). Refusing to auto-retry with --force. Push output: $pushOutputText"
+                        }
+
+                        if (-not $remoteBranchExists) {
+                            # We previously decided the branch did not exist, but the
+                            # push still rejected as non-fast-forward. Re-check the
+                            # remote — most likely a concurrent run created the
+                            # branch between Update-RemoteBranchInfo and this push.
+                            $remoteInfo = Update-RemoteBranchInfo $remoteName $mergeBranchName
+                            $remoteBranchExists = $remoteInfo.Exists
+                            $remoteSha = $remoteInfo.Sha
+                        }
+
+                        if ($remoteBranchExists) {
+                            Assert-NoHumanCommitsOnRemote $mergeBranchName "origin/$mergeBranchName"
+                            Write-Host "Non-force push failed with non-fast-forward. Retrying with --force-with-lease..."
+                            Invoke-Block { & git push --force-with-lease="refs/heads/${mergeBranchName}:${remoteSha}" $remoteName "${mergeBranchName}:${mergeBranchName}" }
+                        } else {
+                            throw "Non-fast-forward rejection but remote branch still reports as not-existing. Refusing to force-push blindly."
+                        }
+                    }
+                }
             }
             $prUpdatedSuccess = $true
         }
         catch {
-            Write-Warning "Failed to update existing PR"
+            Write-Warning "Failed to update existing PR: $_"
         }
 
-        $prMessage = if ($prUpdatedSuccess) {
-            "This pull request has been updated.`n`n$committersList"
+        # Build the PR update comment. Tell reviewers which merge path was taken so
+        # they know whether GitHub's diff reflects a real merge or a source-only
+        # branch (i.e. whether they need to use the merge button to resolve
+        # conflicts).
+        if ($prUpdatedSuccess) {
+            if ($createdMergeCommit) {
+                $pathDescription = "This pull request was updated with a clean merge commit (no conflicts)."
+            } elseif ($conflictFiles -and $conflictFiles.Count -gt 0) {
+                $conflictList = ($conflictFiles | % { "  - ``$_``" }) -join "`n"
+                $pathDescription = @"
+This pull request was updated **without** a merge commit because the following file(s) had conflicts that must be resolved manually via GitHub's merge button:
+
+$conflictList
+"@
+            } else {
+                $pathDescription = "This pull request was updated."
+            }
+            $prMessage = "$pathDescription`n`n$committersList"
         } else {
-            @"
+            $prMessage = @"
 :x: Uh oh, this pull request could not be updated automatically. New commits were pushed to $MergeFromBranch, but I could not automatically push those to $mergeBranchName to update this PR.
 You may need to fix this problem by merging branches with this PR. Contact .NET Core Engineering if you are not sure what to do about this.
 "@
@@ -310,11 +515,21 @@ You may need to fix this problem by merging branches with this PR. Contact .NET 
         }
     }
     else {
-        # Use --force because the merge branch may have been used for a previous PR.
-        # This should only happen if there is no existing PR for the merge
+        # No open PR matched — we'll create one below. The merge branch may still
+        # exist remotely from a closed PR or a manual contributor push. Apply the
+        # same human-commit guard + --force-with-lease as the PR-update path so
+        # we never silently overwrite human commits, and re-fetch atomically so
+        # the lease SHA matches the latest remote state.
 
         if ($PSCmdlet.ShouldProcess("Force updating remote branch $mergeBranchName on $remoteName")) {
-            Invoke-Block { & git push --force $remoteName "${mergeBranchName}:${mergeBranchName}" }
+            $remoteInfo = Update-RemoteBranchInfo $remoteName $mergeBranchName
+            if ($remoteInfo.Exists) {
+                Assert-NoHumanCommitsOnRemote $mergeBranchName "origin/$mergeBranchName"
+                Invoke-Block { & git push --force-with-lease="refs/heads/${mergeBranchName}:$($remoteInfo.Sha)" $remoteName "${mergeBranchName}:${mergeBranchName}" }
+            } else {
+                # First push to this branch — nothing to lease against.
+                Invoke-Block { & git push $remoteName "${mergeBranchName}:${mergeBranchName}" }
+            }
         }
 
         $previewHeaders = @{
