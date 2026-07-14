@@ -56,6 +56,7 @@
 
     <!-- xUnit v3 tests are self-hosting MTP executables and use MTPProject instead -->
     <XUnitProject Remove="..\src\Microsoft.DotNet.XUnitV3Extensions\tests\Microsoft.DotNet.XUnitV3Extensions.Tests.csproj"/>
+    <XUnitProject Remove="..\src\Microsoft.DotNet.XUnitV3Extensions\tests\Microsoft.DotNet.XUnitV3Extensions.AlwaysFalseConditionalAssembly.Tests.csproj"/>
 
     <!-- Arcade SDK validation tests spawn full build.ps1/build.sh sub-builds against the newly
          produced SDK and must run on a build agent with a local package feed; they are intended to
