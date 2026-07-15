@@ -29,9 +29,11 @@ failed.
    `"Build succeeded — no analysis required."` and stop.
 
 3. Otherwise, launch the `build-failure-analyst` agent as a **background**
-   task (`task` tool, `agent_type: "general-purpose"`,
-   `model: "claude-opus-4.6"`, `mode: "background"`). In the sub-agent prompt
-   include:
+   task (`task` tool, `agent_type: "general-purpose"`, `mode: "background"`).
+   Do **not** pin a specific `model` — let the workflow-level default model
+   selection apply so the workflow does not break if a specific model name is
+   absent from the repository's Copilot model allowlist. In the sub-agent
+   prompt include:
    - All six `GH_AW_*` environment values verbatim so the sub-agent knows
      which binlog to query (`GH_AW_BINLOG_PATH` is the in-container path
      `/data/build.binlog` exposed by the `binlog-mcp` MCP server) and where

@@ -59,7 +59,9 @@ concurrency:
 env:
   NUGET_MCP_VERSION: '1.4.3'
 
-timeout-minutes: 30
+# The agent job (analysis only — no build) rarely needs long, but give it
+# headroom for artifact download + tool install + AI turns.
+timeout-minutes: 60
 
 network:
   allowed:
@@ -92,7 +94,10 @@ jobs:
   build:
     name: Build (for analysis)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Arcade's `./build.sh` can routinely run well past 30 minutes, so give
+    # the build job generous headroom. A too-low timeout would look like a
+    # build failure and spuriously trigger the analyst on a healthy build.
+    timeout-minutes: 120
     # Mirror the workflow's `forks: []` trigger filter: skip fork PRs at the
     # build-job level too. Without this guard the build job would still run
     # for fork PRs even though the agent pipeline never runs for them.
