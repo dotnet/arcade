@@ -80,17 +80,11 @@ jobs:
 
     # Acquire Entra token for ceapex feed access when using WIF-based auth
     - ${{ if ne(parameters.CeapexServiceConnection, '') }}:
-      - task: AzureCLI@2
-        displayName: 'Acquire Entra token for ceapex feed access'
-        inputs:
-          azureSubscription: ${{ parameters.CeapexServiceConnection }}
-          scriptType: 'pscore'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            $token = az account get-access-token --query accessToken --resource 499b84ac-1321-427f-aa17-267ca6975798 -o tsv
-            if (-not $token) { Write-Error "Failed to acquire AzDO token"; exit 1 }
-            Write-Host "##vso[task.setvariable variable=CeapexEntraToken;issecret=true]${token}"
-        condition: ${{ parameters.condition }}
+      - template: /eng/common/templates/steps/get-federated-access-token.yml
+        parameters:
+          federatedServiceConnection: ${{ parameters.CeapexServiceConnection }}
+          outputVariableName: 'CeapexEntraToken'
+          condition: ${{ parameters.condition }}
 
     - task: OneLocBuild@3
       displayName: OneLocBuild
