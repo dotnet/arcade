@@ -110,11 +110,22 @@ jobs:
       binlog-relative-path: ${{ steps.find-binlog.outputs.relative-path }}
     steps:
       - uses: actions/checkout@v7.0.0
+        with:
+          # This job runs ./build.sh from checked-out PR contents, so don't
+          # persist the job token into local git config — minimize token
+          # blast radius (matches the pattern used by other agentic
+          # workflows in this repo).
+          persist-credentials: false
 
       - name: Build with binary log
         id: build
         continue-on-error: true
         run: |
+          # Actions runs `run:` steps with `bash -e -o pipefail`. Disable
+          # errexit so a failed build pipeline does not abort the step before
+          # the explicit PIPESTATUS-based exit below; keep pipefail + nounset
+          # so we still read build.sh's real exit code (not tee's).
+          set +e
           set -uo pipefail
           ./build.sh --binaryLog 2>&1 | tee /tmp/build-output.log
           # `tee` is best-effort: rely on the build's own exit code so a
@@ -127,6 +138,12 @@ jobs:
         id: find-binlog
         if: always()
         run: |
+          # `find` returns non-zero when artifacts/log is absent (e.g. the
+          # build failed very early). Actions runs bash with `-e -o pipefail`,
+          # so relax both here to keep this advisory step from turning the
+          # run red; the "no binlog" case is handled explicitly below.
+          set +e
+          set +o pipefail
           BINLOG=$(find artifacts/log -name '*.binlog' -type f -printf '%T@ %p\n' 2>/dev/null \
             | sort -rn | head -1 | cut -d' ' -f2-)
           if [ -n "$BINLOG" ] && [ -f "$BINLOG" ]; then
