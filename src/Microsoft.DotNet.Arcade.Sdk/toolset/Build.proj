@@ -115,8 +115,8 @@
       <!--
         In .NET product build mode, some projects may have set ExcludeFromSourceOnlyBuild or ExcludeFromDotNetBuild to true.
         NuGet Restore task reports a warning for such projects, which we suppress here.
-        ExcludeFromBuild is a general switch that can be used out of .NET product build mode. To make this work, a user can set
-        DisableWarnForInvalidRestoreProjects=true in Build.props to configure that.
+        ExcludeFromBuild is a general switch that can be used outside of the .NET product build mode. To make this work, a user
+        can set DisableWarnForInvalidRestoreProjects=true in Build.props.
       -->
       <_CommonProps Include="DisableWarnForInvalidRestoreProjects=true" Condition="'$(DotNetBuild)' == 'true' or '$(DisableWarnForInvalidRestoreProjects)' == 'true'"/>
 
