@@ -78,6 +78,8 @@ runtime_source_feed_key=${runtime_source_feed_key:-''}
 # True when the build is running within the VMR.
 from_vmr=${from_vmr:-false}
 
+disable_pipeline_set_result=${disable_pipeline_set_result:-false}
+
 # Resolve any symlinks in the given path.
 function ResolvePath {
   local path=$1
@@ -524,7 +526,7 @@ function DotNet {
 
     echo "dotnet command failed with exit code $exit_code. Check errors above."
 
-    if [[ "$ci" == true && -n ${SYSTEM_TEAMPROJECT:-} && "$from_vmr" != true ]]; then
+    if [[ "$ci" == true && -n ${SYSTEM_TEAMPROJECT:-} && "$from_vmr" != true && "$disable_pipeline_set_result" != true ]]; then
       Write-PipelineSetResult -result "Failed" -message "dotnet command execution failed."
       ExitWithExitCode 0
     else
@@ -573,8 +575,8 @@ function MSBuild {
       echo "Build failed with exit code $exit_code. Check errors above."
 
       # When running on Azure Pipelines, override the returned exit code to avoid double logging.
-      # Skip this when the build is a child of the VMR build.
-      if [[ "$ci" == true && -n ${SYSTEM_TEAMPROJECT:-} && "$from_vmr" != true ]]; then
+      # Skip this when the build is a child of the VMR build, or when -disablePipelineSetResult is set so the real exit code propagates.
+      if [[ "$ci" == true && -n ${SYSTEM_TEAMPROJECT:-} && "$from_vmr" != true && "$disable_pipeline_set_result" != true ]]; then
         Write-PipelineSetResult -result "Failed" -message "msbuild execution failed."
         # Exiting with an exit code causes the azure pipelines task to log yet another "noise" error
         # The above Write-PipelineSetResult will cause the task to be marked as failure without adding yet another error
