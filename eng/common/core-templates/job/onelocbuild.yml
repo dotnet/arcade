@@ -82,8 +82,9 @@ jobs:
     # Acquire an Entra token for ceapex feed access via WIF (dnceng/internal only).
     # All other projects use PAT-based auth, since the ceapex service connection is scoped to dnceng/internal.
     - ${{ if and(ne(parameters.CeapexServiceConnection, ''), eq(variables['System.TeamProject'], 'internal')) }}:
-      - template: /eng/common/templates/steps/get-federated-access-token.yml
+      - template: /eng/common/core-templates/steps/get-federated-access-token.yml
         parameters:
+          is1ESPipeline: ${{ parameters.is1ESPipeline }}
           federatedServiceConnection: ${{ parameters.CeapexServiceConnection }}
           outputVariableName: 'CeapexEntraToken'
           condition: ${{ parameters.condition }}
