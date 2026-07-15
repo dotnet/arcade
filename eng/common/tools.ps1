@@ -844,7 +844,7 @@ function MSBuild() {
     Write-Host "Build failed with exit code $exitCode. Check errors above." -ForegroundColor Red
 
     # When running on Azure Pipelines, override the returned exit code to avoid double logging.
-    # Skip this when the build is a child of the VMR build.
+    # Skip this when the build is a child of the VMR build, or when -disablePipelineSetResult is set so the real exit code propagates.
     if ($ci -and $env:SYSTEM_TEAMPROJECT -ne $null -and !$fromVMR -and !$disablePipelineSetResult) {
       Write-PipelineSetResult -Result "Failed" -Message "msbuild execution failed."
       # Exiting with an exit code causes the azure pipelines task to log yet another "noise" error
