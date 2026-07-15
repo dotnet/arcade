@@ -53,22 +53,32 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             if (!string.IsNullOrEmpty(_accessToken))
             {
-                // Legacy PAT-based authentication
+                // Token-based authentication (PAT or AAD access token) via Basic auth
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                     "Basic",
                     Convert.ToBase64String(Encoding.ASCII.GetBytes($":{_accessToken}")));
             }
             else
             {
-                // Entra-based authentication using DefaultIdentityTokenCredential
-                var credential = new DefaultIdentityTokenCredential(
-                    new DefaultIdentityTokenCredentialOptions
-                    {
-                        ManagedIdentityClientId = task.ManagedIdentityClientId
-                    });
-                var tokenRequestContext = new TokenRequestContext(new[] { "499b84ac-1321-427f-aa17-267ca6975798/.default" });
-                var token = credential.GetToken(tokenRequestContext, CancellationToken.None);
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+                // No token provided; acquire an Entra token via DefaultIdentityTokenCredential.
+                try
+                {
+                    var credential = new DefaultIdentityTokenCredential(
+                        new DefaultIdentityTokenCredentialOptions
+                        {
+                            ManagedIdentityClientId = task.ManagedIdentityClientId
+                        });
+                    var tokenRequestContext = new TokenRequestContext(new[] { "499b84ac-1321-427f-aa17-267ca6975798/.default" });
+                    var token = credential.GetToken(tokenRequestContext, CancellationToken.None);
+                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+                }
+                catch (Exception e)
+                {
+                    throw new InvalidOperationException(
+                        "Failed to acquire an Entra token for Azure DevOps feed publishing. Provide 'AzureDevOpsFeedsKey', " +
+                        "or run the publish step under an AzureCLI@2 task with addSpnToEnvironment: true (or a configured " +
+                        "managed/workload identity) so DefaultIdentityTokenCredential can obtain a token.", e);
+                }
             }
         }
 
