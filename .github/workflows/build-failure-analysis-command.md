@@ -80,12 +80,35 @@ jobs:
       binlog-found: ${{ steps.find-binlog.outputs.found }}
       binlog-relative-path: ${{ steps.find-binlog.outputs.relative-path }}
     steps:
+      # `/analyze-build-failure` runs centrally in the base-repo context with
+      # the workflow token. A maintainer could invoke it on a **fork** PR, so
+      # resolve the PR head repo first and skip the checkout/build entirely
+      # for fork PRs — building untrusted fork code here would expose the
+      # workflow token/secrets. (The auto `pull_request` workflow already
+      # blocks forks via `forks: []`; this is the equivalent guard.)
+      - name: Check PR origin
+        id: origin
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
+          GH_AW_ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+          HEAD_REPO=$(gh api "repos/${GH_AW_GITHUB_REPOSITORY}/pulls/${GH_AW_ISSUE_NUMBER}" --jq '.head.repo.full_name')
+          if [ "$HEAD_REPO" = "${GH_AW_GITHUB_REPOSITORY}" ]; then
+            echo "same-repo=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "same-repo=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Skipping build for fork PR #${GH_AW_ISSUE_NUMBER} (head repo: ${HEAD_REPO}); build-failure analysis does not run on fork PRs."
+          fi
+
       # `pull_request_comment` events have the `issues` event payload, so
       # the default checkout would build the default branch — NOT the PR
       # the maintainer ran `/analyze-build-failure` on. Check out the PR's
       # merge ref explicitly so we analyse the same code that the auto
-      # `pull_request` workflow would build.
+      # `pull_request` workflow would build. Skipped for fork PRs (see above).
       - uses: actions/checkout@v7.0.0
+        if: steps.origin.outputs.same-repo == 'true'
         with:
           ref: refs/pull/${{ github.event.issue.number }}/merge
           # A centralized slash-command runs in the base-repo context and
@@ -96,6 +119,11 @@ jobs:
 
       - name: Build with binary log
         id: build
+        # Skip for fork PRs: without a checkout the build would fail on
+        # missing repo contents and could spuriously trigger the analyst.
+        # A skipped step reports outcome `skipped` (not `failure`), so the
+        # top-level `if:` keeps the agent pipeline from activating.
+        if: steps.origin.outputs.same-repo == 'true'
         continue-on-error: true
         run: |
           # Actions runs `run:` steps with `bash -e -o pipefail`. Disable
@@ -113,7 +141,7 @@ jobs:
 
       - name: Locate binlog
         id: find-binlog
-        if: always()
+        if: always() && steps.origin.outputs.same-repo == 'true'
         run: |
           # `find` returns non-zero when artifacts/log is absent (e.g. the
           # build failed very early). Actions runs bash with `-e -o pipefail`,

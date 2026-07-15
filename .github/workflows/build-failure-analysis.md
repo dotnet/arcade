@@ -53,7 +53,7 @@ permissions:
   copilot-requests: write
 
 concurrency:
-  group: build-failure-analysis-${{ github.event.pull_request.number || github.event.issue.number || github.ref }}
+  group: build-failure-analysis-${{ github.event.pull_request.number || github.event.issue.number || inputs.pr-number || github.ref }}
   cancel-in-progress: true
 
 env:
@@ -111,6 +111,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.0
         with:
+          # On `workflow_dispatch` with a `pr-number`, check out that PR's
+          # merge ref so the binlog we analyse matches the PR we comment on
+          # (otherwise the dispatched ref — usually the default branch —
+          # would be built). For `pull_request` events `inputs.pr-number` is
+          # empty, so this falls back to the default checkout (the PR merge
+          # ref GitHub provides for pull_request).
+          ref: ${{ inputs.pr-number != '' && format('refs/pull/{0}/merge', inputs.pr-number) || '' }}
           # This job runs ./build.sh from checked-out PR contents, so don't
           # persist the job token into local git config — minimize token
           # blast radius (matches the pattern used by other agentic
