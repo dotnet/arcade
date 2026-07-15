@@ -33,7 +33,12 @@ permissions:
   copilot-requests: write
 
 concurrency:
-  group: build-failure-analysis-${{ github.event.issue.number }}
+  # This command workflow compiles into a `workflow_dispatch` entrypoint
+  # (gh-aw centralized slash commands), where `github.event.issue.number` is
+  # unset — so fall back to the PR/issue number carried in `aw_context`, and
+  # finally to `github.run_id` so unrelated runs never collapse into one
+  # group and cancel each other.
+  group: build-failure-analysis-${{ github.event.issue.number || github.event.pull_request.number || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number || github.run_id }}
   cancel-in-progress: true
 
 env:
@@ -75,6 +80,9 @@ jobs:
     timeout-minutes: 120
     permissions:
       contents: read
+      # The `Check PR origin` step below calls `gh api .../pulls/<n>` to
+      # detect fork PRs; that read needs the `pull-requests` scope.
+      pull-requests: read
     outputs:
       outcome: ${{ steps.build.outcome }}
       binlog-found: ${{ steps.find-binlog.outputs.found }}
