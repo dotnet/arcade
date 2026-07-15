@@ -719,7 +719,17 @@ function InitializeToolset() {
     $downloadArgs += "--configfile"
     $downloadArgs += $nugetConfig
   }
-  DotNet @downloadArgs
+
+  # 'dotnet package download' fails outright if any source in the repo's NuGet.config is
+  # unavailable (for example a transport feed that was decommissioned after a release). The
+  # Arcade SDK is always published to the public dotnet-eng feed, so if the config-driven
+  # download fails, retry once against that feed directly (which ignores the other sources)
+  # before giving up, so a single dead source doesn't block the build.
+  $downloadExitCode = DotNet -ignoreFailure @downloadArgs
+  if ($downloadExitCode) {
+    Write-Host "Restoring the Arcade SDK from the configured sources failed; retrying from the public dotnet-eng feed."
+    DotNet @downloadArgs --source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json"
+  }
 
   $packageDir = Join-Path $nugetPackageCachePath (Join-Path 'microsoft.dotnet.arcade.sdk' $toolsetVersion)
   $packageToolsetDir = Join-Path $packageDir 'toolset'
@@ -848,7 +858,7 @@ function MSBuild() {
 # Executes a dotnet command with arguments passed to the function.
 # Terminates the script if the command fails.
 #
-function DotNet() {
+function DotNet([switch]$ignoreFailure) {
   $dotnetRoot = InitializeDotNetCli -install:$restore
   $dotnetPath = Join-Path $dotnetRoot (GetExecutableFileName 'dotnet')
 
@@ -867,6 +877,12 @@ function DotNet() {
   $exitCode = Exec-Process $dotnetPath $cmdArgs
 
   if ($exitCode -ne 0) {
+    # When -ignoreFailure is set, return the exit code to the caller so it can implement
+    # its own fallback logic instead of terminating the script.
+    if ($ignoreFailure) {
+      return $exitCode
+    }
+
     Write-Host "dotnet command failed with exit code $exitCode. Check errors above." -ForegroundColor Red
 
     if ($ci -and $env:SYSTEM_TEAMPROJECT -ne $null -and !$fromVMR) {
