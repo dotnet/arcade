@@ -961,10 +961,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string effectiveToken = tokenOverride ?? AzdoApiToken;
             if (!string.IsNullOrEmpty(effectiveToken))
             {
-                // Token-based authentication (PAT or AAD access token) via Basic auth
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                    "Basic",
-                    Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", effectiveToken))));
+                // AAD access tokens are JWTs (three dot-separated segments) and must be sent as Bearer.
+                // Personal access tokens (PATs) are opaque strings and use Basic auth.
+                bool tokenIsJwt = effectiveToken.Split('.').Length == 3;
+                client.DefaultRequestHeaders.Authorization = tokenIsJwt
+                    ? new AuthenticationHeaderValue("Bearer", effectiveToken)
+                    : new AuthenticationHeaderValue(
+                        "Basic",
+                        Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", effectiveToken))));
             }
             else
             {
@@ -984,9 +988,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 catch (Exception e)
                 {
                     throw new InvalidOperationException(
-                        "Failed to acquire an Entra token for Azure DevOps feed publishing. Provide 'AzureDevOpsFeedsKey', " +
-                        "or run the publish step under an AzureCLI@2 task with addSpnToEnvironment: true (or a configured " +
-                        "managed/workload identity) so DefaultIdentityTokenCredential can obtain a token.", e);
+                        "Failed to acquire an Entra token for Azure DevOps. Provide a token (e.g. 'AzdoApiToken' for artifact " +
+                        "download or 'AzureDevOpsFeedsKey' for feed publishing), or run under an AzureCLI@2 task with " +
+                        "addSpnToEnvironment: true (or a configured managed/workload identity) so DefaultIdentityTokenCredential " +
+                        "can obtain a token.", e);
                 }
             }
 
@@ -1342,7 +1347,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             bool failed = false;
             using HttpClient downloadFileClient = CreateAzdoClient();
-            using HttpClient feedPublishingClient = CreateAzdoClient(feedConfig.Token);
+            using HttpClient feedPublishingClient = CreateAzdoClient(feedConfig.Token ?? string.Empty);
 
             await Task.WhenAll(packagesToPublish.Select(package => Task.Run(async () =>
             {
@@ -1467,9 +1472,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             using var clientThrottle = new SemaphoreSlim(maxClients, maxClients);
 
-            // CreateAzdoClient uses Basic auth when a token is provided (PAT or AAD access token),
+            // CreateAzdoClient uses Basic auth for PATs and Bearer for AAD tokens when a token is provided,
             // and falls back to Entra-based auth (DefaultIdentityTokenCredential) when the token is empty.
-            using (HttpClient httpClient = CreateAzdoClient(feedConfig.Token))
+            // Pass string.Empty (not null) so a missing feed key uses the Entra fallback rather than AzdoApiToken.
+            using (HttpClient httpClient = CreateAzdoClient(feedConfig.Token ?? string.Empty))
             {
                 await Task.WhenAll(packagesToPublish.Select(packageToPublish => Task.Run(async () =>
                 {

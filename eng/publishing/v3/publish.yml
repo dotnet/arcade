@@ -108,6 +108,10 @@ stages:
         scriptLocation: inlineScript
         inlineScript: |
           $feedToken = az account get-access-token --resource "499b84ac-1321-427f-aa17-267ca6975798" --query accessToken -o tsv
+          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($feedToken)) {
+            Write-Error "Failed to acquire an AzDO feed publish token from 'az account get-access-token' (exit code $LASTEXITCODE)."
+            exit 1
+          }
           Write-Host "##vso[task.setvariable variable=AzDoFeedToken;isOutput=true;issecret=true]$feedToken"
 
     - task: AzureCLI@2
