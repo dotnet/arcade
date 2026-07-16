@@ -217,7 +217,17 @@ steps:
     # SDK is present). Without this, the command exits with the custom
     # `errorMessage` from `global.json` and the whole agent job fails.
     working-directory: /tmp
-    run: dotnet tool install --global NuGet.Mcp.Server --version "$NUGET_MCP_VERSION"
+    run: |
+      # Install into a `bin` directory under the runner tool cache instead of
+      # `--global` (which drops the shim in ~/.dotnet/tools). The gh-aw/AWF
+      # sandbox that runs the agent's shell tools builds its PATH from `bin`
+      # directories found under the tool cache and does NOT mount
+      # ~/.dotnet/tools — so `--global` would leave `NuGet.Mcp.Server`
+      # uninvokable by the agent. Also export the dir via GITHUB_PATH for any
+      # later runner-side steps.
+      TOOL_DIR="${RUNNER_TOOL_CACHE:-/opt/hostedtoolcache}/nuget-mcp-server/bin"
+      dotnet tool install NuGet.Mcp.Server --version "$NUGET_MCP_VERSION" --tool-path "$TOOL_DIR"
+      echo "$TOOL_DIR" >> "$GITHUB_PATH"
 
   # `pull_request_comment` events use the `issues` event payload, so
   # `github.sha` is the default branch tip — NOT the PR head. Always resolve
