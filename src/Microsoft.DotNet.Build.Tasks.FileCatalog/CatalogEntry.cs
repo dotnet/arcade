@@ -60,9 +60,22 @@ namespace Microsoft.DotNet.Build.Tasks.FileCatalog
         /// Creates an entry from in-memory content, computing its hashes immediately.
         /// </summary>
         public CatalogEntry(string name, ReadOnlyMemory<byte> content)
+#if NET
             : this(name, SHA1.HashData(content.Span), SHA256.HashData(content.Span))
         {
         }
+#else
+            : this(name, HashContent(HashAlgorithmName.SHA1, content), HashContent(HashAlgorithmName.SHA256, content))
+        {
+        }
+
+        private static byte[] HashContent(HashAlgorithmName algorithm, ReadOnlyMemory<byte> content)
+        {
+            using IncrementalHash hash = IncrementalHash.CreateHash(algorithm);
+            hash.AppendData(content.ToArray());
+            return hash.GetHashAndReset();
+        }
+#endif
 
         private CatalogEntry(string name, byte[] sha1, byte[] sha256)
         {

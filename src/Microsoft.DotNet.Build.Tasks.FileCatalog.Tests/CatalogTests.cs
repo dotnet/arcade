@@ -7,7 +7,7 @@ using System.Formats.Asn1;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using AwesomeAssertions;
+using FluentAssertions;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.FileCatalog;
@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Build.Tasks.FileCatalog.Tests
         // A real 25-byte file from the emsdk SDK pack (source-map-support/register.js):
         //   require('./').install();\n
         private static readonly byte[] s_registerJsContent =
-            Convert.FromHexString("7265717569726528272e2f27292e696e7374616c6c28293b0a");
+            FromHex("7265717569726528272e2f27292e696e7374616c6c28293b0a");
 
         // The exact TrustedSubject member DER blobs that makecat.exe emitted for that file
         // in emsdk's shipped emscripten-js.cat. These are the ground-truth fixtures the
@@ -48,13 +48,13 @@ namespace Microsoft.DotNet.Build.Tasks.FileCatalog.Tests
 
             Dictionary<string, byte[]> members = ExtractMembers(cat);
 
-            string sha1Id = Convert.ToHexString(SHA1.HashData(s_registerJsContent));
-            string sha256Id = Convert.ToHexString(SHA256.HashData(s_registerJsContent));
+            string sha1Id = ToHex(Sha1(s_registerJsContent));
+            string sha256Id = ToHex(Sha256(s_registerJsContent));
 
             members.Should().ContainKey(sha1Id);
             members.Should().ContainKey(sha256Id);
-            Convert.ToHexString(members[sha1Id]).Should().Be(GoldenSha1MemberHex);
-            Convert.ToHexString(members[sha256Id]).Should().Be(GoldenSha256MemberHex);
+            ToHex(members[sha1Id]).Should().Be(GoldenSha1MemberHex);
+            ToHex(members[sha256Id]).Should().Be(GoldenSha256MemberHex);
         }
 
         [Fact]
@@ -95,8 +95,8 @@ namespace Microsoft.DotNet.Build.Tasks.FileCatalog.Tests
             Dictionary<string, byte[]> members = ExtractMembers(cat);
 
             members.Should().HaveCount(2);
-            members.Should().ContainKey(Convert.ToHexString(SHA1.HashData(content)));
-            members.Should().ContainKey(Convert.ToHexString(SHA256.HashData(content)));
+            members.Should().ContainKey(ToHex(Sha1(content)));
+            members.Should().ContainKey(ToHex(Sha256(content)));
         }
 
         [Fact]
@@ -110,7 +110,7 @@ namespace Microsoft.DotNet.Build.Tasks.FileCatalog.Tests
 
             List<string> ids = ExtractMembers(builder.Build()).Keys.ToList();
 
-            ids.Should().BeInAscendingOrder(StringComparer.Ordinal);
+            ids.Should().Equal(ids.OrderBy(id => id, StringComparer.Ordinal));
         }
 
         [Fact]
@@ -203,7 +203,7 @@ namespace Microsoft.DotNet.Build.Tasks.FileCatalog.Tests
                 File.Exists(output).Should().BeTrue();
 
                 Dictionary<string, byte[]> members = ExtractMembers(File.ReadAllBytes(output));
-                members.Should().ContainKey(Convert.ToHexString(SHA1.HashData(s_registerJsContent)));
+                members.Should().ContainKey(ToHex(Sha1(s_registerJsContent)));
             }
             finally
             {
@@ -283,7 +283,7 @@ namespace Microsoft.DotNet.Build.Tasks.FileCatalog.Tests
             {
                 byte[] memberBytes = trustedSubjects.PeekEncodedValue().ToArray();
                 AsnReader member = trustedSubjects.ReadSequence();
-                result[Convert.ToHexString(member.ReadOctetString())] = memberBytes;
+                result[ToHex(member.ReadOctetString())] = memberBytes;
             }
 
             return result;
@@ -314,5 +314,39 @@ namespace Microsoft.DotNet.Build.Tasks.FileCatalog.Tests
 
             throw new InvalidOperationException("trustedSubjects not found in CTL.");
         }
+
+        // Hashing / hex helpers that work on both modern .NET and .NET Framework
+        // (Convert.ToHexString / FromHexString and the static SHA*.HashData APIs are net5.0+).
+#if NET
+        private static byte[] FromHex(string hex) => Convert.FromHexString(hex);
+        private static string ToHex(byte[] bytes) => Convert.ToHexString(bytes);
+        private static byte[] Sha1(byte[] data) => SHA1.HashData(data);
+        private static byte[] Sha256(byte[] data) => SHA256.HashData(data);
+#else
+        private static byte[] FromHex(string hex)
+        {
+            byte[] result = new byte[hex.Length / 2];
+            for (int i = 0; i < result.Length; i++)
+            {
+                result[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
+            }
+
+            return result;
+        }
+
+        private static string ToHex(byte[] bytes) => BitConverter.ToString(bytes).Replace("-", "");
+
+        private static byte[] Sha1(byte[] data)
+        {
+            using SHA1 sha1 = SHA1.Create();
+            return sha1.ComputeHash(data);
+        }
+
+        private static byte[] Sha256(byte[] data)
+        {
+            using SHA256 sha256 = SHA256.Create();
+            return sha256.ComputeHash(data);
+        }
+#endif
     }
 }
