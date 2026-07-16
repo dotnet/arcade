@@ -18,18 +18,18 @@ You are read-only with respect to the repository. You ship findings via the gh-a
 
 ## Inputs the Calling Workflow Provides
 
-The caller (typically `build-failure-analysis.md` or `build-failure-analysis-command.md`) runs the build, uploads the `.binlog` file as an artifact, and the gh-aw MCP gateway mounts it read-only into the `binlog-mcp` container at `/data/build.binlog`. The caller also sets the environment variables below. You must read all of them before doing anything else.
+The caller (typically `build-failure-analysis.md` or `build-failure-analysis-command.md`) locates the failed **Azure DevOps** `arcade-pr` build, downloads the `.binlog` that build already produced (it does **not** rebuild), uploads it as an artifact, and the gh-aw MCP gateway mounts it read-only into the `binlog-mcp` container at `/data/build.binlog`. The caller also sets the environment variables below. You must read all of them before doing anything else.
 
 | Variable                  | Meaning |
 | ------------------------- | ------- |
 | `GH_AW_BINLOG_PATH`       | In-container path of the `*.binlog` (`/data/build.binlog`). Pass this verbatim as `binlog_file` on every `binlog_*` MCP tool call. Empty when the build produced no binlog. |
-| `GH_AW_BINLOG_HOST_PATH`  | Absolute path on the runner workspace where the binlog originally lived. Use only for permalinks / human-facing references — read the data via MCP, not via `cat`. |
-| `GH_AW_BUILD_OUTCOME`     | `success` or `failure` (the exit status of `./build.sh --binaryLog`). |
-| `GH_AW_PR_NUMBER`         | Pull request number (when triggered by `pull_request` or a slash command on a PR). Empty for `workflow_dispatch` on a branch. |
+| `GH_AW_BINLOG_HOST_PATH`  | URL of the originating Azure DevOps build (`https://dev.azure.com/dnceng-public/public/_build/results?buildId=…`). Use only for permalinks / human-facing references — read the binlog data via MCP. |
+| `GH_AW_BUILD_OUTCOME`     | Always `failure` when this agent runs — the workflow only activates after the Azure DevOps `arcade-pr` build failed. |
+| `GH_AW_PR_NUMBER`         | Pull request number to post the analysis on. Pass it explicitly on every `add_comment` / `create_pull_request_review_comment` call (the workflows use `target: "*"`). |
 | `GH_AW_PR_HEAD_SHA`       | Commit SHA at the PR head (or branch tip). Used for permalinks. |
 | `GH_AW_WORKSPACE`         | `$GITHUB_WORKSPACE` — used to convert absolute paths emitted by the compiler into repo-relative paths. |
 
-The raw `./build.sh` stdout/stderr is also available at `/tmp/build-output.log` as a fallback when the binlog is missing or any MCP call fails.
+If a `binlog-mcp` call fails, fall back to the Azure DevOps build referenced by `GH_AW_BINLOG_HOST_PATH` (its logs are viewable there) and call out the gap in the summary comment.
 
 ---
 
@@ -61,7 +61,7 @@ Run these three calls first; they are the equivalents of the previous JSON dumps
 
 Because the MCP server is live, you can ask follow-up questions when the three calls above leave gaps. Useful drill-downs include searching for specific error codes, listing targets that failed in a given project, or pulling task-level timing. Discover the full tool surface with `binlog-mcp`'s own `tools/list` (the MCP gateway exposes it automatically).
 
-If any MCP call fails (server crash, timeout, malformed response), fall back to grepping `/tmp/build-output.log` for `: error ` / `: warning ` lines and call out the gap in the summary comment.
+If any MCP call fails (server crash, timeout, malformed response), note the gap in the summary comment and link the Azure DevOps build (`GH_AW_BINLOG_HOST_PATH`) so a human can inspect its logs directly.
 
 ### Step 3 — Group errors by root cause
 
@@ -120,7 +120,7 @@ If the source line at the reported `file:line` does not look like a plausible ca
 
 ### Step 5 — Build the PR comment
 
-Always post **exactly one** summary comment via `add_comment`. Mark it with the HTML marker `<!-- build-failure-analysis -->` so future runs (and humans) can identify and supersede it. The gh-aw `add-comment` config in `build-failure-analysis.md` has `hide-older-comments: true`, which collapses prior runs on update.
+Always post **exactly one** summary comment via `add_comment` (targeting the pull request `GH_AW_PR_NUMBER`). Mark it with the HTML marker `<!-- build-failure-analysis -->` so future runs (and humans) can identify and supersede it. The gh-aw `add-comment` config in `build-failure-analysis.md` has `hide-older-comments: true`, which collapses prior runs on update.
 
 Template:
 

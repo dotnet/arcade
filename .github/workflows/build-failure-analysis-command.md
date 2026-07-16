@@ -1,12 +1,13 @@
 ---
 name: "Build Failure Analysis (command)"
 description: >-
-  Rerun the build-failure analysis on a pull request when a maintainer
-  comments `/analyze-build-failure`. Same body as `build-failure-analysis.md`
-  — re-runs `./build.sh --binaryLog`, captures the binlog, and delegates to
-  the `build-failure-analyst` agent (which queries the binlog live via the
-  containerized `binlog-mcp` MCP server). Useful when a previous run was
-  cancelled, the analysis comment was dismissed, or the agent needs another
+  Rerun the build-failure analysis on a pull request when a maintainer comments
+  `/analyze-build-failure`. Same body as `build-failure-analysis.md` — it does
+  NOT rebuild: it finds the PR's most recent **failed** Azure Pipelines
+  `arcade-pr` build, downloads the binary log that build already produced, and
+  delegates to the `build-failure-analyst` agent (which queries the binlog live
+  via the containerized `binlog-mcp` MCP server). Useful when a previous run
+  was cancelled, the analysis comment was dismissed, or the agent needs another
   pass after a force-push.
 
 on:
@@ -16,16 +17,13 @@ on:
     strategy: centralized
   roles: [admin, maintainer, write]
   reaction: "eyes"
-  # Make `pre_activation` and `activation` wait for the custom `build` job
-  # defined below so the agent only runs when there is actually something
-  # to analyse, mirroring the auto-trigger workflow.
-  needs: [build]
+  # Gate the AI pipeline on the fetch job so the agent only runs when a binlog
+  # was actually retrieved from a failed Azure DevOps build.
+  needs: [fetch-binlog]
 
-# Skip activation (and therefore the agent job) when the build job reported
-# success — even when invoked explicitly via `/analyze-build-failure`, there
-# is nothing to analyse on a green build and running the agent would just
-# expose us to transient Copilot AI flakes.
-if: needs.build.outputs.outcome == 'failure'
+# Skip activation (and the agent) unless a binlog was retrieved — e.g. if the
+# PR's latest Azure DevOps build did not fail, there is nothing to analyse.
+if: needs.fetch-binlog.outputs.binlog-found == 'true'
 
 permissions:
   contents: read
@@ -33,20 +31,13 @@ permissions:
   copilot-requests: write
 
 concurrency:
-  # This command workflow compiles into a `workflow_dispatch` entrypoint
-  # (gh-aw centralized slash commands), where `github.event.issue.number` is
-  # unset — so fall back to the PR/issue number carried in `aw_context`, and
-  # finally to `github.run_id` so unrelated runs never collapse into one
-  # group and cancel each other.
   group: build-failure-analysis-${{ github.event.issue.number || github.event.pull_request.number || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number || github.run_id }}
   cancel-in-progress: true
 
 env:
   NUGET_MCP_VERSION: '1.4.3'
 
-# The agent job (analysis only — no build) rarely needs long, but give it
-# headroom for artifact download + tool install + AI turns.
-timeout-minutes: 60
+timeout-minutes: 30
 
 network:
   allowed:
@@ -57,9 +48,9 @@ imports:
   - shared/build-failure-analysis-shared.md
 
 # Live binlog access for the agent — see build-failure-analysis.md for the
-# rationale. The build job uploads the binlog as an artifact; the agent job
-# downloads it to `/tmp/build.binlog` and the gh-aw MCP gateway mounts it
-# read-only at `/data/build.binlog`.
+# rationale. The fetch-binlog job downloads the binlog from Azure DevOps and
+# uploads it as an artifact; the agent job downloads it to `/tmp/build.binlog`
+# and the gh-aw MCP gateway mounts it read-only at `/data/build.binlog`.
 mcp-servers:
   binlog-mcp:
     container: "mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-binlog-mcp-amd64"
@@ -67,135 +58,107 @@ mcp-servers:
       - "/tmp/build.binlog:/data/build.binlog:ro"
     allowed: ["*"]
 
-# Custom build job that runs on every slash-command invocation. Mirrors the
-# `build` job in build-failure-analysis.md so the slash-command variant
-# benefits from the same skip-on-success gating.
+# Custom job that reuses the binlog from the PR's most recent failed Azure
+# DevOps `arcade-pr` build instead of rebuilding. Mirrors the fetch-binlog job
+# in build-failure-analysis.md; the only difference is that it locates the
+# build by the PR's merge branch (no `check_run` payload is available on a
+# slash command).
 jobs:
-  build:
-    name: Build (for analysis)
+  fetch-binlog:
+    name: Fetch binlog (Azure Pipelines)
     runs-on: ubuntu-latest
-    # Arcade's `./build.sh` can routinely run well past 30 minutes, so give
-    # the build job generous headroom. A too-low timeout would look like a
-    # build failure and spuriously trigger the analyst on a healthy build.
-    timeout-minutes: 120
+    timeout-minutes: 15
     permissions:
       contents: read
-      # The `Check PR origin` step below calls `gh api .../pulls/<n>` to
-      # detect fork PRs; that read needs the `pull-requests` scope.
       pull-requests: read
     outputs:
-      outcome: ${{ steps.build.outcome }}
-      binlog-found: ${{ steps.find-binlog.outputs.found }}
-      binlog-relative-path: ${{ steps.find-binlog.outputs.relative-path }}
+      binlog-found: ${{ steps.fetch.outputs.binlog-found }}
+      pr-number: ${{ steps.fetch.outputs.pr-number }}
+      pr-head-sha: ${{ steps.fetch.outputs.pr-head-sha }}
+      ado-build-id: ${{ steps.fetch.outputs.ado-build-id }}
+      ado-build-url: ${{ steps.fetch.outputs.ado-build-url }}
     steps:
-      # `/analyze-build-failure` runs centrally in the base-repo context with
-      # the workflow token. A maintainer could invoke it on a **fork** PR, so
-      # resolve the PR head repo first and skip the checkout/build entirely
-      # for fork PRs — building untrusted fork code here would expose the
-      # workflow token/secrets. (The auto `pull_request` workflow already
-      # blocks forks via `forks: []`; this is the equivalent guard.)
-      - name: Check PR origin
-        id: origin
+      - name: Download binlog from the PR's latest failed Azure Pipelines build
+        id: fetch
         env:
           GH_TOKEN: ${{ github.token }}
-          GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
-          GH_AW_ISSUE_NUMBER: ${{ github.event.issue.number }}
+          GH_AW_REPO: ${{ github.repository }}
+          ADO_API: "https://dev.azure.com/dnceng-public/public/_apis"
+          ADO_BUILD_UI: "https://dev.azure.com/dnceng-public/public/_build/results"
+          # arcade-pr pipeline definition id in dnceng-public/public.
+          ADO_BUILD_DEFINITION_ID: "283"
+          PR_NUMBER: ${{ github.event.issue.number }}
         run: |
-          set -euo pipefail
-          HEAD_REPO=$(gh api "repos/${GH_AW_GITHUB_REPOSITORY}/pulls/${GH_AW_ISSUE_NUMBER}" --jq '.head.repo.full_name')
-          if [ "$HEAD_REPO" = "${GH_AW_GITHUB_REPOSITORY}" ]; then
-            echo "same-repo=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "same-repo=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Skipping build for fork PR #${GH_AW_ISSUE_NUMBER} (head repo: ${HEAD_REPO}); build-failure analysis does not run on fork PRs."
-          fi
-
-      # `pull_request_comment` events have the `issues` event payload, so
-      # the default checkout would build the default branch — NOT the PR
-      # the maintainer ran `/analyze-build-failure` on. Check out the PR's
-      # merge ref explicitly so we analyse the same code that the auto
-      # `pull_request` workflow would build. Skipped for fork PRs (see above).
-      - uses: actions/checkout@v7.0.0
-        if: steps.origin.outputs.same-repo == 'true'
-        with:
-          ref: refs/pull/${{ github.event.issue.number }}/merge
-          # A centralized slash-command runs in the base-repo context and
-          # this job builds PR merge contents; don't persist the job token
-          # into local git config to reduce blast radius if the PR code is
-          # malicious.
-          persist-credentials: false
-
-      - name: Build with binary log
-        id: build
-        # Skip for fork PRs: without a checkout the build would fail on
-        # missing repo contents and could spuriously trigger the analyst.
-        # A skipped step reports outcome `skipped` (not `failure`), so the
-        # top-level `if:` keeps the agent pipeline from activating.
-        if: steps.origin.outputs.same-repo == 'true'
-        continue-on-error: true
-        run: |
-          # Actions runs `run:` steps with `bash -e -o pipefail`. Disable
-          # errexit so a failed build pipeline does not abort the step before
-          # the explicit PIPESTATUS-based exit below; keep pipefail + nounset
-          # so we still read build.sh's real exit code (not tee's).
-          set +e
-          set -uo pipefail
-          ./build.sh --binaryLog 2>&1 | tee /tmp/build-output.log
-          # `tee` is best-effort: rely on the build's own exit code so a
-          # logging-pipeline glitch never misclassifies a green build as
-          # failed (which would otherwise trigger the AI agent and
-          # re-expose us to the Copilot-flake red-X bug).
-          exit "${PIPESTATUS[0]}"
-
-      - name: Locate binlog
-        id: find-binlog
-        if: always() && steps.origin.outputs.same-repo == 'true'
-        run: |
-          # `find` returns non-zero when artifacts/log is absent (e.g. the
-          # build failed very early). Actions runs bash with `-e -o pipefail`,
-          # so relax both here to keep this advisory step from turning the
-          # run red; the "no binlog" case is handled explicitly below.
+          # Relax errexit/pipefail: advisory + best-effort. On any gap we emit
+          # binlog-found=false and the agent pipeline stays inert.
           set +e
           set +o pipefail
-          BINLOG=$(find artifacts/log -name '*.binlog' -type f -printf '%T@ %p\n' 2>/dev/null \
-            | sort -rn | head -1 | cut -d' ' -f2-)
-          if [ -n "$BINLOG" ] && [ -f "$BINLOG" ]; then
-            REL=$(realpath --relative-to="$PWD" "$BINLOG")
-            echo "found=true"             >> "$GITHUB_OUTPUT"
-            echo "relative-path=$REL"     >> "$GITHUB_OUTPUT"
-          else
-            echo "found=false" >> "$GITHUB_OUTPUT"
+
+          if [ -z "${PR_NUMBER}" ]; then
+            echo "::warning::No PR number on the slash-command event; nothing to analyze."
+            echo "binlog-found=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
-      # Copy the (timestamped) binlog to a fixed name so the agent job can
-      # download it deterministically and the gh-aw MCP gateway can mount it
-      # at a stable in-container path (`/data/build.binlog`).
-      # `continue-on-error: true` keeps the artifact upload step reachable
-      # even if `cp` fails — the agent can then emit a "build failed, no
-      # binlog" comment from the raw build output log.
-      - name: Stage binlog for upload
-        if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
-        continue-on-error: true
-        env:
-          BINLOG_REL_PATH: ${{ steps.find-binlog.outputs.relative-path }}
-        run: cp "$BINLOG_REL_PATH" /tmp/build.binlog
+          # --- 1. Find the PR's most recent failed arcade-pr build ---
+          # Arcade builds the PR merge ref (refs/pull/<n>/merge).
+          builds_json=$(curl -sSL --retry 3 \
+            "${ADO_API}/build/builds?definitions=${ADO_BUILD_DEFINITION_ID}&branchName=refs/pull/${PR_NUMBER}/merge&statusFilter=completed&resultFilter=failed&queryOrder=finishTimeDescending&\$top=1&api-version=7.1")
+          BUILD_ID=$(printf '%s' "${builds_json}" | jq -r '.value // [] | .[0].id // empty')
+          echo "Latest failed arcade-pr build for PR #${PR_NUMBER}: '${BUILD_ID}'"
+          if [ -z "${BUILD_ID}" ]; then
+            echo "::warning::No completed+failed arcade-pr build found for PR #${PR_NUMBER}; nothing to analyze."
+            echo "binlog-found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          HEAD_SHA=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" --jq '.head.sha' 2>/dev/null)
+
+          # --- 2. Find a Logs_Build_* artifact (prefer Linux_Debug) ---
+          artifacts_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}/artifacts?api-version=7.1")
+          DL=$(printf '%s' "${artifacts_json}" \
+            | jq -r '.value // [] | map(select(.name | test("^Logs_Build_")))
+                     | (map(select(.name | test("Linux_Debug"))) + .)
+                     | .[0].resource.downloadUrl // empty')
+          if [ -z "${DL}" ]; then
+            echo "::warning::No Logs_Build_* artifact found on Azure DevOps build ${BUILD_ID}."
+            echo "binlog-found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # --- 3. Download + extract the newest *.binlog ---
+          curl -sSL --retry 3 "${DL}" -o /tmp/logs.zip
+          mkdir -p /tmp/logs
+          unzip -q /tmp/logs.zip -d /tmp/logs
+          BINLOG=$(find /tmp/logs -name '*.binlog' -type f -printf '%T@ %p\n' 2>/dev/null \
+            | sort -rn | head -1 | cut -d' ' -f2-)
+          if [ -z "${BINLOG}" ] || [ ! -f "${BINLOG}" ]; then
+            echo "::warning::No *.binlog inside the logs artifact of build ${BUILD_ID}."
+            echo "binlog-found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          cp "${BINLOG}" /tmp/build.binlog
+          echo "Staged binlog: ${BINLOG} -> /tmp/build.binlog"
+
+          {
+            echo "binlog-found=true"
+            echo "pr-number=${PR_NUMBER}"
+            echo "pr-head-sha=${HEAD_SHA}"
+            echo "ado-build-id=${BUILD_ID}"
+            echo "ado-build-url=${ADO_BUILD_UI}?buildId=${BUILD_ID}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Upload analysis artifact
-        if: always() && steps.build.outcome == 'failure'
-        continue-on-error: true
+        if: steps.fetch.outputs.binlog-found == 'true'
         uses: actions/upload-artifact@v7.0.1
         with:
           name: build-failure-analysis-data
-          path: |
-            /tmp/build.binlog
-            /tmp/build-output.log
+          path: /tmp/build.binlog
           if-no-files-found: warn
           retention-days: 1
 
-# Steps that run in the agent job. The top-level `if:` gates these on a
-# failed build, so the slash-command never invokes the AI agent on a green
-# build (and thus cannot surface as a red workflow check from a transient
-# Copilot AI flake).
+# Steps that run in the agent job. The top-level `if:` gates these on a binlog
+# having been retrieved, so the agent never runs without something to analyse.
 steps:
   - name: Download analysis artifact
     uses: actions/download-artifact@v8.0.1
@@ -210,65 +173,36 @@ steps:
 
   - name: Install NuGet MCP Server
     continue-on-error: true
-    # Run from `/tmp` so `dotnet` does not walk into the repo's `global.json`,
-    # which pins an internal-only SDK preview that is unavailable on this
-    # fresh agent runner (the build job populates `.dotnet/` via `./build.sh`
-    # but this is a different runner, so only the `setup-dotnet`-installed
-    # SDK is present). Without this, the command exits with the custom
-    # `errorMessage` from `global.json` and the whole agent job fails.
+    # See build-failure-analysis.md for why we install into a `bin` directory
+    # under the runner tool cache (agent sandbox PATH) rather than `--global`,
+    # and run from `/tmp` (avoid the repo's internal-SDK `global.json`).
     working-directory: /tmp
     run: |
-      # Install into a `bin` directory under the runner tool cache instead of
-      # `--global` (which drops the shim in ~/.dotnet/tools). The gh-aw/AWF
-      # sandbox that runs the agent's shell tools builds its PATH from `bin`
-      # directories found under the tool cache and does NOT mount
-      # ~/.dotnet/tools — so `--global` would leave `NuGet.Mcp.Server`
-      # uninvokable by the agent. Also export the dir via GITHUB_PATH for any
-      # later runner-side steps.
       TOOL_DIR="${RUNNER_TOOL_CACHE:-/opt/hostedtoolcache}/nuget-mcp-server/bin"
       dotnet tool install NuGet.Mcp.Server --version "$NUGET_MCP_VERSION" --tool-path "$TOOL_DIR"
       echo "$TOOL_DIR" >> "$GITHUB_PATH"
 
-  # `pull_request_comment` events use the `issues` event payload, so
-  # `github.sha` is the default branch tip — NOT the PR head. Always resolve
-  # the real PR head SHA via the API so permalinks and inline comment
-  # placement match the PR.
-  - name: Resolve PR head SHA
-    id: resolve-pr-sha
-    env:
-      GH_TOKEN: ${{ github.token }}
-      GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
-      GH_AW_GITHUB_EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
-    run: |
-      SHA=$(gh api "repos/${GH_AW_GITHUB_REPOSITORY}/pulls/${GH_AW_GITHUB_EVENT_ISSUE_NUMBER}" --jq .head.sha)
-      echo "sha=$SHA" >> "$GITHUB_OUTPUT"
-
   - name: Export agent context
     env:
-      GH_AW_BUILD_OUTCOME_VALUE: ${{ needs.build.outputs.outcome }}
-      GH_AW_BINLOG_FOUND_VALUE: ${{ needs.build.outputs.binlog-found }}
-      GH_AW_BINLOG_REL_VALUE: ${{ needs.build.outputs.binlog-relative-path }}
-      GH_AW_GITHUB_EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
-      GH_AW_PR_HEAD_SHA_VALUE: ${{ steps.resolve-pr-sha.outputs.sha || github.sha }}
+      GH_AW_BINLOG_FOUND_VALUE: ${{ needs.fetch-binlog.outputs.binlog-found }}
+      GH_AW_PR_NUMBER_VALUE: ${{ needs.fetch-binlog.outputs.pr-number }}
+      GH_AW_PR_HEAD_SHA_VALUE: ${{ needs.fetch-binlog.outputs.pr-head-sha }}
+      GH_AW_ADO_BUILD_URL_VALUE: ${{ needs.fetch-binlog.outputs.ado-build-url }}
       GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
     run: |
-      # See build-failure-analysis.md for the binlog path conventions.
-      # The agent reads the binlog through the binlog-mcp MCP server,
-      # which has it mounted at `/data/build.binlog`. The host-side path
-      # is kept only for permalinks.
-      BINLOG_HOST_PATH=""
-      if [ -n "${GH_AW_BINLOG_REL_VALUE:-}" ]; then
-        BINLOG_HOST_PATH="${GH_AW_GITHUB_WORKSPACE}/${GH_AW_BINLOG_REL_VALUE}"
-      fi
+      # See build-failure-analysis.md for the binlog path conventions. The
+      # binlog is read through the binlog-mcp MCP server (mounted at
+      # `/data/build.binlog`); GH_AW_BINLOG_HOST_PATH points at the Azure
+      # DevOps build for human-facing references.
       BINLOG_MCP_PATH=""
       if [ "${GH_AW_BINLOG_FOUND_VALUE:-false}" = "true" ] && [ -f /tmp/build.binlog ]; then
         BINLOG_MCP_PATH="/data/build.binlog"
       fi
       {
-        echo "GH_AW_BUILD_OUTCOME=${GH_AW_BUILD_OUTCOME_VALUE}"
+        echo "GH_AW_BUILD_OUTCOME=failure"
         echo "GH_AW_BINLOG_PATH=${BINLOG_MCP_PATH}"
-        echo "GH_AW_BINLOG_HOST_PATH=${BINLOG_HOST_PATH}"
-        echo "GH_AW_PR_NUMBER=${GH_AW_GITHUB_EVENT_ISSUE_NUMBER}"
+        echo "GH_AW_BINLOG_HOST_PATH=${GH_AW_ADO_BUILD_URL_VALUE}"
+        echo "GH_AW_PR_NUMBER=${GH_AW_PR_NUMBER_VALUE}"
         echo "GH_AW_PR_HEAD_SHA=${GH_AW_PR_HEAD_SHA_VALUE}"
         echo "GH_AW_WORKSPACE=${GH_AW_GITHUB_WORKSPACE}"
       } >> "$GITHUB_ENV"
@@ -292,27 +226,17 @@ tools:
 safe-outputs:
   messages:
     footer: "> 🤖 **Automated content by GitHub Copilot.** Generated by the [{workflow_name}]({agentic_workflow_url}) workflow.{ai_credits_suffix} · [◷]({history_link})"
-  # The agent runs only when the build job reports failure (see top-level
-  # `if:` above). On a failed build the agent normally emits at most one
-  # `noop`, one summary comment, and a small set of inline review comments,
-  # but the Copilot CLI harness retries with `--continue` on
-  # mid-conversation AI flakes (up to 3 retries) and each retry re-emits
-  # every safe-output call it has issued so far. The caps below absorb that
-  # retry budget without spurious safe-output validation warnings:
-  #   - noop max=5: covers 1 happy-path + 4 retry-amplified noops.
-  #   - add-comment max=5: covers 1 summary + 4 retries (hide-older-comments
-  #     auto-collapses the duplicates anyway).
-  #   - create-pull-request-review-comment max=25: shared body asks the
-  #     agent for "top 5 highest-priority issues" per run, so 5 × (1 + 3
-  #     retries) = 20 is the worst case under flake amplification.
-  # We also disable `report-as-issue` / `report-failure-as-issue` so
-  # transient flakes never spam tracking issues.
+  # The agent targets the resolved PR via `GH_AW_PR_NUMBER` (`target: "*"`),
+  # matching the auto-trigger workflow. Caps absorb Copilot CLI retry
+  # amplification; report-as-issue is disabled so flakes don't spam issues.
   report-failure-as-issue: false
   add-comment:
     max: 5
+    target: "*"
     hide-older-comments: true
   create-pull-request-review-comment:
     max: 25
+    target: "*"
   noop:
     max: 5
     report-as-issue: false
