@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"0860cf82d27a83b5be9127e9afdc5abb272f2dd6372eaf3bb7fa97153718a046","body_hash":"d4bf172776c19d8ffbca70b3ed7caccdf6ba7e6d75fb1b0d76481bd397d7b5f4","compiler_version":"v0.77.5","strict":true,"agent_id":"copilot"}
+# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"1b8425cb71ada9a108d899f594f0edc8997b38652c2090ae400e77e474ba3560","body_hash":"f9c0296cec3eb3dfadee3ee7c0689de131dd9bf0f6dfbb59ac027b6a07678983","compiler_version":"v0.77.5","strict":true,"agent_id":"copilot"}
 # gh-aw-manifest: {"version":1,"secrets":["GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-dotnet","sha":"26b0ec14cb23fa6904739307f278c14f94c95bf1","version":"v5.4.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"3ea13c02d765410340d533515cb31a7eef2baaf0","version":"v0.77.5"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.58"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.58"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.58"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.22"},{"image":"ghcr.io/github/github-mcp-server:v1.1.0"},{"image":"mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-binlog-mcp-amd64"},{"image":"node:lts-alpine","digest":"sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14","pinned_image":"node:lts-alpine@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -210,20 +210,20 @@ jobs:
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_d94091946c1b43eb_EOF'
+          cat << 'GH_AW_PROMPT_cd1273fec004045f_EOF'
           <system>
-          GH_AW_PROMPT_d94091946c1b43eb_EOF
+          GH_AW_PROMPT_cd1273fec004045f_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_d94091946c1b43eb_EOF'
+          cat << 'GH_AW_PROMPT_cd1273fec004045f_EOF'
           <safe-output-tools>
           Tools: add_comment(max:5), create_pull_request_review_comment(max:25), missing_tool, missing_data, noop(max:5)
           </safe-output-tools>
-          GH_AW_PROMPT_d94091946c1b43eb_EOF
+          GH_AW_PROMPT_cd1273fec004045f_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_d94091946c1b43eb_EOF'
+          cat << 'GH_AW_PROMPT_cd1273fec004045f_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if github.actor}}
@@ -252,13 +252,13 @@ jobs:
           {{/if}}
           </github-context>
           
-          GH_AW_PROMPT_d94091946c1b43eb_EOF
+          GH_AW_PROMPT_cd1273fec004045f_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_d94091946c1b43eb_EOF'
+          cat << 'GH_AW_PROMPT_cd1273fec004045f_EOF'
           </system>
           {{#runtime-import .github/workflows/shared/build-failure-analysis-shared.md}}
           {{#runtime-import .github/workflows/build-failure-analysis.md}}
-          GH_AW_PROMPT_d94091946c1b43eb_EOF
+          GH_AW_PROMPT_cd1273fec004045f_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -500,9 +500,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_7da728e90a42f0b7_EOF'
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_92bff2536e853fac_EOF'
           {"add_comment":{"hide_older_comments":true,"max":5,"target":"*"},"create_pull_request_review_comment":{"max":25,"side":"RIGHT","target":"*"},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":5,"report-as-issue":"false"},"report_incomplete":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_7da728e90a42f0b7_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_92bff2536e853fac_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -734,7 +734,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_30cc0bce98501b47_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_2f538cfd77c92e69_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "binlog-mcp": {
@@ -792,7 +792,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_30cc0bce98501b47_EOF
+          GH_AW_MCP_CONFIG_2f538cfd77c92e69_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
@@ -1496,13 +1496,25 @@ jobs:
             *) echo "::warning::PR #${PR_NUMBER} base '${BASE_REF}' is out of scope (main, release/*); skipping."; emit_none ;;
           esac
 
-          # --- 4. On dispatch, confirm the ADO build actually failed ---
+          # --- 4. On dispatch, validate the build: it must have failed, be
+          #        the arcade-pr definition (283), and belong to this PR
+          #        (sourceBranch refs/pull/<PR>/merge). Build id and PR number
+          #        are independent dispatch inputs, so guard against a mismatch
+          #        that would post one build's analysis onto the wrong PR.
           if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
-            RESULT=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}?api-version=7.1" | jq -r '.result // empty')
-            echo "ADO build ${BUILD_ID} result: '${RESULT}'"
+            build_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}?api-version=7.1")
+            RESULT=$(printf '%s' "${build_json}" | jq -r '.result // empty')
+            DEF_ID=$(printf '%s' "${build_json}" | jq -r '.definition.id // empty')
+            SRC_BRANCH=$(printf '%s' "${build_json}" | jq -r '.sourceBranch // empty')
+            echo "ADO build ${BUILD_ID}: result='${RESULT}' definition='${DEF_ID}' sourceBranch='${SRC_BRANCH}'"
             if [ "${RESULT}" != "failed" ]; then
-              echo "::warning::ADO build ${BUILD_ID} did not fail (result='${RESULT}'); nothing to analyze."
-              emit_none
+              echo "::warning::ADO build ${BUILD_ID} did not fail (result='${RESULT}'); nothing to analyze."; emit_none
+            fi
+            if [ "${DEF_ID}" != "${ADO_BUILD_DEFINITION_ID}" ]; then
+              echo "::warning::ADO build ${BUILD_ID} is definition '${DEF_ID}', not arcade-pr (${ADO_BUILD_DEFINITION_ID}); refusing."; emit_none
+            fi
+            if [ "${SRC_BRANCH}" != "refs/pull/${PR_NUMBER}/merge" ]; then
+              echo "::warning::ADO build ${BUILD_ID} sourceBranch '${SRC_BRANCH}' does not match PR #${PR_NUMBER} (refs/pull/${PR_NUMBER}/merge); refusing to avoid posting to the wrong PR."; emit_none
             fi
           fi
 
@@ -1543,6 +1555,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
         env:
           ADO_API: https://dev.azure.com/dnceng-public/public/_apis
+          ADO_BUILD_DEFINITION_ID: "283"
           ADO_BUILD_UI: https://dev.azure.com/dnceng-public/public/_build/results
           CHECK_DETAILS_URL: ${{ github.event.check_run.details_url }}
           CHECK_HEAD_SHA: ${{ github.event.check_run.head_sha }}
