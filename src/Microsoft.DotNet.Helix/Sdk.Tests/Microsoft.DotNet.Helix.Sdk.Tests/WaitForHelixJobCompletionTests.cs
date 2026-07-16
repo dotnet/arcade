@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public void FinishedJobDetailsCompleteJob()
+        public void FinishedJobDetailsCompletesJob()
         {
             JobDetails jobDetails = CreateJobDetails(initialWorkItemCount: null, finished: "2026-07-16T00:00:00Z");
 
