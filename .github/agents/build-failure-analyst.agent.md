@@ -83,7 +83,7 @@ Group every error in the binlog under exactly one root-cause cluster. If two clu
 
 ### Step 3b — Use NuGet MCP Server for package issues
 
-When the errors include NuGet resolution failures (`NU1605`, `NU1608`, `NU1100`, `NU1102`, etc.) or vulnerable package warnings, use the **NuGet MCP Server** (installed as a dotnet global tool) via the `bash` tool:
+When the errors include NuGet resolution failures (`NU1605`, `NU1608`, `NU1100`, `NU1102`, etc.) or vulnerable package warnings, use the **NuGet MCP Server** (installed as a dotnet tool on `PATH` via `dotnet tool install --tool-path`) via the `bash` tool:
 
 ```bash
 # Get a remediation plan for vulnerable/conflicting packages.
@@ -114,7 +114,7 @@ For each root cause, identify the **smallest set of files** that need to change.
 
 - For Roslyn / C# errors: read 6 lines above and 10 lines below the reported line.
 - For MSBuild errors: read the offending element and the surrounding `<PropertyGroup>` / `<ItemGroup>` / `<Target>`.
-- For NuGet failures: read the `.csproj`, `Directory.Packages.props`, and `eng/Versions.props` rows mentioning the package. Then run `NuGet.Mcp.Server` (the global tool's command name — not `dotnet NuGet.Mcp.Server`) to get a concrete resolution plan.
+- For NuGet failures: read the `.csproj`, `Directory.Packages.props`, and `eng/Versions.props` rows mentioning the package. Then run `NuGet.Mcp.Server` (the tool's command name on `PATH` — not `dotnet NuGet.Mcp.Server`) to get a concrete resolution plan.
 
 If the source line at the reported `file:line` does not look like a plausible cause (sometimes the compiler reports the *call site*, not the *declaration site*), search the PR-changed files for the symbol named in the error message and use that as the suggestion target.
 

@@ -25,7 +25,7 @@ failed.
    `GH_AW_PR_HEAD_SHA`, `GH_AW_WORKSPACE`.
 
 2. If `GH_AW_BUILD_OUTCOME == 'success'`, the build did not actually fail —
-   there is nothing to analyse. Call `noop` with the message
+   there is nothing to analyze. Call `noop` with the message
    `"Build succeeded — no analysis required."` and stop.
 
 3. Otherwise, launch the `build-failure-analyst` agent as a **background**
@@ -45,7 +45,7 @@ failed.
      pre-dumped JSON files.
    - A reminder that the parent workflow `noop`s immediately and that the
      sub-agent itself is responsible for calling `add_comment` (summary) and
-     `create_pull_request_review_comment` (inline ```suggestion blocks).
+     `create_pull_request_review_comment` (inline `suggestion` blocks).
    - A reminder that `submit_pull_request_review` is **not** a safe output
      for this workflow — inline comments stand alone.
 
