@@ -17,10 +17,9 @@
 #
 # Note that the NuGetAuthenticate task should be called after SetupNugetSources.
 # This ensures that:
-# - Appropriate creds are set for the added internal feeds (if not supplied to the scrupt)
+# - Appropriate creds are set for the added internal feeds (if not supplied to the script)
 # - The credential provider is installed.
 #
-# This logic is also abstracted into enable-internal-sources.yml.
 
 [CmdletBinding()]
 param (
