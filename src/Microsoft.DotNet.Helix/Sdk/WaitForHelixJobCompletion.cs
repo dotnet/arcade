@@ -15,7 +15,6 @@ namespace Microsoft.DotNet.Helix.Sdk
     public class WaitForHelixJobCompletion : HelixTask
     {
         internal const string HelixControllerWorkQueueingWorkItemName = "HelixController Work Queueing";
-        private static readonly TimeSpan MaxHelixJobCompletionWait = TimeSpan.FromHours(4);
         private static readonly TimeSpan HelixJobCompletionPollingInterval = TimeSpan.FromSeconds(20);
 
         /// <summary>
@@ -49,7 +48,6 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             Log.LogMessage(MessageImportance.High, $"Waiting for completion of job {jobName} on {queueName}{detailsUrlWhereApplicable}");
 
-            DateTimeOffset waitStarted = DateTimeOffset.UtcNow;
             try
             {
                 for (; ; await Task.Delay(HelixJobCompletionPollingInterval, cancellationToken).ConfigureAwait(false)) // delay every time this loop repeats
@@ -69,13 +67,6 @@ namespace Microsoft.DotNet.Helix.Sdk
                     if (IsJobComplete(jd, realWorkItems))
                     {
                         Log.LogMessage(MessageImportance.High, $"Job {jobName} on {queueName} is completed with {finishedWorkItems} finished work items.");
-                        return;
-                    }
-
-                    if (DateTimeOffset.UtcNow - waitStarted >= MaxHelixJobCompletionWait)
-                    {
-                        string expectedWorkItems = jd.InitialWorkItemCount is > 0 ? jd.InitialWorkItemCount.Value.ToString() : "unknown";
-                        Log.LogError($"Timed out after {MaxHelixJobCompletionWait.TotalHours:0.#} hours waiting for job {jobName} on {queueName} to finish or report all expected work items. Expected work items: {expectedWorkItems}, observed real work items: {realWorkItems.Count}, finished real work items: {finishedWorkItems}. The Helix job may have failed to expand; please contact dnceng with this information.");
                         return;
                     }
 
