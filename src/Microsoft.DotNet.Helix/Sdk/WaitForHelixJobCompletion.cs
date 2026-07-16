@@ -62,17 +62,11 @@ namespace Microsoft.DotNet.Helix.Sdk
                         return;
                     }
 
-                    if (jd.Finished != null)
-                    {
-                        Log.LogMessage(MessageImportance.High, $"Job {jobName} on {queueName} is completed.");
-                        return;
-                    }
-
                     cancellationToken.ThrowIfCancellationRequested();
                     IReadOnlyCollection<WorkItemSummary> realWorkItems = GetRealWorkItems(await HelixApi.WorkItem.ListAsync(jobName, cancellationToken).ConfigureAwait(false));
                     int finishedWorkItems = realWorkItems.Count(wi => wi.ExitCode.HasValue);
 
-                    if (AreAllExpectedWorkItemsTerminal(jd, realWorkItems))
+                    if (IsJobComplete(jd, realWorkItems))
                     {
                         Log.LogMessage(MessageImportance.High, $"Job {jobName} on {queueName} is completed with {finishedWorkItems} finished work items.");
                         return;
