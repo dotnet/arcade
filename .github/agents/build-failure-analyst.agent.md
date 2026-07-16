@@ -42,8 +42,10 @@ The raw `./build.sh` stdout/stderr is also available at `/tmp/build-output.log` 
 3. If the value is `failure` but `GH_AW_BINLOG_PATH` is empty, post a single comment via `add_comment` with the body:
 
    > 🔍 **Build Failure Analysis** — the build failed but no binary log was produced. See the [workflow run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}) for raw logs.
-   >
-   > `<!-- build-failure-analysis -->`
+
+   <!-- build-failure-analysis -->
+
+   (Emit the `<!-- build-failure-analysis -->` line as a **raw HTML comment**, not wrapped in backticks — it must stay invisible in the rendered comment so `hide-older-comments` marker detection matches it.)
 
    Then stop.
 
