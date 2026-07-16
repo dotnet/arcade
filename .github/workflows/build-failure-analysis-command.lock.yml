@@ -1,5 +1,5 @@
-# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"c31e679e6eca685fab6528db225021b51aa2632b3e49b9742ec4e4ba85e8b447","body_hash":"476a956c3e9739a9c95cec76064b0b8c484ee768e023b594e0a5fa08865c1aac","compiler_version":"v0.77.5","strict":true,"agent_id":"copilot"}
-# gh-aw-manifest: {"version":1,"secrets":["GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-dotnet","sha":"26b0ec14cb23fa6904739307f278c14f94c95bf1","version":"v5.4.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"3ea13c02d765410340d533515cb31a7eef2baaf0","version":"v0.77.5"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.58"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.58"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.58"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.22"},{"image":"ghcr.io/github/github-mcp-server:v1.1.0"},{"image":"mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-binlog-mcp-amd64"},{"image":"node:lts-alpine","digest":"sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14","pinned_image":"node:lts-alpine@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14"}]}
+# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"3757d4c360085c8301df706f914c57a9e9472b3794cda46bcf870e1ac9052ff0","body_hash":"476a956c3e9739a9c95cec76064b0b8c484ee768e023b594e0a5fa08865c1aac","compiler_version":"v0.77.5","strict":true,"agent_id":"copilot"}
+# gh-aw-manifest: {"version":1,"secrets":["GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"3ea13c02d765410340d533515cb31a7eef2baaf0","version":"v0.77.5"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.58"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.58"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.58"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.22"},{"image":"ghcr.io/github/github-mcp-server:v1.1.0"},{"image":"mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-binlog-mcp-amd64"},{"image":"node:lts-alpine","digest":"sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14","pinned_image":"node:lts-alpine@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
 #  | |_| | __ _  ___ _ __ | |_ _  ___ 
@@ -28,9 +28,6 @@
 #   Imports:
 #     - shared/build-failure-analysis-shared.md
 #
-# Frontmatter env variables:
-#   - NUGET_MCP_VERSION: (main workflow)
-#
 # Secrets used:
 #   - GH_AW_GITHUB_MCP_SERVER_TOKEN
 #   - GH_AW_GITHUB_TOKEN
@@ -41,7 +38,6 @@
 #   - actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
 #   - actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
 #   - actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0 (source v9)
-#   - actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
 #   - actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
 #   - actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
 #   - github/gh-aw-actions/setup@3ea13c02d765410340d533515cb31a7eef2baaf0 # v0.77.5
@@ -76,9 +72,6 @@ concurrency:
   group: build-failure-analysis-${{ github.event.issue.number || github.event.pull_request.number || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number || github.run_id }}
 
 run-name: "Build Failure Analysis (command)"
-
-env:
-  NUGET_MCP_VERSION: 1.4.3
 
 jobs:
   activation:
@@ -246,20 +239,20 @@ jobs:
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_2909ca32048ecbf0_EOF'
+          cat << 'GH_AW_PROMPT_3938ff062bd3ddd1_EOF'
           <system>
-          GH_AW_PROMPT_2909ca32048ecbf0_EOF
+          GH_AW_PROMPT_3938ff062bd3ddd1_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_2909ca32048ecbf0_EOF'
+          cat << 'GH_AW_PROMPT_3938ff062bd3ddd1_EOF'
           <safe-output-tools>
           Tools: add_comment(max:5), create_pull_request_review_comment(max:25), missing_tool, missing_data, noop(max:5)
           </safe-output-tools>
-          GH_AW_PROMPT_2909ca32048ecbf0_EOF
+          GH_AW_PROMPT_3938ff062bd3ddd1_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_2909ca32048ecbf0_EOF'
+          cat << 'GH_AW_PROMPT_3938ff062bd3ddd1_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if github.actor}}
@@ -288,16 +281,16 @@ jobs:
           {{/if}}
           </github-context>
           
-          GH_AW_PROMPT_2909ca32048ecbf0_EOF
+          GH_AW_PROMPT_3938ff062bd3ddd1_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
           if [ "$GITHUB_EVENT_NAME" = "issue_comment" ] && [ -n "$GH_AW_IS_PR_COMMENT" ] || [ "$GITHUB_EVENT_NAME" = "pull_request_review_comment" ] || [ "$GITHUB_EVENT_NAME" = "pull_request_review" ]; then
             cat "${RUNNER_TEMP}/gh-aw/prompts/pr_context_prompt.md"
           fi
-          cat << 'GH_AW_PROMPT_2909ca32048ecbf0_EOF'
+          cat << 'GH_AW_PROMPT_3938ff062bd3ddd1_EOF'
           </system>
           {{#runtime-import .github/workflows/shared/build-failure-analysis-shared.md}}
           {{#runtime-import .github/workflows/build-failure-analysis-command.md}}
-          GH_AW_PROMPT_2909ca32048ecbf0_EOF
+          GH_AW_PROMPT_3938ff062bd3ddd1_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -450,17 +443,6 @@ jobs:
         with:
           name: build-failure-analysis-data
           path: /tmp/binlogs
-      - name: Setup .NET (for NuGet MCP Server)
-        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
-        with:
-          dotnet-version: 9.0.x
-      - continue-on-error: true
-        name: Install NuGet MCP Server
-        run: |
-          TOOL_DIR="${RUNNER_TOOL_CACHE:-/opt/hostedtoolcache}/nuget-mcp-server/bin"
-          dotnet tool install NuGet.Mcp.Server --version "$NUGET_MCP_VERSION" --tool-path "$TOOL_DIR"
-          echo "$TOOL_DIR" >> "$GITHUB_PATH"
-        working-directory: /tmp
       - env:
           GH_AW_ADO_BUILD_URL_VALUE: ${{ needs.fetch-binlog.outputs.ado-build-url }}
           GH_AW_BINLOG_FOUND_VALUE: ${{ needs.fetch-binlog.outputs.binlog-found }}
@@ -540,9 +522,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_7a809886c45f07e2_EOF'
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_ce7fbeccbd8b2408_EOF'
           {"add_comment":{"hide_older_comments":true,"max":5,"target":"*"},"create_pull_request_review_comment":{"max":25,"side":"RIGHT","target":"*"},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":5,"report-as-issue":"false"},"report_incomplete":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_7a809886c45f07e2_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_ce7fbeccbd8b2408_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -774,7 +756,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_4baaed312f1d5961_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_8f1d71aa02cb5115_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "binlog-mcp": {
@@ -832,7 +814,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_4baaed312f1d5961_EOF
+          GH_AW_MCP_CONFIG_8f1d71aa02cb5115_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
@@ -861,10 +843,8 @@ jobs:
         # --allow-tool binlog-mcp(*)
         # --allow-tool github
         # --allow-tool safeoutputs
-        # --allow-tool shell(NuGet.Mcp.Server)
         # --allow-tool shell(cat)
         # --allow-tool shell(date)
-        # --allow-tool shell(dotnet:*)
         # --allow-tool shell(echo)
         # --allow-tool shell(find)
         # --allow-tool shell(grep)
@@ -906,7 +886,7 @@ jobs:
           fi
           # shellcheck disable=SC1003
           sudo -E awf --config "${RUNNER_TEMP}/gh-aw/awf-config.json" --container-workdir "${GITHUB_WORKSPACE}" --mount "${RUNNER_TEMP}/gh-aw:${RUNNER_TEMP}/gh-aw:ro" --mount "${RUNNER_TEMP}/gh-aw:/host${RUNNER_TEMP}/gh-aw:ro" ${GH_AW_TOOL_CACHE_MOUNT:+--mount "$GH_AW_TOOL_CACHE_MOUNT"} ${GH_AW_DOCKER_HOST_PATH_PREFIX_ARGS} --env-all --exclude-env COPILOT_GITHUB_TOKEN --exclude-env GITHUB_MCP_SERVER_TOKEN --exclude-env MCP_GATEWAY_API_KEY --log-level info --proxy-logs-dir /tmp/gh-aw/sandbox/firewall/logs --audit-dir /tmp/gh-aw/sandbox/firewall/audit --enable-host-access --allow-host-ports 80,443,8080 --skip-pull \
-            -- /bin/bash -c 'set +o histexpand; export PATH="${RUNNER_TEMP}/gh-aw/mcp-cli/bin:$PATH" && GH_AW_TOOL_CACHE="${RUNNER_TOOL_CACHE:-/opt/hostedtoolcache}"; export PATH="$(find "$GH_AW_TOOL_CACHE" /opt/hostedtoolcache /home/runner/work/_tool -maxdepth 5 -type d -name bin 2>/dev/null | tr '\''\n'\'' '\'':'\'')$PATH"; [ -n "$GOROOT" ] && export PATH="$GOROOT/bin:$PATH" || true && GH_AW_NODE_EXEC="${GH_AW_NODE_BIN:-}"; if [ -z "$GH_AW_NODE_EXEC" ] || [ ! -x "$GH_AW_NODE_EXEC" ]; then GH_AW_NODE_EXEC="$(command -v node 2>/dev/null || true)"; fi; if [ -z "$GH_AW_NODE_EXEC" ]; then echo "node runtime missing on this runner — check runtimes.node in workflow YAML" >&2; exit 127; fi; "$GH_AW_NODE_EXEC" ${RUNNER_TEMP}/gh-aw/actions/copilot_harness.cjs /usr/local/bin/copilot --add-dir /tmp/gh-aw/ --log-level all --log-dir /tmp/gh-aw/sandbox/agent/logs/ --disable-builtin-mcps --no-ask-user --allow-tool binlog-mcp --allow-tool '\''binlog-mcp(*)'\'' --allow-tool github --allow-tool safeoutputs --allow-tool '\''shell(NuGet.Mcp.Server)'\'' --allow-tool '\''shell(cat)'\'' --allow-tool '\''shell(date)'\'' --allow-tool '\''shell(dotnet:*)'\'' --allow-tool '\''shell(echo)'\'' --allow-tool '\''shell(find)'\'' --allow-tool '\''shell(grep)'\'' --allow-tool '\''shell(head)'\'' --allow-tool '\''shell(ls)'\'' --allow-tool '\''shell(printf)'\'' --allow-tool '\''shell(pwd)'\'' --allow-tool '\''shell(safeoutputs:*)'\'' --allow-tool '\''shell(sort)'\'' --allow-tool '\''shell(tail)'\'' --allow-tool '\''shell(uniq)'\'' --allow-tool '\''shell(wc)'\'' --allow-tool '\''shell(yq)'\'' --allow-tool write --allow-all-paths --add-dir "${GITHUB_WORKSPACE}" --prompt-file /tmp/gh-aw/aw-prompts/prompt.txt' 2>&1 | tee -a /tmp/gh-aw/agent-stdio.log
+            -- /bin/bash -c 'set +o histexpand; export PATH="${RUNNER_TEMP}/gh-aw/mcp-cli/bin:$PATH" && GH_AW_TOOL_CACHE="${RUNNER_TOOL_CACHE:-/opt/hostedtoolcache}"; export PATH="$(find "$GH_AW_TOOL_CACHE" /opt/hostedtoolcache /home/runner/work/_tool -maxdepth 5 -type d -name bin 2>/dev/null | tr '\''\n'\'' '\'':'\'')$PATH"; [ -n "$GOROOT" ] && export PATH="$GOROOT/bin:$PATH" || true && GH_AW_NODE_EXEC="${GH_AW_NODE_BIN:-}"; if [ -z "$GH_AW_NODE_EXEC" ] || [ ! -x "$GH_AW_NODE_EXEC" ]; then GH_AW_NODE_EXEC="$(command -v node 2>/dev/null || true)"; fi; if [ -z "$GH_AW_NODE_EXEC" ]; then echo "node runtime missing on this runner — check runtimes.node in workflow YAML" >&2; exit 127; fi; "$GH_AW_NODE_EXEC" ${RUNNER_TEMP}/gh-aw/actions/copilot_harness.cjs /usr/local/bin/copilot --add-dir /tmp/gh-aw/ --log-level all --log-dir /tmp/gh-aw/sandbox/agent/logs/ --disable-builtin-mcps --no-ask-user --allow-tool binlog-mcp --allow-tool '\''binlog-mcp(*)'\'' --allow-tool github --allow-tool safeoutputs --allow-tool '\''shell(cat)'\'' --allow-tool '\''shell(date)'\'' --allow-tool '\''shell(echo)'\'' --allow-tool '\''shell(find)'\'' --allow-tool '\''shell(grep)'\'' --allow-tool '\''shell(head)'\'' --allow-tool '\''shell(ls)'\'' --allow-tool '\''shell(printf)'\'' --allow-tool '\''shell(pwd)'\'' --allow-tool '\''shell(safeoutputs:*)'\'' --allow-tool '\''shell(sort)'\'' --allow-tool '\''shell(tail)'\'' --allow-tool '\''shell(uniq)'\'' --allow-tool '\''shell(wc)'\'' --allow-tool '\''shell(yq)'\'' --allow-tool write --allow-all-paths --add-dir "${GITHUB_WORKSPACE}" --prompt-file /tmp/gh-aw/aw-prompts/prompt.txt' 2>&1 | tee -a /tmp/gh-aw/agent-stdio.log
         env:
           AWF_REFLECT_ENABLED: 1
           COPILOT_AGENT_RUNNER_TYPE: STANDALONE
@@ -1522,7 +1502,7 @@ jobs:
           set +o pipefail
           emit_none() { echo "binlog-found=false" >> "$GITHUB_OUTPUT"; exit 0; }
 
-          [ -z "${PR_NUMBER}" ] && { echo "::warning::No PR number on the slash-command event."; emit_none; }
+          [ -z "${PR_NUMBER}" ] && { echo "::warning::No PR number resolved from the slash-command event / aw_context."; emit_none; }
 
           # --- Scope check: only analyse PRs targeting main / release/* ---
           PR_JSON=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" 2>/dev/null)
@@ -1555,6 +1535,11 @@ jobs:
           names=$(printf '%s' "${artifacts_json}" | jq -r '.value // [] | map(select(.name | test("^Logs_Build_"))) | .[].name')
           [ -z "${names}" ] && { echo "::warning::No Logs_Build_* artifacts on build ${BUILD_ID}."; emit_none; }
 
+          # Guards for untrusted PR-produced archives: cap the compressed
+          # download and the reported uncompressed size, and bound extraction
+          # time, so a zip bomb / oversized artifact can't exhaust the runner.
+          MAX_ZIP_BYTES=524288000      # 500 MB compressed per artifact
+          MAX_UNZIP_BYTES=2147483648   # 2 GB uncompressed per artifact
           mkdir -p /tmp/binlogs
           count=0
           for name in ${names}; do
@@ -1562,12 +1547,17 @@ jobs:
             [ -z "${url}" ] && continue
             rm -rf /tmp/ax /tmp/a.zip
             mkdir -p /tmp/ax
-            curl -sSL --retry 3 "${url}" -o /tmp/a.zip || continue
-            # Extract ONLY `*.binlog` entries with paths junked (`-j`) so a
-            # malicious/relative artifact entry (zip-slip, `../…`) can never
-            # write outside /tmp/ax. Artifacts originate from PR builds, so
-            # treat them as untrusted input.
-            unzip -j -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 || continue
+            curl -sSL --retry 3 --max-filesize "${MAX_ZIP_BYTES}" "${url}" -o /tmp/a.zip \
+              || { echo "::warning::Skipping ${name}: download failed or exceeded ${MAX_ZIP_BYTES} bytes."; continue; }
+            UNCOMP=$(unzip -l /tmp/a.zip 2>/dev/null | tail -1 | awk '{print $1}')
+            if [ -n "${UNCOMP}" ] && [ "${UNCOMP}" -gt "${MAX_UNZIP_BYTES}" ]; then
+              echo "::warning::Skipping ${name}: uncompressed size ${UNCOMP} exceeds ${MAX_UNZIP_BYTES} guard (possible zip bomb)."; continue
+            fi
+            # Extract ONLY `*.binlog` entries with paths junked (`-j`) under a
+            # timeout so a malicious/relative entry (zip-slip) can't escape the
+            # destination and extraction can't run unbounded.
+            timeout 120 unzip -j -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 \
+              || { echo "::warning::Skipping ${name}: extraction failed or timed out."; continue; }
             i=0
             while IFS= read -r bl; do
               [ -f "${bl}" ] || continue
@@ -1595,7 +1585,7 @@ jobs:
           ADO_BUILD_UI: https://dev.azure.com/dnceng-public/public/_build/results
           GH_AW_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.issue.number }}
+          PR_NUMBER: ${{ github.event.issue.number || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number }}
       - name: Upload analysis artifact
         if: steps.fetch.outputs.binlog-found == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
