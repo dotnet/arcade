@@ -22,7 +22,9 @@ The caller (typically `build-failure-analysis.md` or `build-failure-analysis-com
 
 | Variable                  | Meaning |
 | ------------------------- | ------- |
-| `GH_AW_BINLOG_PATH`       | In-container path of the `*.binlog` (`/data/build.binlog`). Pass this verbatim as `binlog_file` on every `binlog_*` MCP tool call. Empty when the build produced no binlog. |
+| `GH_AW_BINLOG_LIST`       | Newline-separated list of in-container binlog paths — one per failed-build leg (e.g. `/data/binlogs/Logs_Build_Linux_Debug.binlog`). Pass each as `binlog_file` on the `binlog_*` MCP tools. |
+| `GH_AW_BINLOG_DIR`        | Directory the binlogs are mounted under (`/data/binlogs`); enumerate `*.binlog` here if `GH_AW_BINLOG_LIST` is unavailable. |
+| `GH_AW_BINLOG_PATH`       | The first entry of `GH_AW_BINLOG_LIST` — a single-path convenience for prompts/tools that expect one. Empty when no binlog was retrieved. |
 | `GH_AW_BINLOG_HOST_PATH`  | URL of the originating Azure DevOps build (`https://dev.azure.com/dnceng-public/public/_build/results?buildId=…`). Use only for permalinks / human-facing references — read the binlog data via MCP. |
 | `GH_AW_BUILD_OUTCOME`     | Always `failure` when this agent runs — the workflow only activates after the Azure DevOps `arcade-pr` build failed. |
 | `GH_AW_PR_NUMBER`         | Pull request number to post the analysis on. Pass it explicitly on every `add_comment` / `create_pull_request_review_comment` call (the workflows use `target: "*"`). |
@@ -39,7 +41,7 @@ If a `binlog-mcp` call fails, fall back to the Azure DevOps build referenced by 
 
 1. Read `GH_AW_BUILD_OUTCOME`.
 2. If the value is `success`, post a `noop` with the message `Build succeeded — no analysis required.` and stop. (The workflow should have skipped you in this case, but be defensive.)
-3. If the value is `failure` but `GH_AW_BINLOG_PATH` is empty, post a single comment via `add_comment` with the body:
+3. If the value is `failure` but `GH_AW_BINLOG_LIST` is empty, post a single comment via `add_comment` with the body:
 
    > 🔍 **Build Failure Analysis** — the build failed but no binary log was produced. See the [workflow run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}) for raw logs.
 
@@ -49,17 +51,15 @@ If a `binlog-mcp` call fails, fall back to the Azure DevOps build referenced by 
 
    Then stop.
 
-### Step 2 — Gather data from the binlog
+### Step 2 — Gather data from the binlogs
 
-Query the binlog through the `binlog-mcp` MCP server. Every tool call must pass the binlog path via the `binlog_file` argument, set to the value of `GH_AW_BINLOG_PATH` (i.e. `/data/build.binlog`). The MCP gateway has the file mounted read-only at that path.
+The failed Azure DevOps build publishes **one binlog per build leg** (e.g. Linux Debug, Windows Release, macOS Debug). They are mounted read-only under `GH_AW_BINLOG_DIR` (`/data/binlogs`) and enumerated, one path per line, in `GH_AW_BINLOG_LIST`. A build failure usually surfaces in only one leg, and some pipeline failures (e.g. test-only / Helix failures) leave every build binlog clean — so triage across all of them:
 
-Run these three calls first; they are the equivalents of the previous JSON dumps and cover the common case:
+1. For **each** path in `GH_AW_BINLOG_LIST`, call `binlog_errors { binlog_file: "<path>" }`. Concentrate your analysis on the leg(s) that actually report errors (each error has `{ severity, code, message, file, line, column, project }`).
+2. For the leg(s) with errors, call `binlog_overview { binlog_file: "<path>" }` for build configuration/context, and `binlog_warnings { binlog_file: "<path>", top: 10 }` when the failure looks like a `WarnAsError` promotion.
+3. If **no** leg's binlog contains errors, the compilation itself succeeded and the pipeline failure is elsewhere (most often a test / Helix stage). Post a single summary comment stating the build compiled cleanly, name the failing stage if you can identify it, link the [Azure DevOps build](${GH_AW_BINLOG_HOST_PATH}), and stop — do **not** invent code fixes.
 
-1. `binlog_overview { binlog_file: "$GH_AW_BINLOG_PATH" }` — high-level summary (build configuration, projects, targets executed, totals). Use it to confirm what was built and where it broke.
-2. `binlog_errors { binlog_file: "$GH_AW_BINLOG_PATH" }` — primary input: every error with `{ severity, code, message, file, line, column, project }`. If empty, drop to Step 6 with a "build failed but no MSBuild errors captured" comment.
-3. `binlog_warnings { binlog_file: "$GH_AW_BINLOG_PATH", top: 10 }` — useful when the failure is caused by a `WarnAsError` promotion.
-
-Because the MCP server is live, you can ask follow-up questions when the three calls above leave gaps. Useful drill-downs include searching for specific error codes, listing targets that failed in a given project, or pulling task-level timing. Discover the full tool surface with `binlog-mcp`'s own `tools/list` (the MCP gateway exposes it automatically).
+Pass each `binlog_file` verbatim from `GH_AW_BINLOG_LIST`. Because the MCP server is live, ask follow-up questions when these calls leave gaps — searching for specific error codes, listing targets that failed in a given project, or pulling task-level timing. Discover the full tool surface with `binlog-mcp`'s own `tools/list` (the MCP gateway exposes it automatically).
 
 If any MCP call fails (server crash, timeout, malformed response), note the gap in the summary comment and link the Azure DevOps build (`GH_AW_BINLOG_HOST_PATH`) so a human can inspect its logs directly.
 

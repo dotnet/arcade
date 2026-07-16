@@ -4,11 +4,11 @@ description: >-
   Rerun the build-failure analysis on a pull request when a maintainer comments
   `/analyze-build-failure`. Same body as `build-failure-analysis.md` — it does
   NOT rebuild: it finds the PR's most recent **failed** Azure Pipelines
-  `arcade-pr` build, downloads the binary log that build already produced, and
-  delegates to the `build-failure-analyst` agent (which queries the binlog live
-  via the containerized `binlog-mcp` MCP server). Useful when a previous run
-  was cancelled, the analysis comment was dismissed, or the agent needs another
-  pass after a force-push.
+  `arcade-pr` build, downloads the binary logs that build already produced
+  (all build legs), and delegates to the `build-failure-analyst` agent (which
+  queries the binlogs live via the containerized `binlog-mcp` MCP server).
+  Useful when a previous run was cancelled, the analysis comment was dismissed,
+  or the agent needs another pass after a force-push.
 
 on:
   slash_command:
@@ -22,7 +22,7 @@ on:
   needs: [fetch-binlog]
 
 # Skip activation (and the agent) unless a binlog was retrieved — e.g. if the
-# PR's latest Azure DevOps build did not fail, there is nothing to analyse.
+# PR's latest Azure DevOps build did not fail, or the PR is out of scope.
 if: needs.fetch-binlog.outputs.binlog-found == 'true'
 
 permissions:
@@ -48,24 +48,24 @@ imports:
   - shared/build-failure-analysis-shared.md
 
 # Live binlog access for the agent — see build-failure-analysis.md for the
-# rationale. The fetch-binlog job downloads the binlog from Azure DevOps and
-# uploads it as an artifact; the agent job downloads it to `/tmp/build.binlog`
-# and the gh-aw MCP gateway mounts it read-only at `/data/build.binlog`.
+# rationale. The fetch-binlog job downloads each build leg's binlog from Azure
+# DevOps into a directory and uploads it; the agent job downloads it to
+# `/tmp/binlogs` and the gh-aw MCP gateway mounts it read-only at
+# `/data/binlogs`.
 mcp-servers:
   binlog-mcp:
     container: "mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-binlog-mcp-amd64"
     mounts:
-      - "/tmp/build.binlog:/data/build.binlog:ro"
+      - "/tmp/binlogs:/data/binlogs:ro"
     allowed: ["*"]
 
-# Custom job that reuses the binlog from the PR's most recent failed Azure
+# Custom job that reuses the binlogs from the PR's most recent failed Azure
 # DevOps `arcade-pr` build instead of rebuilding. Mirrors the fetch-binlog job
-# in build-failure-analysis.md; the only difference is that it locates the
-# build by the PR's merge branch (no `check_run` payload is available on a
-# slash command).
+# in build-failure-analysis.md; it locates the build by the PR's merge branch
+# (no `check_run` payload is available on a slash command).
 jobs:
   fetch-binlog:
-    name: Fetch binlog (Azure Pipelines)
+    name: Fetch binlogs (Azure Pipelines)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -78,7 +78,7 @@ jobs:
       ado-build-id: ${{ steps.fetch.outputs.ado-build-id }}
       ado-build-url: ${{ steps.fetch.outputs.ado-build-url }}
     steps:
-      - name: Download binlog from the PR's latest failed Azure Pipelines build
+      - name: Download binlogs from the PR's latest failed Azure Pipelines build
         id: fetch
         env:
           GH_TOKEN: ${{ github.token }}
@@ -89,56 +89,57 @@ jobs:
           ADO_BUILD_DEFINITION_ID: "283"
           PR_NUMBER: ${{ github.event.issue.number }}
         run: |
-          # Relax errexit/pipefail: advisory + best-effort. On any gap we emit
-          # binlog-found=false and the agent pipeline stays inert.
+          # Advisory + best-effort. On any gap emit binlog-found=false so the
+          # agent pipeline stays inert.
           set +e
           set +o pipefail
+          emit_none() { echo "binlog-found=false" >> "$GITHUB_OUTPUT"; exit 0; }
 
-          if [ -z "${PR_NUMBER}" ]; then
-            echo "::warning::No PR number on the slash-command event; nothing to analyze."
-            echo "binlog-found=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
+          [ -z "${PR_NUMBER}" ] && { echo "::warning::No PR number on the slash-command event."; emit_none; }
 
-          # --- 1. Find the PR's most recent failed arcade-pr build ---
-          # Arcade builds the PR merge ref (refs/pull/<n>/merge).
+          # --- Scope check: only analyse PRs targeting main / release/* ---
+          PR_JSON=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" 2>/dev/null)
+          BASE_REF=$(printf '%s' "${PR_JSON}" | jq -r '.base.ref // empty')
+          HEAD_SHA=$(printf '%s' "${PR_JSON}" | jq -r '.head.sha // empty')
+          case "${BASE_REF}" in
+            main|release/*) echo "PR #${PR_NUMBER} base '${BASE_REF}' is in scope." ;;
+            *) echo "::warning::PR #${PR_NUMBER} base '${BASE_REF}' is out of scope (main, release/*); skipping."; emit_none ;;
+          esac
+
+          # --- Find the PR's most recent failed arcade-pr build (merge ref) ---
           builds_json=$(curl -sSL --retry 3 \
             "${ADO_API}/build/builds?definitions=${ADO_BUILD_DEFINITION_ID}&branchName=refs/pull/${PR_NUMBER}/merge&statusFilter=completed&resultFilter=failed&queryOrder=finishTimeDescending&\$top=1&api-version=7.1")
           BUILD_ID=$(printf '%s' "${builds_json}" | jq -r '.value // [] | .[0].id // empty')
           echo "Latest failed arcade-pr build for PR #${PR_NUMBER}: '${BUILD_ID}'"
-          if [ -z "${BUILD_ID}" ]; then
-            echo "::warning::No completed+failed arcade-pr build found for PR #${PR_NUMBER}; nothing to analyze."
-            echo "binlog-found=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
+          [ -z "${BUILD_ID}" ] && { echo "::warning::No completed+failed arcade-pr build found for PR #${PR_NUMBER}."; emit_none; }
 
-          HEAD_SHA=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" --jq '.head.sha' 2>/dev/null)
-
-          # --- 2. Find a Logs_Build_* artifact (prefer Linux_Debug) ---
+          # --- Download every Logs_Build_* artifact and extract binlogs ---
           artifacts_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}/artifacts?api-version=7.1")
-          DL=$(printf '%s' "${artifacts_json}" \
-            | jq -r '.value // [] | map(select(.name | test("^Logs_Build_")))
-                     | (map(select(.name | test("Linux_Debug"))) + .)
-                     | .[0].resource.downloadUrl // empty')
-          if [ -z "${DL}" ]; then
-            echo "::warning::No Logs_Build_* artifact found on Azure DevOps build ${BUILD_ID}."
-            echo "binlog-found=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
+          names=$(printf '%s' "${artifacts_json}" | jq -r '.value // [] | map(select(.name | test("^Logs_Build_"))) | .[].name')
+          [ -z "${names}" ] && { echo "::warning::No Logs_Build_* artifacts on build ${BUILD_ID}."; emit_none; }
 
-          # --- 3. Download + extract the newest *.binlog ---
-          curl -sSL --retry 3 "${DL}" -o /tmp/logs.zip
-          mkdir -p /tmp/logs
-          unzip -q /tmp/logs.zip -d /tmp/logs
-          BINLOG=$(find /tmp/logs -name '*.binlog' -type f -printf '%T@ %p\n' 2>/dev/null \
-            | sort -rn | head -1 | cut -d' ' -f2-)
-          if [ -z "${BINLOG}" ] || [ ! -f "${BINLOG}" ]; then
-            echo "::warning::No *.binlog inside the logs artifact of build ${BUILD_ID}."
-            echo "binlog-found=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          cp "${BINLOG}" /tmp/build.binlog
-          echo "Staged binlog: ${BINLOG} -> /tmp/build.binlog"
+          mkdir -p /tmp/binlogs
+          count=0
+          for name in ${names}; do
+            url=$(printf '%s' "${artifacts_json}" | jq -r --arg n "${name}" '.value[] | select(.name==$n) | .resource.downloadUrl // empty')
+            [ -z "${url}" ] && continue
+            rm -rf /tmp/ax /tmp/a.zip
+            mkdir -p /tmp/ax
+            curl -sSL --retry 3 "${url}" -o /tmp/a.zip || continue
+            unzip -q /tmp/a.zip -d /tmp/ax || continue
+            i=0
+            while IFS= read -r bl; do
+              [ -f "${bl}" ] || continue
+              dest="/tmp/binlogs/${name}"
+              [ ${i} -gt 0 ] && dest="/tmp/binlogs/${name}.${i}"
+              cp "${bl}" "${dest}.binlog"
+              count=$((count + 1))
+              i=$((i + 1))
+            done < <(find /tmp/ax -name '*.binlog' -type f)
+          done
+          echo "Extracted ${count} binlog(s) into /tmp/binlogs:"
+          ls -la /tmp/binlogs || true
+          [ "${count}" -eq 0 ] && { echo "::warning::No *.binlog found in any Logs_Build_* artifact of build ${BUILD_ID}."; emit_none; }
 
           {
             echo "binlog-found=true"
@@ -153,18 +154,18 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: build-failure-analysis-data
-          path: /tmp/build.binlog
+          path: /tmp/binlogs
           if-no-files-found: warn
           retention-days: 1
 
-# Steps that run in the agent job. The top-level `if:` gates these on a binlog
+# Steps that run in the agent job. The top-level `if:` gates these on binlogs
 # having been retrieved, so the agent never runs without something to analyse.
 steps:
   - name: Download analysis artifact
     uses: actions/download-artifact@v8.0.1
     with:
       name: build-failure-analysis-data
-      path: /tmp/
+      path: /tmp/binlogs
 
   - name: Setup .NET (for NuGet MCP Server)
     uses: actions/setup-dotnet@v5.4.0
@@ -191,20 +192,29 @@ steps:
       GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
     run: |
       # See build-failure-analysis.md for the binlog path conventions. The
-      # binlog is read through the binlog-mcp MCP server (mounted at
-      # `/data/build.binlog`); GH_AW_BINLOG_HOST_PATH points at the Azure
-      # DevOps build for human-facing references.
-      BINLOG_MCP_PATH=""
-      if [ "${GH_AW_BINLOG_FOUND_VALUE:-false}" = "true" ] && [ -f /tmp/build.binlog ]; then
-        BINLOG_MCP_PATH="/data/build.binlog"
+      # per-leg binlogs are read through the binlog-mcp MCP server (mounted at
+      # `/data/binlogs`); GH_AW_BINLOG_HOST_PATH points at the Azure DevOps
+      # build for human-facing references.
+      BINLOG_DIR="/data/binlogs"
+      LIST=""
+      if [ "${GH_AW_BINLOG_FOUND_VALUE:-false}" = "true" ] && [ -d /tmp/binlogs ]; then
+        for f in /tmp/binlogs/*.binlog; do
+          [ -f "$f" ] || continue
+          LIST="${LIST}${BINLOG_DIR}/$(basename "$f")"$'\n'
+        done
       fi
+      FIRST=$(printf '%s' "$LIST" | head -1)
       {
         echo "GH_AW_BUILD_OUTCOME=failure"
-        echo "GH_AW_BINLOG_PATH=${BINLOG_MCP_PATH}"
+        echo "GH_AW_BINLOG_DIR=${BINLOG_DIR}"
+        echo "GH_AW_BINLOG_PATH=${FIRST}"
         echo "GH_AW_BINLOG_HOST_PATH=${GH_AW_ADO_BUILD_URL_VALUE}"
         echo "GH_AW_PR_NUMBER=${GH_AW_PR_NUMBER_VALUE}"
         echo "GH_AW_PR_HEAD_SHA=${GH_AW_PR_HEAD_SHA_VALUE}"
         echo "GH_AW_WORKSPACE=${GH_AW_GITHUB_WORKSPACE}"
+        echo "GH_AW_BINLOG_LIST<<GH_AW_EOF"
+        printf '%s' "$LIST"
+        echo "GH_AW_EOF"
       } >> "$GITHUB_ENV"
 
 tools:
@@ -227,8 +237,7 @@ safe-outputs:
   messages:
     footer: "> 🤖 **Automated content by GitHub Copilot.** Generated by the [{workflow_name}]({agentic_workflow_url}) workflow.{ai_credits_suffix} · [◷]({history_link})"
   # The agent targets the resolved PR via `GH_AW_PR_NUMBER` (`target: "*"`),
-  # matching the auto-trigger workflow. Caps absorb Copilot CLI retry
-  # amplification; report-as-issue is disabled so flakes don't spam issues.
+  # matching the auto-trigger workflow.
   report-failure-as-issue: false
   add-comment:
     max: 5
