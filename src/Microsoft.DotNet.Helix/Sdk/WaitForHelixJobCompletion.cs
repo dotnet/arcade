@@ -8,11 +8,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
+using Microsoft.DotNet.Helix.Client.Models;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
     public class WaitForHelixJobCompletion : HelixTask
     {
+        internal const string HelixControllerWorkQueueingWorkItemName = "HelixController Work Queueing";
+        private static readonly TimeSpan MaxHelixJobCompletionWait = TimeSpan.FromHours(4);
+        private static readonly TimeSpan HelixJobCompletionPollingInterval = TimeSpan.FromSeconds(20);
+
         /// <summary>
         /// An array of Helix Jobs to be waited on
         /// </summary>
@@ -44,33 +49,44 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             Log.LogMessage(MessageImportance.High, $"Waiting for completion of job {jobName} on {queueName}{detailsUrlWhereApplicable}");
 
-            int iterationCount = 0;
+            DateTimeOffset waitStarted = DateTimeOffset.UtcNow;
             try
             {
-                for (; ; await Task.Delay(20000, cancellationToken).ConfigureAwait(false)) // delay every time this loop repeats
+                for (; ; await Task.Delay(HelixJobCompletionPollingInterval, cancellationToken).ConfigureAwait(false)) // delay every time this loop repeats
                 {
-                    // On first try, and ~ every 12 checks (~4 minutes) after, check the job details for errors.
-                    // Jobs with any job-level errors will never finish and we want to investigate these.
-                    if (iterationCount++ % 12 == 0)
+                    JobDetails jd = await HelixApi.Job.DetailsAsync(jobName, cancellationToken).ConfigureAwait(false);
+                    if (jd.Errors?.Any() == true)
                     {
-                        var jd = await HelixApi.Job.DetailsAsync(jobName, cancellationToken).ConfigureAwait(false);
-                        if (jd.Errors.Count() > 0)
-                        {
-                            string errorMsgs = string.Join(",", jd.Errors.Select(d => d.Message));
-                            Log.LogError($"Helix encountered job-level error(s) for this job ({errorMsgs}).  Please contact dnceng with this information.");
-                            return;
-                        }
-                    }
-
-                    cancellationToken.ThrowIfCancellationRequested();
-                    var pf = await HelixApi.Job.PassFailAsync(jobName, cancellationToken).ConfigureAwait(false);
-                    if (pf.Working == 0 && pf.Total != 0)
-                    {
-                        Log.LogMessage(MessageImportance.High, $"Job {jobName} on {queueName} is completed with {pf.Total} finished work items.");
+                        string errorMsgs = string.Join(",", jd.Errors.Select(d => d.Message));
+                        Log.LogError($"Helix encountered job-level error(s) for this job ({errorMsgs}).  Please contact dnceng with this information.");
                         return;
                     }
 
-                    Log.LogMessage($"Job {jobName} on {queueName} is not yet completed with Pending: {pf.Working}, Finished: {pf.Total - pf.Working}");
+                    if (jd.Finished != null)
+                    {
+                        Log.LogMessage(MessageImportance.High, $"Job {jobName} on {queueName} is completed.");
+                        return;
+                    }
+
+                    cancellationToken.ThrowIfCancellationRequested();
+                    IReadOnlyCollection<WorkItemSummary> realWorkItems = GetRealWorkItems(await HelixApi.WorkItem.ListAsync(jobName, cancellationToken).ConfigureAwait(false));
+                    int finishedWorkItems = realWorkItems.Count(wi => wi.ExitCode.HasValue);
+
+                    if (AreAllExpectedWorkItemsTerminal(jd, realWorkItems))
+                    {
+                        Log.LogMessage(MessageImportance.High, $"Job {jobName} on {queueName} is completed with {finishedWorkItems} finished work items.");
+                        return;
+                    }
+
+                    if (DateTimeOffset.UtcNow - waitStarted >= MaxHelixJobCompletionWait)
+                    {
+                        string expectedWorkItems = jd.InitialWorkItemCount is > 0 ? jd.InitialWorkItemCount.Value.ToString() : "unknown";
+                        Log.LogError($"Timed out after {MaxHelixJobCompletionWait.TotalHours:0.#} hours waiting for job {jobName} on {queueName} to finish or report all expected work items. Expected work items: {expectedWorkItems}, observed real work items: {realWorkItems.Count}, finished real work items: {finishedWorkItems}. The Helix job may have failed to expand; please contact dnceng with this information.");
+                        return;
+                    }
+
+                    string expected = jd.InitialWorkItemCount is > 0 ? jd.InitialWorkItemCount.Value.ToString() : "unknown";
+                    Log.LogMessage($"Job {jobName} on {queueName} is not yet completed with Expected: {expected}, Observed: {realWorkItems.Count}, Finished: {finishedWorkItems}");
                     cancellationToken.ThrowIfCancellationRequested();
                 }
             }
@@ -97,6 +113,25 @@ namespace Microsoft.DotNet.Helix.Sdk
                     }
                 }
             }
+        }
+
+        internal static IReadOnlyCollection<WorkItemSummary> GetRealWorkItems(IEnumerable<WorkItemSummary> workItems)
+        {
+            return workItems
+                .Where(w => w.Name != HelixControllerWorkQueueingWorkItemName)
+                .ToList();
+        }
+
+        internal static bool AreAllExpectedWorkItemsTerminal(JobDetails jobDetails, IReadOnlyCollection<WorkItemSummary> realWorkItems)
+        {
+            return jobDetails.InitialWorkItemCount is > 0
+                && realWorkItems.Count >= jobDetails.InitialWorkItemCount.Value
+                && realWorkItems.All(wi => wi.ExitCode.HasValue);
+        }
+
+        internal static bool IsJobComplete(JobDetails jobDetails, IReadOnlyCollection<WorkItemSummary> realWorkItems)
+        {
+            return jobDetails.Finished != null || AreAllExpectedWorkItemsTerminal(jobDetails, realWorkItems);
         }
     }
 }
