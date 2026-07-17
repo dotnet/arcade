@@ -457,7 +457,7 @@ case "$__AlpineVersion" in
             __AlpineVersion=3.21 # minimum version that supports lldb-dev
             __AlpinePackages+=" llvm19-libs"
         elif [[ "$__AlpineArch" == "riscv64" ]]; then
-            __AlpineVersion=3.22 # minimum version that supports lldb-dev
+            __AlpineVersion=3.22 # minimum version that supports lldb-dev is 3.21 but we need newer linux-headers for clean ext probes
             __AlpinePackages+=" llvm20-libs"
         elif [[ -n "$__AlpineMajorVersion" ]]; then
             # use whichever alpine version is provided and select the latest toolchain libs
