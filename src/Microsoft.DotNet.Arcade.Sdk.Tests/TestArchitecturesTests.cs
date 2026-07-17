@@ -54,6 +54,11 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                 element => element.Attribute("Text")?.Value.Contains(
                     "requires a matching dotnet host",
                     StringComparison.Ordinal) == true);
+            Assert.Contains(
+                runTests.Descendants("Error"),
+                element => element.Attribute("Text")?.Value.Contains(
+                    "path cannot be determined",
+                    StringComparison.Ordinal) == true);
         }
 
         [Theory]
@@ -76,6 +81,11 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                 runTests.Descendants("Error"),
                 element => element.Attribute("Text")?.Value.Contains(
                     "requires a matching dotnet host",
+                    StringComparison.Ordinal) == true);
+            Assert.Contains(
+                runTests.Descendants("Error"),
+                element => element.Attribute("Text")?.Value.Contains(
+                    "path cannot be determined",
                     StringComparison.Ordinal) == true);
         }
 
@@ -108,7 +118,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                 element.Attribute("Condition")?.Value.Contains("'$(OS)' == 'Windows_NT'", StringComparison.Ordinal) == true);
             Assert.Contains(validate.Descendants("Error"), element =>
                 element.Attribute("Text")?.Value.Contains(
-                    "Build a separate RID-specific test output",
+                    "PlatformTarget, Prefer32Bit, or RuntimeIdentifier",
                     StringComparison.Ordinal) == true);
             Assert.Contains(validate.Descendants("_MismatchedTestArchitecture"), element =>
                 element.Attribute("Condition")?.Value.Contains(

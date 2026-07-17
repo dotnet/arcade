@@ -43,8 +43,10 @@
       <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' == 'true'">$(_TestRunnerArgs) --auto-reporters off</_TestRunnerArgs>
     </PropertyGroup>
 
-    <Error Condition="'$(_TestRuntime)' == 'Core' and '$(_UseDefaultDotNetRunCommand)' == 'true' and '$(_TestArchitecture)' != '$(_DotNetToolArchitecture)' and !Exists('$(_ArchitectureSpecificDotNetTool)')"
-           Text="Test architecture '$(_TestArchitecture)' requires a matching dotnet host at '$(_ArchitectureSpecificDotNetTool)', but that host is not installed. Set DotNetRoot when DotNetTool does not identify its installation root." />
+    <Error Condition="'$(_TestRuntime)' == 'Core' and '$(_UseDefaultDotNetRunCommand)' == 'true' and '$(_TestArchitecture)' != '$(_DotNetToolArchitecture)' and '$(_ArchitectureSpecificDotNetTool)' == ''"
+           Text="Test architecture '$(_TestArchitecture)' requires a matching dotnet host, but its path cannot be determined. Set DotNetRoot to the installation root containing architecture-specific host subdirectories." />
+    <Error Condition="'$(_TestRuntime)' == 'Core' and '$(_UseDefaultDotNetRunCommand)' == 'true' and '$(_TestArchitecture)' != '$(_DotNetToolArchitecture)' and '$(_ArchitectureSpecificDotNetTool)' != '' and !Exists('$(_ArchitectureSpecificDotNetTool)')"
+           Text="Test architecture '$(_TestArchitecture)' requires a matching dotnet host at '$(_ArchitectureSpecificDotNetTool)', but that host is not installed." />
 
     <PropertyGroup>
       <_TestRunnerCommand>"$(_TestRunner)" $(_TestRunnerArgs)</_TestRunnerCommand>

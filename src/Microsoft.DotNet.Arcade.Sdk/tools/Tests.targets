@@ -143,7 +143,7 @@
     </ItemGroup>
 
     <Error Condition="'@(_MismatchedTestArchitecture)' != ''"
-           Text="Test architecture '%(_MismatchedTestArchitecture.Architecture)' cannot use the '%(_MismatchedTestArchitecture.BuiltTestArchitecture)' test host for '%(_MismatchedTestArchitecture.Identity)'. Build a separate RID-specific test output for each architecture." />
+           Text="Test architecture '%(_MismatchedTestArchitecture.Architecture)' cannot use the '%(_MismatchedTestArchitecture.BuiltTestArchitecture)' test host for '%(_MismatchedTestArchitecture.Identity)'. Build an architecture-specific test output or set TestArchitectures to match the architecture selected by PlatformTarget, Prefer32Bit, or RuntimeIdentifier." />
   </Target>
 
   <Target Name="_OuterGetTestsToRun" Returns="@(TestToRun)">
