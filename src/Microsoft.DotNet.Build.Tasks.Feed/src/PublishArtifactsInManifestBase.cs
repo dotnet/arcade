@@ -988,6 +988,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
                 catch (Exception e)
                 {
+                    // Token acquisition failed before the client is handed to the caller's `using`,
+                    // so dispose it here to avoid leaking the underlying handler/sockets on repeated
+                    // failures (e.g. a misconfigured service connection).
+                    client.Dispose();
                     throw new InvalidOperationException(
                         "Failed to acquire an Entra token for Azure DevOps. Provide a token (e.g. 'AzdoApiToken' for artifact " +
                         "download or 'AzureDevOpsFeedsKey' for feed publishing), or run under an AzureCLI@2 task with " +

@@ -79,6 +79,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
                 catch (Exception e)
                 {
+                    // The constructor is throwing, so Dispose() will never be called on this instance;
+                    // dispose the HttpClient here to avoid leaking the underlying handler/sockets on
+                    // repeated failures (e.g. a misconfigured service connection).
+                    _httpClient.Dispose();
                     throw new InvalidOperationException(
                         "Failed to acquire an Entra token for Azure DevOps feed publishing. Provide 'AzureDevOpsFeedsKey', " +
                         "or run the publish step under an AzureCLI@2 task with addSpnToEnvironment: true (or a configured " +
