@@ -34,7 +34,11 @@ steps:
       # dn-bot-dnceng-artifact-feeds-rw PAT, which has been retired as part of the PAT-to-Entra migration.
       # Disable xtrace around the invocation so the access token isn't echoed to the logs (set -x prints argv).
       set +x
-      "$(System.DefaultWorkingDirectory)/eng/common/SetupNugetSources.sh" "$(System.DefaultWorkingDirectory)/NuGet.config" "$(System.AccessToken)"
+      if [ -n "$(System.AccessToken)" ]; then
+        "$(System.DefaultWorkingDirectory)/eng/common/SetupNugetSources.sh" "$(System.DefaultWorkingDirectory)/NuGet.config" "$(System.AccessToken)"
+      else
+        echo "##vso[task.logissue type=warning]System.AccessToken is empty; skipping internal feed credential setup."
+      fi
       set -x
       internalRestoreArgs='/p:CopyWipIntoInnerSourceBuildRepo=true'
 
