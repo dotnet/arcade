@@ -978,10 +978,13 @@ Set to `true` in a test project to skip running tests.
 
 ### `TestArchitectures` (list of strings)
 
-List of test architectures (`x64`, `x86`) to run tests on.
-If not specified by the project defaults to the value of `PlatformTarget` property, or `x64` if `Platform` is `AnyCPU` or unspecified.
+List of test architectures (for example, `x64`, `x86`, or `arm64`) to run tests on.
+If not specified by the project, .NET Framework tests default to the adjusted `PlatformTarget`, taking `Prefer32Bit` into account for `AnyCPU`; other tests default to the architecture of `DotNetTool`.
+If `DotNetTool` points to a non-native installation, set `DotNetToolArchitecture` to its architecture.
 
 For example, a project that targets `AnyCPU` can opt-into running tests using both 32-bit and 64-bit test runners on .NET Framework by setting `TestArchitectures` to `x64;x86`.
+
+VSTest and framework-dependent xUnit v2 tests can use multiple architectures when the corresponding runtimes are installed. Microsoft.Testing.Platform and xUnit v3 execute a build-produced apphost, so the requested architecture must match the apphost architecture. Build separate RID-specific outputs to test those runners on multiple architectures.
 
 ### `TestResultsLogDir` (string)
 

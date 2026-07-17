@@ -1,4 +1,8 @@
 <Project>
+  <PropertyGroup>
+    <_TestRunnerRequiresMatchingArchitecture>true</_TestRunnerRequiresMatchingArchitecture>
+  </PropertyGroup>
+
   <Target Name="RunTests"
           Outputs="%(TestToRun.ResultsStdOutPath)"
           Condition="'@(TestToRun)' != ''">
