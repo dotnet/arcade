@@ -32,7 +32,10 @@ steps:
       chmod +x $(System.DefaultWorkingDirectory)/eng/common/SetupNugetSources.sh
       # Authenticate to internal feeds using the build identity (System.AccessToken) instead of the
       # dn-bot-dnceng-artifact-feeds-rw PAT, which has been retired as part of the PAT-to-Entra migration.
-      $(System.DefaultWorkingDirectory)/eng/common/SetupNugetSources.sh $(System.DefaultWorkingDirectory)/NuGet.config $(System.AccessToken)
+      # Disable xtrace around the invocation so the access token isn't echoed to the logs (set -x prints argv).
+      set +x
+      "$(System.DefaultWorkingDirectory)/eng/common/SetupNugetSources.sh" "$(System.DefaultWorkingDirectory)/NuGet.config" "$(System.AccessToken)"
+      set -x
       internalRestoreArgs='/p:CopyWipIntoInnerSourceBuildRepo=true'
 
       # The 'Copy WIP' feature of source build uses git stash to apply changes from the original repo.
