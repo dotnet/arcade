@@ -248,20 +248,8 @@ namespace Microsoft.DotNet.Build.Tasks.FileCatalog
             return hash.AsSpan(0, ListIdentifierLength).ToArray();
         }
 
-        private static int CompareBytes(byte[] x, byte[] y)
-        {
-            int min = Math.Min(x.Length, y.Length);
-            for (int i = 0; i < min; i++)
-            {
-                int diff = x[i] - y[i];
-                if (diff != 0)
-                {
-                    return diff;
-                }
-            }
-
-            return x.Length - y.Length;
-        }
+        private static int CompareBytes(byte[] x, byte[] y) =>
+            x.AsSpan().SequenceCompareTo(y.AsSpan());
 
         private readonly struct Member
         {
