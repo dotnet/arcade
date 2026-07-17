@@ -7,9 +7,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Azure.Core;
 using Microsoft.Build.Utilities;
-using Microsoft.DotNet.ArcadeAzureIntegration;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.ProductConstructionService.Client.Models;
 using NuGet.Packaging;
@@ -49,41 +47,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             _httpClient = new HttpClient(new HttpClientHandler {CheckCertificateRevocationList = true})
             {
                 Timeout = GeneralUtils.NugetFeedPublisherHttpClientTimeout,
-            };
-
-            if (!string.IsNullOrEmpty(_accessToken))
-            {
-                // AAD access tokens are JWTs (three dot-separated segments) and must be sent as Bearer.
-                // Personal access tokens (PATs) are opaque strings and use Basic auth.
-                bool tokenIsJwt = _accessToken.Split('.').Length == 3;
-                _httpClient.DefaultRequestHeaders.Authorization = tokenIsJwt
-                    ? new AuthenticationHeaderValue("Bearer", _accessToken)
-                    : new AuthenticationHeaderValue(
+                DefaultRequestHeaders =
+                {
+                    Authorization = new AuthenticationHeaderValue(
                         "Basic",
-                        Convert.ToBase64String(Encoding.ASCII.GetBytes($":{_accessToken}")));
-            }
-            else
-            {
-                // No token provided; acquire an Entra token via DefaultIdentityTokenCredential.
-                try
-                {
-                    var credential = new DefaultIdentityTokenCredential(
-                        new DefaultIdentityTokenCredentialOptions
-                        {
-                            ManagedIdentityClientId = task.ManagedIdentityClientId
-                        });
-                    var tokenRequestContext = new TokenRequestContext(new[] { "499b84ac-1321-427f-aa17-267ca6975798/.default" });
-                    var token = credential.GetToken(tokenRequestContext, CancellationToken.None);
-                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-                }
-                catch (Exception e)
-                {
-                    throw new InvalidOperationException(
-                        "Failed to acquire an Entra token for Azure DevOps feed publishing. Provide 'AzureDevOpsFeedsKey', " +
-                        "or run the publish step under an AzureCLI@2 task with addSpnToEnvironment: true (or a configured " +
-                        "managed/workload identity) so DefaultIdentityTokenCredential can obtain a token.", e);
-                }
-            }
+                        Convert.ToBase64String(Encoding.ASCII.GetBytes($":{_accessToken}")))
+                },
+            };
         }
 
         public void Dispose()

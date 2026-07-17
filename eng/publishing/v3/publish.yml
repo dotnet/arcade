@@ -98,21 +98,11 @@ stages:
     - task: NuGetAuthenticate@1
       displayName: 'Authenticate to AzDO Feeds'
 
-    - task: AzureCLI@2
-      displayName: Get AzDO feed publish token
-      name: GetFeedToken
+    - task: PowerShell@2
+      displayName: Enable cross-org publishing
       inputs:
-        azureSubscription: dnceng-artifact-feeds-publish
-        addSpnToEnvironment: true
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
-          $feedToken = az account get-access-token --resource "499b84ac-1321-427f-aa17-267ca6975798" --query accessToken -o tsv
-          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($feedToken)) {
-            Write-Error "Failed to acquire an AzDO feed publish token from 'az account get-access-token' (exit code $LASTEXITCODE)."
-            exit 1
-          }
-          Write-Host "##vso[task.setvariable variable=AzDoFeedToken;isOutput=true;issecret=true]$feedToken"
+        filePath: $(System.DefaultWorkingDirectory)/eng/common/enable-cross-org-publishing.ps1
+        arguments: -token $(dn-bot-all-orgs-artifact-feeds-rw)
 
     - task: AzureCLI@2
       displayName: Get aka.ms client certificate
@@ -160,7 +150,7 @@ stages:
           /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
           /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/'
           /p:PublishInstallersAndChecksums=true
-          /p:AzureDevOpsFeedsKey='$(GetFeedToken.AzDoFeedToken)'
+          /p:AzureDevOpsFeedsKey='$(dn-bot-all-orgs-artifact-feeds-rw)'
           /p:AkaMSClientId=$(akams-app-id)
           /p:AkaMSClientCertificate=$(Agent.TempDirectory)/akamsclientcert.pfx
           ${{ parameters.artifactsPublishingAdditionalParameters }} 
