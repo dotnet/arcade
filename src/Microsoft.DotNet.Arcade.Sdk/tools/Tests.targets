@@ -43,9 +43,27 @@
       <_CurrentProcessArchitecture>$(_CurrentProcessArchitecture.ToLowerInvariant())</_CurrentProcessArchitecture>
       <_CurrentOSArchitecture Condition="'$(_CurrentOSArchitecture)' == ''">$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)</_CurrentOSArchitecture>
       <_CurrentOSArchitecture>$(_CurrentOSArchitecture.ToLowerInvariant())</_CurrentOSArchitecture>
-      <DotNetToolArchitecture Condition="'$(DotNetToolArchitecture)' == ''">$(_CurrentOSArchitecture)</DotNetToolArchitecture>
+      <DotNetToolArchitecture Condition="'$(DotNetToolArchitecture)' == ''">$(_CurrentProcessArchitecture)</DotNetToolArchitecture>
       <_DotNetToolArchitecture>$(DotNetToolArchitecture)</_DotNetToolArchitecture>
       <_DotNetToolArchitecture>$(_DotNetToolArchitecture.ToLowerInvariant())</_DotNetToolArchitecture>
+      <_DotNetHostRoot Condition="'$(DotNetRoot)' != ''">$(DotNetRoot)</_DotNetHostRoot>
+      <_DotNetHostRoot Condition="'$(_DotNetHostRoot)' == '' and $([System.IO.Path]::IsPathRooted('$(DotNetTool)'))">$([System.IO.Path]::GetDirectoryName('$(DotNetTool)'))</_DotNetHostRoot>
+
+      <_BuiltTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(UseAppHost)' == 'true' and '$(AppHostRuntimeIdentifier)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(AppHostRuntimeIdentifier)', '[^-]+$').Value)</_BuiltTestArchitecture>
+      <_BuiltTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(UseAppHost)' == 'true' and '$(_BuiltTestArchitecture)' == '' and '$(RuntimeIdentifier)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(RuntimeIdentifier)', '[^-]+$').Value)</_BuiltTestArchitecture>
+      <_BuiltTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(UseAppHost)' == 'true' and '$(_BuiltTestArchitecture)' == '' and '$(DefaultAppHostRuntimeIdentifier)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(DefaultAppHostRuntimeIdentifier)', '[^-]+$').Value)</_BuiltTestArchitecture>
+      <_BuiltTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(UseAppHost)' != 'true'">$(_DotNetToolArchitecture)</_BuiltTestArchitecture>
+      <_BuiltTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(PlatformTarget)' != '' and '$(PlatformTarget)' != 'AnyCpu'">$(PlatformTarget)</_BuiltTestArchitecture>
+      <_BuiltTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(_BuiltTestArchitecture)' == '' and '$(Prefer32Bit)' == 'true'">x86</_BuiltTestArchitecture>
+      <_BuiltTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(_BuiltTestArchitecture)' == ''">$(_CurrentOSArchitecture)</_BuiltTestArchitecture>
+      <_BuiltTestArchitecture Condition="'$(_BuiltTestArchitecture)' == ''">$(_CurrentProcessArchitecture)</_BuiltTestArchitecture>
+      <_BuiltTestArchitecture>$(_BuiltTestArchitecture.ToLowerInvariant())</_BuiltTestArchitecture>
+
+      <_DefaultTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(UseAppHost)' == 'true'">$(_BuiltTestArchitecture)</_DefaultTestArchitecture>
+      <_DefaultTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(_DefaultTestArchitecture)' == '' and '$(RuntimeIdentifier)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(RuntimeIdentifier)', '[^-]+$').Value)</_DefaultTestArchitecture>
+      <_DefaultTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(_DefaultTestArchitecture)' == '' and '$(PlatformTarget)' != '' and '$(PlatformTarget)' != 'AnyCpu'">$(PlatformTarget)</_DefaultTestArchitecture>
+      <_DefaultTestArchitecture Condition="'$(_DefaultTestArchitecture)' == ''">$(_DotNetToolArchitecture)</_DefaultTestArchitecture>
+      <_DefaultTestArchitecture>$(_DefaultTestArchitecture.ToLowerInvariant())</_DefaultTestArchitecture>
 
       <TestArchitectures Condition="'$(TestArchitectures)' == '' and
                                     '$(TargetFrameworkIdentifier)' == '.NETFramework' and
@@ -63,16 +81,7 @@
                                     '$(_CurrentOSArchitecture)' != 'x64'">x64</TestArchitectures>
       <TestArchitectures Condition="'$(TestArchitectures)' == '' and
                                     '$(TargetFrameworkIdentifier)' == '.NETFramework'">$(_CurrentOSArchitecture)</TestArchitectures>
-      <TestArchitectures Condition="'$(TestArchitectures)' == ''">$(_DotNetToolArchitecture)</TestArchitectures>
-
-      <_BuiltTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(UseAppHost)' == 'true' and '$(RuntimeIdentifier)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(RuntimeIdentifier)', '[^-]+$').Value)</_BuiltTestArchitecture>
-      <_BuiltTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(UseAppHost)' == 'true' and '$(_BuiltTestArchitecture)' == '' and '$(DefaultAppHostRuntimeIdentifier)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(DefaultAppHostRuntimeIdentifier)', '[^-]+$').Value)</_BuiltTestArchitecture>
-      <_BuiltTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(UseAppHost)' != 'true'">$(_DotNetToolArchitecture)</_BuiltTestArchitecture>
-      <_BuiltTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(PlatformTarget)' != '' and '$(PlatformTarget)' != 'AnyCpu'">$(PlatformTarget)</_BuiltTestArchitecture>
-      <_BuiltTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(_BuiltTestArchitecture)' == '' and '$(Prefer32Bit)' == 'true'">x86</_BuiltTestArchitecture>
-      <_BuiltTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(_BuiltTestArchitecture)' == ''">$(_CurrentOSArchitecture)</_BuiltTestArchitecture>
-      <_BuiltTestArchitecture Condition="'$(_BuiltTestArchitecture)' == ''">$(_CurrentProcessArchitecture)</_BuiltTestArchitecture>
-      <_BuiltTestArchitecture>$(_BuiltTestArchitecture.ToLowerInvariant())</_BuiltTestArchitecture>
+      <TestArchitectures Condition="'$(TestArchitectures)' == ''">$(_DefaultTestArchitecture)</TestArchitectures>
     </PropertyGroup>
 
     <ItemGroup>
@@ -108,6 +117,9 @@
         <BuiltTestArchitecture>$(_BuiltTestArchitecture)</BuiltTestArchitecture>
         <CurrentProcessArchitecture>$(_CurrentProcessArchitecture)</CurrentProcessArchitecture>
         <DotNetToolArchitecture>$(_DotNetToolArchitecture)</DotNetToolArchitecture>
+        <DotNetHostRoot>$(_DotNetHostRoot)</DotNetHostRoot>
+        <UseAppHost>$(UseAppHost)</UseAppHost>
+        <UseDefaultDotNetRunCommand Condition="'$(UseAppHost)' != 'true' and '$(RunCommand)' == 'dotnet'">true</UseDefaultDotNetRunCommand>
         <EnvironmentDisplay>$(TargetFramework)|$(_TestArchitecture)</EnvironmentDisplay>
         <ResultsFilePathWithoutExtension>$(_ResultFileNameNoExt)</ResultsFilePathWithoutExtension>
         <ResultsXmlPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).xml</ResultsXmlPath>
@@ -126,7 +138,8 @@
   <Target Name="_ValidateTestArchitectures" Condition="'$(_TestRunnerRequiresMatchingArchitecture)' == 'true'">
     <ItemGroup>
       <_MismatchedTestArchitecture Include="@(TestToRun)"
-          Condition="'%(TestToRun.Architecture)' != '%(TestToRun.BuiltTestArchitecture)'" />
+          Condition="('%(TestToRun.UseAppHost)' == 'true' or '%(TestToRun.TestRuntime)' == 'Full') and
+                     '%(TestToRun.Architecture)' != '%(TestToRun.BuiltTestArchitecture)'" />
     </ItemGroup>
 
     <Error Condition="'@(_MismatchedTestArchitecture)' != ''"

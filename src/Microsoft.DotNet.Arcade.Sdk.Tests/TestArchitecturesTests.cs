@@ -4,7 +4,10 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
+using Microsoft.Build.Evaluation;
+using Microsoft.Build.Framework;
 using Xunit;
 
 namespace Microsoft.DotNet.Arcade.Sdk.Tests
@@ -59,10 +62,21 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
         public void FixedHostRunnersOptIntoArchitectureValidation(string directory, string fileName)
         {
             XDocument targets = LoadTargets(directory, fileName);
+            XElement runTests = GetTarget(targets, "RunTests");
 
             Assert.Contains(
                 targets.Descendants("_TestRunnerRequiresMatchingArchitecture"),
                 element => element.Value == "true");
+            Assert.Contains(
+                runTests.Descendants("_TestRunner"),
+                element => element.Attribute("Condition")?.Value.Contains(
+                    "'$(_UseDefaultDotNetRunCommand)' == 'true'",
+                    StringComparison.Ordinal) == true);
+            Assert.Contains(
+                runTests.Descendants("Error"),
+                element => element.Attribute("Text")?.Value.Contains(
+                    "requires a matching dotnet host",
+                    StringComparison.Ordinal) == true);
         }
 
         [Fact]
@@ -74,6 +88,9 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
 
             Assert.Contains(initialize.Descendants("_CurrentProcessArchitecture"), element =>
                 element.Value.Contains("RuntimeInformation]::ProcessArchitecture", StringComparison.Ordinal));
+            Assert.Contains(initialize.Descendants("_BuiltTestArchitecture"), element =>
+                element.Value.Contains("AppHostRuntimeIdentifier", StringComparison.Ordinal) &&
+                !element.Value.Contains("DefaultAppHostRuntimeIdentifier", StringComparison.Ordinal));
             Assert.Contains(initialize.Descendants("_BuiltTestArchitecture"), element =>
                 element.Value.Contains("DefaultAppHostRuntimeIdentifier", StringComparison.Ordinal) &&
                 element.Attribute("Condition")?.Value.Contains("'$(UseAppHost)' == 'true'", StringComparison.Ordinal) == true);
@@ -93,6 +110,26 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                 element.Attribute("Text")?.Value.Contains(
                     "Build a separate RID-specific test output",
                     StringComparison.Ordinal) == true);
+            Assert.Contains(validate.Descendants("_MismatchedTestArchitecture"), element =>
+                element.Attribute("Condition")?.Value.Contains(
+                    "'%(TestToRun.UseAppHost)' == 'true'",
+                    StringComparison.Ordinal) == true);
+            Assert.Contains(validate.Descendants("_MismatchedTestArchitecture"), element =>
+                element.Attribute("Condition")?.Value.Contains(
+                    "'%(TestToRun.TestRuntime)' == 'Full'",
+                    StringComparison.Ordinal) == true);
+
+            XElement testToRun = initialize
+                .Document
+                .Descendants("TestToRun")
+                .Single();
+            Assert.Contains(testToRun.Elements("UseAppHost"), element => element.Value == "$(UseAppHost)");
+            Assert.Contains(testToRun.Elements("UseDefaultDotNetRunCommand"), element =>
+                element.Attribute("Condition")?.Value.Contains("'$(RunCommand)' == 'dotnet'", StringComparison.Ordinal) == true);
+            Assert.Contains(testToRun.Elements("DotNetHostRoot"), element => element.Value == "$(_DotNetHostRoot)");
+
+            Assert.Contains(initialize.Descendants("_DotNetHostRoot"), element =>
+                element.Value.Contains("GetDirectoryName('$(DotNetTool)')", StringComparison.Ordinal));
 
             XElement initializationDependencies = targets
                 .Descendants("_InitializeTestArchitecturesDependsOn")
@@ -101,6 +138,67 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
 
             XElement testTarget = GetTarget(targets, "Test");
             Assert.Contains("_ValidateTestArchitectures", testTarget.Attribute("DependsOnTargets")?.Value);
+        }
+
+        [Fact]
+        public void AppHostArchitectureDrivesDefaultTestArchitecture()
+        {
+            string tempDirectory = Path.Combine(Path.GetTempPath(), "arcade", Path.GetRandomFileName());
+            string projectPath = Path.Combine(tempDirectory, "TestArchitectures.proj");
+            string outputPath = Path.Combine(tempDirectory, "architectures.txt");
+            Directory.CreateDirectory(Path.Combine(tempDirectory, "eng"));
+
+            try
+            {
+                var projectDocument = new XDocument(
+                    new XElement("Project",
+                        new XElement("PropertyGroup",
+                            new XElement("IsTestProject", "true"),
+                            new XElement("UsingToolXUnit", "false"),
+                            new XElement("TestRuntime", "Core"),
+                            new XElement("TargetFramework", "net10.0"),
+                            new XElement("TargetFrameworkIdentifier", ".NETCoreApp"),
+                            new XElement("TargetFrameworkVersion", "v10.0"),
+                            new XElement("TargetPath", Path.Combine(tempDirectory, "Sample.Tests.dll")),
+                            new XElement("ArtifactsTestResultsDir", tempDirectory + Path.DirectorySeparatorChar),
+                            new XElement("ArtifactsLogDir", tempDirectory + Path.DirectorySeparatorChar),
+                            new XElement("RepositoryEngineeringDir", Path.Combine(tempDirectory, "eng") + Path.DirectorySeparatorChar),
+                            new XElement("UseAppHost", "true"),
+                            new XElement("AppHostRuntimeIdentifier", "win-x86")),
+                        new XElement("UsingTask",
+                            new XAttribute("TaskName", "Microsoft.Build.Tasks.WriteLinesToFile"),
+                            new XAttribute("AssemblyFile", typeof(Microsoft.Build.Tasks.WriteLinesToFile).Assembly.Location)),
+                        new XElement("Import",
+                            new XAttribute("Project", Path.Combine(s_toolsDirectory, "Tests.targets"))),
+                        new XElement("Target",
+                            new XAttribute("Name", "ComputeRunArguments")),
+                        new XElement("Target",
+                            new XAttribute("Name", "CaptureArchitectures"),
+                            new XAttribute("DependsOnTargets", "_InnerGetTestsToRun"),
+                            new XElement("WriteLinesToFile",
+                                new XAttribute("File", outputPath),
+                                new XAttribute("Overwrite", "true"),
+                                new XAttribute("Lines", "@(TestToRun->'%(Architecture)|%(BuiltTestArchitecture)')")))));
+                projectDocument.Save(projectPath);
+
+                var projectCollection = new ProjectCollection();
+                try
+                {
+                    Project project = projectCollection.LoadProject(projectPath);
+                    var logger = new ErrorLogger();
+                    Assert.True(project.Build("CaptureArchitectures", new[] { logger }), logger.Errors);
+                }
+                finally
+                {
+                    projectCollection.UnloadAllProjects();
+                }
+
+                Assert.Equal("x86|x86", File.ReadAllText(outputPath).Trim());
+            }
+            finally
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
         }
 
         private static XElement GetTarget(XDocument document, string name) =>
@@ -134,6 +232,22 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             }
 
             throw new InvalidOperationException("Unable to locate the Arcade repository root.");
+        }
+
+        private sealed class ErrorLogger : ILogger
+        {
+            private readonly StringBuilder _errors = new StringBuilder();
+
+            public string Parameters { get; set; }
+            public LoggerVerbosity Verbosity { get; set; }
+            public string Errors => _errors.ToString();
+
+            public void Initialize(IEventSource eventSource) =>
+                eventSource.ErrorRaised += (_, args) => _errors.AppendLine(args.Message);
+
+            public void Shutdown()
+            {
+            }
         }
     }
 }

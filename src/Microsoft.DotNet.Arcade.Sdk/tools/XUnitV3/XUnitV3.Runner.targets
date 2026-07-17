@@ -23,6 +23,15 @@
       <_TestRunnerAdditionalArguments>%(TestToRun.TestRunnerAdditionalArguments)</_TestRunnerAdditionalArguments>
 
       <_TestRunner>%(TestToRun.RunCommand)</_TestRunner>
+      <_UseAppHost>%(TestToRun.UseAppHost)</_UseAppHost>
+      <_UseDefaultDotNetRunCommand>%(TestToRun.UseDefaultDotNetRunCommand)</_UseDefaultDotNetRunCommand>
+      <_TestArchitecture>%(TestToRun.Architecture)</_TestArchitecture>
+      <_DotNetToolArchitecture>%(TestToRun.DotNetToolArchitecture)</_DotNetToolArchitecture>
+      <_DotNetHostRoot>%(TestToRun.DotNetHostRoot)</_DotNetHostRoot>
+      <_DotNetExecutableName>$([System.IO.Path]::GetFileName('$(DotNetTool)'))</_DotNetExecutableName>
+      <_ArchitectureSpecificDotNetTool Condition="'$(_DotNetHostRoot)' != ''">$([System.IO.Path]::Combine('$(_DotNetHostRoot)', '$(_TestArchitecture)', '$(_DotNetExecutableName)'))</_ArchitectureSpecificDotNetTool>
+      <_TestRunner Condition="'$(_TestRuntime)' == 'Core' and '$(_UseDefaultDotNetRunCommand)' == 'true' and '$(_TestArchitecture)' == '$(_DotNetToolArchitecture)'">$(DotNetTool)</_TestRunner>
+      <_TestRunner Condition="'$(_TestRuntime)' == 'Core' and '$(_UseDefaultDotNetRunCommand)' == 'true' and '$(_TestArchitecture)' != '$(_DotNetToolArchitecture)' and Exists('$(_ArchitectureSpecificDotNetTool)')">$(_ArchitectureSpecificDotNetTool)</_TestRunner>
       <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' != 'true'">%(TestToRun.RunArguments) $(_TestRunnerAdditionalArguments) -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)" -trx "%(TestToRun.ResultsTrxPath)"</_TestRunnerArgs>
       <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' == 'true'">%(TestToRun.RunArguments) $(_TestRunnerAdditionalArguments) --results-directory "$(_TestResultDirectory)" --report-xunit-xml --report-xunit-xml-filename "$(_TestResultXmlFileName)" --report-xunit-html --report-xunit-html-filename "$(_TestResultHtmlFileName)" --report-trx --report-trx-filename "$(_TestResultTrxFileName)"</_TestRunnerArgs>
 
@@ -33,6 +42,9 @@
       <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' != 'true'">$(_TestRunnerArgs) -noAutoReporters</_TestRunnerArgs>
       <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' == 'true'">$(_TestRunnerArgs) --auto-reporters off</_TestRunnerArgs>
     </PropertyGroup>
+
+    <Error Condition="'$(_TestRuntime)' == 'Core' and '$(_UseDefaultDotNetRunCommand)' == 'true' and '$(_TestArchitecture)' != '$(_DotNetToolArchitecture)' and !Exists('$(_ArchitectureSpecificDotNetTool)')"
+           Text="Test architecture '$(_TestArchitecture)' requires a matching dotnet host at '$(_ArchitectureSpecificDotNetTool)', but that host is not installed. Set DotNetRoot when DotNetTool does not identify its installation root." />
 
     <PropertyGroup>
       <_TestRunnerCommand>"$(_TestRunner)" $(_TestRunnerArgs)</_TestRunnerCommand>
