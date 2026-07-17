@@ -98,11 +98,31 @@ stages:
     - task: NuGetAuthenticate@1
       displayName: 'Authenticate to AzDO Feeds'
 
-    - task: PowerShell@2
-      displayName: Enable cross-org publishing
+    - task: AzureCLI@2
+      displayName: Get AzDO feed publish token
+      name: GetFeedToken
       inputs:
-        filePath: $(System.DefaultWorkingDirectory)/eng/common/enable-cross-org-publishing.ps1
-        arguments: -token $(dn-bot-all-orgs-artifact-feeds-rw)
+        azureSubscription: dnceng-artifact-feeds-publish
+        addSpnToEnvironment: true
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          # Diagnostic (non-secret): log which identity/tenant is federating so that a missing
+          # service connection or a misconfigured federated identity credential (FIC) on the
+          # backing app registration is immediately visible in the build logs.
+          Write-Host "Acquiring AzDO feed publish token via service connection 'dnceng-artifact-feeds-publish'."
+          Write-Host "  Service principal (client) id: $($env:servicePrincipalId)"
+          Write-Host "  Tenant id: $($env:tenantId)"
+          $feedToken = az account get-access-token --resource "499b84ac-1321-427f-aa17-267ca6975798" --query accessToken -o tsv
+          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($feedToken)) {
+            Write-Error ("Failed to acquire an AzDO feed publish token from the 'dnceng-artifact-feeds-publish' service connection (az exit code $LASTEXITCODE). " +
+              "This usually means the service connection does not exist in this organization, or its federated identity credential is not configured on the " +
+              "backing app registration for this org. The Build Promotion Pipeline runs in both dnceng and devdiv, so the service connection (and a matching FIC) " +
+              "must exist in each org. See https://aka.ms/yamlauthz.")
+            exit 1
+          }
+          Write-Host "Successfully acquired AzDO feed publish token."
+          Write-Host "##vso[task.setvariable variable=AzDoFeedToken;isOutput=true;issecret=true]$feedToken"
 
     - task: AzureCLI@2
       displayName: Get aka.ms client certificate
@@ -150,7 +170,7 @@ stages:
           /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
           /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/'
           /p:PublishInstallersAndChecksums=true
-          /p:AzureDevOpsFeedsKey='$(dn-bot-all-orgs-artifact-feeds-rw)'
+          /p:AzureDevOpsFeedsKey='$(GetFeedToken.AzDoFeedToken)'
           /p:AkaMSClientId=$(akams-app-id)
           /p:AkaMSClientCertificate=$(Agent.TempDirectory)/akamsclientcert.pfx
           ${{ parameters.artifactsPublishingAdditionalParameters }} 
