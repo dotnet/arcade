@@ -175,12 +175,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     var feedType = feed.StartsWith("https://pkgs.dev.azure.com")
                         ? FeedType.AzDoNugetFeed : FeedType.AzureStorageContainer;
 
-                    // If no key is specified for AzDo NuGet feeds, the publisher will attempt to fall
-                    // back to Entra-based authentication using DefaultIdentityTokenCredential.
+                    // If no SAS is specified, then the default azure credential will be used.
                     if (feedType == FeedType.AzDoNugetFeed && string.IsNullOrEmpty(key))
                     {
-                        Log?.LogMessage(Microsoft.Build.Framework.MessageImportance.Normal,
-                            $"No key found for {feed}; will attempt Entra-based authentication.");
+                        Log?.LogError($"No key found for {feed}, unable to publish to it.");
+                        continue;
                     }
 
                     yield return new TargetFeedConfig(
