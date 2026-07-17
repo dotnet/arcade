@@ -395,6 +395,10 @@ tools:
     - "uniq"
     - "ls"
     - "find"
+    # binlog-mcp is also mounted as a CLI wrapper (…/mcp-cli/bin/binlog-mcp);
+    # allow it so the agent can query the binlogs via the wrapper when it does
+    # not call the MCP tool natively.
+    - "binlog-mcp:*"
 
 safe-outputs:
   messages:
