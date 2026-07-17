@@ -44,7 +44,12 @@ of read-only `shell` commands (including `cat`).
      `GH_AW_BINLOG_DIR` = `/data/binlogs`) and query the `binlog-mcp` MCP
      server (`binlog_errors`, `binlog_overview`, `binlog_warnings`, …) with
      `binlog_file` set to each leg's path — a failure usually surfaces in only
-     one leg, so do not analyse just the first. If no leg shows errors **and**
+     one leg, so do not analyse just the first. `binlog_errors`,
+     `binlog_overview`, `binlog_warnings`, … are **MCP tools** provided by the
+     `binlog-mcp` server: call them **directly as tools** (with a `binlog_file`
+     argument). `binlog-mcp` is **not** a shell/bash executable — never invoke
+     it via the `shell` tool (the shell allowlist excludes it and such calls
+     are denied). If no leg shows errors **and**
      no failed-target/process evidence, the build compiled cleanly — the
      pipeline failure is then a **non-build** (test/Helix/publishing) failure,
      which is **out of scope**. This workflow analyses build failures only, so
