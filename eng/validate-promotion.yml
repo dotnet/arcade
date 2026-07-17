@@ -45,6 +45,15 @@ jobs:
           $azdoToken = az account get-access-token --resource "499b84ac-1321-427f-aa17-267ca6975798" --query accessToken -o tsv
           if ($LASTEXITCODE -ne 0) { Write-Error "Failed to get AzDO token"; exit 1 }
           Write-Host "##vso[task.setvariable variable=WifAzDoToken;issecret=true]$azdoToken"
+    # Fail fast before the (expensive) test promotion if the feed-publish service connection is
+    # missing or not ready in any org the Build Promotion Pipeline runs in (dnceng AND devdiv).
+    - task: PowerShell@2
+      displayName: Validate feed-publish service connections (all orgs)
+      inputs:
+        targetType: filePath
+        filePath: $(System.DefaultWorkingDirectory)/eng/validation/validate-feed-publish-connections.ps1
+        arguments: >
+          -AzdoToken $(WifAzDoToken)
     - task: AzureCLI@2
       displayName: Validate promotion with the newly built Arcade
       inputs:
