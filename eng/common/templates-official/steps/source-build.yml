@@ -30,7 +30,9 @@ steps:
     if [ '$(dn-bot-dnceng-artifact-feeds-rw)' != '$''(dn-bot-dnceng-artifact-feeds-rw)' ]; then
       # Temporarily work around https://github.com/dotnet/arcade/issues/7709
       chmod +x $(System.DefaultWorkingDirectory)/eng/common/SetupNugetSources.sh
-      $(System.DefaultWorkingDirectory)/eng/common/SetupNugetSources.sh $(System.DefaultWorkingDirectory)/NuGet.config $(dn-bot-dnceng-artifact-feeds-rw)
+      # Authenticate to internal feeds using the build identity (System.AccessToken) instead of the
+      # dn-bot-dnceng-artifact-feeds-rw PAT, which has been retired as part of the PAT-to-Entra migration.
+      $(System.DefaultWorkingDirectory)/eng/common/SetupNugetSources.sh $(System.DefaultWorkingDirectory)/NuGet.config $(System.AccessToken)
       internalRestoreArgs='/p:CopyWipIntoInnerSourceBuildRepo=true'
 
       # The 'Copy WIP' feature of source build uses git stash to apply changes from the original repo.
