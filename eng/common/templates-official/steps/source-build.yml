@@ -27,19 +27,20 @@ steps:
     # This is because SetupNuGetSources.sh will alter the current NuGet.config file, and we need to preserve those
     # changes.
     internalRestoreArgs=
+    # Disable xtrace while evaluating the internal-feeds guard and handling credentials so that neither the
+    # retired dn-bot-dnceng-artifact-feeds-rw variable value nor the build identity token (System.AccessToken)
+    # is echoed to the logs (set -x prints expanded conditions and argv).
+    set +x
     if [ '$(dn-bot-dnceng-artifact-feeds-rw)' != '$''(dn-bot-dnceng-artifact-feeds-rw)' ]; then
       # Temporarily work around https://github.com/dotnet/arcade/issues/7709
       chmod +x $(System.DefaultWorkingDirectory)/eng/common/SetupNugetSources.sh
       # Authenticate to internal feeds using the build identity (System.AccessToken) instead of the
       # dn-bot-dnceng-artifact-feeds-rw PAT, which has been retired as part of the PAT-to-Entra migration.
-      # Disable xtrace around the invocation so the access token isn't echoed to the logs (set -x prints argv).
-      set +x
-      if [ -n "$(System.AccessToken)" ]; then
-        "$(System.DefaultWorkingDirectory)/eng/common/SetupNugetSources.sh" "$(System.DefaultWorkingDirectory)/NuGet.config" "$(System.AccessToken)"
-      else
-        echo "##vso[task.logissue type=warning]System.AccessToken is empty; skipping internal feed credential setup."
+      if [ -z "$(System.AccessToken)" ]; then
+        echo "##vso[task.logissue type=error]System.AccessToken is empty; cannot authenticate to internal feeds for source-build."
+        exit 1
       fi
-      set -x
+      "$(System.DefaultWorkingDirectory)/eng/common/SetupNugetSources.sh" "$(System.DefaultWorkingDirectory)/NuGet.config" "$(System.AccessToken)"
       internalRestoreArgs='/p:CopyWipIntoInnerSourceBuildRepo=true'
 
       # The 'Copy WIP' feature of source build uses git stash to apply changes from the original repo.
@@ -50,6 +51,7 @@ steps:
         git config user.name dn-bot
       fi
     fi
+    set -x
 
     # If building on the internal project, the internal storage variable may be available (usually only if needed)
     # In that case, add variables to allow the download of internal runtimes if the specified versions are not found
