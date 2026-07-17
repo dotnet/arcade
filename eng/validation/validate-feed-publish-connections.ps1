@@ -33,8 +33,9 @@ $disableConfigureToolsetImport = $true
 $headers = @{ Authorization = "Bearer $AzdoToken" }
 $failures = @()
 
+$encodedEndpointName = [uri]::EscapeDataString($EndpointName)
 foreach ($orgProject in $Organizations) {
-  $uri = "https://dev.azure.com/$orgProject/_apis/serviceendpoint/endpoints?endpointNames=$EndpointName&api-version=7.1-preview.4"
+  $uri = "https://dev.azure.com/$orgProject/_apis/serviceendpoint/endpoints?endpointNames=$encodedEndpointName&api-version=7.1-preview.4"
   Write-Host "Checking service connection '$EndpointName' in '$orgProject'..."
   try {
     $resp = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get

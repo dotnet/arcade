@@ -963,7 +963,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 // AAD access tokens are JWTs (three dot-separated segments) and must be sent as Bearer.
                 // Personal access tokens (PATs) are opaque strings and use Basic auth.
-                bool tokenIsJwt = effectiveToken.Split('.').Length == 3;
+                // RemoveEmptyEntries so malformed values like ".." are not misclassified as JWTs.
+                bool tokenIsJwt = effectiveToken.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries).Length == 3;
                 client.DefaultRequestHeaders.Authorization = tokenIsJwt
                     ? new AuthenticationHeaderValue("Bearer", effectiveToken)
                     : new AuthenticationHeaderValue(

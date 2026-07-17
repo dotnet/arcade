@@ -121,11 +121,11 @@ stages:
               "must exist in each org. See https://aka.ms/yamlauthz.")
             exit 1
           }
-          # Assert the acquired token is a well-formed JWT (three dot-separated segments).
+          # Assert the acquired token is a well-formed JWT (three non-empty dot-separated segments).
           # AzureDevOpsNugetFeedAssetPublisher selects Bearer vs Basic auth by exactly this check
-          # (_accessToken.Split('.').Length == 3); a non-JWT here would silently fall back to Basic
-          # (PAT) auth downstream and fail to publish, so fail fast with a clear message instead.
-          if ($feedToken.Split('.').Length -ne 3) {
+          # (three non-empty segments); a non-JWT here would silently fall back to Basic (PAT) auth
+          # downstream and fail to publish, so fail fast with a clear message instead.
+          if ($feedToken.Split([string[]]('.'), [System.StringSplitOptions]::RemoveEmptyEntries).Length -ne 3) {
             Write-Error ("The token returned by the 'dnceng-artifact-feeds-publish' service connection is not a JWT (expected three '.'-separated segments). " +
               "Downstream publishing (AzureDevOpsNugetFeedAssetPublisher) would incorrectly treat it as a PAT and fail. " +
               "Verify the service connection is an Entra/WIF (azurerm) connection, not a PAT-based one.")

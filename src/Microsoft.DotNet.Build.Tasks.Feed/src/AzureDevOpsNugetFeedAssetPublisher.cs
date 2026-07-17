@@ -55,7 +55,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 // AAD access tokens are JWTs (three dot-separated segments) and must be sent as Bearer.
                 // Personal access tokens (PATs) are opaque strings and use Basic auth.
-                bool tokenIsJwt = _accessToken.Split('.').Length == 3;
+                // RemoveEmptyEntries so malformed values like ".." are not misclassified as JWTs.
+                bool tokenIsJwt = _accessToken.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries).Length == 3;
                 _httpClient.DefaultRequestHeaders.Authorization = tokenIsJwt
                     ? new AuthenticationHeaderValue("Bearer", _accessToken)
                     : new AuthenticationHeaderValue(
