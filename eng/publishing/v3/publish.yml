@@ -99,42 +99,6 @@ stages:
       displayName: 'Authenticate to AzDO Feeds'
 
     - task: AzureCLI@2
-      displayName: Get AzDO feed publish token
-      name: GetFeedToken
-      inputs:
-        azureSubscription: dnceng-artifact-feeds-publish
-        addSpnToEnvironment: true
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
-          # Diagnostic (non-secret): log which identity/tenant is federating so that a missing
-          # service connection or a misconfigured federated identity credential (FIC) on the
-          # backing app registration is immediately visible in the build logs.
-          Write-Host "Acquiring AzDO feed publish token via service connection 'dnceng-artifact-feeds-publish'."
-          Write-Host "  Service principal (client) id: $($env:servicePrincipalId)"
-          Write-Host "  Tenant id: $($env:tenantId)"
-          $feedToken = az account get-access-token --resource "499b84ac-1321-427f-aa17-267ca6975798" --query accessToken -o tsv
-          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($feedToken)) {
-            Write-Error ("Failed to acquire an AzDO feed publish token from the 'dnceng-artifact-feeds-publish' service connection (az exit code $LASTEXITCODE). " +
-              "This usually means the service connection does not exist in this organization, or its federated identity credential is not configured on the " +
-              "backing app registration for this org. The Build Promotion Pipeline runs in both dnceng and devdiv, so the service connection (and a matching FIC) " +
-              "must exist in each org. See https://aka.ms/yamlauthz.")
-            exit 1
-          }
-          # Assert the acquired token is a well-formed JWT (three non-empty dot-separated segments).
-          # AzureDevOpsNugetFeedAssetPublisher selects Bearer vs Basic auth by exactly this check
-          # (three non-empty segments); a non-JWT here would silently fall back to Basic (PAT) auth
-          # downstream and fail to publish, so fail fast with a clear message instead.
-          if ($feedToken.Split([string[]]('.'), [System.StringSplitOptions]::RemoveEmptyEntries).Length -ne 3) {
-            Write-Error ("The token returned by the 'dnceng-artifact-feeds-publish' service connection is not a JWT (expected three '.'-separated segments). " +
-              "Downstream publishing (AzureDevOpsNugetFeedAssetPublisher) would incorrectly treat it as a PAT and fail. " +
-              "Verify the service connection is an Entra/WIF (azurerm) connection, not a PAT-based one.")
-            exit 1
-          }
-          Write-Host "Successfully acquired AzDO feed publish token (validated as JWT)."
-          Write-Host "##vso[task.setvariable variable=AzDoFeedToken;isOutput=true;issecret=true]$feedToken"
-
-    - task: AzureCLI@2
       displayName: Get aka.ms client certificate
       inputs:
         azureSubscription: 'DotNet-Engineering-Services_KeyVault'
@@ -180,7 +144,6 @@ stages:
           /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
           /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/'
           /p:PublishInstallersAndChecksums=true
-          /p:AzureDevOpsFeedsKey='$(GetFeedToken.AzDoFeedToken)'
           /p:AkaMSClientId=$(akams-app-id)
           /p:AkaMSClientCertificate=$(Agent.TempDirectory)/akamsclientcert.pfx
           ${{ parameters.artifactsPublishingAdditionalParameters }} 
