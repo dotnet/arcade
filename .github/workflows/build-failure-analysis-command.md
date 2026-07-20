@@ -257,14 +257,17 @@ jobs:
             # then extract `*.binlog` entries *preserving* their in-archive
             # paths (no `-j`) under a fresh dir + timeout, so two binlogs that
             # share a basename in different folders don't overwrite each other.
-            # List entries under a `timeout` and FAIL CLOSED if the listing
-            # errors or times out — otherwise an empty result from a hostile
-            # archive would make the `grep` match nothing and wrongly proceed.
-            entries=$(timeout 60 unzip -Z1 /tmp/a.zip 2>/dev/null); entries_rc=$?
-            if [ "${entries_rc}" -ne 0 ]; then
-              echo "::warning::Skipping ${name}: could not list archive entries (unzip -Z1 error/timeout rc=${entries_rc})."; continue
+            # Stream the entry listing through `grep` under a `timeout` (no full
+            # in-memory buffer of entry names, which a many-entry archive could
+            # bloat) and use PIPESTATUS to separate the failure modes: a
+            # non-zero listing exit (error/timeout) FAILS CLOSED; a grep match
+            # means a suspicious absolute/`..` path.
+            timeout 60 unzip -Z1 /tmp/a.zip 2>/dev/null | grep -qE '(^/|(^|/)\.\.(/|$))'
+            zscan_rc=("${PIPESTATUS[@]}")
+            if [ "${zscan_rc[0]}" -ne 0 ]; then
+              echo "::warning::Skipping ${name}: could not list archive entries (unzip -Z1 rc=${zscan_rc[0]})."; continue
             fi
-            if printf '%s' "${entries}" | grep -qE '(^/|(^|/)\.\.(/|$))'; then
+            if [ "${zscan_rc[1]}" -eq 0 ]; then
               echo "::warning::Skipping ${name}: archive has a suspicious (absolute or ..) entry path."; continue
             fi
             timeout 120 unzip -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 \
