@@ -961,15 +961,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string effectiveToken = tokenOverride ?? AzdoApiToken;
             if (!string.IsNullOrEmpty(effectiveToken))
             {
-                // AAD access tokens are JWTs (three dot-separated segments) and must be sent as Bearer.
-                // Personal access tokens (PATs) are opaque strings and use Basic auth.
-                // RemoveEmptyEntries so malformed values like ".." are not misclassified as JWTs.
-                bool tokenIsJwt = effectiveToken.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries).Length == 3;
-                client.DefaultRequestHeaders.Authorization = tokenIsJwt
-                    ? new AuthenticationHeaderValue("Bearer", effectiveToken)
-                    : new AuthenticationHeaderValue(
-                        "Basic",
-                        Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", effectiveToken))));
+                client.DefaultRequestHeaders.Authorization = CreateAzdoAuthHeader(effectiveToken);
             }
             else
             {
@@ -1001,6 +993,22 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             return client;
+        }
+
+        /// <summary>
+        /// Builds the Authorization header used for Azure DevOps REST calls based on the shape of the token.
+        /// AAD/Entra access tokens are JWTs (three non-empty dot-separated segments) and must be sent as Bearer.
+        /// Personal access tokens (PATs) are opaque strings and use Basic auth. RemoveEmptyEntries ensures
+        /// malformed values like ".." are not misclassified as JWTs.
+        /// </summary>
+        internal static AuthenticationHeaderValue CreateAzdoAuthHeader(string token)
+        {
+            bool tokenIsJwt = token.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries).Length == 3;
+            return tokenIsJwt
+                ? new AuthenticationHeaderValue("Bearer", token)
+                : new AuthenticationHeaderValue(
+                    "Basic",
+                    Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", token))));
         }
 
         /// <summary>
