@@ -302,12 +302,16 @@ jobs:
             if [ "${ZIP_BYTES}" -gt "${MAX_ZIP_BYTES}" ]; then
               echo "::warning::Skipping ${name}: download exceeded ${MAX_ZIP_BYTES} bytes."; continue
             fi
-            UNCOMP=$(unzip -l /tmp/a.zip 2>/dev/null | tail -1 | awk '{print $1}')
+            # Bound the listing with `timeout` so a hostile/huge archive can't
+            # hang the runner during `unzip -l`; a timeout yields empty/partial
+            # output that fails the numeric check below and is skipped.
+            UNCOMP=$(timeout 60 unzip -l /tmp/a.zip 2>/dev/null | tail -1 | awk '{print $1}')
             # Fail safe: if the uncompressed size isn't a plain integer (corrupt
-            # zip / unexpected `unzip -l` output), we can't verify it — skip the
-            # artifact rather than let a non-numeric value bypass the `-gt` guard.
+            # zip / unexpected or timed-out `unzip -l` output), we can't verify
+            # it — skip the artifact rather than let a non-numeric value bypass
+            # the `-gt` guard.
             if ! printf '%s' "${UNCOMP}" | grep -qE '^[0-9]+$'; then
-              echo "::warning::Skipping ${name}: could not determine uncompressed size (unparseable unzip output)."; continue
+              echo "::warning::Skipping ${name}: could not determine uncompressed size (unparseable/timed-out unzip output)."; continue
             fi
             # ZIP64 uncompressed sizes can reach ~20 digits — beyond Bash's
             # signed 64-bit range, where `-gt` (and the cumulative `$((...))`
@@ -329,7 +333,14 @@ jobs:
             # then extract `*.binlog` entries *preserving* their in-archive
             # paths (no `-j`) under a fresh dir + timeout, so two binlogs that
             # share a basename in different folders don't overwrite each other.
-            if unzip -Z1 /tmp/a.zip 2>/dev/null | grep -qE '(^/|(^|/)\.\.(/|$))'; then
+            # List entries under a `timeout` and FAIL CLOSED if the listing
+            # errors or times out — otherwise an empty result from a hostile
+            # archive would make the `grep` match nothing and wrongly proceed.
+            entries=$(timeout 60 unzip -Z1 /tmp/a.zip 2>/dev/null); entries_rc=$?
+            if [ "${entries_rc}" -ne 0 ]; then
+              echo "::warning::Skipping ${name}: could not list archive entries (unzip -Z1 error/timeout rc=${entries_rc})."; continue
+            fi
+            if printf '%s' "${entries}" | grep -qE '(^/|(^|/)\.\.(/|$))'; then
               echo "::warning::Skipping ${name}: archive has a suspicious (absolute or ..) entry path."; continue
             fi
             timeout 120 unzip -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 \
