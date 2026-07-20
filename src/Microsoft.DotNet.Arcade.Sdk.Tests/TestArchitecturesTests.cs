@@ -191,7 +191,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                                 new XAttribute("Lines", "@(TestToRun->'%(Architecture)|%(BuiltTestArchitecture)')")))));
                 projectDocument.Save(projectPath);
 
-                var projectCollection = new ProjectCollection();
+                using var projectCollection = new ProjectCollection();
                 try
                 {
                     Project project = projectCollection.LoadProject(projectPath);
