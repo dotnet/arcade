@@ -54,7 +54,7 @@ steps:
       internalRuntimeDownloadArgs='/p:DotNetRuntimeSourceFeed=https://ci.dot.net/internal /p:DotNetRuntimeSourceFeedKey=$(dotnetbuilds-internal-container-read-token-base64) --runtimesourcefeed https://ci.dot.net/internal --runtimesourcefeedkey $(dotnetbuilds-internal-container-read-token-base64)'
     fi
 
-    # Enable command tracing now that all secret handling is complete.
+    # Enable command tracing for the build-argument assembly below (no secrets are evaluated here).
     set -x
 
     buildConfig=Release
@@ -93,6 +93,9 @@ steps:
       assetManifestFileName=SourceBuild_${{ parameters.platform.name }}.xml
     fi
 
+    # internalRuntimeDownloadArgs embeds the dotnetbuilds-internal-container-read-token-base64 secret,
+    # so disable tracing before the build invocation so the token isn't echoed via xtrace.
+    set +x
     ${{ coalesce(parameters.platform.buildScript, './build.sh') }} --ci \
       --configuration $buildConfig \
       --restore --build --pack $publishArgs -bl \
