@@ -18,7 +18,6 @@ parameters:
 steps:
 # Build. Keep it self-contained for simple reusability. (No source-build-specific job variables.)
 - script: |
-    set -x
     df -h
 
     # If building on the internal project, the artifact feeds variable may be available (usually only if needed)
@@ -27,15 +26,10 @@ steps:
     # This is because SetupNuGetSources.sh will alter the current NuGet.config file, and we need to preserve those
     # changes.
     internalRestoreArgs=
-    # Disable xtrace while evaluating the internal-feeds guard and handling credentials so that neither the
-    # retired dn-bot-dnceng-artifact-feeds-rw variable value nor the build identity token (System.AccessToken)
-    # is echoed to the logs (set -x prints expanded conditions and argv).
-    set +x
     if [ '$(dn-bot-dnceng-artifact-feeds-rw)' != '$''(dn-bot-dnceng-artifact-feeds-rw)' ]; then
       # Temporarily work around https://github.com/dotnet/arcade/issues/7709
       chmod +x $(System.DefaultWorkingDirectory)/eng/common/SetupNugetSources.sh
-      # Authenticate to internal feeds using the build identity (System.AccessToken) instead of the
-      # dn-bot-dnceng-artifact-feeds-rw PAT, which has been retired as part of the PAT-to-Entra migration.
+      # Authenticate to internal feeds using the build identity (System.AccessToken)
       if [ -z "$(System.AccessToken)" ]; then
         echo "##vso[task.logissue type=error]System.AccessToken is empty; cannot authenticate to internal feeds for source-build."
         exit 1
@@ -51,7 +45,6 @@ steps:
         git config user.name dn-bot
       fi
     fi
-    set -x
 
     # If building on the internal project, the internal storage variable may be available (usually only if needed)
     # In that case, add variables to allow the download of internal runtimes if the specified versions are not found
@@ -60,6 +53,9 @@ steps:
     if [ '$(dotnetbuilds-internal-container-read-token-base64)' != '$''(dotnetbuilds-internal-container-read-token-base64)' ]; then
       internalRuntimeDownloadArgs='/p:DotNetRuntimeSourceFeed=https://ci.dot.net/internal /p:DotNetRuntimeSourceFeedKey=$(dotnetbuilds-internal-container-read-token-base64) --runtimesourcefeed https://ci.dot.net/internal --runtimesourcefeedkey $(dotnetbuilds-internal-container-read-token-base64)'
     fi
+
+    # Enable command tracing now that all secret handling is complete.
+    set -x
 
     buildConfig=Release
     # Check if AzDO substitutes in a build config from a variable, and use it if so.
