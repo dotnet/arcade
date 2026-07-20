@@ -996,22 +996,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         /// <summary>
-        /// Builds the Authorization header used for Azure DevOps REST calls based on the shape of the token.
-        /// AAD/Entra access tokens are JWTs (three non-empty dot-separated segments) and must be sent as Bearer.
-        /// Personal access tokens (PATs) are opaque strings and use Basic auth. RemoveEmptyEntries ensures
-        /// malformed values like ".." are not misclassified as JWTs.
-        /// </summary>
-        internal static AuthenticationHeaderValue CreateAzdoAuthHeader(string token)
-        {
-            bool tokenIsJwt = token.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries).Length == 3;
-            return tokenIsJwt
-                ? new AuthenticationHeaderValue("Bearer", token)
-                : new AuthenticationHeaderValue(
-                    "Basic",
-                    Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", token))));
-        }
-
-        /// <summary>
         /// Checks whether Entra-based credentials are available in the current environment.
         /// Returns true if running inside an AzureCLI@2 task (AzurePipelinesCredential),
         /// or if a ManagedIdentityClientId is configured.

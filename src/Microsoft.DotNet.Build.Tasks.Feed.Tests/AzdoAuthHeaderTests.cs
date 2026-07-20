@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [InlineData("header.payload.signature")]
         public void JwtTokensUseBearer(string token)
         {
-            var header = PublishArtifactsInManifestBase.CreateAzdoAuthHeader(token);
+            var header = GeneralUtils.CreateAzdoAuthHeader(token);
 
             header.Scheme.Should().Be("Bearer");
             header.Parameter.Should().Be(token);
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [InlineData("a..b")]                        // only two non-empty segments
         public void OpaqueOrMalformedTokensUseBasic(string token)
         {
-            var header = PublishArtifactsInManifestBase.CreateAzdoAuthHeader(token);
+            var header = GeneralUtils.CreateAzdoAuthHeader(token);
 
             header.Scheme.Should().Be("Basic");
             header.Parameter.Should().Be(Basic(token));

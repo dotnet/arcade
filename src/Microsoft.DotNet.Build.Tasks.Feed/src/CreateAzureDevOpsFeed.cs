@@ -137,9 +137,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         client.DefaultRequestHeaders.Add(
                             "Accept",
                             $"application/json;api-version={AzureDevOpsFeedsApiVersion}");
-                        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                            "Basic",
-                            Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", AzureDevOpsPersonalAccessToken))));
+                        client.DefaultRequestHeaders.Authorization = GeneralUtils.CreateAzdoAuthHeader(AzureDevOpsPersonalAccessToken);
 
                         AzureDevOpsArtifactFeed newFeed = new AzureDevOpsArtifactFeed(versionedFeedName, AzureDevOpsOrg, AzureDevOpsProject);
 
