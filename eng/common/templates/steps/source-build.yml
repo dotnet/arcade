@@ -34,8 +34,7 @@ steps:
     if [ '$(dn-bot-dnceng-artifact-feeds-rw)' != '$''(dn-bot-dnceng-artifact-feeds-rw)' ]; then
       # Temporarily work around https://github.com/dotnet/arcade/issues/7709
       chmod +x $(System.DefaultWorkingDirectory)/eng/common/SetupNugetSources.sh
-      # Authenticate to internal feeds using the build identity (System.AccessToken) instead of the
-      # dn-bot-dnceng-artifact-feeds-rw PAT, which has been retired as part of the PAT-to-Entra migration.
+      # Authenticate to internal feeds using the build identity (System.AccessToken)
       if [ -z "$(System.AccessToken)" ]; then
         echo "##vso[task.logissue type=error]System.AccessToken is empty; cannot authenticate to internal feeds for source-build."
         exit 1
