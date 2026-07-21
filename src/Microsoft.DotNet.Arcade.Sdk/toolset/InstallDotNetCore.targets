@@ -22,7 +22,7 @@
       VersionsPropsPath="$(RepositoryEngineeringDir)Versions.props"
       RuntimeSourceFeed="$(DotNetRuntimeSourceFeed)"
       RuntimeSourceFeedKey="$(DotNetRuntimeSourceFeedKey)"
-      SkipRuntimesInstall="$(SkipRuntimesInstall) />
+      SkipRuntimesInstall="$(SkipRuntimesInstall)" />
   </Target>
 
 </Project>
