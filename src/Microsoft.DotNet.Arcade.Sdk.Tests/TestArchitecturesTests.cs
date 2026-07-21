@@ -15,10 +15,9 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
     public class TestArchitecturesTests
     {
         private static readonly string s_toolsDirectory = Path.Combine(
-            FindRepoRoot(),
-            "src",
-            "Microsoft.DotNet.Arcade.Sdk",
-            "tools");
+            AppContext.BaseDirectory,
+            "testassets",
+            "ArcadeSdkTools");
 
         [Fact]
         public void VSTestPassesRequestedArchitectureToDotNetTest()
@@ -218,31 +217,6 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
 
         private static XDocument LoadTargets(params string[] path) =>
             XDocument.Load(Path.Combine(new[] { s_toolsDirectory }.Concat(path).ToArray()));
-
-        private static string FindRepoRoot()
-        {
-            for (string directory = AppContext.BaseDirectory;
-                 directory != null;
-                 directory = Path.GetDirectoryName(directory))
-            {
-                if (Directory.Exists(Path.Combine(directory, "src", "Microsoft.DotNet.Arcade.Sdk")))
-                {
-                    return directory;
-                }
-            }
-
-            for (string directory = Directory.GetCurrentDirectory();
-                 directory != null;
-                 directory = Path.GetDirectoryName(directory))
-            {
-                if (Directory.Exists(Path.Combine(directory, "src", "Microsoft.DotNet.Arcade.Sdk")))
-                {
-                    return directory;
-                }
-            }
-
-            throw new InvalidOperationException("Unable to locate the Arcade repository root.");
-        }
 
         private sealed class ErrorLogger : ILogger
         {
