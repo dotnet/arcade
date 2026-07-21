@@ -60,8 +60,6 @@
       <_BuiltTestArchitecture>$(_BuiltTestArchitecture.ToLowerInvariant())</_BuiltTestArchitecture>
 
       <_DefaultTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(UseAppHost)' == 'true'">$(_BuiltTestArchitecture)</_DefaultTestArchitecture>
-      <_DefaultTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(_DefaultTestArchitecture)' == '' and '$(RuntimeIdentifier)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(RuntimeIdentifier)', '[^-]+$').Value)</_DefaultTestArchitecture>
-      <_DefaultTestArchitecture Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(_DefaultTestArchitecture)' == '' and '$(PlatformTarget)' != '' and '$(PlatformTarget)' != 'AnyCpu'">$(PlatformTarget)</_DefaultTestArchitecture>
       <_DefaultTestArchitecture Condition="'$(_DefaultTestArchitecture)' == ''">$(_DotNetToolArchitecture)</_DefaultTestArchitecture>
       <_DefaultTestArchitecture>$(_DefaultTestArchitecture.ToLowerInvariant())</_DefaultTestArchitecture>
 

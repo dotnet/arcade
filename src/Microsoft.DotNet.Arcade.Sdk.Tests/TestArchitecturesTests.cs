@@ -150,7 +150,25 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
         }
 
         [Fact]
-        public void AppHostArchitectureDrivesDefaultTestArchitecture()
+        public void AppHostArchitectureDrivesDefaultTestArchitecture() =>
+            Assert.Equal("x86|x86", CaptureArchitectures(
+                useAppHost: true,
+                appHostRuntimeIdentifier: "win-x86"));
+
+        [Fact]
+        public void FrameworkDependentTestsDefaultToDotNetToolArchitecture() =>
+            Assert.Equal("arm64|arm64", CaptureArchitectures(
+                useAppHost: false,
+                runtimeIdentifier: "win-x86",
+                platformTarget: "x86",
+                dotNetToolArchitecture: "arm64"));
+
+        private static string CaptureArchitectures(
+            bool useAppHost,
+            string appHostRuntimeIdentifier = "",
+            string runtimeIdentifier = "",
+            string platformTarget = "",
+            string dotNetToolArchitecture = "")
         {
             string tempDirectory = Path.Combine(Path.GetTempPath(), "arcade", Path.GetRandomFileName());
             string projectPath = Path.Combine(tempDirectory, "TestArchitectures.proj");
@@ -172,8 +190,11 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                             new XElement("ArtifactsTestResultsDir", tempDirectory + Path.DirectorySeparatorChar),
                             new XElement("ArtifactsLogDir", tempDirectory + Path.DirectorySeparatorChar),
                             new XElement("RepositoryEngineeringDir", Path.Combine(tempDirectory, "eng") + Path.DirectorySeparatorChar),
-                            new XElement("UseAppHost", "true"),
-                            new XElement("AppHostRuntimeIdentifier", "win-x86")),
+                            new XElement("UseAppHost", useAppHost),
+                            new XElement("AppHostRuntimeIdentifier", appHostRuntimeIdentifier),
+                            new XElement("RuntimeIdentifier", runtimeIdentifier),
+                            new XElement("PlatformTarget", platformTarget),
+                            new XElement("DotNetToolArchitecture", dotNetToolArchitecture)),
                         new XElement("UsingTask",
                             new XAttribute("TaskName", "Microsoft.Build.Tasks.WriteLinesToFile"),
                             new XAttribute("AssemblyFile", typeof(Microsoft.Build.Tasks.WriteLinesToFile).Assembly.Location)),
@@ -202,7 +223,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                     projectCollection.UnloadAllProjects();
                 }
 
-                Assert.Equal("x86|x86", File.ReadAllText(outputPath).Trim());
+                return File.ReadAllText(outputPath).Trim();
             }
             finally
             {
