@@ -309,9 +309,14 @@ jobs:
               echo "::warning::Skipping ${name}: download exceeded ${MAX_ZIP_BYTES} bytes."; continue
             fi
             # Bound the listing with `timeout` so a hostile/huge archive can't
-            # hang the runner during `unzip -l`; a timeout yields empty/partial
-            # output that fails the numeric check below and is skipped.
-            UNCOMP=$(timeout 60 unzip -l /tmp/a.zip 2>/dev/null | tail -1 | awk '{print $1}')
+            # hang the runner during `unzip -l`. Run the pipeline in a subshell
+            # with `pipefail` and FAIL CLOSED on a non-zero exit: if `timeout`
+            # kills `unzip -l`, its partial output can still end in a numeric
+            # column and undercount the total, bypassing the size guard below —
+            # so a failed/timed-out listing skips the artifact rather than
+            # trusting the parsed value.
+            UNCOMP=$(set -o pipefail; timeout 60 unzip -l /tmp/a.zip 2>/dev/null | tail -1 | awk '{print $1}') \
+              || { echo "::warning::Skipping ${name}: 'unzip -l' failed or timed out; cannot verify uncompressed size."; continue; }
             # Fail safe: if the uncompressed size isn't a plain integer (corrupt
             # zip / unexpected or timed-out `unzip -l` output), we can't verify
             # it — skip the artifact rather than let a non-numeric value bypass
