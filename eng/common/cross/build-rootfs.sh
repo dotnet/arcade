@@ -8,7 +8,7 @@ usage()
     echo "BuildArch can be: arm(default), arm64, loongarch64, ppc64le, riscv64, s390x, x64, x86"
     echo "CodeName - optional, Code name for Linux, can be: xenial(default), zesty, bionic, alpine"
     echo "                               for alpine can be specified with version: alpineX.YY or alpineedge"
-    echo "                               for FreeBSD can be: freebsd13, freebsd14"
+    echo "                               for FreeBSD can be: freebsd14, freebsd15"
     echo "                               for OpenBSD can be: openbsd"
     echo "                               for illumos can be: illumos"
     echo "                               for Haiku can be: haiku."
@@ -78,9 +78,9 @@ __AlpinePackages+=" krb5-dev"
 __AlpinePackages+=" openssl-dev"
 __AlpinePackages+=" zlib-dev"
 
-__FreeBSDBase="13.5-RELEASE"
-__FreeBSDPkg="2.7.5"
-__FreeBSDABI="13"
+__FreeBSDBase="14.4-RELEASE"
+__FreeBSDPkg="2.8.0"
+__FreeBSDABI="14"
 __FreeBSDPackages="libunwind"
 __FreeBSDPackages+=" icu"
 __FreeBSDPackages+=" libinotify"
@@ -365,14 +365,14 @@ while :; do
                 __AlpineVersion="$__AlpineMajorVersion.$__AlpineMinorVersion"
             fi
             ;;
-        freebsd13)
+        freebsd14)
             __CodeName=freebsd
             __SkipUnmount=1
             ;;
-        freebsd14)
+        freebsd15)
             __CodeName=freebsd
-            __FreeBSDBase="14.3-RELEASE"
-            __FreeBSDABI="14"
+            __FreeBSDBase="15.1-RELEASE"
+            __FreeBSDABI="15"
             __SkipUnmount=1
             ;;
         openbsd)
@@ -453,9 +453,12 @@ case "$__AlpineVersion" in
         elif [[ "$__AlpineArch" == "x86" ]]; then
             __AlpineVersion=3.17 # minimum version that supports lldb-dev
             __AlpinePackages+=" llvm15-libs"
-        elif [[ "$__AlpineArch" == "riscv64" || "$__AlpineArch" == "loongarch64" ]]; then
+        elif [[ "$__AlpineArch" == "loongarch64" ]]; then
             __AlpineVersion=3.21 # minimum version that supports lldb-dev
             __AlpinePackages+=" llvm19-libs"
+        elif [[ "$__AlpineArch" == "riscv64" ]]; then
+            __AlpineVersion=3.22 # lldb-dev requires 3.21+, but 3.22+ provides the newer linux-headers needed for RISC-V extension probes
+            __AlpinePackages+=" llvm20-libs"
         elif [[ -n "$__AlpineMajorVersion" ]]; then
             # use whichever alpine version is provided and select the latest toolchain libs
             __AlpineLlvmLibsLookup=1
