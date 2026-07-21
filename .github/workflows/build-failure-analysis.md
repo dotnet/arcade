@@ -198,6 +198,12 @@ jobs:
           # --- 3. Scope check: only analyse PRs targeting main / release/* ---
           PR_JSON=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" 2>/dev/null)
           BASE_REF=$(printf '%s' "${PR_JSON}" | jq -r '.base.ref // empty')
+          # An empty BASE_REF means the `gh api` call failed or returned no
+          # data (rate limit / transient error), NOT that the PR targets an
+          # out-of-scope branch. Treat it as a data-resolution failure so a
+          # valid PR isn't silently skipped and misreported as base '' out of
+          # scope.
+          [ -z "${BASE_REF}" ] && { echo "::warning::Could not resolve the base ref for PR #${PR_NUMBER} (GitHub API returned no data); treating as a data-resolution failure, not an out-of-scope branch."; emit_none; }
           [ -z "${HEAD_SHA}" ] && HEAD_SHA=$(printf '%s' "${PR_JSON}" | jq -r '.head.sha // empty')
           case "${BASE_REF}" in
             main|release/*) echo "PR #${PR_NUMBER} base '${BASE_REF}' is in scope." ;;
