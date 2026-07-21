@@ -13,5 +13,4 @@
     <ArtifactsTestResultsDir>$(MSBuildThisFileDirectory)artifacts\TestResults\</ArtifactsTestResultsDir>
   </PropertyGroup>
   <Import Project="Tests.targets" />
-  <Import Project="Tests.targets" />
 </Project>
