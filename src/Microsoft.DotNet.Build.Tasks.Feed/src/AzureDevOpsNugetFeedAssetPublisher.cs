@@ -4,7 +4,6 @@
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Azure.Core;
@@ -53,15 +52,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             if (!string.IsNullOrEmpty(_accessToken))
             {
-                // AAD access tokens are JWTs (three dot-separated segments) and must be sent as Bearer.
-                // Personal access tokens (PATs) are opaque strings and use Basic auth.
-                // RemoveEmptyEntries so malformed values like ".." are not misclassified as JWTs.
-                bool tokenIsJwt = _accessToken.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries).Length == 3;
-                _httpClient.DefaultRequestHeaders.Authorization = tokenIsJwt
-                    ? new AuthenticationHeaderValue("Bearer", _accessToken)
-                    : new AuthenticationHeaderValue(
-                        "Basic",
-                        Convert.ToBase64String(Encoding.ASCII.GetBytes($":{_accessToken}")));
+                _httpClient.DefaultRequestHeaders.Authorization = GeneralUtils.CreateAzdoAuthHeader(_accessToken);
             }
             else
             {
