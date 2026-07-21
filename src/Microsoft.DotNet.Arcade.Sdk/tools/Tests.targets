@@ -27,6 +27,27 @@
     <Error Condition="!Exists($(TestRunnerTargets))" Text="Test runner $(TestRunnerName) is invalid."/>
   </Target>
 
+  <!--
+    Phase 1 of the test-runner consolidation effort. See
+    Documentation/TestRunnerConsolidation.md for the full plan.
+
+    We warn when a project opts into a code path that is scheduled for
+    removal so that downstream repos can migrate before the next major
+    Arcade release. Suppress by setting:
+      <NoWarn>$(NoWarn);ARCADE0001;ARCADE0002</NoWarn>
+  -->
+  <Target Name="_WarnDeprecatedTestRunnerOptions"
+          Condition="'$(IsTestProject)' == 'true' AND '$(SuppressArcadeTestRunnerDeprecationWarnings)' != 'true'"
+          BeforeTargets="Test;IntegrationTest;Build">
+    <Warning Code="ARCADE0001"
+             Text="The 'UsingToolXUnit' property is deprecated and will be removed in a future Arcade release. Use the 'TestRunnerName' property (e.g. TestRunnerName=XUnitV3) to select a test runner. See Documentation/TestRunnerConsolidation.md."
+             Condition="'$(_UsingToolXUnitExplicitlySet)' == 'true'" />
+
+    <Warning Code="ARCADE0002"
+             Text="The 'UseVSTestRunner' property is deprecated and the VSTest-based runner path will be removed in a future Arcade release. Migrate to Microsoft.Testing.Platform (the default for xUnit v3 and MSTest 4.x). See Documentation/TestRunnerConsolidation.md."
+             Condition="'$(UseVSTestRunner)' == 'true'" />
+  </Target>
+
   <PropertyGroup Condition="'$(IsTestProject)' == 'true' and '$(TestArchitectures)' == ''">
     <TestArchitectures>$(PlatformTarget)</TestArchitectures>
     <TestArchitectures Condition="'$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCpu'">x64</TestArchitectures>
