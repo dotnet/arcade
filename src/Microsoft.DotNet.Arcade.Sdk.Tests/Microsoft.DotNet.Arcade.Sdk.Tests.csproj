@@ -20,6 +20,9 @@
 
   <ItemGroup>
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Microsoft.DotNet.Arcade.Sdk\tools\Tests.targets"
+             Link="testassets\ParallelTestTfms\Tests.targets"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(RepositoryEngineeringDir)common\**\*" LinkBase="testassets\boilerplate\eng\common\" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(RepoRoot)build.sh" LinkBase="testassets\boilerplate\" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(RepoRoot)Build.cmd" LinkBase="testassets\boilerplate\" CopyToOutputDirectory="PreserveNewest" />
