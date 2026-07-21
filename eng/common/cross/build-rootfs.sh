@@ -192,10 +192,8 @@ while :; do
         riscv64)
             __BuildArch=riscv64
             __AlpineArch=riscv64
-            __AlpinePackages="${__AlpinePackages// lldb-dev/}"
             __QEMUArch=riscv64
             __UbuntuArch=riscv64
-            __UbuntuPackages="${__UbuntuPackages// libunwind8-dev/}"
             __LLDB_Package="liblldb-19-dev"
             ;;
         ppc64le)
