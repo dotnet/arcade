@@ -187,7 +187,6 @@ while :; do
             __AlpineArch=loongarch64
             __QEMUArch=loongarch64
             __UbuntuArch=loong64
-            __UbuntuSuites=unreleased
             __LLDB_Package="liblldb-19-dev"
             ;;
         riscv64)
@@ -331,7 +330,7 @@ while :; do
 
             # Debian-Ports architectures need different values
             case "$__UbuntuArch" in
-            amd64|arm64|armhf|i386|mips64el|ppc64el|riscv64|s390x)
+            amd64|arm64|armhf|i386|mips64el|ppc64el|riscv64|loong64|s390x)
                 __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
 
                 if [[ -z "$__UbuntuRepo" ]]; then
