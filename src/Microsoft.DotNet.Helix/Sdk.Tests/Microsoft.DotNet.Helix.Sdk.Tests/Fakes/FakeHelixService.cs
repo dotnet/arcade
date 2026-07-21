@@ -194,7 +194,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
                 originalSnapshotJob?.SubmitterJobName ?? originalJob.SubmitterJobName,
                 originalSnapshotJob?.SubmitterJobDisplayName ?? originalJob.SubmitterJobDisplayName,
                 originalSnapshotJob?.QueueId ?? originalJob.QueueId,
-                originalJobName));
+                originalJobName,
+                stageAttempt: originalSnapshotJob?.StageAttempt ?? originalJob.StageAttempt));
         }
 
         private sealed record HelixSnapshot(

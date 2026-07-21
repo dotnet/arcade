@@ -801,6 +801,115 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         /// <summary>
+        /// Per-attempt scoping. When the stage is retried, the monitor runs under a new stage
+        /// attempt. A Helix job left behind by the previous attempt (here permanently stuck
+        /// "running", mirroring work items stranded in <c>Waiting</c>) must be ignored so the
+        /// monitor can complete instead of waiting out its full timeout on abandoned work.
+        /// </summary>
+        [Fact]
+        public async Task AttemptScopedMonitor_IgnoresHelixJobsFromPreviousAttempt_ExitZero()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "inProgress"),
+                MonitorJob(parentId: "stage-test"),
+                PipelineJob("Test Linux", "completed", "succeeded", parentId: "stage-test"));
+
+            // A stranded job from the previous stage attempt is still "running" forever. The
+            // monitor for attempt 2 must not track it.
+            helix.AddResponse(
+                jobs: [HelixJob("helix-stranded-attempt1", "running", stageName: "Test", stageAttempt: "1")]);
+
+            JobMonitorOptions options = DefaultOptions();
+            options.StageAttempt = "2";
+            var runner = new JobMonitorRunner(options, NullLogger.Instance, azdo, helix, NoDelay);
+
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            // Previous-attempt job ignored, pipeline complete, no in-scope Helix work → exit 0.
+            exitCode.Should().Be(0);
+            helix.Resubmissions.Should().BeEmpty();
+            azdo.UploadedJobNames.Should().BeEmpty();
+            azdo.CreatedTestRuns.Should().BeEmpty();
+        }
+
+        /// <summary>
+        /// Per-attempt scoping only excludes other attempts: a Helix job stamped with the
+        /// monitor's own stage attempt is tracked (uploaded) as usual, while a same-named-stage
+        /// job from a previous attempt is ignored.
+        /// </summary>
+        [Fact]
+        public async Task AttemptScopedMonitor_TracksCurrentAttemptAndIgnoresPreviousAttempt()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "inProgress"),
+                MonitorJob(parentId: "stage-test"),
+                PipelineJob("Test Linux", "completed", "succeeded", parentId: "stage-test"));
+
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-current", "finished", stageName: "Test", stageAttempt: "2"),
+                    HelixJob("helix-previous", "finished", stageName: "Test", stageAttempt: "1"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-current"] = PassFail(passed: ["workitem-1"]),
+                    ["helix-previous"] = PassFail(failed: ["workitem-1"]),
+                });
+            helix.ConfigureResubmission("helix-previous", "helix-previous-resub");
+
+            JobMonitorOptions options = DefaultOptions();
+            options.StageAttempt = "2";
+            var runner = new JobMonitorRunner(options, NullLogger.Instance, azdo, helix, NoDelay);
+
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(0);
+            // The previous attempt's failed job is out of scope, so it is neither resubmitted nor uploaded.
+            helix.Resubmissions.Should().BeEmpty();
+            azdo.UploadedJobNames.Should().BeEquivalentTo(["helix-current"]);
+        }
+
+        /// <summary>
+        /// Backward compatibility: when the monitor's own stage attempt is unknown (no
+        /// <c>SYSTEM_STAGEATTEMPT</c>), attempt scoping is disabled and the monitor tracks jobs
+        /// from every attempt, matching the historical build + stage behavior.
+        /// </summary>
+        [Fact]
+        public async Task AttemptScopedMonitor_UnknownMonitorAttempt_TracksAllAttempts()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "inProgress"),
+                MonitorJob(parentId: "stage-test"),
+                PipelineJob("Test Linux", "completed", "succeeded", parentId: "stage-test"));
+
+            helix.AddResponse(
+                jobs: [HelixJob("helix-attempt1", "finished", stageName: "Test", stageAttempt: "1")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-attempt1"] = PassFail(passed: ["workitem-1"]),
+                });
+
+            JobMonitorOptions options = DefaultOptions();
+            options.StageAttempt = null;
+            var runner = new JobMonitorRunner(options, NullLogger.Instance, azdo, helix, NoDelay);
+
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(0);
+            azdo.UploadedJobNames.Should().BeEquivalentTo(["helix-attempt1"]);
+        }
+
+        /// <summary>
         /// Stage-scoped monitoring also applies to entry-time retry. A failed Helix job from
         /// another stage must not be resubmitted or uploaded by this monitor.
         /// </summary>

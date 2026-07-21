@@ -418,8 +418,22 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         }
 
         private bool IsInScope(HelixJobInfo job)
+            => IsStageInScope(job) && IsStageAttemptInScope(job);
+
+        private bool IsStageInScope(HelixJobInfo job)
             => string.IsNullOrEmpty(job.StageName)
                 || string.Equals(job.StageName, _options.StageName, StringComparison.OrdinalIgnoreCase);
+
+        // Per-attempt scoping: a retried stage re-runs its submitter jobs, which submit brand
+        // new Helix jobs for the new attempt. The monitor only tracks Helix work stamped with
+        // its own stage attempt so that a retry does not re-discover (and wait out the full
+        // timeout on) never-finishing work from a previous attempt. When either the monitor's
+        // own attempt or the job's attempt is unknown (older jobs, non-stage/test submissions)
+        // the job is left in scope, preserving the build+stage behavior for those cases.
+        private bool IsStageAttemptInScope(HelixJobInfo job)
+            => string.IsNullOrEmpty(_options.StageAttempt)
+                || string.IsNullOrEmpty(job.StageAttempt)
+                || string.Equals(job.StageAttempt, _options.StageAttempt, StringComparison.OrdinalIgnoreCase);
 
         public void Dispose()
         {

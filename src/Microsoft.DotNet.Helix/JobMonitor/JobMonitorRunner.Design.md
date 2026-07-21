@@ -24,14 +24,30 @@ Azure DevOps pipeline stage. Its job is to:
 
 ### 2.1 Stage scope
 
-Each invocation owns exactly one Azure DevOps stage. All decisions (retry,
-completion gating, upload, pass/fail) consider only:
+Each invocation owns exactly one Azure DevOps stage **attempt**. All decisions
+(retry, completion gating, upload, pass/fail) consider only:
 
 - Azure DevOps timeline jobs belonging to the monitor's stage.
-- Helix jobs whose `System.StageName` property is empty (stage unknown) or matches the monitor's stage.
+- Helix jobs whose `System.StageName` property is empty (stage unknown) or
+  matches the monitor's stage, **and** whose `System.StageAttempt` property is
+  empty (attempt unknown) or matches the monitor's own stage attempt.
 
-Jobs and work items from other stages must not be retried, uploaded, or used
-to fail this invocation.
+Jobs and work items from other stages — or from a previous attempt of the same
+stage — must not be retried, uploaded, or used to fail this invocation.
+
+Per-attempt scoping is deliberate. When a stage is retried, Azure DevOps re-runs
+every job in the stage, including the Helix submitter jobs; those submitters
+create brand new Helix jobs (stamped with the new stage attempt) covering all of
+the stage's work again. A monitor running in attempt *N* therefore only tracks
+attempt *N*'s Helix jobs; any unfinished or failed work from attempt *N-1* is
+abandoned and re-driven by attempt *N*'s fresh submissions. This prevents a
+retried monitor from re-discovering — and waiting out its full timeout on —
+never-finishing work left behind by an earlier attempt (for example work items
+permanently stranded in `Waiting`).
+
+The monitor's own stage attempt is provided as an input (see §3) and defaults to
+the `SYSTEM_STAGEATTEMPT` pipeline variable. When it is unknown the monitor falls
+back to build + stage scope and tracks jobs from every attempt.
 
 ### 2.2 Durable state
 
@@ -123,6 +139,11 @@ particular:
   fired. This requires a fresh, short-lived cancellation budget for the
   cleanup path.
 
+This re-attach behavior is scoped to a re-run within the *same* stage attempt
+(for example when only the monitor job is retried, or the monitor process
+crashes and is restarted). A new stage attempt is a fresh start: it re-runs the
+submitters and does not re-attach to the previous attempt's Helix jobs (§2.1).
+
 ## 3. Inputs
 
 The runner is configured by an options object. The semantically meaningful
@@ -135,6 +156,7 @@ inputs are:
 | Build ID | Scope Helix and AzDO queries to this build. |
 | AzDO collection URI + project | Construct the test-results URL used in failure reports. |
 | Stage name | Stage scope (see §2.1). |
+| Stage attempt | Per-attempt scope (see §2.1). Defaults to `SYSTEM_STAGEATTEMPT`; when unknown the monitor tracks jobs from every attempt of the stage. |
 | Polling interval | Delay between poll iterations; a minimum floor applies. |
 | Maximum wait | Reported in the timeout message; the timeout itself is enforced by the caller through cancellation. |
 | Job monitor name | Identifier of the monitor's own AzDO timeline record; used to exclude it from pass/fail. |
@@ -151,7 +173,9 @@ behaviorally; method names are illustrative.
 - **List jobs for a build** — given the source filter and build ID, return
   all Helix jobs that the submitter recorded for the build. The source
   filter must be derivable from build metadata in lockstep with the
-  submitter (see §5.1).
+  submitter (see §5.1). The returned set spans every attempt of the build;
+  the runner narrows it to the current stage attempt itself (§2.1) using each
+  job's `System.StageName` / `System.StageAttempt` properties.
 - **List work items for a job** — return all work-item summaries.
 - **Download test results** — given a job and a set of work-item names,
   download recognized result files into a working directory. Individual
@@ -159,8 +183,8 @@ behaviorally; method names are illustrative.
 - **Cancel a job** — best-effort cancellation.
 - **Resubmit failed work items** — given the original job and a set of
   failed work items, submit a new Helix job that contains only those items.
-  The new job must inherit the original's submitter identity (stage, job
-  name, display name, test-run name, queue) and link back via
+  The new job must inherit the original's submitter identity (stage, stage
+  attempt, job name, display name, test-run name, queue) and link back via
   `PreviousHelixJobName`. May return "not possible" (e.g. queue gone), in
   which case the runner skips that retry.
 
@@ -196,7 +220,7 @@ or the runner will silently fail to see its own jobs.
 
 ### 5.3 Retry pass
 
-1. Take a Helix snapshot scoped to the stage.
+1. Take a Helix snapshot scoped to the stage attempt.
 2. Reduce it to the latest incarnation of each lineage chain.
 3. For each completed latest incarnation that has failed work items, ask
    the Helix service to resubmit just the failed items.
@@ -214,7 +238,7 @@ If nothing was eligible for retry, log that fact.
 Each iteration:
 
 1. Check for cancellation.
-2. Fetch the AzDO timeline and the Helix snapshot, scoped to the stage.
+2. Fetch the AzDO timeline and the Helix snapshot, scoped to the stage attempt.
 3. Update the in-memory view of each Helix job with the freshest snapshot
    (so completion/failure transitions are not missed).
 4. Compute the set of completed Helix jobs (§5.5).

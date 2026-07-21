@@ -294,6 +294,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             string testRunName = GetStringPropertyFromProperties(details.Properties, "TestRunName") ?? newJob.Name;
             string stageName = GetStringPropertyFromProperties(details.Properties, "System.StageName");
+            string stageAttempt = GetStringPropertyFromProperties(details.Properties, "System.StageAttempt");
             string submitterJobName = GetStringPropertyFromProperties(details.Properties, "System.JobName");
             string submitterJobDisplayName = GetStringPropertyFromProperties(details.Properties, "System.JobDisplayName");
 
@@ -305,7 +306,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 submitterJobName,
                 submitterJobDisplayName,
                 details.QueueId,
-                originalJobName);
+                originalJobName,
+                stageAttempt: stageAttempt);
 
             _logger.LogInformation("Resubmitted {Count} failed work item(s) from '{OriginalJobName}' as new job '{NewJobName}'{nl}{JobUri}",
                 filteredEntries.Count,
