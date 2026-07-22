@@ -39,5 +39,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             header.Scheme.Should().Be("Basic");
             header.Parameter.Should().Be(Basic(token));
         }
+
+        [Theory]
+        // Null/empty/whitespace tokens are never valid for Azure DevOps and must fail loudly
+        // instead of producing a broken empty Basic header.
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        public void NullOrEmptyTokenThrows(string token)
+        {
+            Action act = () => GeneralUtils.CreateAzdoAuthHeader(token);
+
+            act.Should().Throw<ArgumentException>().WithParameterName("token");
+        }
     }
 }

@@ -33,8 +33,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Personal access tokens (PATs) are opaque strings and use Basic auth. RemoveEmptyEntries ensures
         /// malformed values like ".." are not misclassified as JWTs.
         /// </summary>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="token"/> is null, empty, or whitespace.</exception>
         public static AuthenticationHeaderValue CreateAzdoAuthHeader(string token)
         {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                throw new ArgumentException(
+                    "An Azure DevOps token is required to build an authorization header. Provide a personal access token or an Entra (AAD) access token.",
+                    nameof(token));
+            }
+
             bool tokenIsJwt = token.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries).Length == 3;
             return tokenIsJwt
                 ? new AuthenticationHeaderValue("Bearer", token)
