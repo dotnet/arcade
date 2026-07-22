@@ -167,6 +167,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public async Task<HelixJobInfo> ResubmitWorkItemsAsync(
             HelixJobInfo originalJob,
             IReadOnlyCollection<WorkItemSummary> failedWorkItems,
+            string targetStageAttempt,
             CancellationToken cancellationToken)
         {
             string originalJobName = originalJob.JobName;
@@ -272,6 +273,21 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             string newJobListUri = AppendSasIfPresent(jobListBlobClient.Uri, container.ReadToken);
 
+            // Stamp the resubmission with the resubmitting monitor's own stage attempt (when
+            // known) so the monitor gates on its own resubmission; otherwise preserve the
+            // original job's attempt (build + stage back-compat).
+            string resubmittedStageAttempt = !string.IsNullOrEmpty(targetStageAttempt)
+                ? targetStageAttempt
+                : GetStringPropertyFromProperties(details.Properties, "System.StageAttempt");
+
+            ImmutableDictionary<string, string> resubmittedProperties =
+                ConvertPropertiesToImmutableDictionary(details.Properties)
+                    .SetItem(HelixJobInfo.PreviousHelixJobNamePropertyName, originalJobName);
+            if (!string.IsNullOrEmpty(resubmittedStageAttempt))
+            {
+                resubmittedProperties = resubmittedProperties.SetItem("System.StageAttempt", resubmittedStageAttempt);
+            }
+
             // 5. Build the new job creation request, copying over Source / Properties / Creator
             //    so the resubmitted job remains discoverable (BuildId, System.StageName, TestRunName, etc.).
             //    The QueueId / QueueAlias / DockerTag returned by Job.DetailsAsync ensure the resubmitted
@@ -283,8 +299,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 Creator = details.Creator,
                 DockerTag = details.DockerTag,
                 QueueAlias = details.QueueAlias,
-                Properties = ConvertPropertiesToImmutableDictionary(details.Properties)
-                    .SetItem(HelixJobInfo.PreviousHelixJobNamePropertyName, originalJobName),
+                Properties = resubmittedProperties,
             };
 
             string idempotencyKey = Guid.NewGuid().ToString("N");
@@ -294,7 +309,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             string testRunName = GetStringPropertyFromProperties(details.Properties, "TestRunName") ?? newJob.Name;
             string stageName = GetStringPropertyFromProperties(details.Properties, "System.StageName");
-            string stageAttempt = GetStringPropertyFromProperties(details.Properties, "System.StageAttempt");
             string submitterJobName = GetStringPropertyFromProperties(details.Properties, "System.JobName");
             string submitterJobDisplayName = GetStringPropertyFromProperties(details.Properties, "System.JobDisplayName");
 
@@ -307,7 +321,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 submitterJobDisplayName,
                 details.QueueId,
                 originalJobName,
-                stageAttempt: stageAttempt);
+                stageAttempt: resubmittedStageAttempt);
 
             _logger.LogInformation("Resubmitted {Count} failed work item(s) from '{OriginalJobName}' as new job '{NewJobName}'{nl}{JobUri}",
                 filteredEntries.Count,
