@@ -435,9 +435,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var feeds = config.Setup();
 
             feeds.Should().NotBeEmpty();
-            // With no feed keys supplied, the AzDO feeds resolve to a null token (Entra auth is used downstream).
-            feeds.Where(f => f.Type == FeedType.AzDoNugetFeed)
-                 .Should().OnlyContain(f => f.Token == null);
+            // With no feed keys supplied, the AzDO feeds are still produced (not dropped) but resolve
+            // to a null token so the publisher falls back to Entra-based authentication downstream.
+            var azdoFeeds = feeds.Where(f => f.Type == FeedType.AzDoNugetFeed).ToList();
+            azdoFeeds.Should().NotBeEmpty();
+            azdoFeeds.Should().OnlyContain(f => f.Token == null);
         }
     }
 }
