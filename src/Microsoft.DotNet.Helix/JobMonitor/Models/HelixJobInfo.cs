@@ -17,13 +17,21 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
     {
         public const string PreviousHelixJobNamePropertyName = "PreviousHelixJobName";
 
+        /// <summary>
+        /// Helix job property that records the Azure DevOps stage attempt during which the job
+        /// was submitted. This is the exact AzDO predefined-variable name that the Helix submitter
+        /// (<c>SendHelixJob</c>) copies onto every job, so the monitor reads and re-stamps the
+        /// same property when resubmitting (see JobMonitorRunner.Design.md §2.3).
+        /// </summary>
+        public const string StageAttemptPropertyName = "System.StageAttempt";
+
         public HelixJobInfo(JobSummary helixJob)
         {
             JobName = helixJob.Name;
             Status = helixJob.Finished != null ? "finished" : "running";
             TestRunName = GetTestRunNameFromJob(helixJob);
             StageName = GetStringPropertyFromJob(helixJob, "System.StageName");
-            StageAttempt = GetStringPropertyFromJob(helixJob, "System.StageAttempt");
+            StageAttempt = GetStringPropertyFromJob(helixJob, StageAttemptPropertyName);
             QueueId = helixJob.QueueId;
             InitialWorkItemCount = helixJob.InitialWorkItemCount;
             Properties = helixJob.Properties;
@@ -208,7 +216,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
 
             if (!string.IsNullOrEmpty(stageAttempt))
             {
-                properties["System.StageAttempt"] = stageAttempt;
+                properties[StageAttemptPropertyName] = stageAttempt;
             }
 
             if (!string.IsNullOrEmpty(submitterJobName))

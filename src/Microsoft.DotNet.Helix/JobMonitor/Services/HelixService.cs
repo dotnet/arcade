@@ -275,17 +275,18 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             // Stamp the resubmission with the resubmitting monitor's own stage attempt (when
             // known) so the monitor gates on its own resubmission; otherwise preserve the
-            // original job's attempt (build + stage back-compat).
+            // original job's attempt (build + stage back-compat). Uses the same property name the
+            // Helix submitter stamps (HelixJobInfo.StageAttemptPropertyName / System.StageAttempt).
             string resubmittedStageAttempt = !string.IsNullOrEmpty(targetStageAttempt)
                 ? targetStageAttempt
-                : GetStringPropertyFromProperties(details.Properties, "System.StageAttempt");
+                : GetStringPropertyFromProperties(details.Properties, HelixJobInfo.StageAttemptPropertyName);
 
             ImmutableDictionary<string, string> resubmittedProperties =
                 ConvertPropertiesToImmutableDictionary(details.Properties)
                     .SetItem(HelixJobInfo.PreviousHelixJobNamePropertyName, originalJobName);
             if (!string.IsNullOrEmpty(resubmittedStageAttempt))
             {
-                resubmittedProperties = resubmittedProperties.SetItem("System.StageAttempt", resubmittedStageAttempt);
+                resubmittedProperties = resubmittedProperties.SetItem(HelixJobInfo.StageAttemptPropertyName, resubmittedStageAttempt);
             }
 
             // 5. Build the new job creation request, copying over Source / Properties / Creator

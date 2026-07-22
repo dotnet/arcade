@@ -1236,6 +1236,68 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         /// <summary>
+        /// A monitor job times out while a work item is still <c>Waiting</c> (never dispatched);
+        /// nothing is uploaded for that job because it never completed. On the retry attempt that
+        /// same work item has completed and passed: the monitor must NOT resubmit it, and it must
+        /// process (upload) its test results.
+        /// </summary>
+        [Fact]
+        public async Task WorkItemWaitingAtTimeout_CompletedOnRetry_NotResubmittedAndResultsUploaded()
+        {
+            // --- Attempt 1: monitor times out with the work item still Waiting ---
+            var azdo1 = new FakeAzureDevOpsService();
+            azdo1.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "inProgress"),
+                MonitorJob(parentId: "stage-test"),
+                PipelineJob("Test Suite", "completed", "succeeded", parentId: "stage-test"));
+
+            var helix1 = new FakeHelixService();
+            helix1.AddResponse(
+                jobs: [HelixJob("helix-a", "running", stageName: "Test", submitterJobName: "Test_A", queueId: "q1", stageAttempt: "1")]);
+            helix1.WithWorkItems("helix-a", [WaitingItem("helix-a", "wi-1")]);
+
+            var options1 = DefaultOptions();
+            options1.StageAttempt = "1";
+            using var cts = new CancellationTokenSource();
+            var runner1 = new JobMonitorRunner(options1, NullLogger.Instance, azdo1, helix1,
+                (_, _) => { cts.Cancel(); return Task.CompletedTask; });
+
+            int exit1 = await runner1.RunAsync(cts.Token);
+
+            exit1.Should().Be(1);
+            // Current-attempt in-flight work is gated on, not resubmitted; and since the job never
+            // completed, nothing was uploaded for it.
+            helix1.Resubmissions.Should().BeEmpty();
+            azdo1.UploadedJobNames.Should().BeEmpty();
+
+            // --- Attempt 2 (retry): the previously-Waiting work item has now completed + passed ---
+            var azdo2 = new FakeAzureDevOpsService();
+            azdo2.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "inProgress"),
+                MonitorJob(parentId: "stage-test"),
+                PipelineJob("Test Suite", "completed", "succeeded", parentId: "stage-test"));
+
+            var helix2 = new FakeHelixService();
+            helix2.AddResponse(
+                jobs: [HelixJob("helix-a", "finished", stageName: "Test", submitterJobName: "Test_A", queueId: "q1", stageAttempt: "1")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-a"] = PassFail(passed: ["wi-1"]),
+                });
+
+            var options2 = DefaultOptions();
+            options2.StageAttempt = "2";
+            var runner2 = new JobMonitorRunner(options2, NullLogger.Instance, azdo2, helix2, NoDelay);
+
+            int exit2 = await runner2.RunAsync(CancellationToken.None);
+
+            exit2.Should().Be(0);
+            // Completed on retry → not resubmitted, and its results are processed (uploaded).
+            helix2.Resubmissions.Should().BeEmpty();
+            azdo2.UploadedJobNames.Should().BeEquivalentTo(["helix-a"]);
+        }
+
+        /// <summary>
         /// Stage-scoped monitoring also applies to entry-time retry. A failed Helix job from
         /// another stage must not be resubmitted or uploaded by this monitor.
         /// </summary>
