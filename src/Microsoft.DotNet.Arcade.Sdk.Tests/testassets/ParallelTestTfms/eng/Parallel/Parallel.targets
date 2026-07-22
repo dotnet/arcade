@@ -41,11 +41,13 @@
       <_ExpectedStartedFile Include="$(ArtifactsTmpDir)test-tfm-a.started" />
       <_ExpectedStartedFile Include="$(ArtifactsTmpDir)test-tfm-b.started" />
     </ItemGroup>
-    <MakeDir Directories="$(ArtifactsTmpDir)" />
+    <MakeDir Directories="$(ArtifactsTmpDir);$(ArtifactsLogDir)" />
     <WriteLinesToFile File="$(_StartedFile)" Lines="$(TargetFramework)" Overwrite="true" />
     <WaitForFiles Files="@(_ExpectedStartedFile)" TimeoutSeconds="10" />
+    <WriteLinesToFile File="%(TestToRun.ResultsStdOutPath)" Lines="$(TargetFramework)" Overwrite="true" />
     <ItemGroup>
       <FileWrites Include="$(_StartedFile)" />
+      <FileWrites Include="%(TestToRun.ResultsStdOutPath)" />
     </ItemGroup>
   </Target>
 </Project>

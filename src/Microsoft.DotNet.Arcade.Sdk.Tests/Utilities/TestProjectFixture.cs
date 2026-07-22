@@ -33,6 +33,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
         {
             ClearPackages();
             var helixWorkItemRoot = Environment.GetEnvironmentVariable("HELIX_WORKITEM_ROOT");
+            helixWorkItemRoot = string.IsNullOrWhiteSpace(helixWorkItemRoot) ? null : helixWorkItemRoot;
             _logOutputDir = helixWorkItemRoot == null
                 ? GetType().Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().Single(m => m.Key == "LogOutputDir").Value
                 : Path.Combine(helixWorkItemRoot, "test-logs");

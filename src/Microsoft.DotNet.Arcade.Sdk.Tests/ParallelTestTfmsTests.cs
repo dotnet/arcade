@@ -25,7 +25,6 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
         public void TargetFrameworksRunInParallel()
         {
             var app = _fixture.CreateTestApp("ParallelTestTfms");
-            Directory.CreateDirectory(Path.Combine(app.WorkingDirectory, "artifacts", "log"));
             var startInfo = new ProcessStartInfo
             {
                 FileName = Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? "dotnet",
