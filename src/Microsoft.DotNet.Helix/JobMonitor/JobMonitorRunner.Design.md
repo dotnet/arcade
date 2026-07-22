@@ -191,7 +191,11 @@ Each of these cases is pinned by a pipeline-emulating test in
 (case 1), `StrandedWaitingPreviousWork` (cases 2/3, mirroring #17156),
 `FastRerun_CurrentIncarnationExists` (case 4),
 `UnlinkedRerunDuplicates_HigherAttemptWinsOutcome` (case 5), and
-`UnresubmittablePreviousWork_FailsFast` (case 6).
+`UnresubmittablePreviousWork_FailsFast` (case 6). The `MultiAttempt_*` tests
+additionally exercise the end-to-end lineage across five stage attempts —
+including an attempt in which the monitor never ran — verifying that only
+still-unfinished streams are carried forward and that a stream which has passed
+in any prior attempt is never resubmitted again.
 
 ### 2.4 Upload invariants
 

@@ -1085,6 +1085,157 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         /// <summary>
+        /// End-to-end multi-attempt scenario spanning five stage attempts, including one attempt
+        /// in which the monitor never ran:
+        /// <list type="number">
+        /// <item>Attempt 1: submitters submit three streams (A, B, C); A passes, B and C fail.</item>
+        /// <item>Attempt 2: the monitor resubmits both failing streams (B, C). B's resubmission
+        /// fails and C's is still Waiting when the monitor times out.</item>
+        /// <item>Attempt 3: the monitor resubmits the failing (B) and Waiting (C) streams. B now
+        /// passes; C is still Waiting at timeout.</item>
+        /// <item>Attempt 4: the monitor crashes before starting — no invocation, no change.</item>
+        /// <item>Attempt 5: the monitor must resubmit ONLY the still-Waiting C stream — not the
+        /// now-passing B stream — even though both were last touched in attempt 3.</item>
+        /// </list>
+        /// Each attempt is a distinct monitor invocation stamped with an increasing
+        /// SYSTEM_STAGEATTEMPT, over durable Helix state that accumulates across invocations.
+        /// </summary>
+        [Fact]
+        public async Task MultiAttempt_ResubmitsOnlyUnfinishedStreamsAcrossAttemptsAndMonitorCrash()
+        {
+            HelixJobInfo a1 = HelixJob("a1", "finished", stageName: "Test", submitterJobName: "Test_A", queueId: "q1", stageAttempt: "1");
+            HelixJobInfo b1 = HelixJob("b1", "finished", stageName: "Test", submitterJobName: "Test_B", queueId: "q1", stageAttempt: "1");
+            HelixJobInfo c1 = HelixJob("c1", "finished", stageName: "Test", submitterJobName: "Test_C", queueId: "q1", stageAttempt: "1");
+
+            // Attempt 2: resubmit both failing streams (B, C) into attempt 2, then time out.
+            FakeHelixService helix2 = await RunAttemptToTimeoutAsync(
+                stageAttempt: "2",
+                entryLeaves: [a1, b1, c1],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["a1"] = PassFail(passed: ["a-wi"]),
+                    ["b1"] = PassFail(failed: ["b-wi"]),
+                    ["c1"] = PassFail(failed: ["c-wi"]),
+                },
+                waitingWorkItems: [],
+                resubmissions: [("b1", "b2"), ("c1", "c2")]);
+
+            helix2.Resubmissions.Select(r => r.OriginalJob).Should().BeEquivalentTo(["b1", "c1"]);
+            helix2.Resubmissions.Should().OnlyContain(r => r.TargetStageAttempt == "2");
+
+            // Attempt 3: B's attempt-2 resubmission failed; C's is still Waiting. Resubmit both
+            // into attempt 3, then time out.
+            HelixJobInfo b2 = HelixJob("b2", "finished", stageName: "Test", submitterJobName: "Test_B", queueId: "q1", previousHelixJobName: "b1", stageAttempt: "2");
+            HelixJobInfo c2 = HelixJob("c2", "running", stageName: "Test", submitterJobName: "Test_C", queueId: "q1", previousHelixJobName: "c1", stageAttempt: "2");
+
+            FakeHelixService helix3 = await RunAttemptToTimeoutAsync(
+                stageAttempt: "3",
+                entryLeaves: [a1, b2, c2],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["a1"] = PassFail(passed: ["a-wi"]),
+                    ["b2"] = PassFail(failed: ["b-wi"]),
+                },
+                waitingWorkItems: [("c2", [WaitingItem("c2", "c-wi")])],
+                resubmissions: [("b2", "b3"), ("c2", "c3")]);
+
+            helix3.Resubmissions.Select(r => r.OriginalJob).Should().BeEquivalentTo(["b2", "c2"]);
+            helix3.Resubmissions.Should().OnlyContain(r => r.TargetStageAttempt == "3");
+
+            // Attempt 4: the monitor crashes before starting. No invocation runs, so Helix state
+            // is unchanged (represented by simply not running an attempt here).
+
+            // Attempt 5: B's attempt-3 resubmission PASSED; C's is still Waiting. The monitor must
+            // resubmit ONLY the still-Waiting C stream, not the now-passing B stream, and complete
+            // once C's resubmission finishes.
+            HelixJobInfo b3 = HelixJob("b3", "finished", stageName: "Test", submitterJobName: "Test_B", queueId: "q1", previousHelixJobName: "b2", stageAttempt: "3");
+            HelixJobInfo c3 = HelixJob("c3", "running", stageName: "Test", submitterJobName: "Test_C", queueId: "q1", previousHelixJobName: "c2", stageAttempt: "3");
+            HelixJobInfo c5 = HelixJob("c5", "finished", stageName: "Test", submitterJobName: "Test_C", queueId: "q1", previousHelixJobName: "c3", stageAttempt: "5");
+
+            var azdo5 = new FakeAzureDevOpsService();
+            azdo5.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "inProgress"),
+                MonitorJob(parentId: "stage-test"),
+                PipelineJob("Test Suite", "completed", "succeeded", parentId: "stage-test"));
+            // A and B were already uploaded by earlier attempts (durable AzDO tags).
+            azdo5.WithPreviouslyProcessedJob("a1").WithPreviouslyProcessedJob("b3");
+
+            var helix5 = new FakeHelixService();
+            // On entry: A passed, B passed, C still Waiting.
+            helix5.AddResponse(
+                jobs: [a1, b3, c3],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["a1"] = PassFail(passed: ["a-wi"]),
+                    ["b3"] = PassFail(passed: ["b-wi"]),
+                });
+            helix5.WithWorkItems("c3", [WaitingItem("c3", "c-wi")]);
+            // After the retry pass resubmits C, its resubmission finishes and passes.
+            helix5.AddResponse(
+                jobs: [a1, b3, c3, c5],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["a1"] = PassFail(passed: ["a-wi"]),
+                    ["b3"] = PassFail(passed: ["b-wi"]),
+                    ["c5"] = PassFail(passed: ["c-wi"]),
+                });
+            helix5.ConfigureResubmission("c3", "c5");
+
+            var options5 = DefaultOptions();
+            options5.StageAttempt = "5";
+            var runner5 = new JobMonitorRunner(options5, NullLogger.Instance, azdo5, helix5, NoDelay);
+
+            int exit5 = await runner5.RunAsync(CancellationToken.None);
+
+            exit5.Should().Be(0);
+            helix5.Resubmissions.Should().ContainSingle();
+            helix5.Resubmissions[0].OriginalJob.Should().Be("c3");
+            helix5.Resubmissions[0].FailedItems.Should().BeEquivalentTo(["c-wi"]);
+            helix5.Resubmissions[0].TargetStageAttempt.Should().Be("5");
+        }
+
+        /// <summary>
+        /// Variant of the multi-attempt scenario: if the C stream — Waiting at the previous
+        /// timeout — has PASSED by the time the monitor is retried, it must not be resubmitted.
+        /// With every stream's latest incarnation passed, the monitor completes with no
+        /// resubmissions.
+        /// </summary>
+        [Fact]
+        public async Task MultiAttempt_PreviouslyWaitingStreamHasPassedOnRetry_NotResubmitted()
+        {
+            HelixJobInfo a1 = HelixJob("a1", "finished", stageName: "Test", submitterJobName: "Test_A", queueId: "q1", stageAttempt: "1");
+            HelixJobInfo b3 = HelixJob("b3", "finished", stageName: "Test", submitterJobName: "Test_B", queueId: "q1", previousHelixJobName: "b2", stageAttempt: "3");
+            // Same C incarnation that was Waiting at the last timeout, now reported finished+passed.
+            HelixJobInfo c3 = HelixJob("c3", "finished", stageName: "Test", submitterJobName: "Test_C", queueId: "q1", previousHelixJobName: "c2", stageAttempt: "3");
+
+            var azdo = new FakeAzureDevOpsService();
+            azdo.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "inProgress"),
+                MonitorJob(parentId: "stage-test"),
+                PipelineJob("Test Suite", "completed", "succeeded", parentId: "stage-test"));
+            azdo.WithPreviouslyProcessedJob("a1").WithPreviouslyProcessedJob("b3");
+
+            var helix = new FakeHelixService();
+            helix.AddResponse(
+                jobs: [a1, b3, c3],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["a1"] = PassFail(passed: ["a-wi"]),
+                    ["b3"] = PassFail(passed: ["b-wi"]),
+                    ["c3"] = PassFail(passed: ["c-wi"]),
+                });
+
+            var options = DefaultOptions();
+            options.StageAttempt = "5";
+            var runner = new JobMonitorRunner(options, NullLogger.Instance, azdo, helix, NoDelay);
+
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(0);
+            helix.Resubmissions.Should().BeEmpty();
+        }
+
+        /// <summary>
         /// Stage-scoped monitoring also applies to entry-time retry. A failed Helix job from
         /// another stage must not be resubmitted or uploaded by this monitor.
         /// </summary>
@@ -3460,6 +3611,52 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         };
 
         private static readonly Func<TimeSpan, CancellationToken, Task> NoDelay = (_, _) => Task.CompletedTask;
+
+        private static WorkItemSummary WaitingItem(string jobName, string workItemName)
+            => new($"{jobName}/{workItemName}", jobName, workItemName, "Waiting");
+
+        /// <summary>
+        /// Runs a single monitor invocation for the given stage attempt that is expected to time
+        /// out (a work stream remains unfinished). The retry pass runs on entry and records its
+        /// resubmissions before the first poll; the invocation is then cancelled after that poll
+        /// to simulate the monitor's timeout. Returns the Helix fake so the caller can assert the
+        /// resubmissions the retry pass made.
+        /// </summary>
+        private static async Task<FakeHelixService> RunAttemptToTimeoutAsync(
+            string stageAttempt,
+            HelixJobInfo[] entryLeaves,
+            Dictionary<string, HelixJobPassFail> passFailByJob,
+            (string JobName, WorkItemSummary[] Items)[] waitingWorkItems,
+            (string From, string To)[] resubmissions)
+        {
+            var azdo = new FakeAzureDevOpsService();
+            azdo.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "inProgress"),
+                MonitorJob(parentId: "stage-test"),
+                PipelineJob("Test Suite", "completed", "succeeded", parentId: "stage-test"));
+
+            var helix = new FakeHelixService();
+            helix.AddResponse(jobs: entryLeaves, passFailByJob: passFailByJob);
+            foreach ((string jobName, WorkItemSummary[] items) in waitingWorkItems)
+            {
+                helix.WithWorkItems(jobName, items);
+            }
+            foreach ((string from, string to) in resubmissions)
+            {
+                helix.ConfigureResubmission(from, to);
+            }
+
+            var options = DefaultOptions();
+            options.StageAttempt = stageAttempt;
+
+            using var cts = new CancellationTokenSource();
+            var runner = new JobMonitorRunner(options, NullLogger.Instance, azdo, helix,
+                (_, _) => { cts.Cancel(); return Task.CompletedTask; });
+
+            int exitCode = await runner.RunAsync(cts.Token);
+            exitCode.Should().Be(1); // still-unfinished work stream → timeout
+            return helix;
+        }
 
         private static JobMonitorRunner CreateRunner(
             FakeAzureDevOpsService azdo,
