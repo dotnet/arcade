@@ -406,5 +406,38 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Action shouldPassNonShippingOnly = () => new TargetFeedSpecification(new TargetFeedContentType[] { TargetFeedContentType.Package }, "FooFeed", AssetSelection.NonShippingOnly);
             shouldPassNonShippingOnly.Should().NotThrow();
         }
+
+        [Fact]
+        public void NullFeedKeysAndOverridesAreTreatedAsEmpty()
+        {
+            // MSBuild passes null (not an empty array) for an empty ItemGroup, e.g. when publishing
+            // with Entra/WIF auth and no feed key is supplied. The constructor must tolerate this.
+            BuildModel buildModel = new BuildModel(new BuildIdentity());
+
+            var buildEngine = new MockBuildEngine();
+            var channelConfig = PublishingConstants.ChannelInfos.First(c => c.Id == 2);
+
+            SetupTargetFeedConfigV4 config = null;
+            Action construct = () => config = new SetupTargetFeedConfigV4(
+                channelConfig,
+                buildModel,
+                isInternalBuild: true,
+                repositoryName: "test-repo",
+                commitSha: "c0c0c0c0",
+                feedKeys: null,
+                feedOverrides: null,
+                [$"{LatestLinkShortUrlPrefix}/{BuildQuality}"],
+                buildEngine,
+                symbolVisibility);
+
+            construct.Should().NotThrow();
+
+            var feeds = config.Setup();
+
+            feeds.Should().NotBeEmpty();
+            // With no feed keys supplied, the AzDO feeds resolve to a null token (Entra auth is used downstream).
+            feeds.Where(f => f.Type == FeedType.AzDoNugetFeed)
+                 .Should().OnlyContain(f => f.Token == null);
+        }
     }
 }
