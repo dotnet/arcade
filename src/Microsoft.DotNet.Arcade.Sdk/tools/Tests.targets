@@ -85,8 +85,7 @@
   <Target Name="_OuterRunTests" Returns="@(FileWrites)">
     <ItemGroup>
       <_TargetFramework Include="$(TargetFrameworks)" />
-      <_TargetFramework Project="$(MSBuildProjectFile)" />
-      <_InnerTestBuild Include="%(_TargetFramework.Project)"
+      <_InnerTestBuild Include="$(MSBuildProjectFile)"
                        AdditionalProperties="TargetFramework=%(_TargetFramework.Identity)" />
     </ItemGroup>
     <MSBuild Projects="@(_InnerTestBuild)"
