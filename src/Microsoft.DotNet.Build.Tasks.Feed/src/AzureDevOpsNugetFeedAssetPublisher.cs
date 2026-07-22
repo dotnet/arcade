@@ -32,7 +32,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             _log = log;
             _targetUrl = targetUrl;
-            _accessToken = accessToken;
+            // Trim so a whitespace-only token is treated as "no token" and falls back to Entra auth
+            // instead of throwing in CreateAzdoAuthHeader.
+            _accessToken = accessToken?.Trim();
             _task = task;
 
             var parsedUri = Regex.Match(_targetUrl, PublishingConstants.AzDoNuGetFeedPattern);

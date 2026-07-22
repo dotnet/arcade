@@ -958,7 +958,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             var client = new HttpClient(handler);
             client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
 
-            string effectiveToken = tokenOverride ?? AzdoApiToken;
+            // Trim so a whitespace-only token (e.g. from MSBuild metadata) is treated as "no token"
+            // and cleanly falls back to Entra auth instead of throwing in CreateAzdoAuthHeader.
+            string effectiveToken = (tokenOverride ?? AzdoApiToken)?.Trim();
             if (!string.IsNullOrEmpty(effectiveToken))
             {
                 client.DefaultRequestHeaders.Authorization = CreateAzdoAuthHeader(effectiveToken);
