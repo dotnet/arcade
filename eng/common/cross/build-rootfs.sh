@@ -380,6 +380,15 @@ while :; do
             __CodeName=openbsd
             __SkipUnmount=1
             ;;
+        openbsd7.8)
+            __CodeName=openbsd
+            __SkipUnmount=1
+            ;;
+        openbsd7.9)
+            __CodeName=openbsd
+            __OpenBSDVersion="7.9"
+            __SkipUnmount=1
+            ;;
         illumos)
             __CodeName=illumos
             __SkipUnmount=1
