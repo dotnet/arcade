@@ -304,7 +304,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             foreach (HelixJobInfo job in completedJobs.Where(j => !_state.IsHelixJobProcessed(j.JobName)))
             {
                 await ReconcileCompletedJobAsync(job, queueUpload: true, cancellationToken);
-                _state.TryMarkHelixJobProcessed(job.JobName);
             }
 
             // Second pass: ensure outcomes for every completed job (any attempt) are reflected in
@@ -395,7 +394,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             if (queueUpload && !alreadyUploadedByPriorAttempt)
             {
-                _uploads.Enqueue(helixJob, workItems, cancellationToken);
+                if (_state.TryQueueHelixJobUpload(helixJob.JobName))
+                {
+                    _uploads.Enqueue(helixJob, workItems, cancellationToken);
+                }
             }
 
             if (!alreadyUploadedByPriorAttempt)
