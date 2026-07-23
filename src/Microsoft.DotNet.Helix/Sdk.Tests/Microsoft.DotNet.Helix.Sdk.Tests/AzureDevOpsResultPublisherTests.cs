@@ -68,5 +68,19 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.False(AzureDevOpsResultPublisher.ComputeAllPassed(results));
         }
+
+        [Theory]
+        [InlineData("GET", false, 10)]
+        [InlineData("POST", true, 10)]
+        [InlineData("POST", false, 0)]
+        public void GetRetryCount_DisablesAmbiguousWriteRetriesWhenConfigured(
+            string method,
+            bool retryWrites,
+            int expected)
+        {
+            Assert.Equal(
+                expected,
+                AzureDevOpsResultPublisher.GetRetryCount(new HttpMethod(method), retryWrites));
+        }
     }
 }
