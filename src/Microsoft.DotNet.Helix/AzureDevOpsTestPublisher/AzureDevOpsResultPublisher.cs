@@ -476,7 +476,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         object? payload,
         CancellationToken cancellationToken)
     {
-        int triesLeft = 10;
+        int triesLeft = GetRetryCount(method, _azdoParameters.RetryWrites);
         string? body = payload is null ? null : JsonSerializer.Serialize(payload, s_serializerOptions);
         if (!string.IsNullOrEmpty(body))
         {
@@ -548,6 +548,9 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             throw new AzureDevOpsReportingError($"Azure DevOps request failed with status code {(int)response.StatusCode}: {responseBody}");
         }
     }
+
+    internal static int GetRetryCount(HttpMethod method, bool retryWrites)
+        => retryWrites || method == HttpMethod.Get ? 10 : 0;
 
     private static TimeSpan? GetRetryDelay(HttpResponseMessage response)
     {
