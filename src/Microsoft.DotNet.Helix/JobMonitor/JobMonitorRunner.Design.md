@@ -201,9 +201,9 @@ in any prior attempt is never resubmitted again.
 
 Upload is restart-resilient but logically independent from retry.
 
-1. The same Helix job's test results are never completed and tagged twice. The
-   durable deduplication signal is the Helix-job-name tag on completed AzDO test
-   runs. An interrupted, untagged upload is intentionally replayed.
+1. A Helix job has at most one durably completed, tagged test run. The durable
+   deduplication signal is the Helix-job-name tag on completed AzDO test runs.
+   An interrupted, untagged upload is intentionally replayed.
 2. For every completed Helix job without a completed, tagged upload, all
    available test results are uploaded.
 3. Uploads happen in lineage order — oldest incarnation first. If both an
