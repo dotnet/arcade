@@ -192,11 +192,9 @@ while :; do
         riscv64)
             __BuildArch=riscv64
             __AlpineArch=riscv64
-            __AlpinePackages="${__AlpinePackages// lldb-dev/}"
             __QEMUArch=riscv64
             __UbuntuArch=riscv64
-            __UbuntuPackages="${__UbuntuPackages// libunwind8-dev/}"
-            unset __LLDB_Package
+            __LLDB_Package="liblldb-19-dev"
             ;;
         ppc64le)
             __BuildArch=ppc64le
@@ -290,6 +288,10 @@ while :; do
             __CodeName=noble
             __LLDB_Package="liblldb-19-dev"
             ;;
+        resolute) # Ubuntu 26.04
+            __CodeName=resolute
+            __LLDB_Package="liblldb-21-dev"
+            ;;
         stretch) # Debian 9
             __CodeName=stretch
             __LLDB_Package="liblldb-6.0-dev"
@@ -376,6 +378,15 @@ while :; do
             ;;
         openbsd)
             __CodeName=openbsd
+            __SkipUnmount=1
+            ;;
+        openbsd7.8)
+            __CodeName=openbsd
+            __SkipUnmount=1
+            ;;
+        openbsd7.9)
+            __CodeName=openbsd
+            __OpenBSDVersion="7.9"
             __SkipUnmount=1
             ;;
         illumos)
