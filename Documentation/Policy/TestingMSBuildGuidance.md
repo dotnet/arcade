@@ -12,7 +12,7 @@ We are currently working on ways to improve our testability of Arcade, including
 If you want to also validate your private build of Arcade using a repository, follow these steps. 
 
 1. Run a build of your Arcade branch on the [arcade-official-ci](https://dev.azure.com/dnceng/internal/_build?definitionId=6) Azure DevOps Pipeline
-2. [Promote your build](../Darc.md#add-build-to-channel) to the "General Testing" Maestro channel. 
+2. [Promote your build](../Darc.md) to the "General Testing" Maestro channel.
 3. Create a branch in the repository you wish to validate your private build of Arcade with. 
 4. Add the `general-testing` feed to your `NuGet.config`:   
     ```xml
