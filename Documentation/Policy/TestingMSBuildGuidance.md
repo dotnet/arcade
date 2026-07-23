@@ -4,7 +4,7 @@ We are currently working on ways to improve our testability of Arcade, including
 
 - Since it is known how to create mocks and work with dependency injection in C# code, please move as much logic out of MSBuild proj files and into the C# tasks (or related classes) so that it can be unit tested.
 - Use mocks and dependency injection where applicable when writing unit tests for the MSBuild tasks in C#. If the code does not have an entry point to implement the ASP.NET Core Dependency Injection framework, use the Setter Injection pattern.
-- All msbuild tasks inside dotnet/arcade should use the Runtime="NET" task host feature that allows to run .NETCoreApp compiled tasks on VS msbuild. With that, only .NETCoreApp needs and should be targeted.
+- All MSBuild tasks in dotnet/arcade should use the `Runtime="NET"` task host feature, which allows .NETCoreApp-compiled tasks to run in Visual Studio MSBuild. With this, tasks should target only .NETCoreApp.
 - Also see .NET Engineering Services' [Validation Principles and Policy](../Validation.md)
 
 ## How to Validate a Private Build
