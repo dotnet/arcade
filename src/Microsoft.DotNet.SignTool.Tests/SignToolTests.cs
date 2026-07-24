@@ -17,6 +17,7 @@ using Xunit;
 using Xunit.Abstractions;
 using Microsoft.DotNet.Build.Tasks.Installers;
 using Microsoft.DotNet.StrongName;
+using System.Formats.Tar;
 
 namespace Microsoft.DotNet.SignTool.Tests
 {
@@ -581,6 +582,30 @@ namespace Microsoft.DotNet.SignTool.Tests
                 string resolvedTarget = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(layoutPath)!, expectedTarget));
                 File.ReadAllBytes(layoutPath).Should().BeEquivalentTo(File.ReadAllBytes(resolvedTarget),
                     $"symlink '{symlinkPath}' should resolve to the signed file");
+            }
+        }
+
+        private void ValidateProducedTarGZipHardlinks(
+            string tarGZipPath,
+            (string path, string linkName)[] expectedHardlinks)
+        {
+            using FileStream stream = File.OpenRead(tarGZipPath);
+            using GZipStream decompressor = new(stream, CompressionMode.Decompress);
+            using TarReader reader = new(decompressor);
+
+            var hardlinkEntries = new List<(string Name, string LinkName)>();
+            while (reader.GetNextEntry() is TarEntry entry)
+            {
+                if (entry.EntryType == TarEntryType.HardLink)
+                {
+                    hardlinkEntries.Add((entry.Name, entry.LinkName));
+                }
+            }
+
+            foreach ((string path, string linkName) in expectedHardlinks)
+            {
+                hardlinkEntries.Should().Contain((Name: path, LinkName: linkName),
+                    $"hardlink '{path}' -> '{linkName}' should be preserved in the repacked tarball");
             }
         }
 
@@ -1756,8 +1781,8 @@ $@"
 
         /// <summary>
         /// Validates that tar.gz archives containing symbolic links are handled correctly.
-        /// On Windows, ReadTarGZipEntriesWithExternalTar throws when symlinks are detected,
-        /// so this test is skipped on Windows.
+        /// This test is Unix-only because creating symlinks on Windows requires elevation
+        /// and there are no signing scenarios that use symbolic links on Windows.
         /// </summary>
         [UnixOnlyFactAttribute]
         public void SignTarGZipFileWithSymlinks()
@@ -1794,8 +1819,7 @@ $@"
             });
         }
 
-        // TODO: Remove WindowsOnlyFact once https://github.com/dotnet/arcade/issues/16484 is resolved.
-        [WindowsOnlyFact]
+        [Fact]
         public void SignTarGZipFileWithHardlinks()
         {
             // List of files to be considered for signing
@@ -1813,19 +1837,16 @@ $@"
             // Overriding information
             var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
-            // All three files (original + 2 hardlinks) should be detected for signing
+            // Only the regular file (hardlink1.dll) is detected for signing.
+            // Hardlink entries are skipped (like symlinks) and preserved during repack.
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'hardlink1.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'hardlink2.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'original.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'testHardlinks.tgz'",
             },
             expectedWarnings: new[]
             {
                 $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "hardlink1.dll")}' with Microsoft certificate 'ArcadeCertTest'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "1", "hardlink2.dll")}' with Microsoft certificate 'ArcadeCertTest'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "original.dll")}' with Microsoft certificate 'ArcadeCertTest'. The library is considered 3rd party library due to its copyright: ''.",
             });
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -1835,15 +1856,14 @@ $@"
   <Authenticode>ArcadeCertTest</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "hardlink2.dll"))}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
-  <StrongName>ArcadeStrongTest</StrongName>
-</FilesToSign>
-<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "original.dll"))}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
-  <StrongName>ArcadeStrongTest</StrongName>
-</FilesToSign>
 "
+            });
+
+            // Verify that hardlinks are preserved in the repacked tarball
+            ValidateProducedTarGZipHardlinks(Path.Combine(_tmpDir, "testHardlinks.tgz"), new[]
+            {
+                ("hardlink2.dll", "hardlink1.dll"),
+                ("original.dll", "hardlink1.dll"),
             });
         }
 
