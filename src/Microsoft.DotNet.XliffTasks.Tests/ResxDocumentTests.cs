@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using XliffTasks.Model;
@@ -49,34 +50,51 @@ namespace XliffTasks.Tests
         }
 
         [Fact]
-        public void RewriteFileReferenceToAbsoluteInDestinyFolder()
+        public void RewriteFileReferenceToRelativePathFromOutputFolder()
         {
-            string sourceFolder = Directory.GetCurrentDirectory();
-            string expectedAbsoluteLocation = Path.Combine(
-              Directory.GetCurrentDirectory(),
-              @"Resources\Package.ico".Replace('\\', Path.DirectorySeparatorChar));
+            // Simulates: source .resx is in src/MyProject/, translated output .resx is in artifacts/obj/MyProject.xlf/
+            // The resource file at src/MyProject/Resources/Package.ico should be referenced as
+            // a relative path from the output directory.
+            string tempBase = Path.Combine(Path.GetTempPath(), "xliff-test-" + Path.GetRandomFileName());
+            string sourceFolder = Path.Combine(tempBase, "src", "MyProject");
+            string outputFolder = Path.Combine(tempBase, "artifacts", "obj", "MyProject.xlf");
+            string sourceFullPath = Path.Combine(sourceFolder, "Resources.resx");
+            string outputFullPath = Path.Combine(outputFolder, "MyProject.resx");
+
+            string resourceRelativePath = Path.Combine("Resources", "Package.ico");
+            string resourceAbsolutePath = Path.GetFullPath(Path.Combine(sourceFolder, resourceRelativePath));
+
+            // Compute expected relative path from output directory to resource file
+            Uri fromUri = new Uri(outputFolder.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar);
+            Uri toUri = new Uri(resourceAbsolutePath);
+            string expectedRelativePath = Uri.UnescapeDataString(fromUri.MakeRelativeUri(toUri).ToString())
+                .Replace('/', Path.DirectorySeparatorChar);
+
             string source =
-@"<root>
+$@"<root>
   <data name=""400"" type=""System.Resources.ResXFileRef, System.Windows.Forms"">
-    <value>Resources\Package.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>{resourceRelativePath};System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>";
 
             string expectedTranslation =
-@"<root>
+$@"<root>
   <data name=""400"" type=""System.Resources.ResXFileRef, System.Windows.Forms"">
-    <value>ABSOLUTEPATH;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>{expectedRelativePath};System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-</root>".Replace("ABSOLUTEPATH", expectedAbsoluteLocation);
+</root>";
 
             ResxDocument document = new();
             StringWriter writer = new();
             document.Load(new StringReader(source));
-            document.RewriteRelativePathsToAbsolute(
-                Path.Combine(sourceFolder, "Resources.resx"));
+            document.RewriteRelativePathsForOutputPath(sourceFullPath, outputFullPath);
             document.Save(writer);
 
             AssertEx.EqualIgnoringLineEndings(expectedTranslation, writer.ToString());
+
+            // The path in the output must NOT be absolute — it must be relative,
+            // so the translated .resx remains valid after the repo is renamed or moved.
+            Assert.DoesNotContain(tempBase, writer.ToString());
         }
 
         
