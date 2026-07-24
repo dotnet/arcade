@@ -26,6 +26,17 @@ parameters:
   type: string
   default: ' '
 
+- name: BuildQuality
+  displayName: "Build quality used when creating aka.ms links (aka.ms/dotnet/<channel>/<quality>/...):"
+  type: string
+  default: daily
+  values:
+  - daily
+  - preview
+  - ga
+  - signed
+  - validated
+
  # The parameters below here are legacy. They are passed by add-build-to-channel
  # to the build pipeline, and if they are not present in the pipeline, then queueing
  # will fail. Remove once add-build-to-channel has been updated to remove the parameters.
@@ -84,3 +95,4 @@ extends:
         BARBuildId: ${{ parameters.BARBuildId }}
         symbolPublishingAdditionalParameters: ${{ parameters.SymbolPublishingAdditionalParameters }}
         artifactsPublishingAdditionalParameters: ${{ parameters.ArtifactsPublishingAdditionalParameters }}
+        buildQuality: ${{ parameters.BuildQuality }}
