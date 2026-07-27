@@ -112,6 +112,18 @@ function GetCommitterGitHubName($sha) {
     return $null
 }
 
+function RemoteBranchExists($remoteName, $branchName) {
+    $lsRemoteOutput = & git ls-remote --heads $remoteName "refs/heads/$branchName" 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        # Fail loudly instead of assuming the branch is missing: treating an auth or network
+        # failure as "branch does not exist" would silently recreate the branch and discard
+        # whatever is already on the PR.
+        throw "Failed to query '$remoteName' for branch '$branchName'. Output: $lsRemoteOutput"
+    }
+
+    return [bool]$lsRemoteOutput
+}
+
 function ResetFilesToTargetBranch($patterns, $targetBranch) {
     if (-not $patterns -or $patterns.Count -eq 0) {
         return
@@ -220,13 +232,6 @@ try {
     Write-Host $committersList
 
     $mergeBranchName = "merge/$MergeFromBranch-to-$MergeToBranch"
-    Invoke-Block { & git checkout -B $mergeBranchName  }
-
-    # Reset specified files to target branch if ResetToTargetPaths is configured
-    if ($ResetToTargetPaths) {
-        $patterns = $ResetToTargetPaths -split ";"
-        ResetFilesToTargetBranch $patterns $MergeToBranch
-    }
 
     $remoteName = 'origin'
     $prOwnerName = $RepoOwner
@@ -271,6 +276,58 @@ try {
     $matchingPr = $resp.data.repository.pullRequests.nodes `
         | ? { $_.headRef.name -eq $mergeBranchName -and $_.headRef.repository.owner.login -eq $prOwnerName } `
         | select -First 1
+
+    # Build the merge branch.
+    #
+    # When an open PR already exists for this merge branch, update that branch by merging the
+    # source branch into it rather than recreating it from the source branch tip. Recreating the
+    # branch produces history that is not a descendant of what was pushed on the previous run --
+    # with ResetToTargetPaths the "Reset files to <target>" commit is regenerated with a new SHA
+    # every run, so the branch can never fast-forward -- and the push below is rejected as
+    # non-fast-forward, leaving the PR silently un-updated from then on. Merging into the existing
+    # branch keeps the push a fast-forward and preserves conflict resolutions that were pushed to
+    # the PR branch by hand.
+    $updatedExistingBranch = $false
+
+    if ($matchingPr -and (RemoteBranchExists $remoteName $mergeBranchName)) {
+        Invoke-Block { & git fetch --quiet $remoteName "refs/heads/${mergeBranchName}:refs/remotes/${remoteName}/${mergeBranchName}" }
+        Invoke-Block { & git checkout -B $mergeBranchName "refs/remotes/$remoteName/$mergeBranchName" }
+
+        # A merge commit needs an identity. ResetFilesToTargetBranch configures the same one.
+        Invoke-Block { & git config user.name "github-actions[bot]" }
+        Invoke-Block { & git config user.email "41898282+github-actions[bot]@users.noreply.github.com" }
+
+        # No -X ours/-X theirs: a conflict here needs a human, and must not be auto-resolved.
+        $mergeOutput = & git merge --no-edit "refs/remotes/$remoteName/$MergeFromBranch" 2>&1
+        $mergeExitCode = $LASTEXITCODE
+
+        if ($mergeOutput) {
+            $mergeOutput | Write-Host
+        }
+
+        if ($mergeExitCode -eq 0) {
+            $updatedExistingBranch = $true
+        }
+        else {
+            # Abort and fall back to recreating the branch from the source tip. That is what this
+            # script did before this branch existed: the push below is rejected as non-fast-forward
+            # and the existing PR is left untouched for someone to resolve by hand.
+            # Plain call, not Invoke-Block: `git merge --abort` exits non-zero when the merge failed
+            # for a reason that left no merge in progress.
+            & git merge --abort 2>&1 | Write-Host
+            Write-Host -f Yellow "Could not merge $MergeFromBranch into the existing '$mergeBranchName' branch; it needs manual conflict resolution. The existing PR will be left unchanged."
+        }
+    }
+
+    if (-not $updatedExistingBranch) {
+        Invoke-Block { & git checkout -B $mergeBranchName "refs/remotes/$remoteName/$MergeFromBranch" }
+    }
+
+    # Reset specified files to target branch if ResetToTargetPaths is configured
+    if ($ResetToTargetPaths) {
+        $patterns = $ResetToTargetPaths -split ";"
+        ResetFilesToTargetBranch $patterns $MergeToBranch
+    }
 
     if ($matchingPr) {
         $prUpdatedSuccess = $false
