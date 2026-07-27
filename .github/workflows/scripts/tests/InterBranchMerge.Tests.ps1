@@ -201,10 +201,27 @@ BeforeAll {
     function Invoke-InChildPwsh([string]$Script, [hashtable]$EnvironmentVariables, [string]$WorkingDirectory) {
         $scriptFile = Join-Path ([System.IO.Path]::GetTempPath()) ("ibm-step-$([guid]::NewGuid().ToString('N')).ps1")
         $outputFile = Join-Path ([System.IO.Path]::GetTempPath()) ("ibm-output-$([guid]::NewGuid().ToString('N')).txt")
-        Set-Content -LiteralPath $scriptFile -Value $Script -Encoding utf8
+        $uriFile = Join-Path ([System.IO.Path]::GetTempPath()) ("ibm-uri-$([guid]::NewGuid().ToString('N')).txt")
+        $errorFile = Join-Path ([System.IO.Path]::GetTempPath()) ("ibm-error-$([guid]::NewGuid().ToString('N')).txt")
+
+        # The child renders errors with PowerShell's ConciseView, which wraps long messages across
+        # gutter prefixed lines depending on console width. Record the raw message instead, so
+        # assertions match what was actually thrown rather than how it happened to be formatted.
+        $catchBlock = @'
+}
+catch {
+    $_.Exception.Message | Out-File -FilePath $env:IBM_TEST_ERROR -Append
+    exit 1
+}
+'@
+        Set-Content -LiteralPath $scriptFile -Value ("try {`n" + $Script + "`n" + $catchBlock) -Encoding utf8
         New-Item -ItemType File -Path $outputFile -Force | Out-Null
 
-        $all = @{ 'GITHUB_OUTPUT' = $outputFile }
+        $all = @{
+            'GITHUB_OUTPUT'          = $outputFile
+            'IBM_TEST_REQUESTED_URI' = $uriFile
+            'IBM_TEST_ERROR'         = $errorFile
+        }
         foreach ($key in $EnvironmentVariables.Keys) { $all[$key] = $EnvironmentVariables[$key] }
 
         $toRestore = @{}
@@ -226,9 +243,18 @@ BeforeAll {
         }
 
         $outputs = ConvertFrom-GitHubOutput $outputFile
+        $requestedUris = @(if (Test-Path -LiteralPath $uriFile) { Get-Content -LiteralPath $uriFile })
+        $errorMessage = if (Test-Path -LiteralPath $errorFile) { (Get-Content -LiteralPath $errorFile -Raw) } else { '' }
         Remove-Item -LiteralPath $scriptFile, $outputFile -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $uriFile, $errorFile -Force -ErrorAction SilentlyContinue
 
-        return [pscustomobject]@{ ExitCode = $exitCode; Outputs = $outputs; Log = $log }
+        return [pscustomobject]@{
+            ExitCode      = $exitCode
+            Outputs       = $outputs
+            Log           = $log
+            ErrorMessage  = $errorMessage
+            RequestedUris = $requestedUris
+        }
     }
 
     # Runs a real workflow step: its body, its 'env:' mapping and its 'working-directory' all come
@@ -347,14 +373,29 @@ BeforeAll {
     finally { Pop-Location }
 
     # 'read-configuration.ps1' fetches the configuration over the network, so shadow
-    # Invoke-WebRequest in the scope that invokes it. No real request can be made.
+    # Invoke-WebRequest in the scope that invokes it. No real request can be made. The shim mirrors
+    # the parameters the real call passes and records the URI, so the branch, path, owner and
+    # repository the workflow wires into the lookup are observable.
     $script:ConfigurationFile = Join-Path $script:ScratchRoot 'github-merge-flow.jsonc'
     Set-Content -LiteralPath $script:ConfigurationFile -Value $script:Configuration -Encoding utf8
     $script:ReadConfigurationPreamble = @'
 function Invoke-WebRequest {
+    param(
+        [Parameter(Position = 0)] $Uri,
+        [switch] $UseBasicParsing,
+        $Method,
+        $MaximumRetryCount,
+        $Headers
+    )
+
+    "$Uri" | Out-File -FilePath $env:IBM_TEST_REQUESTED_URI -Append
     return [pscustomobject]@{ Content = (Get-Content -LiteralPath $env:IBM_TEST_CONFIGURATION_FILE -Raw) }
 }
 '@
+
+    # Every component of the configuration URL is a distinct value, so swapping any two of them in
+    # the workflow changes the URL the tests observe.
+    $script:ExpectedConfigurationUri = 'https://raw.githubusercontent.com/dotnet/test-repo/configuration-source-branch/eng/github-merge-flow.jsonc'
 
     function New-WorkflowContext([hashtable]$Overrides) {
         $context = @{
@@ -362,8 +403,8 @@ function Invoke-WebRequest {
             'github.repository_owner'                             = 'dotnet'
             'secrets.GITHUB_TOKEN'                                = 'not-a-real-token'
             'steps.fetch-repo-name.outputs.repository_name'       = 'test-repo'
-            'inputs.configuration_file_branch'                    = 'main'
-            'inputs.configuration_file_path'                      = 'github-merge-flow.jsonc'
+            'inputs.configuration_file_branch'                    = 'configuration-source-branch'
+            'inputs.configuration_file_path'                      = 'eng/github-merge-flow.jsonc'
             'inputs.merge_from_branch'                            = ''
             'inputs.merge_to_branch'                              = ''
             'steps.resolve-branches.outputs.mergeFromBranch'      = ''
@@ -445,6 +486,7 @@ function Invoke-WebRequest {
             ResolvedFromBranch   = $branches.Outputs['mergeFromBranch']
             ResolvedToBranch     = $target.Outputs['mergeToBranch']
             ConfigurationOutputs = $configuration.Outputs
+            ConfigurationUris    = $configuration.RequestedUris
             Merges               = $merges
             ReportsMissingConfig = Test-ActionsCondition $script:ReadConfigurationCondition $gateOutputs
             ReportsMissingTarget = Test-ActionsCondition $script:MergeTargetCondition $gateOutputs
@@ -470,6 +512,13 @@ Describe 'read-configuration.ps1' {
         $result.Outputs['resetToTargetPaths'] | Should -Be 'eng/Version.Details.xml;global.json'
         $result.Outputs['configurationFound'] | Should -Be 'True'
         $result.Outputs['policyFound'] | Should -Be 'True'
+    }
+
+    It 'requests the configuration from the branch, path, owner and repository the workflow supplies' {
+        $result = Invoke-ReadConfiguration -MergeFromBranch 'main'
+
+        $result.RequestedUris.Count | Should -Be 1
+        $result.RequestedUris[0] | Should -Be $script:ExpectedConfigurationUri
     }
 
     It 'emits the policy but no merge target for an entry without MergeToBranch' {
@@ -579,13 +628,13 @@ Describe 'Resolve merge branches step' {
     ) {
         $fromResult = Invoke-ResolveBranches -MergeFromInput $Value -MergeToInput '' -RefName 'main'
         $fromResult.ExitCode | Should -Not -Be 0
-        $fromResult.Log | Should -Match $Reason
-        $fromResult.Log | Should -Match 'merge_from_branch'
+        $fromResult.ErrorMessage | Should -Match $Reason
+        $fromResult.ErrorMessage | Should -Match 'merge_from_branch'
 
         $toResult = Invoke-ResolveBranches -MergeFromInput '' -MergeToInput $Value -RefName 'main'
         $toResult.ExitCode | Should -Not -Be 0
-        $toResult.Log | Should -Match $Reason
-        $toResult.Log | Should -Match 'merge_to_branch'
+        $toResult.ErrorMessage | Should -Match $Reason
+        $toResult.ErrorMessage | Should -Match 'merge_to_branch'
     }
 }
 
@@ -704,6 +753,8 @@ Describe 'Inter-branch merge flow' {
 
         $flow.Invocation['invokedRepoOwner'] | Should -Be 'dotnet'
         $flow.Invocation['invokedRepoName'] | Should -Be 'test-repo'
+        # The same owner and repository must also reach the configuration lookup.
+        $flow.ConfigurationUris[0] | Should -Be $script:ExpectedConfigurationUri
     }
 
     It 'skips an entry without MergeToBranch when no target is supplied' {
