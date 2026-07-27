@@ -74,7 +74,6 @@
   <Project Path="src/Microsoft.DotNet.SignTool/Microsoft.DotNet.SignTool.csproj" />
   <Project Path="src/Microsoft.DotNet.SourceBuild/tasks/Microsoft.DotNet.SourceBuild.Tasks.csproj" />
   <Project Path="src/Microsoft.DotNet.StrongName/Microsoft.DotNet.StrongName.csproj" />
-  <Project Path="src/Microsoft.DotNet.Tar/Microsoft.DotNet.Tar.csproj" />
   <Project Path="src/Microsoft.DotNet.XliffTasks/Microsoft.DotNet.XliffTasks.csproj" />
   <Project Path="src/Microsoft.DotNet.XUnitConsoleRunner/src/Microsoft.DotNet.XUnitConsoleRunner.csproj" />
   <Project Path="src/Microsoft.DotNet.XUnitExtensions.Shared/Microsoft.DotNet.XUnitExtensions.Shared.shproj" />
