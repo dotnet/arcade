@@ -32,6 +32,10 @@ jobs:
   pester:
     # Matches the runner the inter-branch merge workflow itself uses.
     runs-on: windows-latest
+    env:
+      # Pin one exact, tested version so that a runner image refresh or a PSGallery change cannot
+      # silently alter what CI runs.
+      PESTER_VERSION: '5.7.1'
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -39,16 +43,30 @@ jobs:
       - name: Install Pester
         shell: pwsh
         run: |
-          $installed = Get-Module -ListAvailable Pester | Where-Object { $_.Version -ge [version]'5.5.0' }
-          if (-not $installed) {
-            Install-Module Pester -MinimumVersion 5.5.0 -Scope CurrentUser -Force -SkipPublisherCheck
+          if (Get-Module -ListAvailable Pester | Where-Object { $_.Version -eq [version]$env:PESTER_VERSION }) {
+            Write-Host "Pester $env:PESTER_VERSION is already present on this runner."
+            exit 0
           }
+
+          # Saved into a job local directory rather than installed into a shared module path. That
+          # needs no publisher check waiver, and it cannot be shadowed by another Pester that happens
+          # to ship with the runner image.
+          $pesterPath = Join-Path $env:RUNNER_TEMP 'pester'
+          New-Item -ItemType Directory -Path $pesterPath -Force | Out-Null
+          Save-Module -Name Pester -RequiredVersion $env:PESTER_VERSION -Path $pesterPath
 
       - name: Run tests
         shell: pwsh
         run: |
-          Import-Module Pester -MinimumVersion 5.5.0
-          Write-Host "Using Pester $((Get-Module Pester).Version)"
+          $manifest = Join-Path $env:RUNNER_TEMP "pester/Pester/$env:PESTER_VERSION/Pester.psd1"
+          if (Test-Path -LiteralPath $manifest) { Import-Module $manifest -ErrorAction Stop }
+          else { Import-Module Pester -RequiredVersion $env:PESTER_VERSION -ErrorAction Stop }
+
+          $pester = Get-Module Pester
+          if ($pester.Version -ne [version]$env:PESTER_VERSION) {
+            throw "Expected Pester $env:PESTER_VERSION but loaded $($pester.Version) from $($pester.Path)."
+          }
+          Write-Host "Using Pester $($pester.Version) from $($pester.Path)"
 
           $configuration = New-PesterConfiguration
           $configuration.Run.Path = '.github/workflows/scripts/tests'
