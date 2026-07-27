@@ -31,6 +31,11 @@
 
   <Target Name="ComputeRunArguments" />
 
+  <PropertyGroup>
+    <!-- The set of target frameworks the barrier waits for. Overridable so single target framework runs don't deadlock. -->
+    <ExpectedStartedTfms Condition="'$(ExpectedStartedTfms)' == ''">$(TargetFrameworks)</ExpectedStartedTfms>
+  </PropertyGroup>
+
   <Target Name="RunTests"
           Outputs="%(TestToRun.ResultsStdOutPath)"
           Condition="'@(TestToRun)' != ''">
@@ -38,8 +43,8 @@
       <_StartedFile>$(ArtifactsTmpDir)$(TargetFramework).started</_StartedFile>
     </PropertyGroup>
     <ItemGroup>
-      <_ExpectedStartedFile Include="$(ArtifactsTmpDir)test-tfm-a.started" />
-      <_ExpectedStartedFile Include="$(ArtifactsTmpDir)test-tfm-b.started" />
+      <_ExpectedStartedTfm Include="$(ExpectedStartedTfms)" />
+      <_ExpectedStartedFile Include="@(_ExpectedStartedTfm->'$(ArtifactsTmpDir)%(Identity).started')" />
     </ItemGroup>
     <MakeDir Directories="$(ArtifactsTmpDir);$(ArtifactsLogDir)" />
     <WriteLinesToFile File="$(_StartedFile)" Lines="$(TargetFramework)" Overwrite="true" />

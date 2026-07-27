@@ -4,13 +4,13 @@
     <IsTestProject>true</IsTestProject>
     <IsUnitTestProject>true</IsUnitTestProject>
     <TestRunnerName>Parallel</TestRunnerName>
-    <RepositoryEngineeringDir>$(MSBuildThisFileDirectory)eng\</RepositoryEngineeringDir>
+    <RepositoryEngineeringDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'eng'))</RepositoryEngineeringDir>
     <TestRuntime>Core</TestRuntime>
     <TestArchitectures>x64</TestArchitectures>
-    <TargetPath>$(MSBuildThisFileDirectory)$(TargetFramework)\ParallelTestTfms.dll</TargetPath>
-    <ArtifactsTmpDir>$(MSBuildThisFileDirectory)artifacts\tmp\</ArtifactsTmpDir>
-    <ArtifactsLogDir>$(MSBuildThisFileDirectory)artifacts\log\</ArtifactsLogDir>
-    <ArtifactsTestResultsDir>$(MSBuildThisFileDirectory)artifacts\TestResults\</ArtifactsTestResultsDir>
+    <TargetPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(TargetFramework)', 'ParallelTestTfms.dll'))</TargetPath>
+    <ArtifactsTmpDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'artifacts', 'tmp'))</ArtifactsTmpDir>
+    <ArtifactsLogDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'artifacts', 'log'))</ArtifactsLogDir>
+    <ArtifactsTestResultsDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'artifacts', 'TestResults'))</ArtifactsTestResultsDir>
   </PropertyGroup>
   <Import Project="Tests.targets" />
 </Project>

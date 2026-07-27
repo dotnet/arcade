@@ -4,8 +4,13 @@
   <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
     <AutoGenerateBindingRedirects Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">true</AutoGenerateBindingRedirects>
 
-    <_RunTestsTarget Condition="'$(TargetFrameworks)' == ''">_InnerRunTests</_RunTestsTarget>
-    <_RunTestsTarget Condition="'$(TargetFrameworks)' != ''">_OuterRunTests</_RunTestsTarget>
+    <!--
+      Only dispatch to the outer (multi-targeting) build when no specific target framework has been
+      selected. Inner builds keep TargetFrameworks set, so relying on it alone would re-enter the
+      outer path and run every target framework instead of the requested one.
+    -->
+    <_RunTestsTarget>_InnerRunTests</_RunTestsTarget>
+    <_RunTestsTarget Condition="'$(TargetFramework)' == '' and '$(TargetFrameworks)' != ''">_OuterRunTests</_RunTestsTarget>
 
     <!-- The runtime to run tests on: 'Core', 'Mono', 'Full' (desktop FX). -->
     <TestRuntime Condition="'$(TestRuntime)' == '' and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'">Core</TestRuntime>
