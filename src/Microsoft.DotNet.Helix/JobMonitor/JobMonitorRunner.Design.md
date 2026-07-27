@@ -186,17 +186,6 @@ addresses each:
    wait" scheme. → Resubmission-not-possible is treated as an actionable hard
    failure so the invocation fails fast instead of hanging (§2.3.3).
 
-Each of these cases is pinned by a pipeline-emulating test in
-`JobMonitorRunnerTests` (the `AttemptScoped_*` suite): `RetryOnlyMonitor`
-(case 1), `StrandedWaitingPreviousWork` (cases 2/3, mirroring #17156),
-`FastRerun_CurrentIncarnationExists` (case 4),
-`UnlinkedRerunDuplicates_HigherAttemptWinsOutcome` (case 5), and
-`UnresubmittablePreviousWork_FailsFast` (case 6). The `MultiAttempt_*` tests
-additionally exercise the end-to-end lineage across five stage attempts —
-including an attempt in which the monitor never ran — verifying that only
-still-unfinished streams are carried forward and that a stream which has passed
-in any prior attempt is never resubmitted again.
-
 ### 2.4 Upload invariants
 
 Upload is restart-resilient but logically independent from retry.
@@ -488,8 +477,8 @@ least one work item), or `Waiting` (no work items observed yet).
 
 ## 6. Externally observable formats
 
-These shapes are observed by other tools, downstream parsers, or tests and
-must be preserved:
+These shapes are observed by other tools or downstream parsers and must be
+preserved:
 
 - AzDO test-run tag: `helixjob<guid-without-dashes>`, applied to a completed
   test run as an object-form tag (`{ "name": "..." }`).
