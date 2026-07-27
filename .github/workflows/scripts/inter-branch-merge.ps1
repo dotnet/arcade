@@ -124,6 +124,66 @@ function RemoteBranchExists($remoteName, $branchName) {
     return [bool]$lsRemoteOutput
 }
 
+# Resolves merge conflicts that fall entirely within the ResetToTargetPaths patterns.
+#
+# Those files are expected to conflict: the merge branch holds the target branch's version of them
+# while the source branch keeps changing them. They are not conflicts anyone reviews -- the script
+# overwrites those exact paths with the target branch's content on every run no matter how the merge
+# turns out -- so taking the target's version here produces the same tree the script would have
+# produced anyway. Nothing outside the configured patterns is ever resolved: a single conflict
+# outside them makes this return $false so the caller aborts the merge and leaves it to a human.
+function TryResolveResetPathConflicts($patterns, $targetBranch) {
+    if (-not $patterns -or $patterns.Count -eq 0) {
+        return $false
+    }
+
+    $conflicted = @(& git diff --name-only --diff-filter=U)
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to list conflicted files after merging into the existing merge branch."
+    }
+
+    if ($conflicted.Count -eq 0) {
+        return $false
+    }
+
+    $covered = @()
+    foreach ($pattern in $patterns) {
+        $pattern = $pattern.Trim()
+        if (-not $pattern) {
+            continue
+        }
+
+        $matched = @(& git diff --name-only --diff-filter=U -- $pattern)
+        if ($LASTEXITCODE -eq 0 -and $matched.Count -gt 0) {
+            $covered += $matched
+        }
+    }
+
+    $covered = @($covered | Select-Object -Unique)
+
+    $uncovered = @($conflicted | Where-Object { $covered -notcontains $_ })
+    if ($uncovered.Count -gt 0) {
+        Write-Host -f Yellow "Conflicts outside ResetToTargetPaths, leaving them for manual resolution: $($uncovered -join ', ')"
+        return $false
+    }
+
+    foreach ($file in $covered) {
+        & git checkout "origin/$targetBranch" -- $file 2>&1 | Write-Host
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host -f Yellow "Could not take the '$targetBranch' version of '$file'."
+            return $false
+        }
+    }
+
+    $stillConflicted = @(& git diff --name-only --diff-filter=U)
+    if ($LASTEXITCODE -ne 0 -or $stillConflicted.Count -gt 0) {
+        return $false
+    }
+
+    Write-Host -f Green "Took the '$targetBranch' version of conflicted ResetToTargetPaths files: $($covered -join ', ')"
+    return $true
+}
+
 function ResetFilesToTargetBranch($patterns, $targetBranch) {
     if (-not $patterns -or $patterns.Count -eq 0) {
         return
@@ -297,7 +357,7 @@ try {
         Invoke-Block { & git config user.name "github-actions[bot]" }
         Invoke-Block { & git config user.email "41898282+github-actions[bot]@users.noreply.github.com" }
 
-        # No -X ours/-X theirs: a conflict here needs a human, and must not be auto-resolved.
+        # No -X ours/-X theirs: nothing outside ResetToTargetPaths is ever auto-resolved.
         $mergeOutput = & git merge --no-edit "refs/remotes/$remoteName/$MergeFromBranch" 2>&1
         $mergeExitCode = $LASTEXITCODE
 
@@ -306,6 +366,12 @@ try {
         }
 
         if ($mergeExitCode -eq 0) {
+            $updatedExistingBranch = $true
+        }
+        elseif ($ResetToTargetPaths -and (TryResolveResetPathConflicts ($ResetToTargetPaths -split ";") $MergeToBranch)) {
+            # Every conflicted file was one this script overwrites with the target branch's content
+            # anyway, and it has been set to that content. Finish the merge.
+            Invoke-Block { & git commit --no-edit }
             $updatedExistingBranch = $true
         }
         else {
