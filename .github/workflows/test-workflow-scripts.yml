@@ -1,0 +1,57 @@
+# Runs the Pester tests for the PowerShell that backs the workflows in this directory.
+#
+# The Azure DevOps PR pipeline excludes '.github/*' (see the path filters in
+# azure-pipelines-pr.yml), so changes to these workflows and scripts would otherwise land without
+# any automated validation.
+
+name: Test workflow scripts
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/inter-branch-merge-base.yml'
+      - '.github/workflows/scripts/**'
+      - '.github/workflows/test-workflow-scripts.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/inter-branch-merge-base.yml'
+      - '.github/workflows/scripts/**'
+      - '.github/workflows/test-workflow-scripts.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pester:
+    # Matches the runner the inter-branch merge workflow itself uses.
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Install Pester
+        shell: pwsh
+        run: |
+          $installed = Get-Module -ListAvailable Pester | Where-Object { $_.Version -ge [version]'5.5.0' }
+          if (-not $installed) {
+            Install-Module Pester -MinimumVersion 5.5.0 -Scope CurrentUser -Force -SkipPublisherCheck
+          }
+
+      - name: Run tests
+        shell: pwsh
+        run: |
+          Import-Module Pester -MinimumVersion 5.5.0
+          Write-Host "Using Pester $((Get-Module Pester).Version)"
+
+          $configuration = New-PesterConfiguration
+          $configuration.Run.Path = '.github/workflows/scripts/tests'
+          $configuration.Run.Throw = $true
+          $configuration.Output.Verbosity = 'Detailed'
+          Invoke-Pester -Configuration $configuration
