@@ -502,18 +502,3 @@ must be preserved:
 its state is not the terminal success state. A work item is considered
 failed-and-terminal (worth reporting eagerly) when it is failed and not
 still in flight.
-
-## 7. Test traceability
-
-Representative methods in `JobMonitorRunnerTests` pin the major invariant
-groups. This is intentionally a small index rather than an exhaustive test
-catalog.
-
-| Invariant group | Representative test methods |
-| --- | --- |
-| Stage / attempt scope | `StageScopedMonitor_IgnoresJobsOutsideStage_ExitZero`, `AttemptScoped_RetryOnlyMonitor_ReconcilesPreviousAttemptWork`, `AttemptScoped_UnlinkedRerunDuplicates_HigherAttemptWinsOutcome` |
-| Retry | `RetryAttempt2_MultipleJobs_OnlyFailedItemsResubmitted_ExitZero`, `HelixJobFailsAfterMonitorEntry_IsNotResubmittedUntilNextEntry`, `MultiAttempt_ResubmitsOnlyUnfinishedStreamsAcrossAttemptsAndMonitorCrash` |
-| Upload deduplication / restart | `SameCompletedHelixJobSeenAcrossPolls_UploadsOnce`, `PartiallyProcessedLineage_UploadsOnlyUnprocessedOldToNew`, `MonitorTimesOut_Relaunched_UploadsRemainingResults` |
-| Cancellation | `MonitorTimesOut_DoesNotWaitForUploadDrainBeforeCancellingHelixJobs`, `MonitorTimesOut_CancelsLatestInFlightHelixJobs`, `MonitorTimesOut_DoesNotReportOrCancelJobsThatFinishedAfterFirstPoll` |
-| Outcome precedence | `OneSubmitter_FansOutToMultipleQueues_SameWorkItemName_FailureNotOverwrittenByPass`, `NewerPassedIncarnationExistsOnEntry_DoesNotResubmitOlderFailure_ExitZero`, `HelixWorkItemPassesByExitCode_TestUploadReportsFailure_ExitOne` |
-| Failure reporting | `CompletedHelixJob_LogsFailedWorkItemConsoleLinks`, `FinishedHelixJob_WithNonFinishedWorkItemState_IsFailure`, `CanceledAzdoJob_FailsMonitor` |
