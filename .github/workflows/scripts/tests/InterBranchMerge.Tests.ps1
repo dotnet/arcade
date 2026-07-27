@@ -450,6 +450,12 @@ function Invoke-WebRequest {
         return Invoke-WorkflowStep -StepName 'Resolve merge target' -Context $context
     }
 
+    # Errors are recorded raw by the child rather than printed, so the console log can be empty when
+    # a step fails. Report both so a failure never surfaces without a reason.
+    function Get-StepFailureDetail($result) {
+        return ((@($result.ErrorMessage, $result.Log) | Where-Object { $_ -and $_.Trim() }) -join "`n")
+    }
+
     # Drives every step of the job in order, exactly as the workflow wires them together, and reports
     # what the shipped gates decided plus what 'inter-branch-merge.ps1' was actually invoked with.
     function Invoke-MergeFlow([string]$MergeFromInput, [string]$MergeToInput, [string]$RefName = 'main') {
@@ -459,17 +465,17 @@ function Invoke-WebRequest {
         }
 
         $branches = Invoke-WorkflowStep -StepName 'Resolve merge branches' -Context $context -ExtraEnvironment @{ 'GITHUB_REF_NAME' = $RefName }
-        if ($branches.ExitCode -ne 0) { throw "Resolve merge branches failed: $($branches.Log)" }
+        if ($branches.ExitCode -ne 0) { throw "Resolve merge branches failed: $(Get-StepFailureDetail $branches)" }
         Add-StepOutputs $context 'resolve-branches' $branches.Outputs
 
         $configuration = Invoke-WorkflowStep -StepName 'Extract configuration values' -Context $context `
             -Preamble $script:ReadConfigurationPreamble `
             -ExtraEnvironment @{ 'IBM_TEST_CONFIGURATION_FILE' = $script:ConfigurationFile }
-        if ($configuration.ExitCode -ne 0) { throw "Extract configuration values failed: $($configuration.Log)" }
+        if ($configuration.ExitCode -ne 0) { throw "Extract configuration values failed: $(Get-StepFailureDetail $configuration)" }
         Add-StepOutputs $context 'extract-configuration-values' $configuration.Outputs
 
         $target = Invoke-WorkflowStep -StepName 'Resolve merge target' -Context $context
-        if ($target.ExitCode -ne 0) { throw "Resolve merge target failed: $($target.Log)" }
+        if ($target.ExitCode -ne 0) { throw "Resolve merge target failed: $(Get-StepFailureDetail $target)" }
         Add-StepOutputs $context 'resolve-merge-target' $target.Outputs
 
         $gateOutputs = @{}
@@ -479,7 +485,7 @@ function Invoke-WebRequest {
         $invocation = $null
         if ($merges) {
             $invocation = Invoke-WorkflowStep -StepName 'Merge branches' -Context $context -ExtraEnvironment @{ 'GITHUB_REF_NAME' = $RefName }
-            if ($invocation.ExitCode -ne 0) { throw "Merge branches failed: $($invocation.Log)" }
+            if ($invocation.ExitCode -ne 0) { throw "Merge branches failed: $(Get-StepFailureDetail $invocation)" }
         }
 
         return [pscustomobject]@{
@@ -685,12 +691,18 @@ Describe 'Resolve merge target step' {
     }
 }
 
-Describe 'Workflow injection hardening' {
-    # Caller controlled values reach the scripts through step 'env:' entries rather than being
-    # interpolated into a 'run:' body, because a workflow expression is substituted into the script
-    # source before PowerShell ever parses it. Reverting that is value identical, so no behavioural
-    # test would notice; assert the shape directly instead.
-    It 'never interpolates caller controlled data into the <_> run body' -ForEach @(
+Describe 'Runtime input handling' {
+    # Scope: the runtime workflow inputs ('merge_from_branch', 'merge_to_branch',
+    # 'configuration_file_branch', 'configuration_file_path') and the source and target branches
+    # resolved from them. A workflow expression is substituted into the script source before
+    # PowerShell ever parses it, so these values must arrive through step 'env:' entries instead.
+    # Reverting that is value identical, so no behavioural test would notice; assert the shape.
+    #
+    # Deliberately out of scope: 'mergeSwitchArguments' and 'resetToTargetPaths' are derived from
+    # the repository's own merge flow configuration file, and the existing design treats that file
+    # as trusted. 'ExtraSwitches' in particular is splatted onto the command line by design, which
+    # predates this suite and is unchanged by it.
+    It 'never interpolates a runtime input or a resolved branch into the <_> run body' -ForEach @(
         'Resolve merge branches'
         'Extract configuration values'
         'Resolve merge target'
@@ -704,7 +716,7 @@ Describe 'Workflow injection hardening' {
         $run.Text | Should -Not -Match '\$\{\{[^}]*github\.event'
     }
 
-    It 'passes every caller controlled value through a step environment variable' {
+    It 'passes the runtime inputs to the scripts through step environment variables' {
         $environment = Get-WorkflowStepEnvironment 'Resolve merge branches'
 
         $environment['INPUT_MERGE_FROM_BRANCH'] | Should -Be '${{ inputs.merge_from_branch }}'
@@ -714,6 +726,17 @@ Describe 'Workflow injection hardening' {
 
         $environment['CONFIGURATION_FILE_BRANCH'] | Should -Be '${{ inputs.configuration_file_branch }}'
         $environment['CONFIGURATION_FILE_PATH'] | Should -Be '${{ inputs.configuration_file_path }}'
+    }
+
+    It 'passes the resolved source and target branches to the merge through step environment variables' {
+        $environment = Get-WorkflowStepEnvironment 'Merge branches'
+
+        $environment['MERGE_FROM_BRANCH'] | Should -Be '${{ steps.resolve-branches.outputs.mergeFromBranch }}'
+        $environment['MERGE_TO_BRANCH'] | Should -Be '${{ steps.resolve-merge-target.outputs.mergeToBranch }}'
+
+        $environment = Get-WorkflowStepEnvironment 'Extract configuration values'
+
+        $environment['MERGE_FROM_BRANCH'] | Should -Be '${{ steps.resolve-branches.outputs.mergeFromBranch }}'
     }
 }
 
