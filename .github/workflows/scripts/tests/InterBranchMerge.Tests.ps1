@@ -685,6 +685,38 @@ Describe 'Resolve merge target step' {
     }
 }
 
+Describe 'Workflow injection hardening' {
+    # Caller controlled values reach the scripts through step 'env:' entries rather than being
+    # interpolated into a 'run:' body, because a workflow expression is substituted into the script
+    # source before PowerShell ever parses it. Reverting that is value identical, so no behavioural
+    # test would notice; assert the shape directly instead.
+    It 'never interpolates caller controlled data into the <_> run body' -ForEach @(
+        'Resolve merge branches'
+        'Extract configuration values'
+        'Resolve merge target'
+        'Merge branches'
+    ) {
+        $run = Get-WorkflowStepRun $_
+
+        $run.Text | Should -Not -Match '\$\{\{[^}]*inputs\.'
+        $run.Text | Should -Not -Match '\$\{\{[^}]*steps\.resolve-branches\.'
+        $run.Text | Should -Not -Match '\$\{\{[^}]*steps\.resolve-merge-target\.'
+        $run.Text | Should -Not -Match '\$\{\{[^}]*github\.event'
+    }
+
+    It 'passes every caller controlled value through a step environment variable' {
+        $environment = Get-WorkflowStepEnvironment 'Resolve merge branches'
+
+        $environment['INPUT_MERGE_FROM_BRANCH'] | Should -Be '${{ inputs.merge_from_branch }}'
+        $environment['INPUT_MERGE_TO_BRANCH'] | Should -Be '${{ inputs.merge_to_branch }}'
+
+        $environment = Get-WorkflowStepEnvironment 'Extract configuration values'
+
+        $environment['CONFIGURATION_FILE_BRANCH'] | Should -Be '${{ inputs.configuration_file_branch }}'
+        $environment['CONFIGURATION_FILE_PATH'] | Should -Be '${{ inputs.configuration_file_path }}'
+    }
+}
+
 Describe 'Inter-branch merge flow' {
     It 'merges into the configured target when neither input is supplied' {
         $flow = Invoke-MergeFlow -MergeFromInput '' -MergeToInput '' -RefName 'main'
