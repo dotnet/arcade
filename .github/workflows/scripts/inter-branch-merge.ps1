@@ -146,6 +146,16 @@ function TryResolveResetPathConflicts($patterns, $targetBranch) {
         return $false
     }
 
+    # Pathspec magic (anything starting with ':', e.g. ':(attr:...)' or ':(exclude)') can select a
+    # different set of files depending on repository state, so which files a pattern covers is not
+    # guaranteed to still hold after resolving. Only ordinary paths and globs are safe to reason
+    # about here; anything else falls back to leaving the merge to a human.
+    $magicPatterns = @($patterns | Where-Object { $_ -and $_.Trim().StartsWith(':') })
+    if ($magicPatterns.Count -gt 0) {
+        Write-Host -f Yellow "ResetToTargetPaths uses pathspec magic ($($magicPatterns -join ', ')); not resolving conflicts automatically."
+        return $false
+    }
+
     $covered = @()
     foreach ($pattern in $patterns) {
         $pattern = $pattern.Trim()
