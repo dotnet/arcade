@@ -403,14 +403,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             CancellationToken cancellationToken)
         {
             var reportingParameters = new AzureDevOpsReportingParameters(
-                    new Uri(_options.CollectionUri, UriKind.Absolute),
-                    _options.TeamProject,
-                    testRunId.ToString(CultureInfo.InvariantCulture),
-                    _options.SystemAccessToken,
-                    _options.UseFullyQualifiedTestName)
-            {
-                RetryWrites = false,
-            };
+                new Uri(_options.CollectionUri, UriKind.Absolute),
+                _options.TeamProject,
+                testRunId.ToString(CultureInfo.InvariantCulture),
+                _options.SystemAccessToken,
+                _options.UseFullyQualifiedTestName,
+                RetryWrites: false);
             using var publisher = new AzureDevOpsResultPublisher(
                 reportingParameters,
                 _logger);

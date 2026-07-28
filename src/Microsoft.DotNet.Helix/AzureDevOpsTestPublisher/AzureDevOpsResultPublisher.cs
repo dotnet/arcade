@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
 public sealed class AzureDevOpsResultPublisher : IDisposable
 {
+    private const int DefaultRetryCount = 10;
     private const int TestListBuckets = 32;
     private static readonly TimeSpan s_httpClientTimeout = TimeSpan.FromMinutes(5);
     private static readonly JsonSerializerOptions s_serializerOptions = new(JsonSerializerDefaults.Web)
@@ -190,6 +191,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             HttpMethod.Post,
             $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/attachments?api-version=7.1-preview.1",
             new TestRunAttachmentRequest(fileNameBase, base64Data),
+            _azdoParameters.RetryWrites ? DefaultRetryCount : 0,
             cancellationToken);
 
         string metadataUrl = await _uploadClient.UploadAsync(compressedBytes, fileNameBase, "application/gzip", cancellationToken);
@@ -216,6 +218,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             HttpMethod.Post,
             $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results?api-version=7.1-preview.6",
             testCaseResults,
+            _azdoParameters.RetryWrites ? DefaultRetryCount : 0,
             cancellationToken);
 
         IReadOnlyList<PublishedTestCaseResultReference> publishedResults = await ReadPublishedResultsAsync(response, cancellationToken);
@@ -294,7 +297,12 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             ? $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results/{testId}/attachments?testSubResultId={subId}&api-version=7.1-preview.1"
             : $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results/{testId}/attachments?api-version=7.1-preview.1";
 
-        using HttpResponseMessage response = await SendWithRetryAsync(HttpMethod.Post, path, request, cancellationToken);
+        using HttpResponseMessage response = await SendWithRetryAsync(
+            HttpMethod.Post,
+            path,
+            request,
+            _azdoParameters.RetryWrites ? DefaultRetryCount : 0,
+            cancellationToken);
         _ = response;
     }
 
@@ -483,9 +491,10 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         HttpMethod method,
         string relativePath,
         object? payload,
+        int retryCount,
         CancellationToken cancellationToken)
     {
-        int triesLeft = GetRetryCount(method, _azdoParameters.RetryWrites);
+        int triesLeft = retryCount;
         string? body = payload is null ? null : JsonSerializer.Serialize(payload, s_serializerOptions);
         if (!string.IsNullOrEmpty(body))
         {
@@ -557,9 +566,6 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             throw new AzureDevOpsReportingError($"Azure DevOps request failed with status code {(int)response.StatusCode}: {responseBody}");
         }
     }
-
-    internal static int GetRetryCount(HttpMethod method, bool retryWrites)
-        => retryWrites || method == HttpMethod.Get ? 10 : 0;
 
     private static TimeSpan? GetRetryDelay(HttpResponseMessage response)
     {

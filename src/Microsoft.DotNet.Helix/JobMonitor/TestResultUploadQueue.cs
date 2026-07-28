@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
     /// </summary>
     internal sealed class TestResultUploadQueue
     {
-        private const int MaximumTransientAttempts = 3;
+        private const int MaximumTransientRetries = 2;
         private const string AzdoWarningPrefix = "##vso[task.logissue type=warning]";
 
         private readonly ILogger _logger;
@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly IAzureDevOpsService _azdo;
         private readonly IHelixService _helix;
         private readonly MonitorState _monitorState;
-        private readonly Func<CancellationToken, Task> _delay;
+        private readonly Func<TimeSpan, CancellationToken, Task> _delay;
         private readonly List<Task> _pending = [];
 
         public TestResultUploadQueue(
@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             IAzureDevOpsService azdo,
             IHelixService helix,
             MonitorState monitorState,
-            Func<CancellationToken, Task> delay)
+            Func<TimeSpan, CancellationToken, Task> delay)
         {
             _logger = logger;
             _options = options;
@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 "download the Helix test results",
                 helixJob,
                 testRunId: 0,
-                safeToRetry: true,
+                retryCount: MaximumTransientRetries,
                 cancellationToken);
             if (!downloadedSuccessfully)
             {
@@ -109,12 +109,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return;
             }
 
-            (bool created, int testRunId) = await TryExecuteWithRetryAsync(
+            (bool created, int testRunId) = await TryExecuteAsync(
                 () => _azdo.CreateTestRunAsync(helixJob.TestRunName, cancellationToken),
                 "create the Azure DevOps test run",
                 helixJob,
                 testRunId: 0,
-                safeToRetry: false,
                 cancellationToken);
             if (!created)
             {
@@ -123,12 +122,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             (bool uploadedSuccessfully, IReadOnlyDictionary<(string JobName, string WorkItemName), TestResultUploadSummary> testResults)
-                = await TryExecuteWithRetryAsync(
+                = await TryExecuteAsync(
                     () => _azdo.UploadTestResultsAsync(testRunId, downloaded, cancellationToken),
                     "upload the test results to Azure DevOps",
                     helixJob,
                     testRunId,
-                    safeToRetry: false,
                     cancellationToken);
             if (!uploadedSuccessfully)
             {
@@ -148,7 +146,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     .Select(kv => kv.Key.WorkItemName)
             ];
 
-            (bool completed, _) = await TryExecuteWithRetryAsync(
+            (bool completed, _) = await TryExecuteAsync(
                 async () =>
                 {
                     await _azdo.CompleteTestRunAsync(testRunId, helixJob.JobName, failedWorkItems, cancellationToken);
@@ -157,7 +155,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 "complete and tag the Azure DevOps test run",
                 helixJob,
                 testRunId,
-                safeToRetry: false,
                 cancellationToken);
             if (!completed)
             {
@@ -173,59 +170,70 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 helixJob.DisplayName);
         }
 
+        private Task<(bool Success, T Result)> TryExecuteAsync<T>(
+            Func<Task<T>> operation,
+            string operationDescription,
+            HelixJobInfo helixJob,
+            int testRunId,
+            CancellationToken cancellationToken)
+            => TryExecuteWithRetryAsync(
+                operation,
+                operationDescription,
+                helixJob,
+                testRunId,
+                retryCount: 0,
+                cancellationToken);
+
         private async Task<(bool Success, T Result)> TryExecuteWithRetryAsync<T>(
             Func<Task<T>> operation,
             string operationDescription,
             HelixJobInfo helixJob,
             int testRunId,
-            bool safeToRetry,
+            int retryCount,
             CancellationToken cancellationToken)
         {
-            int maximumAttempts = safeToRetry ? MaximumTransientAttempts : 1;
-            for (int attempt = 1; attempt <= maximumAttempts; attempt++)
+            try
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                try
-                {
-                    return (true, await operation());
-                }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                {
-                    throw;
-                }
-                catch (Exception ex) when (TransientFailureDetector.IsTransient(ex) && attempt < maximumAttempts)
-                {
-                    _logger.LogDebug(ex,
-                        "Failed to {OperationDescription} for job {JobName}. Test run ID was {TestRunId}. "
-                        + "Transient attempt {Attempt} of {MaximumAttempts} failed; retrying after delay.",
-                        operationDescription,
-                        helixJob.DisplayName,
-                        testRunId,
-                        attempt,
-                        maximumAttempts);
-                    await _delay(cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    string failureKind = TransientFailureDetector.IsTransient(ex)
-                        ? safeToRetry
-                            ? "Transient retry limit reached."
-                            : "The operation may have partially completed and is not safe to replay in this invocation."
-                        : "The failure is not retryable.";
-                    _logger.LogWarning(ex,
-                        "{Prefix}Failed to {OperationDescription} for job {JobName}. Test run ID was {TestRunId}. "
-                        + "{FailureKind} The run remains untagged and a later monitor invocation may retry the upload.",
-                        AzdoWarningPrefix,
-                        operationDescription,
-                        helixJob.DisplayName,
-                        testRunId,
-                        failureKind);
-                    return (false, default);
-                }
+                T result = await RetryHelper.RetryAsync(
+                    operation,
+                    retryCount,
+                    TransientFailureDetector.IsTransient,
+                    (ex, retry) =>
+                    {
+                        _logger.LogDebug(ex,
+                            "Failed to {OperationDescription} for job {JobName}. Test run ID was {TestRunId}. "
+                            + "Transient retry {Retry} of {RetryCount}; retrying after delay.",
+                            operationDescription,
+                            helixJob.DisplayName,
+                            testRunId,
+                            retry,
+                            retryCount);
+                    },
+                    cancellationToken,
+                    _delay);
+                return (true, result);
             }
-
-            throw new InvalidOperationException("Upload retry loop exited unexpectedly.");
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                string failureKind = TransientFailureDetector.IsTransient(ex)
+                    ? retryCount > 0
+                        ? "Transient retry limit reached."
+                        : "The operation may have partially completed and is not safe to replay in this invocation."
+                    : "The failure is not retryable.";
+                _logger.LogWarning(ex,
+                    "{Prefix}Failed to {OperationDescription} for job {JobName}. Test run ID was {TestRunId}. "
+                    + "{FailureKind} The run remains untagged and a later monitor invocation may retry the upload.",
+                    AzdoWarningPrefix,
+                    operationDescription,
+                    helixJob.DisplayName,
+                    testRunId,
+                    failureKind);
+                return (false, default);
+            }
         }
 
     }

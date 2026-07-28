@@ -6,9 +6,25 @@ namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 public class RetryHelper
 {
     public static async Task<T> RetryAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken)
+        => await RetryAsync(
+            action,
+            retryCount: 4,
+            static _ => true,
+            onRetry: null,
+            cancellationToken);
+
+    public static async Task<T> RetryAsync<T>(
+        Func<Task<T>> action,
+        int retryCount,
+        Func<Exception, bool> isRetryable,
+        Action<Exception, int>? onRetry,
+        CancellationToken cancellationToken,
+        Func<TimeSpan, CancellationToken, Task>? delayAsync = null)
     {
-        Exception? last = null;
-        for (int attempt = 0; attempt < 5; attempt++)
+        ArgumentOutOfRangeException.ThrowIfNegative(retryCount);
+        delayAsync ??= Task.Delay;
+
+        for (int retry = 0; ; retry++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -16,13 +32,15 @@ public class RetryHelper
             {
                 return await action();
             }
-            catch (Exception ex) when (attempt < 4)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                last = ex;
-                await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt + 1)), cancellationToken);
+                throw;
+            }
+            catch (Exception ex) when (retry < retryCount && isRetryable(ex))
+            {
+                onRetry?.Invoke(ex, retry + 1);
+                await delayAsync(TimeSpan.FromSeconds(Math.Pow(2, retry + 1)), cancellationToken);
             }
         }
-
-        throw last ?? new InvalidOperationException("Retry failed without capturing an exception.");
     }
 }
