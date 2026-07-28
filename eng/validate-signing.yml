@@ -17,6 +17,7 @@
 
 parameters:
   microbuildUseESRP: false
+  enablePreviewMicrobuild: false
   useBuiltSdk: true
   # Curated, clean signable inputs from src/Microsoft.DotNet.SignTool.Tests/Resources, shared by all
   # jobs (CopyFiles 'contents' minimatch, one pattern per line).
@@ -44,6 +45,7 @@ jobs:
     name: Validate_Signing_Windows
     displayName: Validate Signing (Windows)
     enableMicrobuild: true
+    enablePreviewMicrobuild: ${{ parameters.enablePreviewMicrobuild }}
     microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
     artifacts:
       ${{ if eq(parameters.useBuiltSdk, true) }}:
@@ -113,6 +115,7 @@ jobs:
     name: Validate_Signing_Linux
     displayName: Validate Signing (Linux)
     enableMicrobuild: true
+    enablePreviewMicrobuild: ${{ parameters.enablePreviewMicrobuild }}
     enableMicrobuildForMacAndLinux: true
     microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
     artifacts:
@@ -180,6 +183,7 @@ jobs:
     name: Validate_Signing_MacOS
     displayName: Validate Signing (macOS)
     enableMicrobuild: true
+    enablePreviewMicrobuild: ${{ parameters.enablePreviewMicrobuild }}
     enableMicrobuildForMacAndLinux: true
     microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
     artifacts:

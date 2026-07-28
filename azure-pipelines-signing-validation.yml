@@ -31,4 +31,5 @@ extends:
       - template: /eng/validate-signing.yml@self
         parameters:
           microbuildUseESRP: true
+          enablePreviewMicrobuild: true
           useBuiltSdk: false
