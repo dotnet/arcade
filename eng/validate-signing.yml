@@ -28,14 +28,12 @@ parameters:
     NestedZip.zip
     PackageWithZip.nupkg
     SignedLibrary.dll
+    test.deb
     test.mpack
     test.pkg
     test.rpm
     test.tgz
     test.zip
-  # test.deb contains a symbolic link, which SignTool cannot repack on Windows.
-  signingTestUnixPackages: |
-    test.deb
   signingTestVSIXes: |
     PackageWithRelationships.vsix
     test.vsix
@@ -157,12 +155,6 @@ jobs:
         targetFolder: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping
         contents: ${{ parameters.signingTestPackages }}
     - task: CopyFiles@2
-      displayName: Stage Unix signing test packages
-      inputs:
-        sourceFolder: $(Build.SourcesDirectory)/src/Microsoft.DotNet.SignTool.Tests/Resources
-        targetFolder: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping
-        contents: ${{ parameters.signingTestUnixPackages }}
-    - task: CopyFiles@2
       displayName: Stage signing test VSIXes
       inputs:
         sourceFolder: $(Build.SourcesDirectory)/src/Microsoft.DotNet.SignTool.Tests/Resources
@@ -228,12 +220,6 @@ jobs:
         sourceFolder: $(Build.SourcesDirectory)/src/Microsoft.DotNet.SignTool.Tests/Resources
         targetFolder: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping
         contents: ${{ parameters.signingTestPackages }}
-    - task: CopyFiles@2
-      displayName: Stage Unix signing test packages
-      inputs:
-        sourceFolder: $(Build.SourcesDirectory)/src/Microsoft.DotNet.SignTool.Tests/Resources
-        targetFolder: $(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping
-        contents: ${{ parameters.signingTestUnixPackages }}
     - task: CopyFiles@2
       displayName: Stage signing test VSIXes
       inputs:
