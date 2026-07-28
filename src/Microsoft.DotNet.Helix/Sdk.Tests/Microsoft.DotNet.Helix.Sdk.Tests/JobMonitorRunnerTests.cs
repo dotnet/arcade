@@ -535,8 +535,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         {
             var azdo = new FakeAzureDevOpsService();
             var helix = new FakeHelixService();
-            int delayCount = 0;
-
             azdo.AddTimelineResponse(
                 MonitorJob(),
                 PipelineJob("Test Linux", "completed", "succeeded"));
@@ -549,12 +547,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     ["helix-linux"] = PassFail(passed: ["workitem-1"]),
                 });
 
-            var runner = new JobMonitorRunner(DefaultOptions(), NullLogger.Instance, azdo, helix,
-                (_, _) =>
-                {
-                    delayCount++;
-                    return Task.CompletedTask;
-                });
+            var runner = CreateRunner(azdo, helix);
 
             int exitCode = await runner.RunAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
 
@@ -562,7 +555,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             azdo.CreateTestRunCallCount.Should().Be(1);
             azdo.UploadTestResultsCallCount.Should().Be(1);
             azdo.CompleteTestRunCallCount.Should().Be(1);
-            delayCount.Should().Be(1);
             azdo.CompletedTestRunIds.Should().ContainSingle();
         }
 

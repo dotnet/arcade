@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Arcade.Common;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
@@ -32,7 +33,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly IAzureDevOpsService _azdo;
         private readonly IHelixService _helix;
         private readonly MonitorState _monitorState;
-        private readonly Func<TimeSpan, CancellationToken, Task> _delay;
         private readonly List<Task> _pending = [];
 
         public TestResultUploadQueue(
@@ -40,15 +40,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             JobMonitorOptions options,
             IAzureDevOpsService azdo,
             IHelixService helix,
-            MonitorState monitorState,
-            Func<TimeSpan, CancellationToken, Task> delay)
+            MonitorState monitorState)
         {
             _logger = logger;
             _options = options;
             _azdo = azdo;
             _helix = helix;
             _monitorState = monitorState;
-            _delay = delay;
         }
 
         public void Enqueue(HelixJobInfo helixJob, IReadOnlyCollection<WorkItemSummary> workItems, CancellationToken cancellationToken)
@@ -195,23 +193,47 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             try
             {
-                T result = await RetryHelper.RetryAsync(
-                    operation,
-                    retryCount,
-                    TransientFailureDetector.IsTransient,
-                    (ex, retry) =>
+                T result = default;
+                var retry = new ExponentialRetry
+                {
+                    MaxAttempts = retryCount + 1,
+                };
+
+                bool succeeded = await retry.RunAsync(
+                    async attempt =>
                     {
-                        _logger.LogDebug(ex,
-                            "Failed to {OperationDescription} for job {JobName}. Test run ID was {TestRunId}. "
-                            + "Transient retry {Retry} of {RetryCount}; retrying after delay.",
-                            operationDescription,
-                            helixJob.DisplayName,
-                            testRunId,
-                            retry,
-                            retryCount);
+                        try
+                        {
+                            result = await operation();
+                            return true;
+                        }
+                        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                        {
+                            throw;
+                        }
+                        catch (Exception ex) when (
+                            TransientFailureDetector.IsTransient(ex)
+                            && attempt < retryCount)
+                        {
+                            _logger.LogDebug(ex,
+                                "Failed to {OperationDescription} for job {JobName}. Test run ID was {TestRunId}. "
+                                + "Transient retry {Retry} of {RetryCount}; retrying after delay.",
+                                operationDescription,
+                                helixJob.DisplayName,
+                                testRunId,
+                                attempt + 1,
+                                retryCount);
+                            return false;
+                        }
                     },
-                    cancellationToken,
-                    _delay);
+                    cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (!succeeded)
+                {
+                    throw new InvalidOperationException("Upload retry loop exited unexpectedly.");
+                }
+
                 return (true, result);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
