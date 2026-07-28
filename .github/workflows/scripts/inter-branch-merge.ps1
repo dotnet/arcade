@@ -358,40 +358,76 @@ try {
     # branch keeps the push a fast-forward and preserves conflict resolutions that were pushed to
     # the PR branch by hand.
     $updatedExistingBranch = $false
+    $mergeBranchHasDiverged = $false
 
     if ($matchingPr -and (RemoteBranchExists $remoteName $mergeBranchName)) {
-        Invoke-Block { & git fetch --quiet $remoteName "refs/heads/${mergeBranchName}:refs/remotes/${remoteName}/${mergeBranchName}" }
-        Invoke-Block { & git checkout -B $mergeBranchName "refs/remotes/$remoteName/$mergeBranchName" }
+        # Plain call, not Invoke-Block: the branch can be deleted between the check above and this
+        # fetch. Re-check rather than failing the run, but only treat a failure as "deleted" when
+        # the remote confirms it -- RemoteBranchExists still throws on an auth or network failure,
+        # so those keep failing loudly instead of silently recreating the branch.
+        & git fetch --quiet $remoteName "refs/heads/${mergeBranchName}:refs/remotes/${remoteName}/${mergeBranchName}" 2>&1 | Write-Host
+        $fetchFailed = $LASTEXITCODE -ne 0
 
-        # A merge commit needs an identity. ResetFilesToTargetBranch configures the same one.
-        Invoke-Block { & git config user.name "github-actions[bot]" }
-        Invoke-Block { & git config user.email "41898282+github-actions[bot]@users.noreply.github.com" }
-
-        # No -X ours/-X theirs: nothing outside ResetToTargetPaths is ever auto-resolved.
-        $mergeOutput = & git merge --no-edit "refs/remotes/$remoteName/$MergeFromBranch" 2>&1
-        $mergeExitCode = $LASTEXITCODE
-
-        if ($mergeOutput) {
-            $mergeOutput | Write-Host
+        if ($fetchFailed -and (RemoteBranchExists $remoteName $mergeBranchName)) {
+            throw "Failed to fetch existing merge branch '$mergeBranchName' from '$remoteName'."
         }
 
-        if ($mergeExitCode -eq 0) {
-            $updatedExistingBranch = $true
-        }
-        elseif ($ResetToTargetPaths -and (TryResolveResetPathConflicts ($ResetToTargetPaths -split ";") $MergeToBranch)) {
-            # Every conflicted file was one this script overwrites with the target branch's content
-            # anyway, and it has been set to that content. Finish the merge.
-            Invoke-Block { & git commit --no-edit }
-            $updatedExistingBranch = $true
+        if ($fetchFailed) {
+            Write-Host -f Yellow "Merge branch '$mergeBranchName' disappeared while it was being read; recreating it from $MergeFromBranch."
         }
         else {
-            # Abort and fall back to recreating the branch from the source tip. That is what this
-            # script did before this branch existed: the push below is rejected as non-fast-forward
-            # and the existing PR is left untouched for someone to resolve by hand.
-            # Plain call, not Invoke-Block: `git merge --abort` exits non-zero when the merge failed
-            # for a reason that left no merge in progress.
-            & git merge --abort 2>&1 | Write-Host
-            Write-Host -f Yellow "Could not merge $MergeFromBranch into the existing '$mergeBranchName' branch; it needs manual conflict resolution. The existing PR will be left unchanged."
+            # Only merge into the existing branch when it has diverged from the source branch. When
+            # it is still an ancestor of the source tip there is nothing on it to preserve and
+            # recreating it from the tip fast-forwards exactly as it always has, so the common case
+            # keeps running the code path it ran before this branch existed.
+            # Plain call, not Invoke-Block: `--is-ancestor` uses exit code 1 to mean "no", which is
+            # an answer rather than a failure.
+            & git merge-base --is-ancestor "refs/remotes/$remoteName/$mergeBranchName" "refs/remotes/$remoteName/$MergeFromBranch"
+            $isAncestorExitCode = $LASTEXITCODE
+
+            if ($isAncestorExitCode -ne 0 -and $isAncestorExitCode -ne 1) {
+                throw "Failed to compare '$mergeBranchName' with $MergeFromBranch (git merge-base --is-ancestor exited $isAncestorExitCode)."
+            }
+
+            $mergeBranchHasDiverged = $isAncestorExitCode -eq 1
+        }
+
+        if (-not $mergeBranchHasDiverged -and -not $fetchFailed) {
+            Write-Host "Merge branch '$mergeBranchName' has not diverged from $MergeFromBranch; recreating it from the source branch tip."
+        }
+        elseif ($mergeBranchHasDiverged) {
+            Invoke-Block { & git checkout -B $mergeBranchName "refs/remotes/$remoteName/$mergeBranchName" }
+
+            # A merge commit needs an identity. ResetFilesToTargetBranch configures the same one.
+            Invoke-Block { & git config user.name "github-actions[bot]" }
+            Invoke-Block { & git config user.email "41898282+github-actions[bot]@users.noreply.github.com" }
+
+            # No -X ours/-X theirs: nothing outside ResetToTargetPaths is ever auto-resolved.
+            $mergeOutput = & git merge --no-edit "refs/remotes/$remoteName/$MergeFromBranch" 2>&1
+            $mergeExitCode = $LASTEXITCODE
+
+            if ($mergeOutput) {
+                $mergeOutput | Write-Host
+            }
+
+            if ($mergeExitCode -eq 0) {
+                $updatedExistingBranch = $true
+            }
+            elseif ($ResetToTargetPaths -and (TryResolveResetPathConflicts ($ResetToTargetPaths -split ";") $MergeToBranch)) {
+                # Every conflicted file was one this script overwrites with the target branch's
+                # content anyway, and it has been set to that content. Finish the merge.
+                Invoke-Block { & git commit --no-edit }
+                $updatedExistingBranch = $true
+            }
+            else {
+                # Abort and fall back to recreating the branch from the source tip. That is what
+                # this script did before this branch existed: the push below is rejected as
+                # non-fast-forward and the existing PR is left untouched for manual resolution.
+                # Plain call, not Invoke-Block: `git merge --abort` exits non-zero when the merge
+                # failed for a reason that left no merge in progress.
+                & git merge --abort 2>&1 | Write-Host
+                Write-Host -f Yellow "Could not merge $MergeFromBranch into the existing '$mergeBranchName' branch; it needs manual conflict resolution. The existing PR will be left unchanged."
+            }
         }
     }
 
