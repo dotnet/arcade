@@ -427,6 +427,11 @@ try {
                 # failed for a reason that left no merge in progress.
                 & git merge --abort 2>&1 | Write-Host
                 Write-Host -f Yellow "Could not merge $MergeFromBranch into the existing '$mergeBranchName' branch; it needs manual conflict resolution. The existing PR will be left unchanged."
+                # An Actions annotation rather than only a log line: this is the one outcome that
+                # needs a human, and it is invisible otherwise -- the push below is classified as a
+                # benign non-fast-forward so the job stays green, and -QuietComments suppresses the
+                # PR comment. Annotations surface on the run summary regardless of either.
+                Write-Host "::warning::Merge branch '$mergeBranchName' has conflicts that must be resolved by hand; the PR for $MergeFromBranch -> $MergeToBranch is no longer being updated."
             }
         }
     }
@@ -464,6 +469,7 @@ try {
                 # untouched and do not fail the job. Reset the exit code so the non-fast-forward
                 # rejection from git push does not propagate as the process exit code.
                 Write-Host -f Yellow "The existing PR branch '$mergeBranchName' has diverged and cannot be fast-forwarded; leaving the existing PR unchanged."
+                Write-Host "::warning::Could not update the PR branch '$mergeBranchName'; it has diverged and was not force-pushed over. The PR for $MergeFromBranch -> $MergeToBranch is stale until someone resolves it."
                 $global:LASTEXITCODE = 0
             }
             else {
