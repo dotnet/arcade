@@ -15,8 +15,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 {
     /// <summary>
     /// Fire-and-forget queue for AzDO test-result uploads. Each queued upload runs as an
-    /// independent task with indefinite retry on transient errors. On normal completion the
-    /// queue is drained so results in flight when the runner exits are not lost. On
+    /// independent task. Transient read failures use bounded retries; state-changing Azure
+    /// DevOps writes are attempted once to avoid replay after an ambiguous response. On normal
+    /// completion the queue is drained so results in flight when the runner exits are not lost. On
     /// cancellation the queue is intentionally NOT drained: cancelling the in-flight Helix jobs
     /// takes priority, and any unfinished upload is re-uploaded in full by a later monitor
     /// invocation (a Helix job is only "processed" once its test run reaches the Completed state).
