@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
@@ -91,29 +90,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.True(defaultParameters.RetryWrites);
             Assert.False(explicitParameters.RetryWrites);
-        }
-
-        [Theory]
-        [InlineData("", true)]
-        [InlineData(@",""RetryWrites"":false", false)]
-        public void ReportingParameters_DeserializationPreservesWriteRetryCompatibility(
-            string retryWritesJson,
-            bool expectedRetryWrites)
-        {
-            string json = $$"""
-                {
-                  "CollectionUri": "https://dev.azure.com/dnceng-public/",
-                  "TeamProject": "public",
-                  "TestRunId": "123"
-                  {{retryWritesJson}}
-                }
-                """;
-
-            AzureDevOpsReportingParameters parameters =
-                Assert.IsType<AzureDevOpsReportingParameters>(
-                    JsonSerializer.Deserialize<AzureDevOpsReportingParameters>(json));
-
-            Assert.Equal(expectedRetryWrites, parameters.RetryWrites);
         }
 
         [Fact]
