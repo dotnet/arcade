@@ -13,10 +13,10 @@ To see your repo's current loc configuration, please refer to https://aka.ms/loc
 
 > **Authenticating the check-in PR:** For GitHub-based repos, the localization check-in PR has
 > historically been authenticated with a shared classic PAT. That PAT is being replaced by a
-> short-lived **GitHub App** installation token to comply with the enterprise classic-PAT policy.
-> See [Authenticating OneLocBuild's GitHub check-in with the GitHub App](OneLocBuildGitHubApp.md)
-> for how to gain access and opt in. The default PAT path still works, so no action is required to
-> keep localization functioning.
+> short-lived **GitHub App** installation token to comply with the enterprise classic-PAT policy,
+> and **the shared PAT will be retired once the App is verified working** — every GitHub-based repo
+> must migrate. See [Authenticating OneLocBuild's GitHub check-in with the GitHub App](OneLocBuildGitHubApp.md)
+> for how to gain access and opt in.
 
 ## Onboarding to OneLocBuild Using Arcade
 

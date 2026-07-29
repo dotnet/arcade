@@ -20,6 +20,12 @@ replacement.
 The GitHub App used for this is **`dotnet OneLoc Localization`** (owned by `@dotnet-bot`). Its only
 job is to open/update the localization check-in PR on your repository.
 
+> **The shared PAT is going away.** Once the GitHub App path is verified working, the shared
+> `BotAccount-dotnet-bot-repo-PAT` will **no longer be maintained** and will be removed. The PAT
+> fallback described below is a temporary migration aid only — every GitHub-based repo that uses
+> OneLocBuild must migrate to the App to keep its localization check-in PR working. Migrate as soon
+> as the App is available for your org.
+
 ## How it works (opt-in, backward-compatible)
 
 The App path is **opt-in** and does not change behavior for any repo that doesn't configure it. In
@@ -37,7 +43,8 @@ passes that token to the OneLocBuild task via `gitHubPatVariable` **instead of**
 
 If `GitHubAppServiceConnection` is left at its default (`''`) — or the build runs in any project
 other than `internal` (e.g. `DevDiv`, `public`) — the job falls back to the existing PAT-based
-authentication. **No action is required for repos that want to keep using the PAT.**
+authentication. This fallback is **temporary**: the shared PAT will be retired once the App path is
+verified, so treat the fallback as a migration window, not a long-term option.
 
 ## Gaining access
 
@@ -129,5 +136,7 @@ The token is minted for the installation on the `GitHubOrg` account (default `do
 - The App path is only available in the **`dnceng/internal`** Azure DevOps project. Pipelines in
   other projects (e.g. DevDiv-hosted loc pipelines) keep using PAT-based auth and are not covered by
   the `dnceng-oneloc-githubapp` service connection.
-- Opting in is **not required** to keep localization working — the default PAT path continues to
-  function. This App is the compliant, long-term replacement, and repos are encouraged to migrate.
+- Migrating is **required, not optional**. The default PAT path still functions today, but the
+  shared `BotAccount-dotnet-bot-repo-PAT` will **not be maintained** once the App is verified and
+  will be removed. Any GitHub-based repo that hasn't migrated by then will have a broken
+  localization check-in PR. Onboard to the App as soon as it's available for your org.
