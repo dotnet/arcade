@@ -43,6 +43,8 @@ param(
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 
+. $PSScriptRoot\pipeline-logging-functions.ps1
+
 function ConvertTo-Base64Url([byte[]] $bytes) {
     return [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
 }
@@ -70,12 +72,26 @@ $digestBytes  = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($signi
 $digestBase64 = [Convert]::ToBase64String($digestBytes)
 
 Write-Host "Signing JWT with key '$KeyName' in vault '$KeyVaultName'..."
-$signResponseJson = az keyvault key sign `
-    --vault-name $KeyVaultName `
-    --name $KeyName `
-    --algorithm RS256 `
-    --digest $digestBase64
-$signResponse  = $signResponseJson | ConvertFrom-Json
+try {
+    $signResponseJson = az keyvault key sign `
+        --vault-name $KeyVaultName `
+        --name $KeyName `
+        --algorithm RS256 `
+        --digest $digestBase64
+}
+catch {
+    Write-PipelineTelemetryError -Category 'Build' -Message "Failed to sign the JWT via Key Vault (key '$KeyName', vault '$KeyVaultName'): $_. Verify the service connection identity has the 'Key Vault Crypto User' role (Sign action) on the key."
+    exit 1
+}
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($signResponseJson)) {
+    Write-PipelineTelemetryError -Category 'Build' -Message "'az keyvault key sign' exited with code $LASTEXITCODE for key '$KeyName' in vault '$KeyVaultName'. Verify the service connection identity has the 'Key Vault Crypto User' role (Sign action) on the key."
+    exit 1
+}
+$signResponse = $signResponseJson | ConvertFrom-Json
+if ([string]::IsNullOrEmpty($signResponse.signature)) {
+    Write-PipelineTelemetryError -Category 'Build' -Message "Key Vault returned an empty signature for key '$KeyName' in vault '$KeyVaultName'."
+    exit 1
+}
 $signatureUrl  = $signResponse.signature.TrimEnd('=').Replace('+', '-').Replace('/', '_')
 $jwt           = "$signingInput.$signatureUrl"
 
@@ -87,19 +103,31 @@ $headers = @{
 }
 
 Write-Host "Looking up installation for '$InstallationOwner'..."
-$installations = Invoke-RestMethod -Uri 'https://api.github.com/app/installations' -Headers $headers -Method Get
+try {
+    $installations = Invoke-RestMethod -Uri 'https://api.github.com/app/installations' -Headers $headers -Method Get
+}
+catch {
+    Write-PipelineTelemetryError -Category 'Build' -Message "Failed to list GitHub App installations: $_. The signed JWT may be invalid or the App's Client ID ('$AppClientId') may be incorrect."
+    exit 1
+}
 $installation  = $installations | Where-Object { $_.account.login -eq $InstallationOwner }
 if ($null -eq $installation) {
     $found = ($installations | ForEach-Object { $_.account.login }) -join ', '
-    Write-Error "No installation found for '$InstallationOwner'. App is installed on: $found"
+    Write-PipelineTelemetryError -Category 'Build' -Message "No installation found for '$InstallationOwner'. App is installed on: $found"
     exit 1
 }
 
-$tokenResponse = Invoke-RestMethod `
-    -Uri "https://api.github.com/app/installations/$($installation.id)/access_tokens" `
-    -Headers $headers `
-    -Method Post `
-    -ContentType 'application/json'
+try {
+    $tokenResponse = Invoke-RestMethod `
+        -Uri "https://api.github.com/app/installations/$($installation.id)/access_tokens" `
+        -Headers $headers `
+        -Method Post `
+        -ContentType 'application/json'
+}
+catch {
+    Write-PipelineTelemetryError -Category 'Build' -Message "Failed to mint an installation access token for '$InstallationOwner' (installation $($installation.id)): $_"
+    exit 1
+}
 
 Write-Host "Got installation token for '$InstallationOwner' (expires $($tokenResponse.expires_at))."
 if ($OutputVariableName) {
