@@ -355,7 +355,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return 1;
             }
 
-            if (_state.AssociatedJobsCount == 0)
+            if (_state.AssociatedJobsCount == 0 && !_options.AllowNoHelixJobs)
             {
                 _reporter.LogNoHelixJobsFailure();
                 return 1;

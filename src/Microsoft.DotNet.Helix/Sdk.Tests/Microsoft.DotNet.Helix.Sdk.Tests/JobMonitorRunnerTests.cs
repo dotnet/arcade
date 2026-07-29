@@ -64,6 +64,29 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 message.Contains("No Helix jobs were submitted by this stage in any attempt."));
         }
 
+        [Fact]
+        public async Task SinglePipelineJobSucceeds_NoHelixJobsAllowed_ExitZero()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Build Linux", "completed", "succeeded"));
+            helix.AddResponse(jobs: []);
+
+            JobMonitorOptions options = DefaultOptions();
+            options.AllowNoHelixJobs = true;
+            var runner = new JobMonitorRunner(options, logger, azdo, helix, NoDelay);
+
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(0);
+            logger.Messages.Should().NotContain(message =>
+                message.Contains("No Helix jobs were submitted by this stage in any attempt."));
+        }
+
         /// <summary>
         /// Two pipeline jobs (plus the monitor). No Helix jobs submitted.
         /// Jobs finish at different times: one passes, one fails.
