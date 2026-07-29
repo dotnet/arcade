@@ -11,6 +11,13 @@ To make OneLocBuild easier to use, we have integrated the task into Arcade. This
 
 To see your repo's current loc configuration, please refer to https://aka.ms/locstats.
 
+> **Authenticating the check-in PR:** For GitHub-based repos, the localization check-in PR has
+> historically been authenticated with a shared classic PAT. That PAT is being replaced by a
+> short-lived **GitHub App** installation token to comply with the enterprise classic-PAT policy.
+> See [Authenticating OneLocBuild's GitHub check-in with the GitHub App](OneLocBuildGitHubApp.md)
+> for how to gain access and opt in. The default PAT path still works, so no action is required to
+> keep localization functioning.
+
 ## Onboarding to OneLocBuild Using Arcade
 
 Onboarding to OneLocBuild is a simple process:
@@ -195,6 +202,10 @@ The parameters that can be passed to the template are as follows:
 | `LanguageSet` | `VS_Main_Languages` | This defines the `LanguageSet` of the LocProject.json as described in the [OneLocBuild task documentation](https://dev.azure.com/ceapex/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). |
 | `LclSource` | `LclFilesInRepo` | This passes the `LclSource` input to the OneLocBuild task as described in [its documentation](https://dev.azure.com/ceapex/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). For most repos, this should be set to `LclFilesfromPackage`. |
 | `LclPackageId` | `''` | When `LclSource` is set to `LclFilesfromPackage`, this passes in the package ID as described in the [OneLocBuild task documentation](https://dev.azure.com/ceapex/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=scenario-2%3A-lcl-files-from-a-package). |
+| `GitHubAppServiceConnection` | `''` | Opt in to GitHub App authentication for the check-in PR (dnceng/internal + `RepoType: gitHub` only). See [the GitHub App doc](OneLocBuildGitHubApp.md). Leave empty to keep PAT-based auth. |
+| `GitHubAppClientId` | `''` | The GitHub App's Client ID. Only used when `GitHubAppServiceConnection` is set. |
+| `GitHubAppKeyVaultName` | `''` | Key Vault holding the App's RSA signing key. Only used when `GitHubAppServiceConnection` is set. |
+| `GitHubAppKeyName` | `''` | Name of the App's RSA signing key in the Key Vault. Only used when `GitHubAppServiceConnection` is set. |
 | `condition` | `''` | Allows for conditionalizing the template's steps on build-time variables. |
 | `JobNameSuffix` | `''` | Allows for custom job name suffix. This is helpful for disambiguation in case of need for more then one OneLocBuild job run - e.g. as a way to set multiple package IDs. |
 
