@@ -202,6 +202,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 bool succeeded = await retry.RunAsync(
                     async attempt =>
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
+
                         try
                         {
                             result = await operation();
@@ -227,10 +229,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         }
                     },
                     cancellationToken);
-                cancellationToken.ThrowIfCancellationRequested();
 
                 if (!succeeded)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     throw new InvalidOperationException("Upload retry loop exited unexpectedly.");
                 }
 
