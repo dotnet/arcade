@@ -209,7 +209,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         public void LogNoHelixJobsFailure()
         {
-            LogError("No Helix jobs were submitted by this stage in any attempt.");
+            LogError($"No Helix jobs were submitted by this stage in any attempt. Stage: '{_options.StageName}', BuildId: {_options.BuildId}.");
         }
 
         /// <summary>
