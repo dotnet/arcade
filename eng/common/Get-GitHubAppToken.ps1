@@ -110,8 +110,8 @@ catch {
     Write-PipelineTelemetryError -Category 'Build' -Message "Failed to list GitHub App installations: $_. The signed JWT may be invalid or the App's Client ID ('$AppClientId') may be incorrect."
     exit 1
 }
-$installation  = $installations | Where-Object { $_.account.login -eq $InstallationOwner }
-if ($null -eq $installation) {
+$installation  = $installations | Where-Object { $_.account.login -eq $InstallationOwner } | Select-Object -First 1
+if (-not $installation) {
     $found = ($installations | ForEach-Object { $_.account.login }) -join ', '
     Write-PipelineTelemetryError -Category 'Build' -Message "No installation found for '$InstallationOwner'. App is installed on: $found"
     exit 1
