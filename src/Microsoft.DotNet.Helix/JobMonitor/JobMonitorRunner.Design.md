@@ -44,8 +44,9 @@ Concretely, all decisions (retry, completion gating, upload, pass/fail) consider
 - Azure DevOps timeline jobs belonging to the monitor's stage.
 - Helix jobs whose `System.StageName` property is empty (stage unknown) or
   matches the monitor's stage. Within that stage, a job's `System.StageAttempt`
-  classifies it as **current-attempt** (empty/unknown, or equal to the monitor's
-  own attempt) or **previous-attempt** (a lower attempt). Previous-attempt work
+  classifies it as **current-attempt** when it equals the monitor's own attempt,
+  or **previous-attempt** when it is lower. When neither the monitor nor its
+  submitted jobs have stage-attempt metadata, attempt scoping is disabled. Previous-attempt work
   is reconciled into the current attempt per §2.3 but is never *gated on*
   directly.
 
@@ -73,9 +74,8 @@ but reconciles previous-attempt work into it by resubmission (§2.3), deciding
 per logical work stream (not per attempt) whether a resubmission is needed.
 
 The monitor's own stage attempt is provided as an input (see §3) and defaults to
-the `SYSTEM_STAGEATTEMPT` pipeline variable. When it is unknown the monitor
-cannot distinguish attempts and falls back to build + stage scope, gating on
-every attempt's work (historical behavior).
+the `SYSTEM_STAGEATTEMPT` pipeline variable. A monitor invocation and the jobs
+submitted within its build use the same stage-attempt metadata contract.
 
 ### 2.2 Durable state
 
@@ -260,7 +260,7 @@ inputs are:
 | Build ID | Scope Helix and AzDO queries to this build. |
 | AzDO collection URI + project | Construct the test-results URL used in failure reports. |
 | Stage name | Stage scope (see §2.1). |
-| Stage attempt | Per-attempt scope (see §2.1). Defaults to `SYSTEM_STAGEATTEMPT`; when unknown the monitor tracks jobs from every attempt of the stage. |
+| Stage attempt | Per-attempt scope (see §2.1). Defaults to `SYSTEM_STAGEATTEMPT`; when absent, jobs from the same build are also expected not to carry stage-attempt metadata. |
 | Polling interval | Delay between poll iterations; a minimum floor applies. |
 | Maximum wait | Reported in the timeout message; the timeout itself is enforced by the caller through cancellation. |
 | Job monitor name | Identifier of the monitor's own AzDO timeline record; used to exclude it from pass/fail. |

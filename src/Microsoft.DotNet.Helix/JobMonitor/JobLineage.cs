@@ -3,34 +3,41 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
 
 namespace Microsoft.DotNet.Helix.JobMonitor
 {
     /// <summary>
-    /// The stage attempt associated with a Helix job. Missing and malformed values retain their
-    /// original representation but sort as the first attempt for backward compatibility.
+    /// The positive stage-attempt number associated with a Helix job.
     /// </summary>
-    internal readonly struct StageAttempt : IComparable<StageAttempt>
+    internal readonly record struct StageAttempt : IComparable<StageAttempt>
     {
-        private StageAttempt(string value)
+        private StageAttempt(int number)
         {
-            Value = value;
+            Number = number;
         }
 
-        public string Value { get; }
-
-        public int Number => int.TryParse(Value, out int attempt) ? attempt : 1;
-
-        public bool IsSpecified => !string.IsNullOrEmpty(Value);
-
-        public static StageAttempt Parse(string value) => new(value);
+        public int Number { get; }
 
         public int CompareTo(StageAttempt other) => Number.CompareTo(other.Number);
 
-        public bool HasSameValue(StageAttempt other)
-            => string.Equals(Value, other.Value, StringComparison.OrdinalIgnoreCase);
+        public static StageAttempt? ParseOptional(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return null;
+            }
+
+            if (!int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int number)
+                || number < 1)
+            {
+                throw new FormatException($"Stage attempt '{value}' must be a positive integer.");
+            }
+
+            return new StageAttempt(number);
+        }
     }
 
     /// <summary>
@@ -78,7 +85,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
     internal sealed record JobIncarnation(
         HelixJobInfo Job,
         WorkStreamIdentity WorkStream,
-        StageAttempt StageAttempt,
+        StageAttempt? StageAttempt,
         int LineageDepth);
 
     /// <summary>
@@ -106,7 +113,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return new JobIncarnation(
                 job,
                 GetWorkStream(job),
-                StageAttempt.Parse(job.StageAttempt),
+                StageAttempt.ParseOptional(job.StageAttempt),
                 GetLineageDepth(job));
         }
 

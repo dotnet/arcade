@@ -12,37 +12,34 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 {
     public class JobLineageTests
     {
-        public static TheoryData<string, bool, int> StageAttempts => new()
+        public static TheoryData<string, int?> StageAttempts => new()
         {
-            { null, false, 1 },
-            { "", false, 1 },
-            { "malformed", true, 1 },
-            { "999999999999999999999", true, 1 },
-            { "1", true, 1 },
-            { " 2 ", true, 2 },
-            { "0", true, 0 },
-            { "-1", true, -1 },
+            { null, null },
+            { "", null },
+            { "1", 1 },
+            { "2", 2 },
         };
 
         [Theory]
         [MemberData(nameof(StageAttempts))]
-        public void StageAttempt_PreservesPresenceAndExistingNumericFallback(
+        public void StageAttempt_ParsesOptionalPositiveInteger(
             string value,
-            bool expectedIsSpecified,
-            int expectedNumber)
+            int? expectedNumber)
         {
-            StageAttempt attempt = StageAttempt.Parse(value);
+            StageAttempt? attempt = StageAttempt.ParseOptional(value);
 
-            Assert.Equal(value, attempt.Value);
-            Assert.Equal(expectedIsSpecified, attempt.IsSpecified);
-            Assert.Equal(expectedNumber, attempt.Number);
+            Assert.Equal(expectedNumber, attempt?.Number);
         }
 
-        [Fact]
-        public void StageAttempt_ValueComparisonIsOrdinalIgnoreCase()
+        [Theory]
+        [InlineData("malformed")]
+        [InlineData("999999999999999999999")]
+        [InlineData(" 2 ")]
+        [InlineData("0")]
+        [InlineData("-1")]
+        public void StageAttempt_RejectsInvalidValues(string value)
         {
-            Assert.True(StageAttempt.Parse("MALFORMED").HasSameValue(StageAttempt.Parse("malformed")));
-            Assert.False(StageAttempt.Parse("01").HasSameValue(StageAttempt.Parse("1")));
+            Assert.Throws<FormatException>(() => StageAttempt.ParseOptional(value));
         }
 
         public static IEnumerable<object[]> WorkStreamIdentities()
@@ -145,7 +142,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             [
                 new[]
                 {
-                    Job("malformed", submitter: "Test", queue: "q", attempt: "not-a-number"),
+                    Job("first", submitter: "Test", queue: "q", attempt: "1"),
                     Job("higher", submitter: "Test", queue: "q", attempt: "2"),
                 },
                 new[] { "higher" },
@@ -225,11 +222,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             [
                 new[]
                 {
-                    Job("z-malformed", attempt: "bad"),
+                    Job("z-first", attempt: "1"),
                     Job("a-missing"),
                     Job("higher", attempt: "2"),
                 },
-                new[] { "a-missing", "z-malformed", "higher" },
+                new[] { "a-missing", "z-first", "higher" },
             ];
             yield return
             [
@@ -253,7 +250,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
         [Theory]
         [MemberData(nameof(OldToNewOrderings))]
-        public void OrderOldToNew_IsDeterministicForMalformedAndCyclicLineage(
+        public void OrderOldToNew_IsDeterministicForIncompleteAndCyclicLineage(
             HelixJobInfo[] jobs,
             string[] expectedJobNames)
         {

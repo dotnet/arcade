@@ -48,9 +48,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// <summary>
         /// Attempt number of the Azure DevOps pipeline stage the monitor is running in. Used to
         /// scope monitoring to Helix jobs submitted by the current stage attempt (matched against
-        /// each job's <c>System.StageAttempt</c> property). When empty the monitor falls back to
-        /// build + stage scope and tracks jobs from every attempt. Defaults to the
-        /// SYSTEM_STAGEATTEMPT environment variable.
+        /// each job's <c>System.StageAttempt</c> property). Defaults to the
+        /// SYSTEM_STAGEATTEMPT environment variable. When empty, jobs submitted within the same
+        /// build are also expected not to carry stage-attempt metadata.
         /// </summary>
         public string StageAttempt { get; set; }
 
