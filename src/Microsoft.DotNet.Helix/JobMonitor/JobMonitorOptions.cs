@@ -65,6 +65,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// </summary>
         public bool FailWorkItemsWithFailedTests { get; set; } = true;
 
+        /// <summary>
+        /// When true, the monitor may succeed when the stage completes without producing any
+        /// Helix jobs in any attempt. Defaults to false so missing submissions fail the monitor.
+        /// </summary>
+        public bool AllowNoHelixJobs { get; set; }
+
         public bool Verbose { get; set; }
 
         public static JobMonitorOptions Parse(string[] args)
@@ -157,6 +163,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 DefaultValueFactory = _ => true
             };
 
+            Option<bool> allowNoHelixJobsOption = new("--allow-no-helix-jobs")
+            {
+                Description = "Allow the monitor to succeed when the stage completes without producing any Helix jobs in any attempt."
+            };
+
             Option<bool> verboseOption = new("--verbose")
             {
                 Description = "Enable verbose job monitor logging."
@@ -183,6 +194,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             rootCommand.Options.Add(stageAttemptOption);
             rootCommand.Options.Add(testResultUploadParallelismOption);
             rootCommand.Options.Add(failWorkItemsWithFailedTestsOption);
+            rootCommand.Options.Add(allowNoHelixJobsOption);
             rootCommand.Options.Add(verboseOption);
 
             rootCommand.SetAction(parseResult =>
@@ -205,6 +217,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     StageAttempt = parseResult.GetValue(stageAttemptOption),
                     TestResultUploadParallelism = parseResult.GetValue(testResultUploadParallelismOption),
                     FailWorkItemsWithFailedTests = parseResult.GetValue(failWorkItemsWithFailedTestsOption),
+                    AllowNoHelixJobs = parseResult.GetValue(allowNoHelixJobsOption),
                     Verbose = parseResult.GetValue(verboseOption),
                 };
             });
