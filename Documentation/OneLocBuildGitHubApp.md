@@ -4,27 +4,15 @@ This document explains how a repository gains access to, and opts in to, the **G
 authentication path for the OneLocBuild localization check-in PR. It supplements the main
 [OneLocBuild in Arcade](OneLocBuild.md) documentation.
 
-## Background: why this change
+## Background
 
-When OneLocBuild is configured for a GitHub-based repo (`RepoType: gitHub`), the task opens (or
-updates) a pull request into the repo to check in the localized files. Historically that PR was
-authenticated with a shared, long-lived classic PAT (`BotAccount-dotnet-bot-repo-PAT`, from the
-`OneLocBuildVariables` variable group).
-
-The **Microsoft Open Source** enterprise policy forbids classic PATs with a lifetime longer than a
-few days, which the shared PAT violates. To comply, the OneLocBuild job template can instead mint a
-**short-lived GitHub App installation token** (`ghs_…`) at build time and use it for the check-in
-PR. Installation tokens are exempt from the classic-PAT lifetime policy, so they are a durable
-replacement.
+When OneLocBuild is configured for a GitHub-based repo (`RepoType: gitHub`), the task opens or
+updates a pull request to check in localized files. The GitHub App authentication path mints a
+repository-scoped installation token (`ghs_…`) at build time, avoiding a stored GitHub credential.
+[GitHub installation tokens expire after one hour](https://docs.github.com/apps/creating-github-apps/authenticating-with-a-github-app/generating-an-installation-access-token-for-a-github-app#generating-an-installation-access-token).
 
 The GitHub App used for this is **`dotnet OneLoc Localization`** (owned by `@dotnet-bot`). Its only
 job is to open/update the localization check-in PR on your repository.
-
-> **The shared PAT is going away.** Once the GitHub App path is verified working, the shared
-> `BotAccount-dotnet-bot-repo-PAT` will **no longer be maintained** and will be removed. The PAT
-> fallback described below is a temporary migration aid only — every GitHub-based repo that uses
-> OneLocBuild must migrate to the App to keep its localization check-in PR working. Migrate as soon
-> as the App is available for your org.
 
 ## How it works (opt-in, backward-compatible)
 
@@ -32,19 +20,17 @@ The App path is **opt-in** and does not change behavior for any repo that doesn'
 [`onelocbuild.yml`](/eng/common/core-templates/job/onelocbuild.yml), the App token is minted only
 when **all** of the following are true:
 
-- `GitHubAppServiceConnection` is set to a non-empty value, **and**
+- `UseGitHubAppAuthentication` is `true`, **and**
 - `RepoType` is `gitHub`, **and**
 - the build is running in the **`internal`** Azure DevOps project (the App service connection and
   Key Vault key are scoped to `dnceng/internal`).
 
 When those hold, the job runs [`get-github-app-token.yml`](/eng/common/templates/steps/get-github-app-token.yml),
 which signs a JWT with the App's RSA key in Key Vault, exchanges it for an installation token, and
-passes that token to the OneLocBuild task via `gitHubPatVariable` **instead of** the shared PAT.
+passes that token to the OneLocBuild task via `gitHubPatVariable`.
 
-If `GitHubAppServiceConnection` is left at its default (`''`) — or the build runs in any project
-other than `internal` (e.g. `DevDiv`, `public`) — the job falls back to the existing PAT-based
-authentication. This fallback is **temporary**: the shared PAT will be retired once the App path is
-verified, so treat the fallback as a migration window, not a long-term option.
+If `UseGitHubAppAuthentication` is `false` — or the build runs in any project other than `internal`
+(e.g. `DevDiv`, `public`) — the job uses the existing `GithubPat` parameter.
 
 ## Gaining access
 
@@ -53,8 +39,8 @@ verified, so treat the fallback as a migration window, not a long-term option.
 1. **The App must be installed on the GitHub org/account that owns your target repo, and your
    specific repository must be selected in that installation.** The App can only open a PR against a
    repository it is installed on. This is what actually grants the App permission to your repo.
-2. **Your pipeline must opt in** by passing the GitHub App parameters to the `onelocbuild.yml`
-   template (see below).
+2. **Your pipeline must opt in** by setting `UseGitHubAppAuthentication: true` in the
+   `onelocbuild.yml` template call.
 
 ### Step 1 — Request that your repository be added to the App installation
 
@@ -88,24 +74,21 @@ template call. For example:
       LclSource: lclFilesfromPackage
       LclPackageId: 'LCL-JUNO-PROD-YOURREPO'
       # Opt in to GitHub App authentication for the check-in PR:
-      GitHubAppServiceConnection: 'dnceng-oneloc-githubapp'
-      GitHubAppClientId: 'Iv23lijBU8x3gc9lDOc9'
-      GitHubAppKeyVaultName: 'EngKeyVault'
-      GitHubAppKeyName: 'oneloc-localization-app-key'
+      UseGitHubAppAuthentication: true
 ```
 
-These values are non-secret identifiers for the dnceng-managed `dotnet OneLoc Localization` App and
-its Key Vault signing key. Confirm the current values with the First Responders when you onboard, in
-case they change.
+The dnceng service connection, App client ID, Key Vault, and key name are centralized as defaults in
+the Arcade template. They can be overridden for separately provisioned infrastructure.
 
 ### GitHub App parameters
 
 | **Parameter** | **Default** | **Notes** |
 |:-:|:-:|-|
-| `GitHubAppServiceConnection` | `''` | The Azure DevOps **WIF service connection** (in `dnceng/internal`) whose identity has `Sign` permission on the App's Key Vault key. Setting this to a non-empty value is what activates the App path. Leave empty to keep using the PAT. |
-| `GitHubAppClientId` | `''` | The GitHub App's **Client ID** (used as the JWT `iss` claim). |
-| `GitHubAppKeyVaultName` | `''` | The Key Vault holding the App's RSA signing key (e.g. `EngKeyVault`). |
-| `GitHubAppKeyName` | `''` | The name of the RSA key inside that Key Vault (the App's private key). |
+| `UseGitHubAppAuthentication` | `false` | Activates the App path for GitHub repos in `dnceng/internal`. |
+| `GitHubAppServiceConnection` | `'dnceng-oneloc-githubapp'` | The Azure DevOps **WIF service connection** whose identity has `Sign` permission on the App's Key Vault key. |
+| `GitHubAppClientId` | `'Iv23lijBU8x3gc9lDOc9'` | The GitHub App's **Client ID** (used as the JWT `iss` claim). |
+| `GitHubAppKeyVaultName` | `'EngKeyVault'` | The Key Vault holding the App's RSA signing key. |
+| `GitHubAppKeyName` | `'oneloc-localization-app-key'` | The name of the RSA key inside that Key Vault (the App's private key). |
 
 The token is minted for the installation on the `GitHubOrg` account (default `dotnet`), so make sure
 `GitHubOrg` (and `MirrorRepo`, if mirroring) point at the org/repo where the App is installed.
@@ -116,13 +99,13 @@ The token is minted for the installation on the `GitHubOrg` account (default `do
 2. In the build, confirm the **`Get GitHub App installation token`** step runs and succeeds before
    the `OneLocBuild` task.
 3. Confirm the check-in PR is opened by the **`dotnet OneLoc Localization`** App (the PR author will
-   be the App / its bot identity) rather than by `dotnet-bot` via the shared PAT.
+   be the App / its bot identity).
 
 ## Troubleshooting
 
-- **The App-token step is skipped.** The App path only activates when `GitHubAppServiceConnection`
-  is non-empty, `RepoType` is `gitHub`, and the build runs in the `internal` project. Verify all
-  three. Builds in `public`/`DevDiv` intentionally fall back to the PAT.
+- **The App-token step is skipped.** The App path only activates when
+  `UseGitHubAppAuthentication` is `true`, `RepoType` is `gitHub`, and the build runs in the
+  `internal` project. Verify all three.
 - **Token minting fails with a Key Vault authorization error.** The service connection identity
   needs the `Key Vault Crypto User` role (or at least the `Sign` action) on the App's key. Contact
   First Responders.
@@ -134,9 +117,6 @@ The token is minted for the installation on the `GitHubOrg` account (default `do
 ## Scope and limitations
 
 - The App path is only available in the **`dnceng/internal`** Azure DevOps project. Pipelines in
-  other projects (e.g. DevDiv-hosted loc pipelines) keep using PAT-based auth and are not covered by
-  the `dnceng-oneloc-githubapp` service connection.
-- Migrating is **required, not optional**. The default PAT path still functions today, but the
-  shared `BotAccount-dotnet-bot-repo-PAT` will **not be maintained** once the App is verified and
-  will be removed. Any GitHub-based repo that hasn't migrated by then will have a broken
-  localization check-in PR. Onboard to the App as soon as it's available for your org.
+  other projects use `GithubPat` and are not covered by the `dnceng-oneloc-githubapp` service
+  connection. DevDiv can use the same template path after a DevDiv-scoped service connection and
+  signing-key access are provisioned.
