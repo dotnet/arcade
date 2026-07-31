@@ -48,7 +48,7 @@
     This target translates common msbuild properties to NuSpec properties.
   -->
   <Target Name="InitializeStandardNuspecProperties"
-          BeforeTargets="GenerateNuspec"
+          BeforeTargets="GenerateNuspec;_CalculateInputsOutputsForPack"
           DependsOnTargets="_InitializeNuspecRepositoryInformationPropertiesWorkaround"
           Condition="'$(IsPackable)' == 'true'">
 
