@@ -47,10 +47,12 @@
     Project that produce tools packages use .nuspec file in order to include all the needed dependencies.
     This target translates common msbuild properties to NuSpec properties.
 
-    NuspecProperties must be set before _CalculateInputsOutputsForPack runs because NuGet reads them as
-    incremental-build inputs (see https://github.com/NuGet/NuGet.Client/pull/7531).
-    Using GenerateNuspecDependsOn hooks into the public NuGet extension point for GenerateNuspec ordering.
-  -->
+    Starting with https://github.com/NuGet/NuGet.Client/pull/7531, GetPackOutputItemsTask needs NuspecProperties.
+    This task runs during _GetOutputItemsFromPack target (which _CalculateInputsOutputsForPack depends on).
+    To ensure we have set the NuspecProperties early enough, we need to include InitializeStandardNuspecProperties in GenerateNuspecDependsOn.
+    The GenerateNuspecDependsOn targets are guaranteed to run before _CalculateInputsOutputsForPack.
+    This was preferred over BeforeTargets="_CalculateInputsOutputsForPack;GenerateNuspec" to avoid depending on a private target name.
+   -->
   <PropertyGroup>
     <GenerateNuspecDependsOn>$(GenerateNuspecDependsOn);InitializeStandardNuspecProperties</GenerateNuspecDependsOn>
   </PropertyGroup>
