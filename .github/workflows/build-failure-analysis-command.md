@@ -18,7 +18,6 @@ on:
   slash_command:
     name: analyze-build-failure
     events: [pull_request_comment]
-    strategy: centralized
   roles: [admin, maintainer, write]
   reaction: "eyes"
   # Gate the AI pipeline on the fetch job so the agent only runs when a binlog
@@ -77,6 +76,19 @@ mcp-servers:
 jobs:
   fetch-binlog:
     name: Fetch binlogs (Azure Pipelines)
+    # Cheap pre-gate. This job is a dependency of gh-aw's `pre_activation`, so it
+    # runs BEFORE the role / command-position check. Without a guard it would
+    # download hundreds of MB of binlogs on *every* comment in the repository,
+    # which any public commenter could trigger repeatedly. Mirror the same
+    # trusted-author predicate `pre_activation` uses so an untrusted commenter
+    # cannot force the download at all. `pre_activation` remains the
+    # authoritative role + command-position check, and `activation` additionally
+    # requires `binlog-found == 'true'`.
+    if: >-
+      github.event.repository.fork == false &&
+      github.event.issue.pull_request &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
+      contains(github.event.comment.body, '/analyze-build-failure')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
