@@ -56,7 +56,6 @@
   </PropertyGroup>
 
   <Target Name="InitializeStandardNuspecProperties"
-          BeforeTargets="_CalculateInputsOutputsForPack"
           DependsOnTargets="_InitializeNuspecRepositoryInformationPropertiesWorkaround"
           Condition="'$(IsPackable)' == 'true'">
 
