@@ -44,7 +44,12 @@ permissions:
   copilot-requests: write
 
 concurrency:
-  group: build-failure-analysis-${{ github.event.issue.number || github.event.pull_request.number || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number || github.run_id }}
+  # Distinct from the automatic workflow's group (`build-failure-analysis-<pr>`).
+  # Concurrency groups are repository-global, so sharing the name made the two
+  # workflows cancel each other for the same PR: a newly failing build would
+  # kill an on-demand analysis a maintainer had just asked for. Each still
+  # collapses its own repeat invocations for a PR.
+  group: build-failure-analysis-cmd-${{ github.event.issue.number || github.event.pull_request.number || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number || github.run_id }}
   cancel-in-progress: true
 
 timeout-minutes: 30
@@ -86,6 +91,28 @@ jobs:
     # commenter's real repository permission before anything is downloaded.
     # `pre_activation` remains the authoritative role + command-position check,
     # and `activation` additionally requires `binlog-found == 'true'`.
+    #
+    # KEEP IN SYNC with `roles:` in the frontmatter above. The author_association
+    # list here and the permission step below are hand-written restatements of
+    # that policy; editing `roles:` does NOT update them, because only
+    # `pre_activation` is generated from the frontmatter.
+    #
+    # `github.event.issue.pull_request` is what keeps plain issue comments out:
+    # gh-aw emits no such filter of its own despite `events: [pull_request_comment]`
+    # (checked in the generated lock), so PR-only scoping is a property of this
+    # hand-written expression rather than something the compiler enforces. It
+    # degrades safely without it — `repos/.../pulls/<issue#>` 404s and the script
+    # emits no binlog — but it would pay for a runner first.
+    #
+    # `contains(..., '/analyze-build-failure')` is a substring match anywhere in
+    # the body, whereas the authoritative `check_command_position` requires the
+    # command to be in a valid position. So a write-access user merely mentioning
+    # the command, or editing an old comment that quotes it (`types:` includes
+    # `edited`), still starts this job and pays for the download before
+    # `pre_activation` throws the result away. Workflow `if:` expressions have no
+    # regex, and `startsWith` would reject the leading whitespace/newlines gh-aw
+    # accepts, so this stays a deliberate over-approximation: it can cost a
+    # runner, never grant access.
     if: >-
       github.event.repository.fork == false &&
       github.event.issue.pull_request &&
@@ -108,41 +135,66 @@ jobs:
       # with read-only access apart from a maintainer, so resolve the real
       # repository permission here — before any download — and match it against
       # the same `roles: [admin, maintainer, write]` this command declares.
-      # Check `role_name` and `permission` together: `role_name` reports the
-      # precise role (so `maintain` and `triage` stay distinct) while
-      # `permission` is the coarse legacy field, and a custom org role reports a
-      # non-standard name in `role_name` while still showing its push access in
-      # `permission`. Accepting the union of the two covers every shape without
-      # depending on which field carries the role. On any API failure `gh` emits
-      # an error document that has neither field, so the check falls into the
-      # deny branch; failing closed is the safe direction for a pre-gate.
+      # KEEP IN SYNC with that list.
+      #
+      # `.permission` is the field to test. The REST docs for this endpoint say
+      # it returns the legacy base roles admin|write|read|none, "where the
+      # maintain role is mapped to write and the triage role is mapped to read",
+      # so `admin|write` is exactly "has push access or better" — precisely the
+      # set `roles: [admin, maintainer, write]` describes, with maintainers
+      # included.
+      #
+      # `.role_name` is deliberately NOT consulted. It reports "the name of the
+      # assigned role, including custom roles", and a custom organization role
+      # only has to avoid the base names read/triage/write/maintain/admin — so
+      # matching on it would let a role merely *named* like a privileged one
+      # (e.g. a custom `maintainer` inheriting read) pass this gate with no push
+      # access at all.
+      #
+      # On any API failure the response carries no `.permission`, so `perm` ends
+      # up empty and the check falls into the deny branch; failing closed is the
+      # safe direction for a pre-gate.
       - name: Verify the commenter has write access
         id: perm
         if: github.event_name == 'issue_comment'
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           COMMENTER: ${{ github.event.comment.user.login }}
         run: |
           set +e
+          # `COMMENTER` is interpolated into an API path and into log output, so
+          # give it the same shape check `PR_NUMBER` and `BUILD_ID` get below.
+          # GitHub logins are alphanumerics and hyphens; anything else (a bot
+          # login such as `github-actions[bot]`, or an empty value) is rejected
+          # here instead of being sent to the API.
+          if ! printf '%s' "${COMMENTER}" | grep -qE '^[A-Za-z0-9-]+$'; then
+            echo "::warning::Commenter login is missing or malformed; skipping the binlog download."
+            echo "authorized=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Read the response first and extract with `jq` rather than using
+          # `gh api --jq`: on a non-2xx response `gh` prints the error document
+          # to stdout, which `--jq` does not filter, so the raw JSON would end
+          # up in `perm` and get echoed into the log. Extracting the field
+          # ourselves yields an empty string for any error shape.
           resp=$(gh api "repos/${GITHUB_REPOSITORY}/collaborators/${COMMENTER}/permission" 2>/dev/null)
-          role=$(printf '%s' "${resp}" | jq -r '.role_name // empty' 2>/dev/null)
           perm=$(printf '%s' "${resp}" | jq -r '.permission // empty' 2>/dev/null)
-          authorized=false
-          for r in "${role}" "${perm}"; do
-            case "${r}" in
-              admin|maintain|maintainer|write) authorized=true ;;
-            esac
-          done
+          case "${perm}" in
+            admin|write) authorized=true ;;
+            *)           authorized=false ;;
+          esac
           if [ "${authorized}" = "true" ]; then
-            echo "'${COMMENTER}' has '${role:-${perm}}' access to ${GITHUB_REPOSITORY}; proceeding."
+            echo "'${COMMENTER}' has '${perm}' access to ${GITHUB_REPOSITORY}; proceeding."
           else
-            echo "::warning::'${COMMENTER}' does not have write access to ${GITHUB_REPOSITORY} (resolved role '${role:-none}'); skipping the binlog download."
+            echo "::warning::'${COMMENTER}' does not have write access to ${GITHUB_REPOSITORY} (resolved permission '${perm:-none}'); skipping the binlog download."
           fi
           echo "authorized=${authorized}" >> "$GITHUB_OUTPUT"
 
       - name: Download binlogs from the PR's latest failed Azure Pipelines build
         id: fetch
         if: github.event_name != 'issue_comment' || steps.perm.outputs.authorized == 'true'
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           GH_AW_REPO: ${{ github.repository }}
@@ -423,6 +475,7 @@ steps:
       path: /tmp/binlogs
 
   - name: Export agent context
+    shell: bash
     env:
       GH_AW_BINLOG_FOUND_VALUE: ${{ needs.fetch-binlog.outputs.binlog-found }}
       GH_AW_PR_NUMBER_VALUE: ${{ needs.fetch-binlog.outputs.pr-number }}
