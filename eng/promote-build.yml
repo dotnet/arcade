@@ -22,20 +22,9 @@ parameters:
   default: ' '
 
 - name: ArtifactsPublishingAdditionalParameters
-  displayName: Additional (MSBuild) properties for general asset publishing
+  displayName: Additional (MSBuild) properties for general asset publishing (for example, /p:BuildQuality=preview)
   type: string
   default: ' '
-
-- name: BuildQuality
-  displayName: "Build quality used when creating aka.ms links (aka.ms/dotnet/<channel>/<quality>/...):"
-  type: string
-  default: daily
-  values:
-  - daily
-  - preview
-  - ga
-  - signed
-  - validated
 
  # The parameters below here are legacy. They are passed by add-build-to-channel
  # to the build pipeline, and if they are not present in the pipeline, then queueing
@@ -95,4 +84,3 @@ extends:
         BARBuildId: ${{ parameters.BARBuildId }}
         symbolPublishingAdditionalParameters: ${{ parameters.SymbolPublishingAdditionalParameters }}
         artifactsPublishingAdditionalParameters: ${{ parameters.ArtifactsPublishingAdditionalParameters }}
-        buildQuality: ${{ parameters.BuildQuality }}

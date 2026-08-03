@@ -153,12 +153,10 @@ stages:
           /p:AzureDevOpsFeedsKey='$(dn-bot-all-orgs-artifact-feeds-rw)'
           /p:AkaMSClientId=$(akams-app-id)
           /p:AkaMSClientCertificate=$(Agent.TempDirectory)/akamsclientcert.pfx
-          ${{ parameters.artifactsPublishingAdditionalParameters }} 
           /p:PDBArtifactsBasePath='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
           /p:SymbolPublishingExclusionsFile='$(Build.ArtifactStagingDirectory)/ReleaseConfigs/SymbolPublishingExclusionsFile.txt'
           /p:TempSymbolsAzureDevOpsOrg='dnceng'
           /p:SymbolRequestProject='dotnet'
-          ${{ parameters.symbolPublishingAdditionalParameters}}
           /p:BuildQuality='${{ parameters.buildQuality }}'
           /p:ArtifactsBasePath='$(Build.ArtifactStagingDirectory)/'
           /p:BuildId='$(AzDOBuildId)'
@@ -167,6 +165,8 @@ stages:
           /p:UseStreamingPublishing='true'
           /p:StreamingPublishingMaxClients=16
           /p:NonStreamingPublishingMaxClients=12
+          ${{ parameters.artifactsPublishingAdditionalParameters }}
+          ${{ parameters.symbolPublishingAdditionalParameters}}
 
     - template: /eng/common/templates-official/steps/publish-logs.yml@self
       parameters:
