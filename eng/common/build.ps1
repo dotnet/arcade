@@ -8,6 +8,7 @@ Param(
   [bool] $warnAsError = $true,
   [string] $warnNotAsError = '',
   [bool] $nodeReuse = $true,
+  [bool][Alias('mt')]$msbuildMultiThreaded = $true,
   [switch] $buildCheck = $false,
   [switch][Alias('r')]$restore,
   [switch] $deployDeps,
@@ -79,6 +80,7 @@ function Print-Usage() {
   Write-Host "  -excludePrereleaseVS    Set to exclude build engines in prerelease versions of Visual Studio"
   Write-Host "  -nativeToolsOnMachine   Sets the native tools on machine environment variable (indicating that the script should use native tools on machine)"
   Write-Host "  -nodeReuse <value>      Sets nodereuse msbuild parameter ('true' or 'false')"
+  Write-Host "  -msbuildMultiThreaded <value> Sets /mt msbuild parameter ('true' or 'false'); defaults to 'true' locally and 'false' in CI (short: -mt)"
   Write-Host "  -buildCheck             Sets /check msbuild parameter"
   Write-Host "  -fromVMR                Set when building from within the VMR"
   Write-Host "  -disablePipelineSetResult Set to disable masking the actual exit code in the pipeline when the build fails"
@@ -179,6 +181,11 @@ try {
     # Internal testing only; this env var will be replaced with a switch (https://github.com/dotnet/arcade/issues/17013) and must not be depended on.
     if ($env:MSBUILD_NODEREUSE_ENABLED -ne "1") {
       $nodeReuse = $false
+    }
+    # Msbuild multi-threaded mode is currently not run on CI unless explicitly opted in via MSBUILD_MT_ENABLED.
+    # Internal testing only; this env var must not be depended on.
+    if ($env:MSBUILD_MT_ENABLED -ne "1") {
+      $msbuildMultiThreaded = $false
     }
   }
 

@@ -15,6 +15,7 @@ scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 verbosity='minimal'
 warn_as_error=true
 node_reuse=true
+msbuild_multi_threaded=true
 prepare_machine=false
 extra_args=''
 
@@ -31,6 +32,10 @@ while (($# > 0)); do
       ;;
     --nodereuse)
       node_reuse=$2
+      shift 2
+      ;;
+    --msbuildmultithreaded|--mt)
+      msbuild_multi_threaded=$2
       shift 2
       ;;
     --ci)
@@ -55,6 +60,11 @@ if [[ "$ci" == true ]]; then
   # Internal testing only; this env var will be replaced with a switch (https://github.com/dotnet/arcade/issues/17013) and must not be depended on.
   if [[ "${MSBUILD_NODEREUSE_ENABLED:-}" != "1" ]]; then
     node_reuse=false
+  fi
+  # Msbuild multi-threaded mode is currently not run on CI unless explicitly opted in via MSBUILD_MT_ENABLED.
+  # Internal testing only; this env var must not be depended on.
+  if [[ "${MSBUILD_MT_ENABLED:-}" != "1" ]]; then
+    msbuild_multi_threaded=false
   fi
 fi
 

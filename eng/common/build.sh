@@ -43,6 +43,7 @@ usage()
   echo "  --pipelinesLog           Promote msbuild errors/warnings to Azure Pipelines timeline issues; defaults to on in CI (short: -pl)"
   echo "  --prepareMachine         Prepare machine for CI run, clean up processes after build"
   echo "  --nodeReuse <value>      Sets nodereuse msbuild parameter ('true' or 'false')"
+  echo "  --msbuildMultiThreaded <value> Sets /mt msbuild parameter ('true' or 'false'); defaults to 'true' locally and 'false' in CI (short: -mt)"
   echo "  --warnAsError <value>    Sets warnaserror msbuild parameter ('true' or 'false')"
   echo "  --warnNotAsError <value> Sets a semi-colon delimited list of warning codes that should not be treated as errors"
   echo "  --buildCheck <value>     Sets /check msbuild parameter"
@@ -85,6 +86,7 @@ clean=false
 warn_as_error=true
 warn_not_as_error=''
 node_reuse=true
+msbuild_multi_threaded=true
 build_check=false
 binary_log=false
 binary_log_name=''
@@ -199,6 +201,10 @@ while [[ $# -gt 0 ]]; do
       node_reuse=$2
       shift
       ;;
+    -msbuildmultithreaded|-mt)
+      msbuild_multi_threaded=$2
+      shift
+      ;;
     -buildcheck)
       build_check=true
       ;;
@@ -228,6 +234,11 @@ if [[ "$ci" == true ]]; then
   # Internal testing only; this env var will be replaced with a switch (https://github.com/dotnet/arcade/issues/17013) and must not be depended on.
   if [[ "${MSBUILD_NODEREUSE_ENABLED:-}" != "1" ]]; then
     node_reuse=false
+  fi
+  # Msbuild multi-threaded mode is currently not run on CI unless explicitly opted in via MSBUILD_MT_ENABLED.
+  # Internal testing only; this env var must not be depended on.
+  if [[ "${MSBUILD_MT_ENABLED:-}" != "1" ]]; then
+    msbuild_multi_threaded=false
   fi
   if [[ "$exclude_ci_binary_log" == false ]]; then
     binary_log=true
