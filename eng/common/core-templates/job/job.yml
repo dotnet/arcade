@@ -207,6 +207,12 @@ jobs:
           Contents: '**'
           TargetFolder: '$(Build.ArtifactStagingDirectory)/artifacts/packages'
     - ${{ if and(ne(parameters.artifacts.publish.logs, 'false'), ne(parameters.artifacts.publish.logs, '')) }}:
+      # 1ES PT validates non-production output paths even when an earlier task fails.
+      - pwsh: |
+          New-Item -ItemType Directory -Force -Path '$(System.DefaultWorkingDirectory)/artifacts/log' | Out-Null
+          New-Item -ItemType Directory -Force -Path '$(Build.ArtifactStagingDirectory)/artifacts/log' | Out-Null
+        displayName: Initialize log artifact directories
+        condition: always()
       - task: CopyFiles@2
         displayName: Gather logs for publish to artifacts
         inputs:
