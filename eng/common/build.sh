@@ -43,7 +43,7 @@ usage()
   echo "  --pipelinesLog           Promote msbuild errors/warnings to Azure Pipelines timeline issues; defaults to on in CI (short: -pl)"
   echo "  --prepareMachine         Prepare machine for CI run, clean up processes after build"
   echo "  --nodeReuse <value>      Sets nodereuse msbuild parameter ('true' or 'false')"
-  echo "  --msbuildMultiThreaded <value> Sets /mt msbuild parameter ('true' or 'false'); defaults to 'true' locally and 'false' in CI (short: -mt)"
+  echo "  --msbuildMultiThreaded <value> Sets -mt msbuild parameter ('true' or 'false'); defaults to 'true' locally and 'false' in CI (short: -mt)"
   echo "  --warnAsError <value>    Sets warnaserror msbuild parameter ('true' or 'false')"
   echo "  --warnNotAsError <value> Sets a semi-colon delimited list of warning codes that should not be treated as errors"
   echo "  --buildCheck <value>     Sets /check msbuild parameter"

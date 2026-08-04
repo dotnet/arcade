@@ -596,7 +596,7 @@ function MSBuild {
 
   local mt_switch=""
   if [[ "$msbuild_multi_threaded" == true ]]; then
-    mt_switch="/mt"
+    mt_switch="-mt"
   fi
 
   local warnnotaserror_switch=""
