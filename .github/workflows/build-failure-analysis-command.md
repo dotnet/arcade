@@ -67,6 +67,25 @@ imports:
 # DevOps into a directory and uploads it; the agent job downloads it to
 # `/tmp/binlogs` and the gh-aw MCP gateway mounts it read-only at
 # `/data/binlogs`.
+#
+# NOT pinned by digest, and that is a gh-aw v0.77.5 limitation, not a choice.
+# This container is handed the binlogs of an unmerged, possibly external PR and
+# its output is what the agent reports back, so "whatever this tag points at
+# today" is a supply-chain decision made by whoever last pushed the tag — and
+# the tag does move: it resolved to sha256:9f1e2c3e8281... from 2026-07-16
+# until 2026-08-03, when it became
+# sha256:ee7b7e5c6e162f3f0061822aa7183260626f1a1e986d04ba9915ab197a37932c.
+# v0.77.5 validates `container` against `^[a-zA-Z0-9][a-zA-Z0-9/:_.-]*$`, which
+# has no `@`, so `image@sha256:...` is rejected at compile time and the
+# generated `download_docker_images.sh` pulls this image by bare tag while every
+# other image in the lock is digest-pinned. gh-aw >= v0.83.x resolves and pins
+# the digest automatically (verified: microsoft/testfx on v0.83.4 emits
+# `digest` + `pinned_image` in its `gh-aw-manifest` and pulls by `@sha256:`), so
+# this is fixed by bumping the compiler this repo pins rather than by editing
+# this line.
+# Refresh/inspect the current digest with:
+#   docker buildx imagetools inspect \
+#     mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-binlog-mcp-amd64
 mcp-servers:
   binlog-mcp:
     container: "mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-binlog-mcp-amd64"
@@ -108,11 +127,11 @@ jobs:
     # the body, whereas the authoritative `check_command_position` requires the
     # command to be in a valid position. So a write-access user merely mentioning
     # the command, or editing an old comment that quotes it (`types:` includes
-    # `edited`), still starts this job and pays for the download before
-    # `pre_activation` throws the result away. Workflow `if:` expressions have no
+    # `edited`), still starts this job. Workflow `if:` expressions have no
     # regex, and `startsWith` would reject the leading whitespace/newlines gh-aw
-    # accepts, so this stays a deliberate over-approximation: it can cost a
-    # runner, never grant access.
+    # accepts, so this stays a deliberate over-approximation — but it is now
+    # only a cheap pre-filter: the first step of the job reproduces gh-aw's real
+    # first-token check and bails out before anything is downloaded.
     if: >-
       github.event.repository.fork == false &&
       github.event.issue.pull_request &&
@@ -154,15 +173,45 @@ jobs:
       # On any API failure the response carries no `.permission`, so `perm` ends
       # up empty and the check falls into the deny branch; failing closed is the
       # safe direction for a pre-gate.
-      - name: Verify the commenter has write access
+      - name: Verify the comment invokes the command and the commenter has write access
         id: perm
         if: github.event_name == 'issue_comment'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           COMMENTER: ${{ github.event.comment.user.login }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMAND_NAME: "analyze-build-failure"
         run: |
           set +e
+          # --- 1. Command position (free; do this before the API call) ------
+          # The job-level `if:` can only use `contains()`, a plain substring
+          # test, so a comment that merely mentions the command — or an edited
+          # old comment quoting it — still reaches this job and pays for the
+          # download before `pre_activation` throws the result away. That check
+          # runs too late by construction, so reproduce it here.
+          #
+          # gh-aw trims the body and requires the command to be the FIRST token:
+          # `/^\/([a-zA-Z0-9][a-zA-Z0-9._-]*)(?=$|\s)/` over the trimmed text,
+          # then an equality comparison on the captured name
+          # (actions/setup/js/slash_command_matcher.cjs). `awk 'NF {print $1;
+          # exit}'` is the same rule: skip leading whitespace/blank lines, take
+          # the first whitespace-delimited token. The token is delimited by
+          # whitespace or end-of-input, exactly the `(?=$|\s)` lookahead, so
+          # `/analyze-build-failure-now` correctly does NOT match. `tr -d '\r'`
+          # is needed because JS `.trim()` and `\s` treat CR as whitespace while
+          # awk's default field splitting does not.
+          # KEEP IN SYNC with `on.command.name` below.
+          first_word=$(printf '%s' "${COMMENT_BODY}" | tr -d '\r' | awk 'NF {print $1; exit}')
+          if [ "${first_word}" != "/${COMMAND_NAME}" ]; then
+            # Never echo the raw token: it is attacker-controlled and `::`-
+            # prefixed text is interpreted by the runner as a workflow command.
+            safe_word=$(printf '%s' "${first_word}" | tr -cd 'A-Za-z0-9/._-' | cut -c1-40)
+            echo "Comment does not start with '/${COMMAND_NAME}' (first token: '${safe_word}'); skipping the binlog download."
+            echo "authorized=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # --- 2. Repository permission -------------------------------------
           # `COMMENTER` is interpolated into an API path and into log output, so
           # give it the same shape check `PR_NUMBER` and `BUILD_ID` get below.
           # GitHub logins are alphanumerics and hyphens; anything else (a bot
@@ -532,16 +581,37 @@ tools:
 safe-outputs:
   messages:
     footer: "> 🤖 **Automated content by GitHub Copilot.** Generated by the [{workflow_name}]({agentic_workflow_url}) workflow.{ai_credits_suffix} · [◷]({history_link})"
-  # The agent targets the resolved PR via `GH_AW_PR_NUMBER` (`target: "*"`),
-  # matching the auto-trigger workflow.
+  # This workflow is triggered by an `issue_comment` on a PR, so it HAS a
+  # triggering item — and it is the same PR `fetch-binlog` resolves from
+  # `github.event.issue.number`. `target: "triggering"` is therefore equivalent
+  # by construction to targeting `GH_AW_PR_NUMBER`, while removing the agent's
+  # ability to name a different issue/PR: the prompt instruction to use
+  # `GH_AW_PR_NUMBER` is guidance, not a boundary, and the agent reads binlogs
+  # and PR content from unmerged external code.
+  #
+  # The auto-trigger workflow must keep `target: "*"`: `check_run` has no
+  # triggering item of its own, and the resolved PR number is not reachable
+  # there — gh-aw bakes `target` into the generated `safe_outputs` job, whose
+  # `needs:` does not include `fetch-binlog`, and the Actions `needs` context
+  # exposes only direct dependencies.
   report-failure-as-issue: false
   add-comment:
     max: 5
-    target: "*"
+    target: "triggering"
+    # Hiding superseded comments is scoped to the posting workflow's id
+    # (`GH_AW_WORKFLOW_ID`, the workflow FILE stem — here
+    # `build-failure-analysis-command` vs `build-failure-analysis`), so this
+    # workflow only ever hides its own comments: re-running the command leaves
+    # the stale automatic analysis visible next to the fresh one. dotnet/sdk
+    # fixes that with the object form
+    # (`hide-older-comments: {enabled: true, match: [...]}`), but the gh-aw
+    # v0.77.5 schema this repo pins types `hide-older-comments` as a
+    # `templatable_boolean` with no object/`match` variant, so it cannot be
+    # expressed here. Fixed by bumping the compiler, not by editing this line.
     hide-older-comments: true
   create-pull-request-review-comment:
     max: 25
-    target: "*"
+    target: "triggering"
   noop:
     max: 5
     report-as-issue: false
