@@ -115,7 +115,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             HttpMethod.Post,
             $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results?api-version=7.1-preview.6",
             testCaseResults,
-            _azdoParameters.RetryWrites ? DefaultRetryCount : 0,
+            _azdoParameters.RetryWrites ? DefaultRetryCount : 1,
             cancellationToken);
 
         IReadOnlyList<PublishedTestCaseResultReference> publishedResults = await ReadPublishedResultsAsync(response, cancellationToken);
@@ -198,7 +198,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             HttpMethod.Post,
             path,
             request,
-            _azdoParameters.RetryWrites ? DefaultRetryCount : 0,
+            _azdoParameters.RetryWrites ? DefaultRetryCount : 1,
             cancellationToken);
         _ = response;
     }
@@ -388,7 +388,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         HttpMethod method,
         string relativePath,
         object? payload,
-        int retryCount,
+        int attemptCount,
         CancellationToken cancellationToken)
     {
         string? body = payload is null ? null : JsonSerializer.Serialize(payload, s_serializerOptions);
@@ -398,9 +398,10 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         }
 
         HttpResponseMessage? successfulResponse = null;
+        Exception? lastException = null;
         var retryHandler = new ExponentialRetry
         {
-            MaxAttempts = retryCount + 1,
+            MaxAttempts = attemptCount,
             DelayBase = 3,
             DelayConstant = 0,
             MinRandomFactor = 1,
@@ -408,7 +409,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         };
 
         bool succeeded = await retryHandler.RunAsync(
-            async attempt =>
+            async _ =>
             {
                 Uri baseUri = _azdoParameters.CollectionUri.AbsoluteUri.EndsWith('/')
                     ? _azdoParameters.CollectionUri
@@ -434,7 +435,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                         string responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
                         bool isTransientStatus = (int)response.StatusCode >= 500
                             || response.StatusCode == HttpStatusCode.TooManyRequests;
-                        if (isTransientStatus && attempt < retryCount)
+                        if (isTransientStatus)
                         {
                             TimeSpan? retryAfter = GetRetryDelay(response);
                             if (response.StatusCode == HttpStatusCode.TooManyRequests && retryAfter is null)
@@ -443,9 +444,10 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                             }
 
                             _logger.LogDebug(
-                                "Hit HTTP {StatusCode} from Azure DevOps. Retrying ({RetriesLeft} retries left).",
-                                (int)response.StatusCode,
-                                retryCount - attempt);
+                                "Hit HTTP {StatusCode} from Azure DevOps. Retrying.",
+                                (int)response.StatusCode);
+                            lastException = new AzureDevOpsReportingError(
+                                $"Azure DevOps request failed with status code {(int)response.StatusCode}: {responseBody}");
                             return RetryResult.Retry(retryAfter);
                         }
 
@@ -466,12 +468,12 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                 {
                     throw;
                 }
-                catch (Exception ex) when (IsTransientException(ex) && attempt < retryCount)
+                catch (Exception ex) when (IsTransientException(ex))
                 {
+                    lastException = ex;
                     _logger.LogDebug(
                         ex,
-                        "Transient Azure DevOps request failure. Retrying ({RetriesLeft} retries left).",
-                        retryCount - attempt);
+                        "Transient Azure DevOps request failure. Retrying.");
                     return RetryResult.Retry();
                 }
             },
@@ -479,7 +481,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
 
         return succeeded && successfulResponse is not null
             ? successfulResponse
-            : throw new InvalidOperationException("Azure DevOps retry loop exited unexpectedly.");
+            : throw lastException ?? new InvalidOperationException("Azure DevOps retry loop exited unexpectedly.");
     }
 
     private static bool IsTransientException(Exception exception)

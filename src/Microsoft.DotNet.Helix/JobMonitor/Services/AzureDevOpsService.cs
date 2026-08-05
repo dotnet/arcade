@@ -500,6 +500,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             string result = null;
+            Exception lastException = null;
             var retryHandler = new ExponentialRetry
             {
                 MaxAttempts = 5,
@@ -510,7 +511,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             };
 
             bool succeeded = await retryHandler.RunAsync(
-                async attempt =>
+                async _ =>
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -523,8 +524,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     {
                         throw;
                     }
-                    catch (Exception) when (attempt < 4)
+                    catch (Exception ex)
                     {
+                        lastException = ex;
                         return RetryResult.Retry();
                     }
                 },
@@ -532,7 +534,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             return succeeded
                 ? result
-                : throw new InvalidOperationException("Retry failed without completing the Azure DevOps request.");
+                : throw lastException ?? new InvalidOperationException("Retry failed without completing the Azure DevOps request.");
         }
 
         // Honors Azure DevOps rate limiting guidance:
