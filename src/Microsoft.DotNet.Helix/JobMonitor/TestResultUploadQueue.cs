@@ -194,6 +194,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             try
             {
                 T result = default;
+                Exception lastException = null;
                 var retry = new ExponentialRetry
                 {
                     MaxAttempts = retryCount + 1,
@@ -209,17 +210,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         }
                         catch (Exception ex) when (
                             !cancellationToken.IsCancellationRequested
-                            && TransientFailureDetector.IsTransient(ex)
-                            && attempt < retryCount)
+                            && TransientFailureDetector.IsTransient(ex))
                         {
+                            lastException = ex;
                             _logger.LogDebug(ex,
                                 "Failed to {OperationDescription} for job {JobName}. Test run ID was {TestRunId}. "
-                                + "Transient retry {Retry} of {RetryCount}; retrying after delay.",
+                                + "Transient attempt {Attempt} of {AttemptCount} failed.",
                                 operationDescription,
                                 helixJob.DisplayName,
                                 testRunId,
                                 attempt + 1,
-                                retryCount);
+                                retryCount + 1);
                             return false;
                         }
                     },
@@ -228,7 +229,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 if (!succeeded)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    throw new InvalidOperationException("Upload retry loop exited unexpectedly.");
+                    throw lastException ?? new InvalidOperationException("Upload retry loop exited unexpectedly.");
                 }
 
                 return (true, result);

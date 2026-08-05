@@ -53,6 +53,11 @@ namespace Microsoft.Arcade.Common
                     return true;
                 }
 
+                if (i == MaxAttempts - 1)
+                {
+                    return false;
+                }
+
                 double randomFactor =
                     _random.NextDouble() * (MaxRandomFactor - MinRandomFactor) + MinRandomFactor;
 

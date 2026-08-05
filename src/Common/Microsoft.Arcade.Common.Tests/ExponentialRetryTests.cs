@@ -54,5 +54,20 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
 
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => retryTask);
         }
+
+        [Fact]
+        public async Task FinalFailedAttemptDoesNotDelay()
+        {
+            var retry = new ExponentialRetry
+            {
+                MaxAttempts = 1,
+            };
+
+            bool succeeded = await retry.RunAsync(
+                _ => Task.FromResult(RetryResult.Retry(TimeSpan.FromHours(1))),
+                CancellationToken.None);
+
+            Assert.False(succeeded);
+        }
     }
 }

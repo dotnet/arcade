@@ -394,24 +394,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             };
 
             bool succeeded = await retryHandler.RunAsync(
-                async attempt =>
+                async _ =>
                 {
                     try
                     {
                         result = await action();
                         return RetryResult.Success;
                     }
-                    catch (Exception ex) when (
-                        !cancellationToken.IsCancellationRequested
-                        && attempt < 4)
+                    catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
                     {
                         last = ex;
                         return RetryResult.Retry();
-                    }
-                    catch (Exception ex)
-                    {
-                        last = ex;
-                        throw;
                     }
                 },
                 cancellationToken);
