@@ -29,14 +29,25 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
     private readonly AzureDevOpsReportingParameters _azdoParameters;
     private readonly HttpClient _httpClient;
     private readonly ILogger _logger;
+    private readonly Func<TimeSpan, CancellationToken, Task> _delay;
 
     public AzureDevOpsResultPublisher(
         AzureDevOpsReportingParameters azdoParameters,
         ILogger logger)
+        : this(azdoParameters, logger, CreateHttpClient(azdoParameters.AccessToken), Task.Delay)
+    {
+    }
+
+    private AzureDevOpsResultPublisher(
+        AzureDevOpsReportingParameters azdoParameters,
+        ILogger logger,
+        HttpClient httpClient,
+        Func<TimeSpan, CancellationToken, Task> delay)
     {
         _azdoParameters = azdoParameters;
-        _httpClient = CreateHttpClient(azdoParameters.AccessToken);
+        _httpClient = httpClient;
         _logger = logger;
+        _delay = delay;
     }
 
     public void Dispose()
@@ -365,12 +376,10 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         }
     }
 
-    private static HttpClient CreateHttpClient(string? accessToken)
+    private static HttpClient CreateHttpClient(string? accessToken, HttpMessageHandler? handler = null)
     {
-        var client = new HttpClient
-        {
-            Timeout = s_httpClientTimeout
-        };
+        var client = handler is null ? new HttpClient() : new HttpClient(handler);
+        client.Timeout = s_httpClientTimeout;
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
         if (!string.IsNullOrWhiteSpace(accessToken))
@@ -408,7 +417,23 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                 request.Content = new StringContent(body, Encoding.UTF8, "application/json");
             }
 
-            HttpResponseMessage response = await _httpClient.SendAsync(request, cancellationToken);
+            HttpResponseMessage response;
+            try
+            {
+                response = await _httpClient.SendAsync(request, cancellationToken);
+            }
+            catch (HttpRequestException ex) when (triesLeft > 0 && !cancellationToken.IsCancellationRequested)
+            {
+                TimeSpan retryDelay = TimeSpan.FromSeconds(3);
+                triesLeft--;
+                _logger.LogDebug(ex,
+                    "Azure DevOps request failed while sending. Waiting {DelaySeconds:0.###} seconds and trying again ({TriesLeft} retries left).",
+                    retryDelay.TotalSeconds,
+                    triesLeft);
+                await _delay(retryDelay, cancellationToken);
+                continue;
+            }
+
             if (response.IsSuccessStatusCode)
             {
                 return response;
@@ -425,7 +450,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                     (int)response.StatusCode,
                     retryDelay.TotalSeconds,
                     triesLeft);
-                await Task.Delay(retryDelay, cancellationToken);
+                await _delay(retryDelay, cancellationToken);
                 continue;
             }
 

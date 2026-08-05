@@ -87,6 +87,5 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.True(defaultParameters.RetryWrites);
             Assert.False(explicitParameters.RetryWrites);
         }
-
     }
 }
