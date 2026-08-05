@@ -464,10 +464,6 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                             $"Azure DevOps request failed with status code {(int)response.StatusCode}: {responseBody}");
                     }
                 }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                {
-                    throw;
-                }
                 catch (Exception ex) when (IsTransientException(ex))
                 {
                     lastException = ex;

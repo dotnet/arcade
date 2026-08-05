@@ -514,11 +514,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         result = await SendOnceAsync();
                         return RetryResult.Success;
                     }
-                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                    {
-                        throw;
-                    }
-                    catch (Exception ex)
+                    catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
                     {
                         lastException = ex;
                         return RetryResult.Retry();

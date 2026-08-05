@@ -207,12 +207,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                             result = await operation();
                             return true;
                         }
-                        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                        {
-                            throw;
-                        }
                         catch (Exception ex) when (
-                            TransientFailureDetector.IsTransient(ex)
+                            !cancellationToken.IsCancellationRequested
+                            && TransientFailureDetector.IsTransient(ex)
                             && attempt < retryCount)
                         {
                             _logger.LogDebug(ex,
