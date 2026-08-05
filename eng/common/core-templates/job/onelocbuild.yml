@@ -15,9 +15,9 @@ parameters:
   CeapexServiceConnection: 'dnceng-onelocbuild-ceapex'
 
   # GitHub App authentication for the OneLoc check-in PR (dnceng/internal only).
-  # The infrastructure identifiers are centralized here so consumers only need to opt in.
+  # The infrastructure identifiers are centralized here and the App path is enabled by default.
   # DevDiv requires its own project-scoped service connection before this path can be enabled there.
-  UseGitHubAppAuthentication: false
+  UseGitHubAppAuthentication: true
   GitHubAppServiceConnection: 'dnceng-oneloc-githubapp'
   GitHubAppClientId: 'Iv23lijBU8x3gc9lDOc9'
   GitHubAppKeyVaultName: 'EngKeyVault'
