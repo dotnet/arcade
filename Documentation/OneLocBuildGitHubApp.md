@@ -8,7 +8,9 @@ authentication path for the OneLocBuild localization check-in PR. It supplements
 
 When OneLocBuild is configured for a GitHub-based repo (`RepoType: gitHub`), the task opens or
 updates a pull request to check in localized files. The GitHub App authentication path mints a
-repository-scoped installation token (`ghs_…`) at build time, avoiding a stored GitHub credential.
+short-lived installation token (`ghs_…`) at build time, avoiding a stored GitHub credential. The
+repositories accessible to the token are determined by the GitHub App installation configuration
+(all repositories or the selected repositories).
 [GitHub installation tokens expire after one hour](https://docs.github.com/apps/creating-github-apps/authenticating-with-a-github-app/generating-an-installation-access-token-for-a-github-app#generating-an-installation-access-token).
 
 The GitHub App used for this is **`dotnet OneLoc Localization`** (owned by `@dotnet-bot`). Its only
@@ -25,7 +27,7 @@ when **all** of the following are true:
 - the build is running in the **`internal`** Azure DevOps project (the App service connection and
   Key Vault key are scoped to `dnceng/internal`).
 
-When those hold, the job runs [`get-github-app-token.yml`](/eng/common/templates/steps/get-github-app-token.yml),
+When those hold, the job runs [`get-github-app-token.yml`](/eng/common/core-templates/steps/get-github-app-token.yml),
 which signs a JWT with the App's RSA key in Key Vault, exchanges it for an installation token, and
 passes that token to the OneLocBuild task via `gitHubPatVariable`.
 
