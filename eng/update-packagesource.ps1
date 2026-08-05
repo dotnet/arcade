@@ -53,7 +53,7 @@ function AddSourceToNugetConfig([string]$nugetConfigPath, [string]$source)
 }
 
 try {
-  Push-Location $PSScriptRoot
+  Push-Location (Join-Path $PSScriptRoot "common\post-build")
   $nugetConfigPath = Join-Path $RepoRoot "NuGet.config"
 
   Write-Host "Adding local source to NuGet.config"
@@ -65,7 +65,7 @@ try {
   $DarcExe = "$dotnetRoot\tools"
   Create-Directory $DarcExe
   $DarcExe = Resolve-Path $DarcExe
-  . .\common\darc-init.ps1 -toolpath $DarcExe
+  . (Join-Path $PSScriptRoot "common\darc-init.ps1") -toolpath $DarcExe
   CheckExitCode "Running darc-init"
 
   $Env:dotnet_root = $dotnetRoot
