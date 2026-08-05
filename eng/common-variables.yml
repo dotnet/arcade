@@ -24,7 +24,6 @@ variables:
     - name: _SignType
       value: ${{ parameters.signType }}
     # DotNet-HelixApi-Access provides: HelixApiAccessToken
-    - group: Publish-Build-Assets
     - group: DotNet-HelixApi-Access
     - group: SDL_Settings
     - name: _InternalBuildArgs
