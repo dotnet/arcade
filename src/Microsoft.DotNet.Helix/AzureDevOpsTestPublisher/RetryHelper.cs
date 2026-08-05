@@ -1,6 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Arcade.Common;
+
 namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
 public class RetryHelper
@@ -8,21 +10,45 @@ public class RetryHelper
     public static async Task<T> RetryAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken)
     {
         Exception? last = null;
-        for (int attempt = 0; attempt < 5; attempt++)
+        T result = default!;
+        IRetryHandler retryHandler = new ExponentialRetry
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            MaxAttempts = 5,
+            DelayBase = 2,
+            DelayConstant = 0,
+            MinRandomFactor = 1,
+            MaxRandomFactor = 1,
+        };
 
-            try
+        bool succeeded = await retryHandler.RunAsync(
+            async attempt =>
             {
-                return await action();
-            }
-            catch (Exception ex) when (attempt < 4)
-            {
-                last = ex;
-                await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt + 1)), cancellationToken);
-            }
-        }
+                cancellationToken.ThrowIfCancellationRequested();
 
-        throw last ?? new InvalidOperationException("Retry failed without capturing an exception.");
+                try
+                {
+                    result = await action();
+                    return RetryResult.Success;
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex) when (attempt < 4)
+                {
+                    last = ex;
+                    return RetryResult.Retry();
+                }
+                catch (Exception ex)
+                {
+                    last = ex;
+                    throw;
+                }
+            },
+            cancellationToken);
+
+        return succeeded
+            ? result
+            : throw last ?? new InvalidOperationException("Retry failed without capturing an exception.");
     }
 }

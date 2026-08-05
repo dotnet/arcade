@@ -31,13 +31,13 @@ namespace Microsoft.Arcade.Common
 
         public CancellationToken DefaultCancellationToken { get; set; } = CancellationToken.None;
 
-        public Task<bool> RunAsync(Func<int, Task<bool>> actionSuccessfulAsync)
+        public Task<bool> RunAsync(Func<int, Task<RetryResult>> actionAsync)
         {
-            return RunAsync(actionSuccessfulAsync, DefaultCancellationToken);
+            return RunAsync(actionAsync, DefaultCancellationToken);
         }
 
         public async Task<bool> RunAsync(
-            Func<int, Task<bool>> actionSuccessfulAsync,
+            Func<int, Task<RetryResult>> actionAsync,
             CancellationToken cancellationToken)
         {
             for (int i = 0; i < MaxAttempts; i++)
@@ -45,7 +45,8 @@ namespace Microsoft.Arcade.Common
                 string attempt = $"Attempt {i + 1}/{MaxAttempts}";
                 Trace.TraceInformation(attempt);
 
-                if (await actionSuccessfulAsync(i))
+                RetryResult result = await actionAsync(i);
+                if (result.Succeeded)
                 {
                     return true;
                 }
@@ -53,8 +54,11 @@ namespace Microsoft.Arcade.Common
                 double randomFactor =
                     _random.NextDouble() * (MaxRandomFactor - MinRandomFactor) + MinRandomFactor;
 
-                TimeSpan delay = TimeSpan.FromSeconds(
+                TimeSpan exponentialDelay = TimeSpan.FromSeconds(
                     (Math.Pow(DelayBase, i) + DelayConstant) * randomFactor);
+                TimeSpan delay = result.RetryAfter is TimeSpan retryAfter
+                    ? TimeSpan.FromTicks(Math.Max(exponentialDelay.Ticks, retryAfter.Ticks))
+                    : exponentialDelay;
 
                 Trace.TraceInformation($"{attempt} failed. Waiting {delay} before next try.");
 
