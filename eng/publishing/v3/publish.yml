@@ -12,7 +12,6 @@ stages:
     displayName: Publish Assets and Symbols
     timeoutInMinutes: 120
     variables:
-    - group: AzureDevOps-Artifact-Feeds-Pats
     - group: Arcade-Publishing-Client-Ids
 
     - template: /eng/common/templates-official/post-build/common-variables.yml@self
