@@ -30,6 +30,11 @@ jobs:
     - checkout: self
       clean: true
     steps:
+    - task: UseDotNet@2
+      inputs:
+        version: 8.0.x
+        installationPath: $(Build.SourcesDirectory)/.dotnet
+
     - task: AzureCLI@2
       inputs:
         azureSubscription: "Darc: Maestro Production"
