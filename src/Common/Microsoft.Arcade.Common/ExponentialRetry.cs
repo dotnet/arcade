@@ -31,6 +31,22 @@ namespace Microsoft.Arcade.Common
 
         public CancellationToken DefaultCancellationToken { get; set; } = CancellationToken.None;
 
+        public Task<bool> RunAsync(Func<int, Task<bool>> actionAsync)
+        {
+            return RunAsync(
+                async attempt => (RetryResult)await actionAsync(attempt),
+                DefaultCancellationToken);
+        }
+
+        public Task<bool> RunAsync(
+            Func<int, Task<bool>> actionAsync,
+            CancellationToken cancellationToken)
+        {
+            return RunAsync(
+                async attempt => (RetryResult)await actionAsync(attempt),
+                cancellationToken);
+        }
+
         public Task<bool> RunAsync(Func<int, Task<RetryResult>> actionAsync)
         {
             return RunAsync(actionAsync, DefaultCancellationToken);

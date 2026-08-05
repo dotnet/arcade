@@ -437,6 +437,11 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                         if (isTransientStatus && attempt < retryCount)
                         {
                             TimeSpan? retryAfter = GetRetryDelay(response);
+                            if (response.StatusCode == HttpStatusCode.TooManyRequests && retryAfter is null)
+                            {
+                                retryAfter = TimeSpan.FromSeconds(30);
+                            }
+
                             _logger.LogDebug(
                                 "Hit HTTP {StatusCode} from Azure DevOps. Retrying ({RetriesLeft} retries left).",
                                 (int)response.StatusCode,
