@@ -10,6 +10,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Arcade.Common;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Microsoft.Extensions.Logging;
@@ -493,9 +494,45 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return content;
             }
 
-            return retryTransientFailures
-                ? await RetryHelper.RetryAsync(SendOnceAsync, cancellationToken)
-                : await SendOnceAsync();
+            if (!retryTransientFailures)
+            {
+                return await SendOnceAsync();
+            }
+
+            string result = null;
+            var retryHandler = new ExponentialRetry
+            {
+                MaxAttempts = 5,
+                DelayBase = 2,
+                DelayConstant = 0,
+                MinRandomFactor = 1,
+                MaxRandomFactor = 1,
+            };
+
+            bool succeeded = await retryHandler.RunAsync(
+                async attempt =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    try
+                    {
+                        result = await SendOnceAsync();
+                        return RetryResult.Success;
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        throw;
+                    }
+                    catch (Exception) when (attempt < 4)
+                    {
+                        return RetryResult.Retry();
+                    }
+                },
+                cancellationToken);
+
+            return succeeded
+                ? result
+                : throw new InvalidOperationException("Retry failed without completing the Azure DevOps request.");
         }
 
         // Honors Azure DevOps rate limiting guidance:
