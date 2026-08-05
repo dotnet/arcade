@@ -513,8 +513,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             bool succeeded = await retryHandler.RunAsync(
                 async _ =>
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
                     try
                     {
                         result = await SendOnceAsync();

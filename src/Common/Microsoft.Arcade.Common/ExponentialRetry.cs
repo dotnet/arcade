@@ -42,6 +42,8 @@ namespace Microsoft.Arcade.Common
         {
             for (int i = 0; i < MaxAttempts; i++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 string attempt = $"Attempt {i + 1}/{MaxAttempts}";
                 Trace.TraceInformation(attempt);
 
@@ -62,14 +64,7 @@ namespace Microsoft.Arcade.Common
 
                 Trace.TraceInformation($"{attempt} failed. Waiting {delay} before next try.");
 
-                try
-                {
-                    await Task.Delay(delay, cancellationToken);
-                }
-                catch (TaskCanceledException)
-                {
-                    break;
-                }
+                await Task.Delay(delay, cancellationToken);
             }
             return false;
         }

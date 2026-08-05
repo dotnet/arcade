@@ -31,6 +31,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles
         {
             for (var attempt = 0; attempt < _maxAttempts; attempt++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 ActualAttempts++;
 
                 RetryResult result = await actionAsync(attempt);
