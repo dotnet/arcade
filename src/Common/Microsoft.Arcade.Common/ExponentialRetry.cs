@@ -29,6 +29,11 @@ namespace Microsoft.Arcade.Common
         public double MinRandomFactor { get; set; } = 0.5;
         public double MaxRandomFactor { get; set; } = 1.0;
 
+        /// <summary>
+        /// Maximum exponential delay. A longer server-provided retry delay is still honored.
+        /// </summary>
+        public TimeSpan? MaximumDelay { get; set; }
+
         public CancellationToken DefaultCancellationToken { get; set; } = CancellationToken.None;
 
         public Task<bool> RunAsync(Func<int, Task<RetryResult>> actionAsync)
@@ -63,6 +68,11 @@ namespace Microsoft.Arcade.Common
 
                 TimeSpan exponentialDelay = TimeSpan.FromSeconds(
                     (Math.Pow(DelayBase, i) + DelayConstant) * randomFactor);
+                if (MaximumDelay is TimeSpan maximumDelay && exponentialDelay > maximumDelay)
+                {
+                    exponentialDelay = maximumDelay;
+                }
+
                 TimeSpan delay = result.RetryAfter is TimeSpan retryAfter
                     ? TimeSpan.FromTicks(Math.Max(exponentialDelay.Ticks, retryAfter.Ticks))
                     : exponentialDelay;

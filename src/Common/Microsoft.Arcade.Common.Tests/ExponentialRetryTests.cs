@@ -69,5 +69,31 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
 
             Assert.False(succeeded);
         }
+
+        [Fact]
+        public async Task MaximumDelayCapsExponentialBackoff()
+        {
+            var retry = new ExponentialRetry
+            {
+                MaxAttempts = 2,
+                DelayBase = 60,
+                DelayConstant = 0,
+                MinRandomFactor = 1,
+                MaxRandomFactor = 1,
+                MaximumDelay = TimeSpan.Zero,
+            };
+            int attempts = 0;
+
+            bool succeeded = await retry.RunAsync(
+                _ =>
+                {
+                    attempts++;
+                    return Task.FromResult(RetryResult.Retry());
+                },
+                CancellationToken.None);
+
+            Assert.False(succeeded);
+            Assert.Equal(2, attempts);
+        }
     }
 }

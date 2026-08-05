@@ -14,7 +14,8 @@ namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
 public sealed class AzureDevOpsResultPublisher : IDisposable
 {
-    private const int DefaultRetryCount = 10;
+    private const int DefaultAttemptCount = 10;
+    private static readonly TimeSpan s_maximumRetryDelay = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan s_httpClientTimeout = TimeSpan.FromMinutes(5);
     private static readonly JsonSerializerOptions s_serializerOptions = new(JsonSerializerDefaults.Web)
     {
@@ -115,7 +116,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             HttpMethod.Post,
             $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results?api-version=7.1-preview.6",
             testCaseResults,
-            DefaultRetryCount,
+            DefaultAttemptCount,
             cancellationToken);
 
         IReadOnlyList<PublishedTestCaseResultReference> publishedResults = await ReadPublishedResultsAsync(response, cancellationToken);
@@ -198,7 +199,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             HttpMethod.Post,
             path,
             request,
-            DefaultRetryCount,
+            DefaultAttemptCount,
             cancellationToken);
         _ = response;
     }
@@ -406,6 +407,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             DelayConstant = 0,
             MinRandomFactor = 1,
             MaxRandomFactor = 1,
+            MaximumDelay = s_maximumRetryDelay,
         };
 
         bool succeeded = await retryHandler.RunAsync(
