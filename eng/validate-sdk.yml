@@ -22,6 +22,7 @@ jobs:
       name: NetCore1ESPool-Svc-Internal
       demands: ImageOverride -equals windows.vs2019.amd64
     variables:
+    - group: Arcade-Promotion-GitHub
     - _BuildConfig: ${{ parameters.buildConfig }}
     - _BuildArgs: ${{ parameters.buildArgs }}
     - _ValidateBlobFeedUrl: ${{ parameters.validateBlobFeedUrl }}
