@@ -73,27 +73,24 @@ $digestBase64 = [Convert]::ToBase64String($digestBytes)
 
 Write-Host "Signing JWT with key '$KeyName' in vault '$KeyVaultName'..."
 try {
-    $signResponseJson = az keyvault key sign `
+    $signatureUrl = az keyvault key sign `
         --vault-name $KeyVaultName `
         --name $KeyName `
         --algorithm RS256 `
-        --digest $digestBase64
+        --digest $digestBase64 `
+        --query value `
+        --output tsv `
+        --only-show-errors
 }
 catch {
     Write-PipelineTelemetryError -Category 'Build' -Message "Failed to sign the JWT via Key Vault (key '$KeyName', vault '$KeyVaultName'): $_. Verify the service connection identity has the 'Key Vault Crypto User' role (Sign action) on the key."
     exit 1
 }
-if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($signResponseJson)) {
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($signatureUrl)) {
     Write-PipelineTelemetryError -Category 'Build' -Message "'az keyvault key sign' exited with code $LASTEXITCODE for key '$KeyName' in vault '$KeyVaultName'. Verify the service connection identity has the 'Key Vault Crypto User' role (Sign action) on the key."
     exit 1
 }
-$signResponse = $signResponseJson | ConvertFrom-Json
-if ([string]::IsNullOrEmpty($signResponse.signature)) {
-    Write-PipelineTelemetryError -Category 'Build' -Message "Key Vault returned an empty signature for key '$KeyName' in vault '$KeyVaultName'."
-    exit 1
-}
-$signatureUrl  = $signResponse.signature.TrimEnd('=').Replace('+', '-').Replace('/', '_')
-$jwt           = "$signingInput.$signatureUrl"
+$jwt = "$signingInput.$($signatureUrl.Trim())"
 
 $headers = @{
     Authorization          = "Bearer $jwt"
@@ -104,13 +101,22 @@ $headers = @{
 
 Write-Host "Looking up installation for '$InstallationOwner'..."
 try {
-    $installations = Invoke-RestMethod -Uri 'https://api.github.com/app/installations' -Headers $headers -Method Get
+    $installations = @()
+    $page = 1
+    do {
+        $pageInstallations = @(Invoke-RestMethod `
+            -Uri "https://api.github.com/app/installations?per_page=100&page=$page" `
+            -Headers $headers `
+            -Method Get)
+        $installations += $pageInstallations
+        $page++
+    } while ($pageInstallations.Count -eq 100)
 }
 catch {
     Write-PipelineTelemetryError -Category 'Build' -Message "Failed to list GitHub App installations: $_. The signed JWT may be invalid or the App's Client ID ('$AppClientId') may be incorrect."
     exit 1
 }
-$installation  = $installations | Where-Object { $_.account.login -eq $InstallationOwner } | Select-Object -First 1
+$installation = $installations | Where-Object { $_.account.login -ieq $InstallationOwner } | Select-Object -First 1
 if (-not $installation) {
     $found = ($installations | ForEach-Object { $_.account.login }) -join ', '
     Write-PipelineTelemetryError -Category 'Build' -Message "No installation found for '$InstallationOwner'. App is installed on: $found"
