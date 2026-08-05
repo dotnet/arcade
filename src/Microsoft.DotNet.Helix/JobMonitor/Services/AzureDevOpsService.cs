@@ -408,11 +408,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 _options.TeamProject,
                 testRunId.ToString(CultureInfo.InvariantCulture),
                 _options.SystemAccessToken,
-                _options.UseFullyQualifiedTestName,
-                // Test-result POSTs are retried by the publisher for transient HTTP and
-                // transport failures. Create/complete operations remain single-attempt because
-                // their responses are ambiguous state-changing writes.
-                RetryWrites: true);
+                _options.UseFullyQualifiedTestName);
             using var publisher = new AzureDevOpsResultPublisher(
                 reportingParameters,
                 _logger);

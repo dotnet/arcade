@@ -115,7 +115,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             HttpMethod.Post,
             $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results?api-version=7.1-preview.6",
             testCaseResults,
-            _azdoParameters.RetryWrites ? DefaultRetryCount : 1,
+            DefaultRetryCount,
             cancellationToken);
 
         IReadOnlyList<PublishedTestCaseResultReference> publishedResults = await ReadPublishedResultsAsync(response, cancellationToken);
@@ -198,7 +198,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             HttpMethod.Post,
             path,
             request,
-            _azdoParameters.RetryWrites ? DefaultRetryCount : 1,
+            DefaultRetryCount,
             cancellationToken);
         _ = response;
     }
