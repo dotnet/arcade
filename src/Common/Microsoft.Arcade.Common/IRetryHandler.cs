@@ -10,13 +10,6 @@ namespace Microsoft.Arcade.Common
     public interface IRetryHandler
     {
         Task<bool> RunAsync(
-            Func<int, Task<bool>> actionAsync);
-
-        Task<bool> RunAsync(
-            Func<int, Task<bool>> actionAsync,
-            CancellationToken cancellationToken);
-
-        Task<bool> RunAsync(
             Func<int, Task<RetryResult>> actionAsync);
 
         Task<bool> RunAsync(
