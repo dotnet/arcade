@@ -122,9 +122,6 @@ What this means in practice:
 - **One-shot retry on entry.** When the monitor starts, it takes a snapshot of the Helix jobs for
   the build and resubmits the failed work items from each completed job's latest incarnation.
   Passing work items are not resubmitted; only the failed ones are.
-- **Test-result upload retries.** Transient Azure DevOps transport, server, and throttling
-  responses are retried with exponential backoff. Test-run creation and completion remain
-  single-attempt because their responses can be ambiguous.
 - **Re-running the monitor job re-runs failed Helix work.** If you re-run the **monitor job** in
   Azure DevOps (e.g. via "Rerun failed jobs" on the build), it picks up where it left off:
   - Passing work items from previous attempts are preserved.
