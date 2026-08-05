@@ -29,7 +29,6 @@ steps:
       -BinlogToolVersion ${{parameters.BinlogToolVersion}}
       -TokensFilePath '$(System.DefaultWorkingDirectory)/eng/BinlogSecretsRedactionFile.txt'
       '$(MaestroAccessToken)'
-      '$(dn-bot-all-orgs-artifact-feeds-rw)'
       '$(microsoft-symbol-server-pat)'
       '$(symweb-symbol-server-pat)'
       '$(dn-bot-all-orgs-build-rw-code-rw)'
