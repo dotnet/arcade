@@ -44,13 +44,9 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             }
 
             var arguments = $"\"{scriptPath}\" \"{configFilePath}\"";
-            if (!string.IsNullOrEmpty(credToken))
-            {
-                arguments += $" \"{credToken}\"";
-            }
 
             var shell = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "bash.exe" : "/bin/bash";
-            return await RunProcess(shell, arguments, _repoRoot);
+            return await RunProcess(shell, arguments, _repoRoot, credToken);
         }
 
         private async Task<(int exitCode, string output, string error)> RunProcess(

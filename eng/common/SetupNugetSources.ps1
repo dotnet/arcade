@@ -48,7 +48,7 @@ $disableConfigureToolsetImport = $true
 # Adds or enables the package source with the given name
 function AddOrEnablePackageSource($sources, $disabledPackageSources, $SourceName, $SourceEndPoint, $creds, $Username, $credential) {
     if ($disabledPackageSources -eq $null -or -not (EnableInternalPackageSource -DisabledPackageSources $disabledPackageSources -Creds $creds -PackageSourceName $SourceName -Credential $credential)) {
-        AddPackageSource -Sources $sources -SourceName $SourceName -SourceEndPoint $SourceEndPoint -Creds $creds -Username $userName -credential $credential
+        AddPackageSource -Sources $sources -SourceName $SourceName -SourceEndPoint $SourceEndPoint -Creds $creds -Username $Username -credential $credential
     }
 }
 
