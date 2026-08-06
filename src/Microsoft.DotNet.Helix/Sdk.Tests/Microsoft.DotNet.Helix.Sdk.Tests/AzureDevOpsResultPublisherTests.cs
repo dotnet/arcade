@@ -4,6 +4,8 @@
 using System;
 using System.Net.Http;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -67,6 +69,25 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             };
 
             Assert.False(AzureDevOpsResultPublisher.ComputeAllPassed(results));
+        }
+
+        [Fact]
+        public void HttpClientTimeoutIsTransient()
+        {
+            Assert.True(AzureDevOpsResultPublisher.IsTransientException(
+                new TaskCanceledException(),
+                CancellationToken.None));
+        }
+
+        [Fact]
+        public void CallerCancellationIsNotTransient()
+        {
+            using var cancellation = new CancellationTokenSource();
+            cancellation.Cancel();
+
+            Assert.False(AzureDevOpsResultPublisher.IsTransientException(
+                new TaskCanceledException(),
+                cancellation.Token));
         }
 
     }

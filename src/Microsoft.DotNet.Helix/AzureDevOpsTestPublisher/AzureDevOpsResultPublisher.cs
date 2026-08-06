@@ -466,7 +466,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                             $"Azure DevOps request failed with status code {(int)response.StatusCode}: {responseBody}");
                     }
                 }
-                catch (Exception ex) when (IsTransientException(ex))
+                catch (Exception ex) when (IsTransientException(ex, cancellationToken))
                 {
                     lastException = ex;
                     _logger.LogDebug(
@@ -482,8 +482,10 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             : throw lastException ?? new InvalidOperationException("Azure DevOps retry loop exited unexpectedly.");
     }
 
-    private static bool IsTransientException(Exception exception)
-        => exception is HttpRequestException
+    internal static bool IsTransientException(Exception exception, CancellationToken cancellationToken)
+        => !cancellationToken.IsCancellationRequested
+            && exception is TaskCanceledException
+                or HttpRequestException
             or TimeoutException
             or SocketException
             or IOException;
