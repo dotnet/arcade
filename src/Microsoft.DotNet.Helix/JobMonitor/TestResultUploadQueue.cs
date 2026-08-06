@@ -16,12 +16,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 {
     /// <summary>
     /// Fire-and-forget queue for AzDO test-result uploads. Each queued upload runs as an
-    /// independent task. Transient read failures use bounded retries; state-changing Azure
-    /// DevOps writes are attempted once to avoid replay after an ambiguous response. On normal
-    /// completion the queue is drained so results in flight when the runner exits are not lost. On
-    /// cancellation the queue is intentionally NOT drained: cancelling the in-flight Helix jobs
-    /// takes priority, and any unfinished upload is re-uploaded in full by a later monitor
-    /// invocation (a Helix job is only "processed" once its test run reaches the Completed state).
+    /// independent task. Transient reads and test-result/attachment publishing use bounded
+    /// retries; test-run creation and completion are attempted once. On normal completion the
+    /// queue is drained so results in flight when the runner exits are not lost. On cancellation
+    /// the queue is intentionally NOT drained: cancelling the in-flight Helix jobs takes priority,
+    /// and any unfinished upload is re-uploaded in full by a later monitor invocation (a Helix job
+    /// is only "processed" once its test run reaches the Completed state).
     /// </summary>
     internal sealed class TestResultUploadQueue
     {
