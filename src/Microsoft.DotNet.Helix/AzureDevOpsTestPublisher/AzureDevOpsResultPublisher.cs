@@ -484,7 +484,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
 
     internal static bool IsTransientException(Exception exception, CancellationToken cancellationToken)
         => !cancellationToken.IsCancellationRequested
-            && exception is TaskCanceledException
+            && exception is OperationCanceledException { InnerException: TimeoutException }
                 or HttpRequestException
             or TimeoutException
             or SocketException
