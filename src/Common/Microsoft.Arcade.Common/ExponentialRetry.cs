@@ -38,8 +38,7 @@ namespace Microsoft.Arcade.Common
         /// Invoked after a failed attempt when another attempt will be made. The first argument
         /// is the one-based number of the failed attempt and the second is the computed delay.
         /// </summary>
-        public Action<int, TimeSpan> RetryDelayCallback { get; set; }
-
+        public Action<int, TimeSpan>? RetryDelayCallback { get; set; }
         public CancellationToken DefaultCancellationToken { get; set; } = CancellationToken.None;
 
         public Task<bool> RunAsync(Func<int, Task<RetryResult>> actionAsync)
