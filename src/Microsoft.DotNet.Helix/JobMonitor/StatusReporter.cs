@@ -255,9 +255,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             List<HelixJobInfo> unfinishedHelixJobs =
             [
-                ..MonitorState.GetLatestHelixJobAttempts(_state.SnapshotAssociatedJobs())
-                    .Where(j => !j.IsCompleted || !_state.IsHelixJobProcessed(j.JobName))
-                    .OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
+                ..new JobLineage(_state.SnapshotAssociatedJobs())
+                    .GetLatestLineageIncarnations()
+                    .Select(incarnation => incarnation.Job)
+                    .Where(job => !job.IsCompleted || !_state.IsHelixJobProcessed(job.JobName))
+                    .OrderBy(job => job.JobName, StringComparer.OrdinalIgnoreCase)
             ];
 
             List<AzureDevOpsTimelineRecord> inProgressPipelineJobs =

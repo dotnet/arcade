@@ -30,6 +30,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly IHelixService _helix;
         private readonly Func<TimeSpan, CancellationToken, Task> _delayFunc;
         private readonly string _helixSource;
+        private readonly StageAttempt? _stageAttempt;
 
         private readonly MonitorState _state = new();
         private readonly StatusReporter _reporter;
@@ -65,6 +66,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _azdo = azdo ?? throw new ArgumentNullException(nameof(azdo));
             _helix = helix ?? throw new ArgumentNullException(nameof(helix));
             _delayFunc = delayFunc ?? Task.Delay;
+            _stageAttempt = StageAttempt.ParseOptional(_options.StageAttempt);
             Directory.CreateDirectory(_options.WorkingDirectory);
 
             _helixSource = HelixJobSource.Compute(
@@ -136,8 +138,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     .Where(IsStageInScope)
             ];
 
-            // Seed the cross-poll cache so submitter-chain-key lineage (PreviousHelixJobName
-            // walks) resolves while grouping streams below.
+            // Seed the cross-poll cache so later outcome reconciliation can resolve predecessor
+            // links across poll snapshots.
             _state.ObserveJobs(stageJobs);
 
             // Surfacing work items that passed by exit code but whose AzDO test results contain
@@ -154,9 +156,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             var resubmittedJobs = new List<HelixJobInfo>();
 
-            foreach (HelixJobInfo latest in _state.GetLatestIncarnationPerStream(stageJobs))
+            foreach (JobIncarnation latestIncarnation in new JobLineage(stageJobs).GetLatestIncarnationsPerStream())
             {
-                bool previousAttempt = IsPreviousAttempt(latest);
+                HelixJobInfo latest = latestIncarnation.Job;
+                bool previousAttempt = IsPreviousAttempt(latestIncarnation.StageAttempt);
 
                 // A current-attempt incarnation that is still in flight is gated on, not
                 // resubmitted (this also covers the fast-rerun case where a fresh current-attempt
@@ -305,11 +308,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             // the running outcome map (oldest-incarnation first, then lower stage attempt first,
             // so newer incarnations — including higher-attempt rerun duplicates — supersede older
             // ones). Idempotent — already-reconciled jobs early-return.
-            foreach (HelixJobInfo job in MonitorState.OrderHelixJobsOldToNew(
-                MonitorState.GetLatestHelixJobAttempts(stageJobs)
-                    .Where(j => completedJobNames.Contains(j.JobName))))
+            IEnumerable<JobIncarnation> latestCompletedIncarnations = new JobLineage(stageJobs)
+                .GetLatestLineageIncarnations()
+                .Where(incarnation => completedJobNames.Contains(incarnation.Job.JobName))
+                .OrderBy(incarnation => incarnation.StageAttempt)
+                .ThenBy(incarnation => incarnation.Job.JobName, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(incarnation => incarnation.Job.JobName, StringComparer.Ordinal);
+            foreach (JobIncarnation incarnation in latestCompletedIncarnations)
             {
-                await ReconcileCompletedJobAsync(job, queueUpload: false, cancellationToken);
+                await ReconcileCompletedJobAsync(incarnation.Job, queueUpload: false, cancellationToken);
             }
 
             _uploads.Prune();
@@ -420,7 +427,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
             }
 
-            return MonitorState.OrderHelixJobsOldToNew(completed);
+            return
+            [
+                ..new JobLineage(completed)
+                    .OrderOldToNew()
+                    .Select(incarnation => incarnation.Job)
+            ];
         }
 
         private async Task<bool> AreAllWorkItemsTerminalAsync(HelixJobInfo job, CancellationToken cancellationToken)
@@ -439,9 +451,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             List<HelixJobInfo> inFlightJobs =
             [
-                ..MonitorState.GetLatestHelixJobAttempts(_state.SnapshotAssociatedJobs())
-                    .Where(j => !j.IsCompleted && !_state.IsHelixJobProcessed(j.JobName))
-                    .OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
+                ..new JobLineage(_state.SnapshotAssociatedJobs())
+                    .GetLatestLineageIncarnations()
+                    .Select(incarnation => incarnation.Job)
+                    .Where(job => !job.IsCompleted && !_state.IsHelixJobProcessed(job.JobName))
+                    .OrderBy(job => job.JobName, StringComparer.OrdinalIgnoreCase)
             ];
 
             if (inFlightJobs.Count == 0)
@@ -474,23 +488,23 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             => string.IsNullOrEmpty(job.StageName)
                 || string.Equals(job.StageName, _options.StageName, StringComparison.OrdinalIgnoreCase);
 
-        // Per-attempt scoping for completion gating: a job is "current attempt" when the
-        // monitor's own attempt is unknown (build+stage back-compat), the job's attempt is
-        // unknown (older jobs / non-stage submissions), or the two match. Only current-attempt
-        // work gates termination (§2.1).
+        // Per-attempt scoping for completion gating. Builds without stage-attempt metadata have
+        // no attempt scope; otherwise both the monitor and submitted jobs carry the same number.
         private bool IsStageAttemptInScope(HelixJobInfo job)
-            => string.IsNullOrEmpty(_options.StageAttempt)
-                || string.IsNullOrEmpty(job.StageAttempt)
-                || string.Equals(job.StageAttempt, _options.StageAttempt, StringComparison.OrdinalIgnoreCase);
+        {
+            StageAttempt? jobAttempt = StageAttempt.ParseOptional(job.StageAttempt);
+            return jobAttempt == _stageAttempt;
+        }
 
         // A job belongs to a strictly-earlier attempt of this stage than the monitor's own.
-        // Such work is reconciled into the current attempt by the retry pass (§2.3) but never
-        // gated on directly. Requires both attempts to be known; unknown attempts are treated
-        // as current (see IsStageAttemptInScope).
-        private bool IsPreviousAttempt(HelixJobInfo job)
-            => !string.IsNullOrEmpty(_options.StageAttempt)
-                && !string.IsNullOrEmpty(job.StageAttempt)
-                && MonitorState.ParseStageAttempt(job.StageAttempt) < MonitorState.ParseStageAttempt(_options.StageAttempt);
+        // Such work is reconciled into the current attempt by the retry pass (§2.3) but never gated
+        // on directly. Builds without stage-attempt metadata have no previous-attempt concept.
+        private bool IsPreviousAttempt(StageAttempt? jobAttempt)
+        {
+            return _stageAttempt.HasValue
+                && jobAttempt.HasValue
+                && jobAttempt.Value.CompareTo(_stageAttempt.Value) < 0;
+        }
 
         public void Dispose()
         {
