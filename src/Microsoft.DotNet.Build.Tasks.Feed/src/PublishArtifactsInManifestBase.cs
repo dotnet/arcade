@@ -1544,11 +1544,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return NuGetFeedUploadPackageResult.Success;
                 }
 
-                string responseBody = await response.Content.ReadAsStringAsync();
-                if (responseBody.Length > maxResponseBodyLength)
-                {
-                    responseBody = responseBody.Substring(0, maxResponseBodyLength) + " [truncated]";
-                }
+                string responseBody = await ReadBoundedResponseBodyAsync(response.Content, maxResponseBodyLength);
 
                 log?.LogMessage(
                     MessageImportance.High,
@@ -1564,6 +1560,33 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 return NuGetFeedUploadPackageResult.Failed;
             }
+        }
+
+        private static async Task<string> ReadBoundedResponseBodyAsync(HttpContent content, int maxLength)
+        {
+            if (content == null)
+            {
+                return string.Empty;
+            }
+
+            using Stream responseStream = await content.ReadAsStreamAsync();
+            using var reader = new StreamReader(responseStream);
+            var buffer = new char[maxLength + 1];
+            int charsRead = 0;
+
+            while (charsRead < buffer.Length)
+            {
+                int read = await reader.ReadAsync(buffer, charsRead, buffer.Length - charsRead);
+                if (read == 0)
+                {
+                    break;
+                }
+
+                charsRead += read;
+            }
+
+            bool truncated = charsRead > maxLength;
+            return new string(buffer, 0, Math.Min(charsRead, maxLength)) + (truncated ? " [truncated]" : string.Empty);
         }
 
         /// <summary>

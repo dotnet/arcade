@@ -397,6 +397,35 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             buildEngine.BuildWarningEvents.Should().BeEmpty();
         }
 
+        [Fact]
+        public async Task NuGetFeedUploadPackageAsyncBoundsLoggedResponseBody()
+        {
+            const string omittedText = "This text should not be logged.";
+            var buildEngine = new MockBuildEngine();
+            var task = new PublishArtifactsInManifestV3
+            {
+                BuildEngine = buildEngine
+            };
+            using var response = new HttpResponseMessage(HttpStatusCode.BadRequest)
+            {
+                Content = new StringContent(new string('a', 4096) + omittedText)
+            };
+            using HttpClient client = FakeHttpClient.WithResponses(response);
+            using var packageStream = new MemoryStream([1, 2, 3]);
+
+            NuGetFeedUploadPackageResult result = await NuGetFeedUploadPackageAsync(
+                client,
+                "test-feed",
+                "https://pkgs.dev.azure.com/dnceng/_packaging/test-feed/nuget/v2",
+                packageStream,
+                task.Log);
+
+            result.Should().Be(NuGetFeedUploadPackageResult.Failed);
+            buildEngine.BuildMessageEvents.Should().Contain(message =>
+                message.Message.Contains(new string('a', 4096) + " [truncated]") &&
+                !message.Message.Contains(omittedText));
+        }
+
         private sealed class ThrowingHttpMessageHandler : HttpMessageHandler
         {
             protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
