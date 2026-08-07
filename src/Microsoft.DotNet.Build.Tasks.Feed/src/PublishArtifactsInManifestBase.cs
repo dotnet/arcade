@@ -1507,14 +1507,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public static async Task<NuGetFeedUploadPackageResult> NuGetFeedUploadPackageAsync(HttpClient httpClient, string feedName, string feedUri, Stream packageContentReadStream)
         {
+            return await NuGetFeedUploadPackageAsync(httpClient, feedName, feedUri, packageContentReadStream, log: null);
+        }
+
+        public static async Task<NuGetFeedUploadPackageResult> NuGetFeedUploadPackageAsync(
+            HttpClient httpClient,
+            string feedName,
+            string feedUri,
+            Stream packageContentReadStream,
+            MsBuildUtils.TaskLoggingHelper log)
+        {
             const string cAzureDevOps = "AzureDevOps";
+            const int maxResponseBodyLength = 4096;
 
             try
             {
                 Uri uri = new Uri(feedUri);
 
-                var request = new HttpRequestMessage(HttpMethod.Put, uri);
-                var packageContent = new StreamContent(packageContentReadStream);
+                using var request = new HttpRequestMessage(HttpMethod.Put, uri);
+                using var packageContent = new StreamContent(packageContentReadStream);
                 packageContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
                 using var content = new MultipartFormDataContent();
                 content.Add(packageContent, "package", "package.nupkg");
@@ -1522,18 +1533,35 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 request.Headers.TransferEncodingChunked = true;
                 request.Headers.Add("X-NuGet-ApiKey", cAzureDevOps);
 
-                var response = await httpClient.SendAsync(request);
+                using var response = await httpClient.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
                 {
                     return NuGetFeedUploadPackageResult.AlreadyExists;
                 }
 
-                response.EnsureSuccessStatusCode();
-                return NuGetFeedUploadPackageResult.Success;
+                if (response.IsSuccessStatusCode)
+                {
+                    return NuGetFeedUploadPackageResult.Success;
+                }
+
+                string responseBody = await response.Content.ReadAsStringAsync();
+                if (responseBody.Length > maxResponseBodyLength)
+                {
+                    responseBody = responseBody.Substring(0, maxResponseBodyLength) + " [truncated]";
+                }
+
+                log?.LogMessage(
+                    MessageImportance.High,
+                    $"NuGet package upload to Azure DevOps feed '{feedName}' returned HTTP {(int)response.StatusCode} ({response.ReasonPhrase}). Response: {responseBody}");
+
+                return NuGetFeedUploadPackageResult.Failed;
             }
-            catch
+            catch (Exception e)
             {
-                // Log the exception if we have access to the logging context
+                log?.LogMessage(
+                    MessageImportance.High,
+                    $"NuGet package upload to Azure DevOps feed '{feedName}' failed with {e.GetType().Name}: {e.Message}");
+
                 return NuGetFeedUploadPackageResult.Failed;
             }
         }
@@ -1577,7 +1605,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             // Using these callbacks we can mock up functionality when testing.
             CompareLocalPackageToFeedPackageCallBack ??= CompareLocalPackageToFeedPackage;
-            AttemptPushPackageCallback ??= NuGetFeedUploadPackageAsync;
+            AttemptPushPackageCallback ??= (httpClient, targetFeedName, targetFeedUri, packageStream) =>
+                NuGetFeedUploadPackageAsync(httpClient, targetFeedName, targetFeedUri, packageStream, Log);
 
             var packageStatus = PackageFeedStatus.Unknown;
 
