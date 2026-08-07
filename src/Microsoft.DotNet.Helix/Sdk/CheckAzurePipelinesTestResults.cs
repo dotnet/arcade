@@ -147,7 +147,30 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 
                 if (workItem != null)
                 {
-                    Log.LogError(FailureCategory.Test, $"Test {name} has failed. Check the Test tab or this console log: {workItem.GetMetadata("ConsoleOutputUri")}");
+                    string consoleUri = workItem.GetMetadata("ConsoleOutputUri");
+                    string consoleErrorText = workItem.GetMetadata("ConsoleErrorText");
+                    string exitCode = workItem.GetMetadata("ExitCode");
+
+                    var sb = new System.Text.StringBuilder();
+                    sb.Append($"Test {name} has failed.");
+
+                    if (!string.IsNullOrEmpty(exitCode))
+                    {
+                        sb.Append($" (exit code {exitCode})");
+                    }
+
+                    sb.Append($" Check the Test tab or this console log: {consoleUri}");
+
+                    if (!string.IsNullOrEmpty(consoleErrorText))
+                    {
+                        sb.AppendLine();
+                        sb.AppendLine("Error details:");
+                            ? consoleErrorText.Substring(0, 2000) + "..."
+                            : consoleErrorText;
+                        sb.Append(truncated);
+                    }
+
+                    Log.LogError(FailureCategory.Test, sb.ToString());
                 }
                 else
                 {
