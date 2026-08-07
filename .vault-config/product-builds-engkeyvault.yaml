@@ -99,16 +99,6 @@ secrets:
       name: dn-bot-dnceng-universal-packages
       organization: dnceng
 
-  dn-bot-all-orgs-artifact-feeds-rw:
-    type: azure-devops-access-token
-    parameters:
-      domainAccountName: dn-bot
-      domainAccountSecret:
-          location: helixkv
-          name: dn-bot-account-redmond
-      name: dn-bot-all-orgs-artifact-feeds
-      organization: dnceng
-
   #DotNet-Symbol-Server-Pats
   microsoft-symbol-server-pat:
     type: azure-devops-access-token
