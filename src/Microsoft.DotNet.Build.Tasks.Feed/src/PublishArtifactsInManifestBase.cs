@@ -1636,10 +1636,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             try
             {
                 Log.LogMessage(MessageImportance.Normal, $"Pushing package {id}@{version} to target feed {feedConfig.TargetURL}");
-                RetryHandler.MaxAttempts = MaxRetryCount;
+                var packagePushRetryHandler = new ExponentialRetry
+                {
+                    MaxAttempts = MaxRetryCount,
+                    DelayBase = RetryHandler.DelayBase,
+                    DelayConstant = RetryHandler.DelayConstant,
+                    MinRandomFactor = RetryHandler.MinRandomFactor,
+                    MaxRandomFactor = RetryHandler.MaxRandomFactor,
+                    MaximumDelay = RetryHandler.MaximumDelay,
+                    RetryDelayCallback = RetryHandler.RetryDelayCallback,
+                    DefaultCancellationToken = RetryHandler.DefaultCancellationToken
+                };
                 int attemptsMade = 0;
 
-                await RetryHandler.RunAsync(async attempt =>
+                await packagePushRetryHandler.RunAsync(async attempt =>
                 {
                     int attemptIndex = attempt + 1;
                     attemptsMade = attemptIndex;
