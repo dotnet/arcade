@@ -148,6 +148,12 @@ By default, the monitor fails when its stage completes without producing any Hel
 attempt. For stages where an empty test selection is expected, set `allowNoHelixJobs: true` on the
 monitor template. The equivalent tool switch is `--allow-no-helix-jobs`.
 
+To wait for Helix and gate the pipeline on work-item exit codes without publishing individual test
+results to Azure DevOps, set `publishTestResults: false` on the monitor template. The equivalent
+tool switch is `--publish-test-results false`. This mode does not detect test failures from result
+files when the work item itself exits successfully, and monitor reruns cannot recover those
+test-only failures for resubmission.
+
 #### Fully qualified test names
 
 By default the monitor reports each test to Azure DevOps using the framework-provided display name

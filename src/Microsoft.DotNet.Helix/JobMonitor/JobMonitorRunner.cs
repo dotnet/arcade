@@ -82,7 +82,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             _reporter.LogMonitorStart();
 
-            _state.AddProcessedHelixJobs(await _azdo.GetProcessedHelixJobNamesAsync(cancellationToken));
+            if (_options.PublishTestResults)
+            {
+                _state.AddProcessedHelixJobs(await _azdo.GetProcessedHelixJobNamesAsync(cancellationToken));
+            }
 
             try
             {
@@ -148,7 +151,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             // when --fail-on-failed-tests is disabled so AzDO test results no longer influence
             // retry decisions.
             IReadOnlyDictionary<string, IReadOnlySet<string>> failedTestWorkItemsByJob =
-                _options.FailWorkItemsWithFailedTests
+                _options.PublishTestResults && _options.FailWorkItemsWithFailedTests
                     ? await _azdo.GetFailedTestWorkItemsAsync(cancellationToken)
                     : new Dictionary<string, IReadOnlySet<string>>(StringComparer.OrdinalIgnoreCase);
 
@@ -387,18 +390,25 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             if (!alreadyUploadedByPriorAttempt)
             {
-                _reporter.LogJobProcessingStart(helixJob);
+                if (_options.PublishTestResults)
+                {
+                    _reporter.LogJobProcessingStart(helixJob);
+                }
                 _reporter.LogFailedWorkItemConsoleLinks(helixJob, workItems.Where(wi => wi.IsFailed));
             }
 
             _state.TryRecordWorkItemOutcomes(helixJob, workItems);
 
-            if (queueUpload && !alreadyUploadedByPriorAttempt)
+            if (_options.PublishTestResults && queueUpload && !alreadyUploadedByPriorAttempt)
             {
                 if (_state.TryQueueHelixJobUpload(helixJob.JobName))
                 {
                     _uploads.Enqueue(helixJob, workItems, cancellationToken);
                 }
+            }
+            else if (!_options.PublishTestResults)
+            {
+                _state.TryMarkHelixJobProcessed(helixJob.JobName);
             }
 
             if (!alreadyUploadedByPriorAttempt)

@@ -536,6 +536,45 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 message.Contains("2 test results for job 'helix-linux' processed.", StringComparison.Ordinal));
         }
 
+        [Theory]
+        [InlineData(false, 0)]
+        [InlineData(true, 1)]
+        public async Task PublishTestResultsDisabled_WaitsForHelixAndUsesWorkItemExitCode(
+            bool workItemFailed,
+            int expectedExitCode)
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "inProgress"));
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"));
+            helix.AddResponse(jobs: [HelixJob("helix-linux", "running")]);
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = workItemFailed
+                        ? PassFail(failed: ["workitem-1"])
+                        : PassFail(passed: ["workitem-1"]),
+                });
+
+            JobMonitorOptions options = DefaultOptions();
+            options.PublishTestResults = false;
+            var runner = new JobMonitorRunner(options, NullLogger.Instance, azdo, helix, NoDelay);
+
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(expectedExitCode);
+            azdo.TimelineCallCount.Should().Be(2);
+            azdo.CreatedTestRuns.Should().BeEmpty();
+            azdo.UploadedJobNames.Should().BeEmpty();
+            azdo.CompletedTestRunIds.Should().BeEmpty();
+        }
+
         [Fact]
         public async Task VerboseDrainReportsPendingUploadPhaseAndElapsedTime()
         {
