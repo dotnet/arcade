@@ -62,6 +62,13 @@ parameters:
   type: number
   default: 30
 
+# Whether the monitor publishes Helix test results to Azure DevOps. When false, the monitor
+# still waits for Helix and uses work-item exit codes to determine success.
+# Forwarded as --publish-test-results.
+- name: publishTestResults
+  type: boolean
+  default: true
+
 # When 'true' (the default), Helix work items that exit 0 but have failed AzDO test results
 # are treated as failed: they count toward the monitor's exit code and are resubmitted by a
 # later invocation's retry pass. Set to 'false' to fall back to exit-code-only outcomes.
@@ -200,6 +207,7 @@ jobs:
       toolArgs=(
         --helix-base-uri              '${{ parameters.helixBaseUri }}'
         --polling-interval-seconds    '${{ parameters.pollingIntervalSeconds }}'
+        --publish-test-results        '${{ parameters.publishTestResults }}'
         --fail-on-failed-tests        '${{ parameters.failWorkItemsWithFailedTests }}'
         --allow-no-helix-jobs         '${{ parameters.allowNoHelixJobs }}'
         --use-fully-qualified-test-name '${{ parameters.useFullyQualifiedTestName }}'
