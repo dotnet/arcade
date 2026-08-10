@@ -389,9 +389,12 @@ jobs:
             # here and only resurface below as an unreadable archive —
             # indistinguishable from a hostile one, and costing the whole leg
             # and with it the entire analysis (see the all-legs guard below).
-            # `|| true` keeps errexit from killing the step and does not clobber
-            # PIPESTATUS, which is set by the pipeline itself.
-            curl -sSL --retry 3 --retry-delay 2 --max-time 600 "${url}" 2>/dev/null | head -c $((MAX_ZIP_BYTES + 1)) > /tmp/a.zip || true
+            # Nothing is appended to the pipeline and errexit is not toggled
+            # around it: this step already runs with errexit off (`set +e` at
+            # the top), so the pipeline cannot abort it, and a trailing
+            # `|| true` would run `true` — itself a command — resetting
+            # PIPESTATUS before curl's status could be read.
+            curl -sSL --retry 3 --retry-delay 2 --max-time 600 "${url}" 2>/dev/null | head -c $((MAX_ZIP_BYTES + 1)) > /tmp/a.zip
             curl_rc=${PIPESTATUS[0]}
             ZIP_BYTES=$(stat -c%s /tmp/a.zip 2>/dev/null || echo 0)
             if [ "${ZIP_BYTES}" -eq 0 ]; then
