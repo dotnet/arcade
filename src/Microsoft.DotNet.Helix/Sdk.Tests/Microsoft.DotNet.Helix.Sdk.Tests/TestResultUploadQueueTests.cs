@@ -368,6 +368,41 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
+        public async Task CompletedPayloadsAreRemovedDuringHighVolumeSequentialAdmission()
+        {
+            const int jobCount = 500;
+            var helix = new PipelineHelixService();
+            var azdo = new PipelineAzureDevOpsService();
+            var state = new MonitorState();
+            using var queue = CreateQueue(
+                helix,
+                azdo,
+                state,
+                processingParallelism: 1,
+                uploadParallelism: 1);
+
+            int admissionCapacity = queue.SnapshotJobAdmission().Capacity;
+            for (int i = 0; i < jobCount; i++)
+            {
+                string jobName = $"volume-{i:D3}";
+                await EnqueueAsync(queue, state, Job(jobName), WorkItems(jobName, 1));
+            }
+
+            await WaitUntilAsync(() => queue.SnapshotPendingPayloads().Current == 0);
+            var payloads = queue.SnapshotPendingPayloads();
+            payloads.Maximum.Should().BeLessThanOrEqualTo(
+                admissionCapacity + 4,
+                "only the bounded preparation/publication stages may retain jobs after scheduling");
+
+            for (int i = 0; i < jobCount; i++)
+            {
+                state.IsHelixJobProcessed($"volume-{i:D3}").Should().BeTrue();
+            }
+
+            await queue.DrainAsync(CancellationToken.None).WaitAsync(Timeout);
+        }
+
+        [Fact]
         public async Task SchedulingIsFairBeyondFormerActiveJobCohort()
         {
             const int largeJobCount = 65;

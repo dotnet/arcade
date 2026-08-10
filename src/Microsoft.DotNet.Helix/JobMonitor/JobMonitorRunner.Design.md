@@ -476,10 +476,11 @@ run is considered durable.
   result queues all apply backpressure. The admission permit is acquired before
   materializing a job's work-item names and is released when that job leaves
   scheduling. Drain closes admission and first waits for any enqueue already in
-  progress to register or cancel. Fixed workers discover, download, parse,
-  aggregate, and prepare individual work items. Prepared results cross a bounded
-  queue to independent publishing workers, so slow AzDO writes do not hold
-  preparation slots.
+  progress to register or cancel. Completed jobs remove their payloads from the
+  pending set immediately rather than waiting for the runner's next poll.
+  Fixed workers discover, download, parse, aggregate, and prepare individual
+  work items. Prepared results cross a bounded queue to independent publishing
+  workers, so slow AzDO writes do not hold preparation slots.
 - The Helix results SAS and job output directory are resolved once per job.
   Transient work-item downloads use a bounded retry budget; a retry never
   redownloads successful sibling work items.

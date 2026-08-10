@@ -46,6 +46,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly Task[] _publicationWorkers;
         private readonly object _pendingLock = new();
         private readonly List<JobUpload> _pending = [];
+        private int _maximumPendingCount;
         private readonly object _enqueueLock = new();
         private TaskCompletionSource _enqueueBarrier;
         private int _inProgressEnqueueCount;
@@ -151,13 +152,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     helixJob,
                     workItemNames,
                     cancellationToken,
-                    admission);
+                    admission,
+                    RemovePending);
                 admission = null;
 
-                lock (_pendingLock)
-                {
-                    _pending.Add(upload);
-                }
+                RegisterPending(upload);
 
                 _logger.LogInformation(
                     "Queued {Count} work item(s) from job '{JobName}' for test-result processing.",
@@ -191,6 +190,35 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             lock (_pendingLock)
             {
                 _pending.RemoveAll(static upload => upload.Completion.IsCompleted);
+            }
+        }
+
+        private void RegisterPending(JobUpload upload)
+        {
+            lock (_pendingLock)
+            {
+                _pending.Add(upload);
+                _maximumPendingCount = Math.Max(_maximumPendingCount, _pending.Count);
+                if (upload.Completion.IsCompleted)
+                {
+                    _pending.Remove(upload);
+                }
+            }
+        }
+
+        private void RemovePending(JobUpload upload)
+        {
+            lock (_pendingLock)
+            {
+                _pending.Remove(upload);
+            }
+        }
+
+        internal (int Current, int Maximum) SnapshotPendingPayloads()
+        {
+            lock (_pendingLock)
+            {
+                return (_pending.Count, _maximumPendingCount);
             }
         }
 
@@ -1226,17 +1254,20 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             private HelixTestResultsContext _resultsContext;
             private Task<OperationResult<int>> _testRun;
             private readonly JobAdmissionLease _admission;
+            private readonly Action<JobUpload> _onFinished;
 
             public JobUpload(
                 HelixJobInfo helixJob,
                 string[] workItemNames,
                 CancellationToken cancellationToken,
-                JobAdmissionLease admission)
+                JobAdmissionLease admission,
+                Action<JobUpload> onFinished)
             {
                 HelixJob = helixJob;
                 _workItemNames = workItemNames;
                 CancellationToken = cancellationToken;
                 _admission = admission;
+                _onFinished = onFinished;
                 StartedAt = DateTimeOffset.UtcNow;
                 _phaseStartedAt = StartedAt;
                 _queued = Total;
@@ -1454,8 +1485,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                     _finished = true;
                     _completion.TrySetResult();
-                    return true;
                 }
+
+                _onFinished(this);
+                return true;
             }
 
             private TerminalAction GetTerminalActionLocked()
