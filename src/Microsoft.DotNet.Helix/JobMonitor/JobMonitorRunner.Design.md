@@ -266,7 +266,7 @@ inputs are:
 | Maximum wait | Reported in the timeout message; the timeout itself is enforced by the caller through cancellation. |
 | Job monitor name | Identifier of the monitor's own AzDO timeline record; used to exclude it from pass/fail. |
 | Working directory | Local staging directory for downloaded test results. |
-| Result processing parallelism | Bounds concurrent work-item discovery, download, parsing, aggregation, and preparation. |
+| Result processing parallelism | Bounds concurrent work-item discovery, download, parsing, aggregation, and preparation. The tool defaults to 4; the shared template only forwards an explicit value so independently pinned older tools remain compatible. |
 | Result upload parallelism | Bounds concurrent AzDO result publishing independently from preparation. |
 | Verbose flag | Forces a status snapshot every poll. |
 

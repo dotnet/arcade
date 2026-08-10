@@ -23,7 +23,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
     internal sealed class TestResultUploadQueue : IDisposable
     {
         private const int MaximumTransientRetries = 2;
-        private const int MaximumActiveJobs = 64;
         private const string AzdoWarningPrefix = "##vso[task.logissue type=warning]";
 
         private readonly ILogger _logger;
@@ -36,6 +35,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly Channel<WorkItemUpload> _preparations;
         private readonly Channel<PreparedUpload> _publications;
         private readonly SemaphoreSlim _processingLimiter;
+        private readonly Task _dispatchStart;
         private readonly CancellationTokenSource _shutdown = new();
         private readonly Task _dispatcher;
         private readonly Task[] _initializationWorkers;
@@ -53,13 +53,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             JobMonitorOptions options,
             IAzureDevOpsService azdo,
             IHelixService helix,
-            MonitorState monitorState)
+            MonitorState monitorState,
+            Task dispatchStart = null)
         {
             _logger = logger;
             _options = options;
             _azdo = azdo;
             _helix = helix;
             _monitorState = monitorState;
+            _dispatchStart = dispatchStart ?? Task.CompletedTask;
 
             int jobCapacity = Math.Max(16, options.TestResultProcessingParallelism * 4);
             int preparationCapacity = options.TestResultProcessingParallelism;
@@ -73,9 +75,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 SingleReader = options.TestResultProcessingParallelism == 1,
                 SingleWriter = false,
             });
-            _readyJobs = Channel.CreateBounded<JobUpload>(new BoundedChannelOptions(jobCapacity)
+            // This queue holds one lightweight state object per ready Helix job, never prepared
+            // results or per-work-item tasks. Keeping every ready job visible to the dispatcher
+            // avoids a fixed active cohort that can starve jobs admitted later.
+            _readyJobs = Channel.CreateUnbounded<JobUpload>(new UnboundedChannelOptions
             {
-                FullMode = BoundedChannelFullMode.Wait,
                 SingleReader = true,
                 SingleWriter = options.TestResultProcessingParallelism == 1,
             });
@@ -303,9 +307,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             var activeJobs = new Queue<JobUpload>();
             try
             {
+                await _dispatchStart.WaitAsync(_shutdown.Token);
                 while (true)
                 {
-                    while (activeJobs.Count < MaximumActiveJobs && _readyJobs.Reader.TryRead(out JobUpload queuedJob))
+                    // Admit every currently ready job before taking the next scheduling turn.
+                    // The bounded work/prepared queues below still provide payload backpressure.
+                    while (_readyJobs.Reader.TryRead(out JobUpload queuedJob))
                     {
                         activeJobs.Enqueue(queuedJob);
                     }

@@ -212,6 +212,66 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
+        public async Task SchedulingIsFairBeyondFormerActiveJobCohort()
+        {
+            const int largeJobCount = 65;
+            var dispatchStart = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var smallJobStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var releaseSmallJob = new ManualResetEventSlim();
+            var downloadCounts = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var helix = new PipelineHelixService
+            {
+                DownloadAsync = (context, workItemName, _) =>
+                {
+                    downloadCounts.AddOrUpdate(context.JobName, 1, static (_, count) => count + 1);
+                    if (context.JobName == "small")
+                    {
+                        smallJobStarted.TrySetResult();
+                        releaseSmallJob.Wait(Timeout);
+                    }
+
+                    return Task.FromResult(Result(context.JobName, workItemName));
+                },
+            };
+            var azdo = new PipelineAzureDevOpsService();
+            var state = new MonitorState();
+            using var queue = CreateQueue(
+                helix,
+                azdo,
+                state,
+                processingParallelism: 1,
+                uploadParallelism: 1,
+                dispatchStart: dispatchStart.Task);
+
+            for (int i = 0; i < largeJobCount; i++)
+            {
+                string jobName = $"large-{i:D2}";
+                await EnqueueAsync(queue, state, Job(jobName), WorkItems(jobName, 2));
+            }
+            await EnqueueAsync(queue, state, Job("small"), WorkItems("small", 1));
+
+            await WaitUntilAsync(() => helix.ContextCounts.Count == largeJobCount + 1);
+            dispatchStart.TrySetResult();
+            await smallJobStarted.Task.WaitAsync(Timeout);
+
+            try
+            {
+                for (int i = 0; i < largeJobCount; i++)
+                {
+                    downloadCounts[$"large-{i:D2}"].Should().Be(
+                        1,
+                        "the later small job must get a turn before any large job gets a second turn");
+                }
+            }
+            finally
+            {
+                releaseSmallJob.Set();
+            }
+
+            await queue.DrainAsync(CancellationToken.None).WaitAsync(Timeout);
+        }
+
+        [Fact]
         public async Task SlowJobContextDoesNotMonopolizeProcessing()
         {
             var slowContextStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -402,7 +462,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             IAzureDevOpsService azdo,
             MonitorState state,
             int processingParallelism,
-            int uploadParallelism)
+            int uploadParallelism,
+            Task dispatchStart = null)
             => new(
                 NullLogger.Instance,
                 new JobMonitorOptions
@@ -413,7 +474,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 },
                 azdo,
                 helix,
-                state);
+                state,
+                dispatchStart);
 
         private static async Task EnqueueAsync(
             TestResultUploadQueue queue,
