@@ -43,6 +43,28 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
+        public void ParameterizedRow_AsDataDrivenSubResult_KeepsFrameworkDisplayName()
+        {
+            string result = TestNameFormatter.FormatDisplayName(
+                "Microsoft.DotNet.Cli.New.IntegrationTests.CommonTemplatesTests.FeaturesSupport",
+                "FeaturesSupport(\"classlib\",True,\"netstandard2.0\")",
+                isDataDrivenSubResult: true);
+
+            Assert.Equal("FeaturesSupport(\"classlib\",True,\"netstandard2.0\")", result);
+        }
+
+        [Fact]
+        public void EmptyDisplayName_AsDataDrivenSubResult_DoesNotRepeatFullyQualifiedName()
+        {
+            string result = TestNameFormatter.FormatDisplayName(
+                "Ns.MyTests.Theory",
+                "",
+                isDataDrivenSubResult: true);
+
+            Assert.Empty(result);
+        }
+
+        [Fact]
         public void CustomDisplayName_KeepsBothFullyQualifiedNameAndDisplayName()
         {
             // xUnit [Fact(DisplayName = "...")] with an arbitrary, non-unique name.
