@@ -84,12 +84,14 @@ parameters:
   type: boolean
   default: false
 
-# Controls per-test output attachments. Failed uploads output only for failed tests, All uploads
-# output for every test, and None suppresses per-test output attachments.
+# Controls per-test output attachments. Leave empty (the default) to avoid passing the option to
+# older independently pinned monitor tools; current tools default to Failed. Set Failed, All, or
+# None only when the consuming repo's pinned monitor supports --test-result-attachment-mode.
 - name: testResultAttachmentMode
   type: string
-  default: Failed
+  default: ''
   values:
+  - ''
   - Failed
   - All
   - None
@@ -213,7 +215,6 @@ jobs:
         --fail-on-failed-tests        '${{ parameters.failWorkItemsWithFailedTests }}'
         --allow-no-helix-jobs         '${{ parameters.allowNoHelixJobs }}'
         --use-fully-qualified-test-name '${{ parameters.useFullyQualifiedTestName }}'
-        --test-result-attachment-mode '${{ parameters.testResultAttachmentMode }}'
         --max-wait-minutes            "$((${{ parameters.timeoutInMinutes }} - 5))" # Set the tool's timeout slightly lower than the Azure DevOps job timeout to allow it to exit gracefully.
         --stage-name                  '$(System.StageName)'
         --stage-attempt               '$(System.StageAttempt)'
@@ -221,6 +222,7 @@ jobs:
 
       organization='${{ parameters.organization }}'
       repository='${{ parameters.repository }}'
+      testResultAttachmentMode='${{ parameters.testResultAttachmentMode }}'
 
       # Fall back to Azure DevOps-provided environment variables when the caller did not
       # supply organization / repository explicitly. BUILD_REPOSITORY_NAME is typically
@@ -243,6 +245,9 @@ jobs:
 
       if [ -n "$organization" ]; then toolArgs+=( --organization "$organization" ); fi
       if [ -n "$repository" ];   then toolArgs+=( --repository   "$repository" );   fi
+      if [ -n "$testResultAttachmentMode" ]; then
+        toolArgs+=( --test-result-attachment-mode "$testResultAttachmentMode" )
+      fi
 
       # Build.Reason and Build.SourceBranch are required to derive the Helix source filter
       # the same way the Helix SDK submitter does (PR -> 'pr', internal -> 'official',
