@@ -52,14 +52,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly JobMonitorOptions _options;
         private readonly ILogger _logger;
         private readonly HttpClient _azdoClient;
-        private readonly SemaphoreSlim _uploadSemaphore;
+        private readonly AzureDevOpsRequestScheduler _resultUploadScheduler;
 
         public AzureDevOpsService(JobMonitorOptions options, ILogger logger)
         {
             _options = options;
             _logger = logger;
             _azdoClient = new HttpClient();
-            _uploadSemaphore = new SemaphoreSlim(options.TestResultUploadParallelism);
+            _resultUploadScheduler = new AzureDevOpsRequestScheduler(options.TestResultUploadParallelism, logger);
             InitializeClient();
         }
 
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _options = options;
             _logger = logger;
             _azdoClient = azdoClient ?? throw new ArgumentNullException(nameof(azdoClient));
-            _uploadSemaphore = new SemaphoreSlim(options.TestResultUploadParallelism);
+            _resultUploadScheduler = new AzureDevOpsRequestScheduler(options.TestResultUploadParallelism, logger);
             InitializeClient();
         }
 
@@ -411,7 +411,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 _options.UseFullyQualifiedTestName);
             using var publisher = new AzureDevOpsResultPublisher(
                 reportingParameters,
-                _logger);
+                _logger,
+                _resultUploadScheduler);
 
             async Task<TestResultUploadSummary> UploadWorkItemAsync(WorkItemTestResults workItem)
             {
@@ -421,44 +422,27 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     return new TestResultUploadSummary(true, 0);
                 }
 
-                DateTimeOffset waitStartedAt = DateTimeOffset.UtcNow;
+                DateTimeOffset uploadStartedAt = DateTimeOffset.UtcNow;
                 _logger.LogDebug(
-                    "Work item '{WorkItemName}' in job '{JobName}' is waiting for a test-result upload slot. "
-                    + "{AvailableSlots} slot(s) are currently available.",
+                    "Preparing and publishing {FileCount} test-result file(s) for work item '{WorkItemName}' in job '{JobName}'.",
+                    workItem.TestResultFiles.Count,
+                    workItem.WorkItemName,
+                    workItem.JobName);
+                AzureDevOpsResultPublisher.PreparedTestResults prepared = await publisher.PrepareTestResultsAsync(
+                    workItem.TestResultFiles,
+                    new
+                    {
+                        HelixJobId = workItem.JobName,
+                        HelixWorkItemName = workItem.WorkItemName
+                    },
+                    cancellationToken);
+                TestResultUploadSummary summary = await publisher.PublishTestResultsAsync(prepared, cancellationToken);
+                _logger.LogDebug(
+                    "Work item '{WorkItemName}' in job '{JobName}' finished preparing and publishing after {UploadElapsed}.",
                     workItem.WorkItemName,
                     workItem.JobName,
-                    _uploadSemaphore.CurrentCount);
-                await _uploadSemaphore.WaitAsync(cancellationToken);
-
-                try
-                {
-                    DateTimeOffset uploadStartedAt = DateTimeOffset.UtcNow;
-                    _logger.LogDebug(
-                        "Work item '{WorkItemName}' in job '{JobName}' acquired a test-result upload slot after {WaitElapsed}. "
-                        + "Parsing and publishing {FileCount} file(s).",
-                        workItem.WorkItemName,
-                        workItem.JobName,
-                        uploadStartedAt - waitStartedAt,
-                        workItem.TestResultFiles.Count);
-                    TestResultUploadSummary summary = await publisher.UploadTestResultsWithSummaryAsync(
-                        workItem.TestResultFiles,
-                        new
-                        {
-                            HelixJobId = workItem.JobName,
-                            HelixWorkItemName = workItem.WorkItemName
-                        },
-                        cancellationToken);
-                    _logger.LogDebug(
-                        "Work item '{WorkItemName}' in job '{JobName}' finished parsing and publishing after {UploadElapsed}.",
-                        workItem.WorkItemName,
-                        workItem.JobName,
-                        DateTimeOffset.UtcNow - uploadStartedAt);
-                    return summary;
-                }
-                finally
-                {
-                    _uploadSemaphore.Release();
-                }
+                    DateTimeOffset.UtcNow - uploadStartedAt);
+                return summary;
             }
 
             (WorkItemTestResults WorkItem, TestResultUploadSummary Summary)[] testSummaries = await Task.WhenAll(results.Select(async result => (result, await UploadWorkItemAsync(result))));
@@ -612,7 +596,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public void Dispose()
         {
             _azdoClient.Dispose();
-            _uploadSemaphore.Dispose();
+            _resultUploadScheduler.Dispose();
         }
     }
 }

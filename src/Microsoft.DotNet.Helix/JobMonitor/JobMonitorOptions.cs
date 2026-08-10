@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// </summary>
         public string StageAttempt { get; set; }
 
-        public int TestResultUploadParallelism { get; set; } = 4;
+        public int TestResultUploadParallelism { get; set; } = 8;
 
         /// <summary>
         /// When true (the default), a Helix work item that exited 0 but whose uploaded test
@@ -162,8 +162,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             Option<int> testResultUploadParallelismOption = new("--test-result-upload-parallelism")
             {
-                Description = "Maximum number of work items whose test results can be uploaded to Azure DevOps in parallel.",
-                DefaultValueFactory = _ => 4
+                Description = "Maximum number of concurrent Azure DevOps test-result and result-attachment HTTP requests across all jobs and work items.",
+                DefaultValueFactory = _ => 8
             };
 
             Option<bool> failWorkItemsWithFailedTestsOption = new("--fail-on-failed-tests")

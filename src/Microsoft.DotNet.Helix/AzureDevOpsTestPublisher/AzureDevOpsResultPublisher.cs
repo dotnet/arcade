@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
 public sealed class AzureDevOpsResultPublisher : IDisposable
 {
+    private const int DefaultMaximumConcurrency = 8;
     private const int DefaultAttemptCount = 10;
     private static readonly TimeSpan s_maximumRetryDelay = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan s_httpClientTimeout = TimeSpan.FromMinutes(5);
@@ -32,22 +33,91 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
     private readonly AzureDevOpsReportingParameters _azdoParameters;
     private readonly HttpClient _httpClient;
     private readonly ILogger _logger;
+    private readonly AzureDevOpsRequestScheduler _requestScheduler;
+    private readonly bool _disposeHttpClient;
+    private readonly bool _disposeRequestScheduler;
 
     public AzureDevOpsResultPublisher(
         AzureDevOpsReportingParameters azdoParameters,
         ILogger logger)
+        : this(
+            azdoParameters,
+            logger,
+            new AzureDevOpsRequestScheduler(DefaultMaximumConcurrency, logger),
+            CreateHttpClient(azdoParameters.AccessToken),
+            disposeRequestScheduler: true,
+            disposeHttpClient: true)
+    {
+    }
+
+    public AzureDevOpsResultPublisher(
+        AzureDevOpsReportingParameters azdoParameters,
+        ILogger logger,
+        AzureDevOpsRequestScheduler requestScheduler)
+        : this(
+            azdoParameters,
+            logger,
+            requestScheduler,
+            CreateHttpClient(azdoParameters.AccessToken),
+            disposeRequestScheduler: false,
+            disposeHttpClient: true)
+    {
+    }
+
+    internal AzureDevOpsResultPublisher(
+        AzureDevOpsReportingParameters azdoParameters,
+        ILogger logger,
+        AzureDevOpsRequestScheduler requestScheduler,
+        HttpClient httpClient,
+        bool disposeHttpClient = false)
+        : this(
+            azdoParameters,
+            logger,
+            requestScheduler,
+            httpClient,
+            disposeRequestScheduler: false,
+            disposeHttpClient)
+    {
+    }
+
+    private AzureDevOpsResultPublisher(
+        AzureDevOpsReportingParameters azdoParameters,
+        ILogger logger,
+        AzureDevOpsRequestScheduler requestScheduler,
+        HttpClient httpClient,
+        bool disposeRequestScheduler,
+        bool disposeHttpClient)
     {
         _azdoParameters = azdoParameters;
-        _httpClient = CreateHttpClient(azdoParameters.AccessToken);
         _logger = logger;
+        _requestScheduler = requestScheduler ?? throw new ArgumentNullException(nameof(requestScheduler));
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _disposeRequestScheduler = disposeRequestScheduler;
+        _disposeHttpClient = disposeHttpClient;
     }
 
     public void Dispose()
     {
-        _httpClient.Dispose();
+        if (_disposeHttpClient)
+        {
+            _httpClient.Dispose();
+        }
+
+        if (_disposeRequestScheduler)
+        {
+            _requestScheduler.Dispose();
+        }
     }
 
     public async Task<TestResultUploadSummary> UploadTestResultsWithSummaryAsync(List<string> testResultFiles, object resultMetadata, CancellationToken cancellationToken = default)
+        => await PublishTestResultsAsync(
+            await PrepareTestResultsAsync(testResultFiles, resultMetadata, cancellationToken),
+            cancellationToken);
+
+    public async Task<PreparedTestResults> PrepareTestResultsAsync(
+        List<string> testResultFiles,
+        object resultMetadata,
+        CancellationToken cancellationToken = default)
     {
         var testResultReader = new LocalTestResultsReader(_logger);
 
@@ -69,20 +139,16 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         if (parsedResults.Length == 0)
         {
             _logger.LogWarning("No test result files were provided for upload");
-            return new TestResultUploadSummary(true, 0);
+            return PrepareTestResults([], resultMetadata);
         }
 
         IReadOnlyList<AggregatedResult> aggregatedResults = new ResultAggregator().Aggregate(parsedResults, _azdoParameters.UseFullyQualifiedTestName);
         if (aggregatedResults.Count == 0)
         {
             _logger.LogDebug("Test results were discovered but none could be aggregated");
-            return new TestResultUploadSummary(true, 0);
         }
 
-        long uploadedCount = await UploadTestResultsWithCountAsync(aggregatedResults, resultMetadata, cancellationToken);
-        return new TestResultUploadSummary(
-            AllPassed: ComputeAllPassed(aggregatedResults),
-            UploadedCount: uploadedCount);
+        return PrepareTestResults(aggregatedResults, resultMetadata);
     }
 
     /// <summary>
@@ -94,22 +160,49 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
     internal static bool ComputeAllPassed(IReadOnlyList<AggregatedResult> results)
         => results.All(result => result.Result != "Failed" && result.Result != "None");
 
-    public async Task<long> UploadTestResultsWithCountAsync(IEnumerable<AggregatedResult> results, object resultMetadata, CancellationToken cancellationToken = default)
+    public PreparedTestResults PrepareTestResults(IEnumerable<AggregatedResult> results, object resultMetadata)
     {
+        IReadOnlyList<AggregatedResult> resultList = results as IReadOnlyList<AggregatedResult> ?? results.ToList();
+        var converted = ConvertResults(resultList, resultMetadata).ToList();
+        IReadOnlyList<IReadOnlyList<ConvertedResult>> batches =
+            [.. Batch(converted, 1000, static t => Size(t.Converted)).Select(static batch => (IReadOnlyList<ConvertedResult>)batch)];
+        return new PreparedTestResults(batches, ComputeAllPassed(resultList));
+    }
+
+    public async Task<TestResultUploadSummary> PublishTestResultsAsync(
+        PreparedTestResults preparedResults,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(preparedResults);
+
         try
         {
             long publishedTestCount = 0;
-            IReadOnlyList<AggregatedResult> resultList = results as IReadOnlyList<AggregatedResult> ?? results.ToList();
-            var converted = ConvertResults(resultList, resultMetadata).ToList();
-            foreach (List<ConvertedResult> batch in Batch(converted, 1000, static t => Size(t.Converted)))
+            int nextBatch = -1;
+            var batches = (IReadOnlyList<IReadOnlyList<ConvertedResult>>)preparedResults.Batches;
+
+            async Task PublishBatchesAsync()
             {
-                IReadOnlyList<PublishedTestCase> publishedTests = await PublishResultsAsync(batch, cancellationToken);
-                publishedTestCount += publishedTests.Count;
+                while (true)
+                {
+                    int batchIndex = Interlocked.Increment(ref nextBatch);
+                    if (batchIndex >= batches.Count)
+                    {
+                        return;
+                    }
+
+                    IReadOnlyList<PublishedTestCase> publishedTests =
+                        await PublishResultsAsync(batches[batchIndex], cancellationToken);
+                    Interlocked.Add(ref publishedTestCount, publishedTests.Count);
+                }
             }
+
+            int workerCount = Math.Min(_requestScheduler.MaximumConcurrency, batches.Count);
+            await Task.WhenAll(Enumerable.Range(0, workerCount).Select(_ => PublishBatchesAsync()));
 
             _logger.LogDebug("Uploaded {Count} results", publishedTestCount);
 
-            return publishedTestCount;
+            return new TestResultUploadSummary(preparedResults.AllPassed, publishedTestCount);
         }
         catch (TerminalError ex)
         {
@@ -117,6 +210,12 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             throw;
         }
     }
+
+    public async Task<long> UploadTestResultsWithCountAsync(
+        IEnumerable<AggregatedResult> results,
+        object resultMetadata,
+        CancellationToken cancellationToken = default)
+        => (await PublishTestResultsAsync(PrepareTestResults(results, resultMetadata), cancellationToken)).UploadedCount;
 
     private async Task<IReadOnlyList<PublishedTestCase>> PublishResultsAsync(
         IReadOnlyList<ConvertedResult> converted,
@@ -454,7 +553,9 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                         relativePath,
                         attempt + 1,
                         attemptCount);
-                    HttpResponseMessage response = await _httpClient.SendAsync(request, cancellationToken);
+                    HttpResponseMessage response = await _requestScheduler.SendAsync(
+                        token => _httpClient.SendAsync(request, token),
+                        cancellationToken);
                     if (response.IsSuccessStatusCode)
                     {
                         _logger.LogDebug(
@@ -477,7 +578,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                             || response.StatusCode == HttpStatusCode.TooManyRequests;
                         if (isTransientStatus)
                         {
-                            TimeSpan? retryAfter = GetRetryDelay(response);
+                            TimeSpan? retryAfter = AzureDevOpsRequestScheduler.GetRetryAfterDelay(response);
                             if (response.StatusCode == HttpStatusCode.TooManyRequests && retryAfter is null)
                             {
                                 retryAfter = TimeSpan.FromSeconds(30);
@@ -539,26 +640,6 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             or SocketException
             or IOException;
 
-    private static TimeSpan? GetRetryDelay(HttpResponseMessage response)
-    {
-        RetryConditionHeaderValue? retryAfter = response.Headers.RetryAfter;
-        if (retryAfter?.Delta is { } delta && delta > TimeSpan.Zero)
-        {
-            return delta;
-        }
-
-        if (retryAfter?.Date is { } date)
-        {
-            TimeSpan delay = date - DateTimeOffset.UtcNow;
-            if (delay > TimeSpan.Zero)
-            {
-                return delay;
-            }
-        }
-
-        return null;
-    }
-
     private static async Task<IReadOnlyList<PublishedTestCaseResultReference>> ReadPublishedResultsAsync(
         HttpResponseMessage response,
         CancellationToken cancellationToken)
@@ -613,6 +694,21 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
     private sealed record ConvertedResult(PublishedTestCase Converted, AggregatedResult Aggregated);
 
     private sealed record ChunkPair(PublishedSubResult Converted, AggregatedResult Aggregated);
+
+    public sealed class PreparedTestResults
+    {
+        internal PreparedTestResults(
+            object batches,
+            bool allPassed)
+        {
+            Batches = batches;
+            AllPassed = allPassed;
+        }
+
+        internal object Batches { get; }
+
+        public bool AllPassed { get; }
+    }
 
     private sealed record TestRunAttachmentRequest(string FileName, string Stream);
 

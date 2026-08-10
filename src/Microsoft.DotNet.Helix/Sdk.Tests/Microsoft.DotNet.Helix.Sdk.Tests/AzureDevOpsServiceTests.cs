@@ -23,6 +23,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         private const string HelixJobTag = "helixjobf79561f86c134e869c6f0527cd707a54";
 
         [Fact]
+        public void JobMonitorOptions_DefaultsResultRequestParallelismToEight()
+        {
+            new JobMonitorOptions().TestResultUploadParallelism.Should().Be(8);
+        }
+
+        [Fact]
         public async Task CreateTestRunAsync_UsesPlainNameAndDoesNotTag()
         {
             var handler = new RecordingHttpMessageHandler(_ =>
