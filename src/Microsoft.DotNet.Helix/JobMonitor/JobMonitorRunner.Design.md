@@ -470,11 +470,13 @@ completion. Their in-memory lifecycle distinguishes queued, preparing, prepared,
 publishing, durably completed, and failed work; only a completed, tagged test
 run is considered durable.
 
-- A round-robin dispatcher fairly services active jobs and feeds a bounded
-  preparation queue. Fixed workers discover, download, parse, aggregate, and
-  prepare individual work items. Prepared results cross a second bounded queue
-  to independent publishing workers, so slow AzDO writes do not hold preparation
-  slots and backpressure bounds retained prepared data.
+- A bounded rotating admission window gives each active job one work-item turn.
+  When jobs are waiting, the just-serviced partial job rotates behind them, so
+  jobs beyond the window are not starved. Admission, preparation, and prepared
+  result queues all apply backpressure. Fixed workers discover, download, parse,
+  aggregate, and prepare individual work items. Prepared results cross a bounded
+  queue to independent publishing workers, so slow AzDO writes do not hold
+  preparation slots.
 - The Helix results SAS and job output directory are resolved once per job.
   Transient work-item downloads use a bounded retry budget; a retry never
   redownloads successful sibling work items.

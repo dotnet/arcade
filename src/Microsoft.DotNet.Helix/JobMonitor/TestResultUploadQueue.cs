@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
     internal sealed class TestResultUploadQueue : IDisposable
     {
         private const int MaximumTransientRetries = 2;
+        private const int ActiveJobWindowCapacity = 64;
         private const string AzdoWarningPrefix = "##vso[task.logissue type=warning]";
 
         private readonly ILogger _logger;
@@ -31,7 +32,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly IHelixService _helix;
         private readonly MonitorState _monitorState;
         private readonly Channel<JobUpload> _jobs;
-        private readonly Channel<JobUpload> _readyJobs;
+        private readonly BoundedRotatingJobQueue _readyJobs;
         private readonly Channel<WorkItemUpload> _preparations;
         private readonly Channel<PreparedUpload> _publications;
         private readonly SemaphoreSlim _processingLimiter;
@@ -75,14 +76,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 SingleReader = options.TestResultProcessingParallelism == 1,
                 SingleWriter = false,
             });
-            // This queue holds one lightweight state object per ready Helix job, never prepared
-            // results or per-work-item tasks. Keeping every ready job visible to the dispatcher
-            // avoids a fixed active cohort that can starve jobs admitted later.
-            _readyJobs = Channel.CreateUnbounded<JobUpload>(new UnboundedChannelOptions
-            {
-                SingleReader = true,
-                SingleWriter = options.TestResultProcessingParallelism == 1,
-            });
+            // Retain one bounded waiting tier behind the active window. A completed scheduling
+            // turn atomically rotates a partial active job behind that tier, so later jobs get
+            // service without admitting an unbounded number of JobUpload states.
+            _readyJobs = new BoundedRotatingJobQueue(
+                ActiveJobWindowCapacity,
+                ActiveJobWindowCapacity + jobCapacity,
+                _shutdown.Token);
             _preparations = Channel.CreateBounded<WorkItemUpload>(new BoundedChannelOptions(preparationCapacity)
             {
                 FullMode = BoundedChannelFullMode.Wait,
@@ -132,10 +132,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     .Distinct(StringComparer.OrdinalIgnoreCase)
             ];
             var upload = new JobUpload(helixJob, workItemNames, cancellationToken);
-            lock (_pendingLock)
-            {
-                _pending.Add(upload);
-            }
 
             _logger.LogInformation(
                 "Queued {Count} work item(s) from job '{JobName}' for test-result processing.",
@@ -146,6 +142,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             try
             {
                 await _jobs.Writer.WriteAsync(upload, cancellationToken);
+                lock (_pendingLock)
+                {
+                    _pending.Add(upload);
+                }
             }
             catch
             {
@@ -167,6 +167,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 Volatile.Read(ref _activePreparations),
                 Volatile.Read(ref _queuedPublications),
                 Volatile.Read(ref _activePublications));
+
+        internal (
+            int Retained,
+            int MaximumRetained,
+            int Capacity,
+            int Active,
+            int ActiveCapacity,
+            int Waiting) SnapshotJobAdmission()
+            => _readyJobs.Snapshot();
 
         public async Task DrainAsync(CancellationToken cancellationToken)
         {
@@ -290,13 +299,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             try
             {
                 LogProgress(job, "queued for work-item preparation");
-                await _readyJobs.Writer.WriteAsync(job, _shutdown.Token);
+                await _readyJobs.EnqueueAsync(job, job.CancellationToken);
             }
-            catch (OperationCanceledException) when (_shutdown.IsCancellationRequested)
+            catch (OperationCanceledException) when (
+                job.CancellationToken.IsCancellationRequested || _shutdown.IsCancellationRequested)
             {
                 ExecuteTerminalAction(job, job.FailAllWorkItems());
             }
-            catch (ChannelClosedException) when (_shutdown.IsCancellationRequested)
+            catch (ObjectDisposedException) when (_shutdown.IsCancellationRequested)
             {
                 ExecuteTerminalAction(job, job.FailAllWorkItems());
             }
@@ -304,47 +314,38 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task DispatchAsync()
         {
-            var activeJobs = new Queue<JobUpload>();
             try
             {
                 await _dispatchStart.WaitAsync(_shutdown.Token);
                 while (true)
                 {
-                    // Admit every currently ready job before taking the next scheduling turn.
-                    // The bounded work/prepared queues below still provide payload backpressure.
-                    while (_readyJobs.Reader.TryRead(out JobUpload queuedJob))
+                    JobUpload job = await _readyJobs.TakeAsync();
+                    bool hasMoreWork = false;
+                    try
                     {
-                        activeJobs.Enqueue(queuedJob);
-                    }
+                        if (job.CancellationToken.IsCancellationRequested)
+                        {
+                            ExecuteTerminalAction(job, job.SkipUnscheduledWorkItems());
+                            continue;
+                        }
 
-                    if (activeJobs.Count == 0)
-                    {
-                        activeJobs.Enqueue(await _readyJobs.Reader.ReadAsync(_shutdown.Token));
-                        continue;
-                    }
+                        if (job.TryTakeNextWorkItem(out WorkItemUpload workItem))
+                        {
+                            await _preparations.Writer.WriteAsync(workItem, _shutdown.Token);
+                        }
 
-                    JobUpload job = activeJobs.Dequeue();
-                    if (job.CancellationToken.IsCancellationRequested)
-                    {
-                        ExecuteTerminalAction(job, job.SkipUnscheduledWorkItems());
-                        continue;
+                        hasMoreWork = job.HasUnscheduledWorkItems;
                     }
-
-                    if (job.TryTakeNextWorkItem(out WorkItemUpload workItem))
+                    finally
                     {
-                        await _preparations.Writer.WriteAsync(workItem, _shutdown.Token);
-                    }
-
-                    if (job.HasUnscheduledWorkItems)
-                    {
-                        activeJobs.Enqueue(job);
+                        _readyJobs.CompleteTurn(job, hasMoreWork);
                     }
                 }
             }
             catch (OperationCanceledException) when (_shutdown.IsCancellationRequested)
             {
             }
-            catch (ChannelClosedException) when (_shutdown.IsCancellationRequested)
+            catch (ObjectDisposedException) when (_shutdown.IsCancellationRequested)
             {
             }
             catch (Exception ex)
@@ -861,7 +862,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _disposed = true;
             _shutdown.Cancel();
             _jobs.Writer.TryComplete();
-            _readyJobs.Writer.TryComplete();
+            _readyJobs.Dispose();
             _preparations.Writer.TryComplete();
             _publications.Writer.TryComplete();
             FailAllPendingJobs();
@@ -885,6 +886,161 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             if (task.IsFaulted)
             {
                 _ = task.Exception;
+            }
+        }
+
+        private sealed class BoundedRotatingJobQueue : IDisposable
+        {
+            private readonly object _sync = new();
+            private readonly Queue<JobUpload> _active = [];
+            private readonly Queue<JobUpload> _waiting = [];
+            private readonly SemaphoreSlim _capacitySlots;
+            private readonly SemaphoreSlim _activeAvailable = new(0);
+            private readonly int _activeCapacity;
+            private readonly int _capacity;
+            private readonly CancellationToken _shutdownToken;
+            private int _inFlightCount;
+            private int _retainedCount;
+            private int _maximumRetainedCount;
+            private bool _disposed;
+
+            public BoundedRotatingJobQueue(
+                int activeCapacity,
+                int capacity,
+                CancellationToken shutdownToken)
+            {
+                if (activeCapacity <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(activeCapacity));
+                }
+
+                if (capacity < activeCapacity)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(capacity));
+                }
+
+                _activeCapacity = activeCapacity;
+                _capacity = capacity;
+                _shutdownToken = shutdownToken;
+                _capacitySlots = new SemaphoreSlim(capacity, capacity);
+            }
+
+            public async Task EnqueueAsync(JobUpload job, CancellationToken cancellationToken)
+            {
+                using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(
+                    cancellationToken,
+                    _shutdownToken);
+                bool capacityAcquired = false;
+                try
+                {
+                    await _capacitySlots.WaitAsync(linkedCancellation.Token);
+                    capacityAcquired = true;
+
+                    lock (_sync)
+                    {
+                        ObjectDisposedException.ThrowIf(_disposed, this);
+                        _waiting.Enqueue(job);
+                        _retainedCount++;
+                        _maximumRetainedCount = Math.Max(_maximumRetainedCount, _retainedCount);
+                        PromoteWaitingJobsLocked();
+                        capacityAcquired = false;
+                    }
+                }
+                finally
+                {
+                    if (capacityAcquired)
+                    {
+                        _capacitySlots.Release();
+                    }
+                }
+            }
+
+            public async Task<JobUpload> TakeAsync()
+            {
+                await _activeAvailable.WaitAsync(_shutdownToken);
+                lock (_sync)
+                {
+                    ObjectDisposedException.ThrowIf(_disposed, this);
+                    JobUpload job = _active.Dequeue();
+                    _inFlightCount++;
+                    return job;
+                }
+            }
+
+            public void CompleteTurn(JobUpload job, bool hasMoreWork)
+            {
+                bool releaseCapacity = false;
+                lock (_sync)
+                {
+                    if (_inFlightCount <= 0)
+                    {
+                        throw new InvalidOperationException("No admitted job turn is in flight.");
+                    }
+
+                    _inFlightCount--;
+                    if (hasMoreWork && !_disposed)
+                    {
+                        // New and previously rotated jobs stay ahead of the just-serviced job.
+                        // Promotion below atomically swaps the serviced job out of the active
+                        // window when anything is waiting.
+                        _waiting.Enqueue(job);
+                    }
+                    else
+                    {
+                        _retainedCount--;
+                        releaseCapacity = true;
+                    }
+
+                    PromoteWaitingJobsLocked();
+                }
+
+                if (releaseCapacity)
+                {
+                    _capacitySlots.Release();
+                }
+            }
+
+            public (
+                int Retained,
+                int MaximumRetained,
+                int Capacity,
+                int Active,
+                int ActiveCapacity,
+                int Waiting) Snapshot()
+            {
+                lock (_sync)
+                {
+                    return (
+                        _retainedCount,
+                        _maximumRetainedCount,
+                        _capacity,
+                        _active.Count + _inFlightCount,
+                        _activeCapacity,
+                        _waiting.Count);
+                }
+            }
+
+            private void PromoteWaitingJobsLocked()
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                while (_active.Count + _inFlightCount < _activeCapacity
+                    && _waiting.TryDequeue(out JobUpload job))
+                {
+                    _active.Enqueue(job);
+                    _activeAvailable.Release();
+                }
+            }
+
+            public void Dispose()
+            {
+                lock (_sync)
+                {
+                    _disposed = true;
+                }
             }
         }
 

@@ -212,6 +212,49 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
+        public async Task AdmissionBackpressureBoundsRetainedJobStates()
+        {
+            const int jobCount = 120;
+            var dispatchStart = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var helix = new PipelineHelixService();
+            var azdo = new PipelineAzureDevOpsService();
+            var state = new MonitorState();
+            using var queue = CreateQueue(
+                helix,
+                azdo,
+                state,
+                processingParallelism: 1,
+                uploadParallelism: 1,
+                dispatchStart: dispatchStart.Task);
+
+            Task[] enqueues =
+            [
+                ..Enumerable.Range(0, jobCount).Select(index =>
+                {
+                    string jobName = $"bounded-{index:D3}";
+                    return EnqueueAsync(queue, state, Job(jobName), WorkItems(jobName, 1));
+                })
+            ];
+
+            int capacity = queue.SnapshotJobAdmission().Capacity;
+            await WaitUntilAsync(() => queue.SnapshotJobAdmission().Retained == capacity);
+
+            var stalled = queue.SnapshotJobAdmission();
+            stalled.Retained.Should().Be(capacity);
+            stalled.MaximumRetained.Should().Be(capacity);
+            stalled.Active.Should().BeLessThanOrEqualTo(stalled.ActiveCapacity);
+
+            dispatchStart.TrySetResult();
+            await Task.WhenAll(enqueues).WaitAsync(Timeout);
+            await queue.DrainAsync(CancellationToken.None).WaitAsync(Timeout);
+
+            for (int i = 0; i < jobCount; i++)
+            {
+                state.IsHelixJobProcessed($"bounded-{i:D3}").Should().BeTrue();
+            }
+        }
+
+        [Fact]
         public async Task SchedulingIsFairBeyondFormerActiveJobCohort()
         {
             const int largeJobCount = 65;
@@ -251,6 +294,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             await EnqueueAsync(queue, state, Job("small"), WorkItems("small", 1));
 
             await WaitUntilAsync(() => helix.ContextCounts.Count == largeJobCount + 1);
+
+            var stalled = queue.SnapshotJobAdmission();
+            stalled.Retained.Should().Be(largeJobCount + 1);
+            stalled.Active.Should().Be(stalled.ActiveCapacity);
+            stalled.Waiting.Should().Be(2);
+            stalled.MaximumRetained.Should().BeLessThanOrEqualTo(stalled.Capacity);
+
             dispatchStart.TrySetResult();
             await smallJobStarted.Task.WaitAsync(Timeout);
 
@@ -261,6 +311,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     downloadCounts[$"large-{i:D2}"].Should().Be(
                         1,
                         "the later small job must get a turn before any large job gets a second turn");
+                    state.IsHelixJobProcessed($"large-{i:D2}").Should().BeFalse(
+                        "a job must not complete before all of its work items are scheduled and published");
                 }
             }
             finally
@@ -269,6 +321,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             }
 
             await queue.DrainAsync(CancellationToken.None).WaitAsync(Timeout);
+            downloadCounts["small"].Should().Be(1);
+            state.IsHelixJobProcessed("small").Should().BeTrue();
+            for (int i = 0; i < largeJobCount; i++)
+            {
+                downloadCounts[$"large-{i:D2}"].Should().Be(2);
+                state.IsHelixJobProcessed($"large-{i:D2}").Should().BeTrue();
+            }
         }
 
         [Fact]
