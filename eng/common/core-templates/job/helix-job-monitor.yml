@@ -62,11 +62,13 @@ parameters:
   type: number
   default: 30
 
-# Maximum number of concurrent high-volume Azure DevOps test-result and result-attachment
-# HTTP requests across all jobs and work items (--test-result-upload-parallelism).
+# Optional maximum number of concurrent high-volume Azure DevOps test-result and
+# result-attachment HTTP requests across all jobs and work items. A positive value is
+# forwarded as --test-result-upload-parallelism. The default 0 omits the option for rollout
+# compatibility with older independently pinned monitor tools; updated tools default to 8.
 - name: testResultUploadParallelism
   type: number
-  default: 8
+  default: 0
 
 # When 'true' (the default), Helix work items that exit 0 but have failed AzDO test results
 # are treated as failed: they count toward the monitor's exit code and are resubmitted by a
@@ -206,7 +208,6 @@ jobs:
       toolArgs=(
         --helix-base-uri              '${{ parameters.helixBaseUri }}'
         --polling-interval-seconds    '${{ parameters.pollingIntervalSeconds }}'
-        --test-result-upload-parallelism '${{ parameters.testResultUploadParallelism }}'
         --fail-on-failed-tests        '${{ parameters.failWorkItemsWithFailedTests }}'
         --allow-no-helix-jobs         '${{ parameters.allowNoHelixJobs }}'
         --use-fully-qualified-test-name '${{ parameters.useFullyQualifiedTestName }}'
@@ -214,6 +215,10 @@ jobs:
         --stage-name                  '$(System.StageName)'
         --stage-attempt               '$(System.StageAttempt)'
       )
+
+      if (( ${{ parameters.testResultUploadParallelism }} > 0 )); then
+        toolArgs+=( --test-result-upload-parallelism '${{ parameters.testResultUploadParallelism }}' )
+      fi
 
       organization='${{ parameters.organization }}'
       repository='${{ parameters.repository }}'
