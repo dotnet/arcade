@@ -27,15 +27,24 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             CancellationToken cancellationToken);
 
         /// <summary>
-        /// Downloads test result files for a completed Helix job's work items
-        /// and returns metadata about each work item's results.
-        /// Work items without recognizable test result files may be omitted from the result.
-        /// Individual file download failures should not prevent other result files from being downloaded.
+        /// Resolves the job-scoped output directory and results SAS used to retrieve test results.
+        /// The returned context can be reused to download individual work items without resolving
+        /// the job results endpoint again.
         /// </summary>
-        Task<IReadOnlyList<WorkItemTestResults>> DownloadTestResultsAsync(
+        Task<HelixTestResultsContext> CreateTestResultsContextAsync(
             string jobName,
-            IReadOnlyCollection<string> workItemNames,
-            string workingDirectory, CancellationToken cancellationToken);
+            string workingDirectory,
+            CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Lists and downloads recognizable test result files for one work item using a
+        /// previously resolved job context. Individual file download failures should not
+        /// prevent the remaining files from being attempted.
+        /// </summary>
+        Task<WorkItemTestResults> DownloadTestResultsAsync(
+            HelixTestResultsContext context,
+            string workItemName,
+            CancellationToken cancellationToken);
 
         /// <summary>
         /// Lists work items for the specified Helix job.

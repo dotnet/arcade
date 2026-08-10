@@ -56,6 +56,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         public int TestResultUploadParallelism { get; set; } = 8;
 
+        public int TestResultProcessingParallelism { get; set; } = 4;
+
         /// <summary>
         /// When true (the default), a Helix work item that exited 0 but whose uploaded test
         /// results contained failures is treated as failed: the monitor marks it failed in
@@ -166,6 +168,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 DefaultValueFactory = _ => 8
             };
 
+            Option<int> testResultProcessingParallelismOption = new("--test-result-processing-parallelism")
+            {
+                Description = "Maximum number of work items concurrently discovering, downloading, parsing, aggregating, and preparing test results.",
+                DefaultValueFactory = _ => 4
+            };
+
             Option<bool> failWorkItemsWithFailedTestsOption = new("--fail-on-failed-tests")
             {
                 Description = "When true (default), Helix work items that exit 0 but have failed AzDO test results are treated as failed (counted toward the monitor's exit code and resubmitted by a later invocation's retry pass). Pass --fail-on-failed-tests false to fall back to exit-code-only outcomes.",
@@ -208,6 +216,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             rootCommand.Options.Add(stageNameOption);
             rootCommand.Options.Add(stageAttemptOption);
             rootCommand.Options.Add(testResultUploadParallelismOption);
+            rootCommand.Options.Add(testResultProcessingParallelismOption);
             rootCommand.Options.Add(failWorkItemsWithFailedTestsOption);
             rootCommand.Options.Add(allowNoHelixJobsOption);
             rootCommand.Options.Add(verboseOption);
@@ -232,6 +241,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     StageName = parseResult.GetValue(stageNameOption),
                     StageAttempt = parseResult.GetValue(stageAttemptOption),
                     TestResultUploadParallelism = parseResult.GetValue(testResultUploadParallelismOption),
+                    TestResultProcessingParallelism = parseResult.GetValue(testResultProcessingParallelismOption),
                     FailWorkItemsWithFailedTests = parseResult.GetValue(failWorkItemsWithFailedTestsOption),
                     AllowNoHelixJobs = parseResult.GetValue(allowNoHelixJobsOption),
                     Verbose = parseResult.GetValue(verboseOption),
@@ -309,6 +319,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             if (TestResultUploadParallelism <= 0)
             {
                 throw new InvalidOperationException("--test-result-upload-parallelism must be greater than zero.");
+            }
+
+            if (TestResultProcessingParallelism <= 0)
+            {
+                throw new InvalidOperationException("--test-result-processing-parallelism must be greater than zero.");
             }
         }
 

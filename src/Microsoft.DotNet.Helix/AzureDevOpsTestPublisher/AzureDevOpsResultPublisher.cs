@@ -169,10 +169,17 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         return new PreparedTestResults(batches, ComputeAllPassed(resultList));
     }
 
+    public Task<TestResultUploadSummary> PublishTestResultsAsync(
+        PreparedTestResults preparedResults,
+        CancellationToken cancellationToken = default)
+        => PublishTestResultsAsync(_azdoParameters.TestRunId, preparedResults, cancellationToken);
+
     public async Task<TestResultUploadSummary> PublishTestResultsAsync(
+        string testRunId,
         PreparedTestResults preparedResults,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(testRunId);
         ArgumentNullException.ThrowIfNull(preparedResults);
 
         try
@@ -192,7 +199,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                     }
 
                     IReadOnlyList<PublishedTestCase> publishedTests =
-                        await PublishResultsAsync(batches[batchIndex], cancellationToken);
+                        await PublishResultsAsync(testRunId, batches[batchIndex], cancellationToken);
                     Interlocked.Add(ref publishedTestCount, publishedTests.Count);
                 }
             }
@@ -218,6 +225,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         => (await PublishTestResultsAsync(PrepareTestResults(results, resultMetadata), cancellationToken)).UploadedCount;
 
     private async Task<IReadOnlyList<PublishedTestCase>> PublishResultsAsync(
+        string testRunId,
         IReadOnlyList<ConvertedResult> converted,
         CancellationToken cancellationToken)
     {
@@ -226,7 +234,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
 
         using HttpResponseMessage response = await SendWithRetryAsync(
             HttpMethod.Post,
-            $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results?api-version=7.1-preview.6",
+            $"{_azdoParameters.TeamProject}/_apis/test/runs/{testRunId}/results?api-version=7.1-preview.6",
             testCaseResults,
             DefaultAttemptCount,
             cancellationToken);
@@ -273,7 +281,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                 {
                     foreach (TestResultAttachment attachment in subTriplet.originalSubResult.Attachments)
                     {
-                        await SendAttachmentAsync(attachment, testId, subTriplet.publishedSubResult.Id, cancellationToken);
+                        await SendAttachmentAsync(testRunId, attachment, testId, subTriplet.publishedSubResult.Id, cancellationToken);
                     }
 
                     await IterateSubResultsAsync(subTriplet.publishedSubResult.SubResults, subTriplet.originalSubResult.SubResults, testId);
@@ -282,7 +290,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
 
             foreach (TestResultAttachment attachment in original.Attachments)
             {
-                await SendAttachmentAsync(attachment, published.Id, null, cancellationToken);
+                await SendAttachmentAsync(testRunId, attachment, published.Id, null, cancellationToken);
             }
 
             await IterateSubResultsAsync(published.SubResults, original.SubResults, published.Id);
@@ -294,6 +302,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
     }
 
     private async Task SendAttachmentAsync(
+        string testRunId,
         TestResultAttachment attachment,
         long testId,
         long? subResultId,
@@ -304,8 +313,8 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             Convert.ToBase64String(Encoding.UTF8.GetBytes(attachment.Text)));
 
         string path = subResultId is long subId
-            ? $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results/{testId}/attachments?testSubResultId={subId}&api-version=7.1-preview.1"
-            : $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results/{testId}/attachments?api-version=7.1-preview.1";
+            ? $"{_azdoParameters.TeamProject}/_apis/test/runs/{testRunId}/results/{testId}/attachments?testSubResultId={subId}&api-version=7.1-preview.1"
+            : $"{_azdoParameters.TeamProject}/_apis/test/runs/{testRunId}/results/{testId}/attachments?api-version=7.1-preview.1";
 
         using HttpResponseMessage response = await SendWithRetryAsync(
             HttpMethod.Post,

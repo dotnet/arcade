@@ -23,59 +23,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         private const string HelixJobTag = "helixjobf79561f86c134e869c6f0527cd707a54";
 
         [Fact]
-        public void JobMonitorOptions_DefaultsResultRequestParallelismToEight()
+        public void JobMonitorOptions_DefaultsResultParallelism()
         {
             new JobMonitorOptions().TestResultUploadParallelism.Should().Be(8);
-        }
-
-        [Fact]
-        public async Task WorkItemPreparationAndPublishing_IsBoundedIndependentlyOfRequestParallelism()
-        {
-            var firstWaveStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var releaseFirstWave = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            object sync = new();
-            int active = 0;
-            int maximumActive = 0;
-            int started = 0;
-
-            Task<int[]> processing = AzureDevOpsService.SelectAsyncWithConcurrency(
-                Enumerable.Range(0, 12).ToArray(),
-                AzureDevOpsService.WorkItemUploadParallelism,
-                async item =>
-                {
-                    lock (sync)
-                    {
-                        active++;
-                        started++;
-                        maximumActive = Math.Max(maximumActive, active);
-                        if (started == AzureDevOpsService.WorkItemUploadParallelism)
-                        {
-                            firstWaveStarted.TrySetResult(true);
-                        }
-                    }
-
-                    await releaseFirstWave.Task;
-
-                    lock (sync)
-                    {
-                        active--;
-                    }
-
-                    return item;
-                });
-
-            await firstWaveStarted.Task.WaitAsync(TimeSpan.FromSeconds(10));
-            lock (sync)
-            {
-                started.Should().Be(AzureDevOpsService.WorkItemUploadParallelism);
-                active.Should().Be(AzureDevOpsService.WorkItemUploadParallelism);
-            }
-
-            releaseFirstWave.TrySetResult(true);
-            int[] results = await processing;
-
-            results.Should().Equal(Enumerable.Range(0, 12));
-            maximumActive.Should().Be(AzureDevOpsService.WorkItemUploadParallelism);
+            new JobMonitorOptions().TestResultProcessingParallelism.Should().Be(4);
         }
 
         [Fact]

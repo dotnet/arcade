@@ -578,7 +578,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             logger.Messages.Should().Contain(message =>
                 message.Contains("test result upload(s) remain pending", StringComparison.Ordinal)
                 && message.Contains("helix-linux", StringComparison.Ordinal)
-                && message.Contains("phase='publishing 1 work item(s) to Azure DevOps test run", StringComparison.Ordinal)
+                && message.Contains("phase='publishing 'workitem-1''", StringComparison.Ordinal)
+                && message.Contains("processing limiter=0/4", StringComparison.Ordinal)
+                && message.Contains("publishing limiter=1/8", StringComparison.Ordinal)
                 && message.Contains("phase elapsed=", StringComparison.Ordinal)
                 && message.Contains("total elapsed=", StringComparison.Ordinal));
         }

@@ -125,6 +125,49 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
+        public async Task PublishTestResultsAsync_UsesExplicitTestRunId()
+        {
+            Uri requestUri = null;
+            using var scheduler = new AzureDevOpsRequestScheduler(1, NullLogger.Instance);
+            using var client = new HttpClient(new DelegateHandler((request, _) =>
+            {
+                requestUri = request.RequestUri;
+                return Task.FromResult(EmptyResultResponse());
+            }));
+            using var publisher = CreatePublisher("default-run", scheduler, client);
+
+            AzureDevOpsResultPublisher.PreparedTestResults prepared =
+                publisher.PrepareTestResults([Result("passed", "Passed")], new { });
+            await publisher.PublishTestResultsAsync("explicit-run", prepared);
+
+            Assert.Contains("/runs/explicit-run/results", requestUri.AbsolutePath);
+        }
+
+        [Fact]
+        public async Task PublishTestResultsAsync_IsolatesConcurrentExplicitTestRunIds()
+        {
+            var paths = new ConcurrentBag<string>();
+            using var scheduler = new AzureDevOpsRequestScheduler(2, NullLogger.Instance);
+            using var client = new HttpClient(new DelegateHandler((request, _) =>
+            {
+                paths.Add(request.RequestUri.AbsolutePath);
+                return Task.FromResult(EmptyResultResponse());
+            }));
+            using var publisher = CreatePublisher("default-run", scheduler, client);
+
+            AzureDevOpsResultPublisher.PreparedTestResults first =
+                publisher.PrepareTestResults([Result("first", "Passed")], new { });
+            AzureDevOpsResultPublisher.PreparedTestResults second =
+                publisher.PrepareTestResults([Result("second", "Passed")], new { });
+            await Task.WhenAll(
+                publisher.PublishTestResultsAsync("run-one", first),
+                publisher.PublishTestResultsAsync("run-two", second));
+
+            Assert.Contains(paths, path => path.Contains("/runs/run-one/results", StringComparison.Ordinal));
+            Assert.Contains(paths, path => path.Contains("/runs/run-two/results", StringComparison.Ordinal));
+        }
+
+        [Fact]
         public async Task Scheduler_BoundsConcurrentBatchesAcrossPublisherCalls()
         {
             const int maximumConcurrency = 2;

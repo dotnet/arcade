@@ -15,8 +15,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
 {
     internal sealed class FakeAzureDevOpsService : IAzureDevOpsService
     {
-        // FakeAzureDevOpsService is exercised concurrently when JobMonitorRunner kicks off
-        // multiple test-result uploads in parallel via Task.Run. All mutable state is
+        // FakeAzureDevOpsService is exercised concurrently by the result pipeline's fixed
+        // publication workers. All mutable state is
         // guarded by _sync so observable assertions (e.g. UploadedJobNames count) are
         // deterministic across machines with varying parallelism levels.
         private readonly object _sync = new();
@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         public Task UploadBlocker { get; set; } = Task.CompletedTask;
 
         /// <summary>
-        /// When true, <see cref="UploadTestResultsAsync"/> waits on <see cref="UploadBlocker"/>
+        /// When true, <see cref="PublishTestResultsAsync"/> waits on <see cref="UploadBlocker"/>
         /// without observing the cancellation token, simulating an upload stuck in a
         /// non-cancellable operation when the monitor is cancelled.
         /// </summary>
@@ -125,7 +125,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         }
 
         /// <summary>
-        /// Configures <see cref="UploadTestResultsAsync"/> to report
+        /// Configures <see cref="PublishTestResultsAsync"/> to report
         /// <c>AllPassed = false</c> for the given (Helix job, work item) pair when the next
         /// upload includes it. Used to test that the monitor marks work items as failed
         /// based on their uploaded test results even when the work item passed by exit code.
@@ -217,9 +217,17 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             }
         }
 
-        public async Task<IReadOnlyDictionary<(string JobName, string WorkItemName), TestResultUploadSummary>> UploadTestResultsAsync(
+        public Task<PreparedWorkItemTestResults> PrepareTestResultsAsync(
+            WorkItemTestResults results,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(new PreparedWorkItemTestResults(results, PreparedResults: null));
+        }
+
+        public async Task<TestResultUploadSummary> PublishTestResultsAsync(
             int testRunId,
-            IReadOnlyList<WorkItemTestResults> results,
+            PreparedWorkItemTestResults results,
             CancellationToken cancellationToken)
         {
             UploadStarted.TrySetResult();
@@ -231,8 +239,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             {
                 await UploadBlocker.WaitAsync(cancellationToken);
             }
-
-            var summaries = new Dictionary<(string JobName, string WorkItemName), TestResultUploadSummary>();
 
             lock (_sync)
             {
@@ -248,23 +254,22 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
                     UploadedResultsByRunId[testRunId] = existing;
                 }
 
-                existing.AddRange(results);
+                existing.Add(results.WorkItem);
 
-                foreach (string jobName in results.Select(r => r.JobName).Distinct(StringComparer.OrdinalIgnoreCase))
+                if (!UploadedJobNames.Contains(results.WorkItem.JobName, StringComparer.OrdinalIgnoreCase))
                 {
-                    UploadedJobNames.Add(jobName);
+                    UploadedJobNames.Add(results.WorkItem.JobName);
                 }
 
-                foreach (WorkItemTestResults result in results)
-                {
-                    bool allPassed = !_uploadFailedTests.Contains((result.JobName, result.WorkItemName));
-                    summaries[(result.JobName, result.WorkItemName)] =
-                        new TestResultUploadSummary(allPassed, result.TestResultFiles.Count);
-                }
+                bool allPassed = !_uploadFailedTests.Contains((
+                    results.WorkItem.JobName,
+                    results.WorkItem.WorkItemName));
+                var summary = new TestResultUploadSummary(
+                    allPassed,
+                    results.WorkItem.TestResultFiles.Count);
+                UploadCompleted.TrySetResult();
+                return summary;
             }
-
-            UploadCompleted.TrySetResult();
-            return summaries;
         }
 
         private static HttpRequestException CreateTransientFailure(string message)

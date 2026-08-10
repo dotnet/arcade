@@ -397,7 +397,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 if (_state.TryQueueHelixJobUpload(helixJob.JobName))
                 {
-                    _uploads.Enqueue(helixJob, workItems, cancellationToken);
+                    await _uploads.EnqueueAsync(helixJob, workItems, cancellationToken);
                 }
             }
 
@@ -494,6 +494,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         public void Dispose()
         {
+            _uploads.Dispose();
             (_azdo as IDisposable)?.Dispose();
             (_helix as IDisposable)?.Dispose();
         }

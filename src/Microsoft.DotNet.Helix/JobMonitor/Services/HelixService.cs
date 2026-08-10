@@ -67,94 +67,102 @@ namespace Microsoft.DotNet.Helix.JobMonitor
              ];
         }
 
-        public async Task<IReadOnlyList<WorkItemTestResults>> DownloadTestResultsAsync(
+        public async Task<HelixTestResultsContext> CreateTestResultsContextAsync(
             string jobName,
-            IReadOnlyCollection<string> workItemNames,
             string workingDirectory,
             CancellationToken cancellationToken)
         {
-            List<WorkItemTestResults> downloadedFiles = [];
-            List<Exception> transientFailures = [];
             string outputDirectory = _fileSystem.PathCombine(workingDirectory, SanitizeDirName(jobName));
             _fileSystem.CreateDirectory(outputDirectory);
 
-            JobResultsUri resultsUri = await RetryAsync(() => _helixApi.Job.ResultsAsync(jobName), cancellationToken);
+            JobResultsUri resultsUri = await RetryAsync(
+                () => _helixApi.Job.ResultsAsync(jobName, cancellationToken),
+                cancellationToken);
+            return new HelixTestResultsContext(jobName, outputDirectory, resultsUri.ResultsUriRSAS);
+        }
 
-            foreach (string workItemName in workItemNames)
+        public async Task<WorkItemTestResults> DownloadTestResultsAsync(
+            HelixTestResultsContext context,
+            string workItemName,
+            CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(context);
+
+            List<Exception> transientFailures = [];
+            IImmutableList<UploadedFile> availableFiles = await RetryAsync(
+                () => _helixApi.WorkItem.ListFilesAsync(
+                    workItemName,
+                    context.JobName,
+                    false,
+                    cancellationToken),
+                cancellationToken);
+
+            availableFiles = [.. availableFiles.Where(f => LooksLikeTestResultFile(f.Name))];
+            if (availableFiles.Count == 0)
             {
-                IImmutableList<UploadedFile> availableFiles = await RetryAsync(
-                    () => _helixApi.WorkItem.ListFilesAsync(workItemName, jobName, false),
-                    cancellationToken);
+                return new WorkItemTestResults(context.JobName, workItemName, []);
+            }
 
-                availableFiles = [.. availableFiles.Where(f => LooksLikeTestResultFile(f.Name))];
-                if (availableFiles.Count == 0)
+            string workItemDirectory = _fileSystem.PathCombine(context.OutputDirectory, SanitizeDirName(workItemName));
+            _fileSystem.CreateDirectory(workItemDirectory);
+
+            List<string> workItemFiles = [];
+            foreach (UploadedFile file in availableFiles)
+            {
+                string relativePath = NormalizeUploadedFilePath(file.Name);
+                string destinationFile = _fileSystem.PathCombine(workItemDirectory, relativePath);
+                string directory = _fileSystem.GetDirectoryName(destinationFile);
+                if (!string.IsNullOrEmpty(directory))
                 {
-                    continue;
+                    _fileSystem.CreateDirectory(directory);
                 }
 
-                string workItemDirectory = _fileSystem.PathCombine(outputDirectory, SanitizeDirName(workItemName));
-                _fileSystem.CreateDirectory(workItemDirectory);
-
-                List<string> workItemFiles = [];
-                foreach (UploadedFile file in availableFiles)
+                try
                 {
-                    string relativePath = NormalizeUploadedFilePath(file.Name);
-                    string destinationFile = _fileSystem.PathCombine(workItemDirectory, relativePath);
-                    string directory = _fileSystem.GetDirectoryName(destinationFile);
-                    if (!string.IsNullOrEmpty(directory))
-                    {
-                        _fileSystem.CreateDirectory(directory);
-                    }
-
-                    try
-                    {
-                        DateTimeOffset downloadStartedAt = DateTimeOffset.UtcNow;
-                        _logger.LogDebug(
-                            "Downloading test result file '{FileName}' for '{JobName}/{WorkItemName}'.",
-                            file.Name,
-                            jobName,
-                            workItemName);
-                        IBlobClient blobClient = _blobClientFactory.CreateBlobClient(file.Link, resultsUri.ResultsUriRSAS);
-                        await blobClient.DownloadToAsync(destinationFile, cancellationToken);
-                        _logger.LogDebug(
-                            "Downloaded test result file '{FileName}' for '{JobName}/{WorkItemName}' in {Elapsed}.",
-                            file.Name,
-                            jobName,
-                            workItemName,
-                            DateTimeOffset.UtcNow - downloadStartedAt);
-                        workItemFiles.Add(destinationFile);
-                    }
-                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                    {
-                        throw;
-                    }
-                    catch (Exception ex) when (TransientFailureDetector.IsTransient(ex))
-                    {
-                        transientFailures.Add(ex);
-                        _logger.LogWarning(ex,
-                            "Transient failure downloading '{FileName}' for '{JobName}/{WorkItemName}'. "
-                            + "The remaining files will still be attempted before the download is retried.",
-                            file.Name,
-                            jobName,
-                            workItemName);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Failed to download '{FileName}' for '{JobName}/{WorkItemName}'.", file.Name, jobName, workItemName);
-                    }
+                    DateTimeOffset downloadStartedAt = DateTimeOffset.UtcNow;
+                    _logger.LogDebug(
+                        "Downloading test result file '{FileName}' for '{JobName}/{WorkItemName}'.",
+                        file.Name,
+                        context.JobName,
+                        workItemName);
+                    IBlobClient blobClient = _blobClientFactory.CreateBlobClient(file.Link, context.ResultsSas);
+                    await blobClient.DownloadToAsync(destinationFile, cancellationToken);
+                    _logger.LogDebug(
+                        "Downloaded test result file '{FileName}' for '{JobName}/{WorkItemName}' in {Elapsed}.",
+                        file.Name,
+                        context.JobName,
+                        workItemName,
+                        DateTimeOffset.UtcNow - downloadStartedAt);
+                    workItemFiles.Add(destinationFile);
                 }
-
-                downloadedFiles.Add(new WorkItemTestResults(jobName, workItemName, workItemFiles));
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex) when (TransientFailureDetector.IsTransient(ex))
+                {
+                    transientFailures.Add(ex);
+                    _logger.LogWarning(ex,
+                        "Transient failure downloading '{FileName}' for '{JobName}/{WorkItemName}'. "
+                        + "The remaining files will still be attempted before the work item is retried.",
+                        file.Name,
+                        context.JobName,
+                        workItemName);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to download '{FileName}' for '{JobName}/{WorkItemName}'.", file.Name, context.JobName, workItemName);
+                }
             }
 
             if (transientFailures.Count > 0)
             {
                 throw new IOException(
-                    $"One or more transient test-result downloads failed for Helix job '{jobName}'.",
+                    $"One or more transient test-result downloads failed for Helix work item '{context.JobName}/{workItemName}'.",
                     new AggregateException(transientFailures));
             }
 
-            return downloadedFiles;
+            return new WorkItemTestResults(context.JobName, workItemName, workItemFiles);
         }
 
         private static bool LooksLikeTestResultFile(string path)

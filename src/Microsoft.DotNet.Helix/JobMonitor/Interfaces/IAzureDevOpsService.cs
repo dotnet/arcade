@@ -59,12 +59,19 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             CancellationToken cancellationToken);
 
         /// <summary>
-        /// Uploads test results for the specified work items into an existing test run.
-        /// Returns a dictionary mapping each work item and job name to its upload summary.
+        /// Parses, aggregates, and prepares one work item's downloaded test results for publishing.
+        /// This phase performs no Azure DevOps network writes.
         /// </summary>
-        Task<IReadOnlyDictionary<(string JobName, string WorkItemName), TestResultUploadSummary>> UploadTestResultsAsync(
+        Task<PreparedWorkItemTestResults> PrepareTestResultsAsync(
+            WorkItemTestResults results,
+            CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Publishes one prepared work item's results into an existing test run.
+        /// </summary>
+        Task<TestResultUploadSummary> PublishTestResultsAsync(
             int testRunId,
-            IReadOnlyList<WorkItemTestResults> results,
+            PreparedWorkItemTestResults results,
             CancellationToken cancellationToken);
     }
 }

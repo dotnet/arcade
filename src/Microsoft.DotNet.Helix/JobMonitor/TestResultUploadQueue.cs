@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.Arcade.Common;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
@@ -15,17 +16,14 @@ using Microsoft.Extensions.Logging;
 namespace Microsoft.DotNet.Helix.JobMonitor
 {
     /// <summary>
-    /// Fire-and-forget queue for AzDO test-result uploads. Each queued upload runs as an
-    /// independent task. Transient reads and test-result/attachment publishing use bounded
-    /// retries; test-run creation and completion are attempted once. On normal completion the
-    /// queue is drained so results in flight when the runner exits are not lost. On cancellation
-    /// the queue is intentionally NOT drained: cancelling the in-flight Helix jobs takes priority,
-    /// and any unfinished upload is re-uploaded in full by a later monitor invocation (a Helix job
-    /// is only "processed" once its test run reaches the Completed state).
+    /// Bounded cross-job pipeline for downloading, preparing, and publishing Helix test results.
+    /// Work items are scheduled round-robin across active jobs, prepared by a fixed worker pool,
+    /// and handed through a bounded queue to an independent publishing pool.
     /// </summary>
-    internal sealed class TestResultUploadQueue
+    internal sealed class TestResultUploadQueue : IDisposable
     {
         private const int MaximumTransientRetries = 2;
+        private const int MaximumActiveJobs = 64;
         private const string AzdoWarningPrefix = "##vso[task.logissue type=warning]";
 
         private readonly ILogger _logger;
@@ -33,7 +31,22 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly IAzureDevOpsService _azdo;
         private readonly IHelixService _helix;
         private readonly MonitorState _monitorState;
-        private readonly List<PendingUpload> _pending = [];
+        private readonly Channel<JobUpload> _jobs;
+        private readonly Channel<JobUpload> _readyJobs;
+        private readonly Channel<WorkItemUpload> _preparations;
+        private readonly Channel<PreparedUpload> _publications;
+        private readonly SemaphoreSlim _processingLimiter;
+        private readonly CancellationTokenSource _shutdown = new();
+        private readonly Task _dispatcher;
+        private readonly Task[] _initializationWorkers;
+        private readonly Task[] _preparationWorkers;
+        private readonly Task[] _publicationWorkers;
+        private readonly object _pendingLock = new();
+        private readonly List<JobUpload> _pending = [];
+        private int _activePreparations;
+        private int _queuedPublications;
+        private int _activePublications;
+        private bool _disposed;
 
         public TestResultUploadQueue(
             ILogger logger,
@@ -47,41 +60,139 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _azdo = azdo;
             _helix = helix;
             _monitorState = monitorState;
+
+            int jobCapacity = Math.Max(16, options.TestResultProcessingParallelism * 4);
+            int preparationCapacity = options.TestResultProcessingParallelism;
+            int publicationCapacity = Math.Max(
+                options.TestResultProcessingParallelism,
+                options.TestResultUploadParallelism);
+
+            _jobs = Channel.CreateBounded<JobUpload>(new BoundedChannelOptions(jobCapacity)
+            {
+                FullMode = BoundedChannelFullMode.Wait,
+                SingleReader = options.TestResultProcessingParallelism == 1,
+                SingleWriter = false,
+            });
+            _readyJobs = Channel.CreateBounded<JobUpload>(new BoundedChannelOptions(jobCapacity)
+            {
+                FullMode = BoundedChannelFullMode.Wait,
+                SingleReader = true,
+                SingleWriter = options.TestResultProcessingParallelism == 1,
+            });
+            _preparations = Channel.CreateBounded<WorkItemUpload>(new BoundedChannelOptions(preparationCapacity)
+            {
+                FullMode = BoundedChannelFullMode.Wait,
+                SingleReader = options.TestResultProcessingParallelism == 1,
+                SingleWriter = true,
+            });
+            _publications = Channel.CreateBounded<PreparedUpload>(new BoundedChannelOptions(publicationCapacity)
+            {
+                FullMode = BoundedChannelFullMode.Wait,
+                SingleReader = options.TestResultUploadParallelism == 1,
+                SingleWriter = false,
+            });
+
+            _processingLimiter = new SemaphoreSlim(
+                options.TestResultProcessingParallelism,
+                options.TestResultProcessingParallelism);
+            _dispatcher = DispatchAsync();
+            _initializationWorkers =
+            [
+                ..Enumerable.Range(0, options.TestResultProcessingParallelism)
+                    .Select(_ => InitializeJobsAsync())
+            ];
+            _preparationWorkers =
+            [
+                ..Enumerable.Range(0, options.TestResultProcessingParallelism)
+                    .Select(_ => PrepareAsync())
+            ];
+            _publicationWorkers =
+            [
+                ..Enumerable.Range(0, options.TestResultUploadParallelism)
+                    .Select(_ => PublishAsync())
+            ];
         }
 
-        public void Enqueue(HelixJobInfo helixJob, IReadOnlyCollection<WorkItemSummary> workItems, CancellationToken cancellationToken)
+        public async Task EnqueueAsync(
+            HelixJobInfo helixJob,
+            IReadOnlyCollection<WorkItemSummary> workItems,
+            CancellationToken cancellationToken)
         {
-            IReadOnlyList<string> workItemNames = [.. workItems.Select(w => w.Name)];
-            var pendingUpload = new PendingUpload(helixJob);
-            // Scheduling uses CancellationToken.None so the upload task is always allowed to start.
-            // The upload body still observes the runner's token, so when the runner is cancelled the
-            // upload stops promptly and the job's results are re-uploaded by a later invocation.
-            pendingUpload.Task = Task.Run(
-                () => UploadAsync(pendingUpload, workItemNames, cancellationToken),
-                CancellationToken.None);
-            _pending.Add(pendingUpload);
+            ObjectDisposedException.ThrowIf(_disposed, this);
+
+            string[] workItemNames =
+            [
+                ..workItems
+                    .Select(w => w.Name)
+                    .Where(name => !string.IsNullOrEmpty(name))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+            ];
+            var upload = new JobUpload(helixJob, workItemNames, cancellationToken);
+            lock (_pendingLock)
+            {
+                _pending.Add(upload);
+            }
+
+            _logger.LogInformation(
+                "Queued {Count} work item(s) from job '{JobName}' for test-result processing.",
+                workItemNames.Length,
+                helixJob.DisplayName);
+            LogProgress(upload, "queued");
+
+            try
+            {
+                await _jobs.Writer.WriteAsync(upload, cancellationToken);
+            }
+            catch
+            {
+                FinalizeFailedJob(upload);
+                throw;
+            }
         }
 
         public void Prune()
         {
-            _pending.RemoveAll(static upload => upload.Task.IsCompleted);
+            lock (_pendingLock)
+            {
+                _pending.RemoveAll(static upload => upload.Completion.IsCompleted);
+            }
         }
+
+        internal (int ActivePreparations, int QueuedPublications, int ActivePublications) SnapshotOccupancy()
+            => (
+                Volatile.Read(ref _activePreparations),
+                Volatile.Read(ref _queuedPublications),
+                Volatile.Read(ref _activePublications));
 
         public async Task DrainAsync(CancellationToken cancellationToken)
         {
-            Prune();
-            if (_pending.Count == 0)
+            bool loggedWait = false;
+            while (true)
             {
-                return;
-            }
+                JobUpload[] pending;
+                lock (_pendingLock)
+                {
+                    _pending.RemoveAll(static upload => upload.Completion.IsCompleted);
+                    pending = [.._pending];
+                }
 
-            _logger.LogInformation("Waiting for {Count} pending test result upload(s) to complete.", _pending.Count);
-            try
-            {
-                Task allUploads = Task.WhenAll(_pending.Select(upload => upload.Task));
+                if (pending.Length == 0)
+                {
+                    return;
+                }
+
+                if (!loggedWait)
+                {
+                    _logger.LogInformation(
+                        "Waiting for {Count} pending test result upload(s) to complete.",
+                        pending.Length);
+                    loggedWait = true;
+                }
+
+                Task allUploads = Task.WhenAll(pending.Select(upload => upload.Completion));
                 if (_options.Verbose)
                 {
-                    LogPendingUploads();
+                    LogPendingUploads(pending);
                     TimeSpan heartbeatInterval = TimeSpan.FromSeconds(Math.Max(1, _options.PollingIntervalSeconds));
                     while (!allUploads.IsCompleted)
                     {
@@ -92,133 +203,482 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         }
 
                         cancellationToken.ThrowIfCancellationRequested();
-                        Prune();
-                        LogPendingUploads();
+                        LogPendingUploads(pending.Where(upload => !upload.Completion.IsCompleted));
                     }
                 }
 
                 await allUploads.WaitAsync(cancellationToken);
             }
-            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-            {
-                // One or more upload tasks were cancelled; treat as best-effort drained.
-            }
-            Prune();
         }
 
-        private async Task UploadAsync(
-            PendingUpload pendingUpload,
-            IReadOnlyCollection<string> workItemNames,
-            CancellationToken cancellationToken)
+        private async Task InitializeJobsAsync()
         {
-            HelixJobInfo helixJob = pendingUpload.HelixJob;
-            _monitorState.MarkHelixJobUploadInProgress(helixJob.JobName);
-
-            SetPhase(pendingUpload, $"downloading Helix test results for {workItemNames.Count} work item(s)");
-            (bool downloadedSuccessfully, IReadOnlyList<WorkItemTestResults> downloaded) = await TryExecuteWithRetryAsync(
-                () => _helix.DownloadTestResultsAsync(
-                        helixJob.JobName,
-                        workItemNames,
-                        _options.WorkingDirectory,
-                        cancellationToken),
-                "download the Helix test results",
-                helixJob,
-                testRunId: 0,
-                retryCount: MaximumTransientRetries,
-                cancellationToken);
-            if (!downloadedSuccessfully)
+            try
             {
-                SetPhase(pendingUpload, "failed while downloading Helix test results");
-                _monitorState.MarkHelixJobUploadFailed(helixJob.JobName);
-                return;
-            }
-
-            SetPhase(pendingUpload, "creating the Azure DevOps test run");
-            (bool created, int testRunId) = await TryExecuteAsync(
-                () => _azdo.CreateTestRunAsync(helixJob.TestRunName, cancellationToken),
-                "create the Azure DevOps test run",
-                helixJob,
-                testRunId: 0,
-                cancellationToken);
-            if (!created)
-            {
-                SetPhase(pendingUpload, "failed while creating the Azure DevOps test run");
-                _monitorState.MarkHelixJobUploadFailed(helixJob.JobName);
-                return;
-            }
-
-            SetPhase(pendingUpload, $"publishing {downloaded.Count} work item(s) to Azure DevOps test run {testRunId}");
-            (bool uploadedSuccessfully, IReadOnlyDictionary<(string JobName, string WorkItemName), TestResultUploadSummary> testResults)
-                = await TryExecuteAsync(
-                    () => _azdo.UploadTestResultsAsync(testRunId, downloaded, cancellationToken),
-                    "upload the test results to Azure DevOps",
-                    helixJob,
-                    testRunId,
-                    cancellationToken);
-            if (!uploadedSuccessfully)
-            {
-                SetPhase(pendingUpload, $"failed while publishing to Azure DevOps test run {testRunId}");
-                _monitorState.MarkHelixJobUploadFailed(helixJob.JobName);
-                return;
-            }
-
-            if (_options.FailWorkItemsWithFailedTests)
-            {
-                _monitorState.ObserveTestResults(testResults);
-            }
-
-            IReadOnlyCollection<string> failedWorkItems =
-            [
-                .. testResults
-                    .Where(kv => !kv.Value.AllPassed)
-                    .Select(kv => kv.Key.WorkItemName)
-            ];
-
-            SetPhase(pendingUpload, $"completing and tagging Azure DevOps test run {testRunId}");
-            (bool completed, _) = await TryExecuteAsync(
-                async () =>
+                await foreach (JobUpload job in _jobs.Reader.ReadAllAsync(_shutdown.Token))
                 {
-                    await _azdo.CompleteTestRunAsync(testRunId, helixJob.JobName, failedWorkItems, cancellationToken);
-                    return true;
-                },
-                "complete and tag the Azure DevOps test run",
-                helixJob,
-                testRunId,
-                cancellationToken);
-            if (!completed)
-            {
-                SetPhase(pendingUpload, $"failed while completing Azure DevOps test run {testRunId}");
-                _monitorState.MarkHelixJobUploadFailed(helixJob.JobName);
-                return;
+                    await InitializeJobAsync(job);
+                }
             }
-
-            SetPhase(pendingUpload, $"completed Azure DevOps test run {testRunId}");
-            _monitorState.TryMarkHelixJobProcessed(helixJob.JobName);
-
-            long uploadedCount = testResults.Values.Sum(r => r.UploadedCount);
-            _logger.LogInformation("{UploadedCount} test results for job '{JobName}' processed.",
-                uploadedCount,
-                helixJob.DisplayName);
+            catch (OperationCanceledException) when (_shutdown.IsCancellationRequested)
+            {
+            }
         }
 
-        private Task<(bool Success, T Result)> TryExecuteAsync<T>(
+        private async Task InitializeJobAsync(JobUpload job)
+        {
+            bool initialized = false;
+            bool limiterAcquired = false;
+            try
+            {
+                await _processingLimiter.WaitAsync(_shutdown.Token);
+                limiterAcquired = true;
+                Interlocked.Increment(ref _activePreparations);
+                _monitorState.MarkHelixJobUploadInProgress(job.HelixJob.JobName);
+                LogProgress(job, "resolving Helix results context");
+                job.CancellationToken.ThrowIfCancellationRequested();
+
+                OperationResult<HelixTestResultsContext> context = await TryExecuteWithRetryAsync(
+                    () => _helix.CreateTestResultsContextAsync(
+                        job.HelixJob.JobName,
+                        _options.WorkingDirectory,
+                        job.CancellationToken),
+                    "resolve the Helix results context",
+                    job.HelixJob,
+                    workItemName: null,
+                    testRunId: 0,
+                    retryCount: MaximumTransientRetries,
+                    job.CancellationToken);
+                if (context.Success)
+                {
+                    job.SetResultsContext(context.Result);
+                    initialized = true;
+                }
+            }
+            catch (OperationCanceledException) when (
+                job.CancellationToken.IsCancellationRequested || _shutdown.IsCancellationRequested)
+            {
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "{Prefix}Unexpected failure resolving the Helix results context for job '{JobName}'. "
+                    + "The run remains untagged and a later monitor invocation may retry the upload.",
+                    AzdoWarningPrefix,
+                    job.HelixJob.DisplayName);
+            }
+            finally
+            {
+                if (limiterAcquired)
+                {
+                    Interlocked.Decrement(ref _activePreparations);
+                    _processingLimiter.Release();
+                }
+            }
+
+            if (!initialized)
+            {
+                ExecuteTerminalAction(job, job.FailAllWorkItems());
+                return;
+            }
+
+            try
+            {
+                LogProgress(job, "queued for work-item preparation");
+                await _readyJobs.Writer.WriteAsync(job, _shutdown.Token);
+            }
+            catch (OperationCanceledException) when (_shutdown.IsCancellationRequested)
+            {
+                ExecuteTerminalAction(job, job.FailAllWorkItems());
+            }
+            catch (ChannelClosedException) when (_shutdown.IsCancellationRequested)
+            {
+                ExecuteTerminalAction(job, job.FailAllWorkItems());
+            }
+        }
+
+        private async Task DispatchAsync()
+        {
+            var activeJobs = new Queue<JobUpload>();
+            try
+            {
+                while (true)
+                {
+                    while (activeJobs.Count < MaximumActiveJobs && _readyJobs.Reader.TryRead(out JobUpload queuedJob))
+                    {
+                        activeJobs.Enqueue(queuedJob);
+                    }
+
+                    if (activeJobs.Count == 0)
+                    {
+                        activeJobs.Enqueue(await _readyJobs.Reader.ReadAsync(_shutdown.Token));
+                        continue;
+                    }
+
+                    JobUpload job = activeJobs.Dequeue();
+                    if (job.CancellationToken.IsCancellationRequested)
+                    {
+                        ExecuteTerminalAction(job, job.SkipUnscheduledWorkItems());
+                        continue;
+                    }
+
+                    if (job.TryTakeNextWorkItem(out WorkItemUpload workItem))
+                    {
+                        await _preparations.Writer.WriteAsync(workItem, _shutdown.Token);
+                    }
+
+                    if (job.HasUnscheduledWorkItems)
+                    {
+                        activeJobs.Enqueue(job);
+                    }
+                }
+            }
+            catch (OperationCanceledException) when (_shutdown.IsCancellationRequested)
+            {
+            }
+            catch (ChannelClosedException) when (_shutdown.IsCancellationRequested)
+            {
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Test-result pipeline dispatcher failed.");
+                FailAllPendingJobs();
+            }
+        }
+
+        private async Task PrepareAsync()
+        {
+            try
+            {
+                await foreach (WorkItemUpload workItem in _preparations.Reader.ReadAllAsync(_shutdown.Token))
+                {
+                    await PrepareWorkItemAsync(workItem);
+                }
+            }
+            catch (OperationCanceledException) when (_shutdown.IsCancellationRequested)
+            {
+            }
+        }
+
+        private async Task PrepareWorkItemAsync(WorkItemUpload workItem)
+        {
+            JobUpload job = workItem.Job;
+            bool handedOff = false;
+            bool preparedForPublication = false;
+            bool limiterAcquired = false;
+            bool preparationBegan = false;
+            PreparedUpload publication = null;
+
+            try
+            {
+                await _processingLimiter.WaitAsync(_shutdown.Token);
+                limiterAcquired = true;
+                job.BeginPreparation();
+                preparationBegan = true;
+                Interlocked.Increment(ref _activePreparations);
+                LogProgress(job, workItem.CompletionOnly ? "preparing job completion" : $"preparing '{workItem.WorkItemName}'");
+                job.CancellationToken.ThrowIfCancellationRequested();
+
+                PreparedWorkItemTestResults prepared = null;
+                if (!workItem.CompletionOnly)
+                {
+                    OperationResult<WorkItemTestResults> downloaded = await TryExecuteWithRetryAsync(
+                        () => _helix.DownloadTestResultsAsync(
+                            job.ResultsContext,
+                            workItem.WorkItemName,
+                            job.CancellationToken),
+                        "download the Helix test results",
+                        job.HelixJob,
+                        workItem.WorkItemName,
+                        testRunId: 0,
+                        retryCount: MaximumTransientRetries,
+                        job.CancellationToken);
+                    if (!downloaded.Success)
+                    {
+                        return;
+                    }
+
+                    OperationResult<PreparedWorkItemTestResults> preparation = await TryExecuteWithRetryAsync(
+                        () => _azdo.PrepareTestResultsAsync(downloaded.Result, job.CancellationToken),
+                        "prepare the test results",
+                        job.HelixJob,
+                        workItem.WorkItemName,
+                        testRunId: 0,
+                        retryCount: MaximumTransientRetries,
+                        job.CancellationToken);
+                    if (!preparation.Success)
+                    {
+                        return;
+                    }
+
+                    prepared = preparation.Result;
+                }
+
+                LogProgress(job, workItem.CompletionOnly
+                    ? "waiting to publish job completion"
+                    : $"prepared '{workItem.WorkItemName}', waiting to publish");
+                job.MovePreparationToPublicationQueue();
+                preparedForPublication = true;
+                Interlocked.Increment(ref _queuedPublications);
+                publication = new PreparedUpload(
+                    job,
+                    workItem.WorkItemName,
+                    workItem.CompletionOnly,
+                    prepared);
+                await _publications.Writer.WriteAsync(publication, _shutdown.Token);
+                handedOff = true;
+            }
+            catch (OperationCanceledException) when (
+                job.CancellationToken.IsCancellationRequested || _shutdown.IsCancellationRequested)
+            {
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "{Prefix}Unexpected failure preparing test results for '{JobName}/{WorkItemName}'. "
+                    + "The run remains untagged and a later monitor invocation may retry the upload.",
+                    AzdoWarningPrefix,
+                    job.HelixJob.DisplayName,
+                    workItem.WorkItemName);
+            }
+            finally
+            {
+                if (limiterAcquired)
+                {
+                    Interlocked.Decrement(ref _activePreparations);
+                    _processingLimiter.Release();
+                }
+                publication?.ReleasePreparationSlot();
+                if (!handedOff && preparationBegan)
+                {
+                    if (preparedForPublication)
+                    {
+                        Interlocked.Decrement(ref _queuedPublications);
+                        ExecuteTerminalAction(job, job.CompleteQueuedPublication(success: false));
+                    }
+                    else
+                    {
+                        ExecuteTerminalAction(job, job.CompletePreparation(success: false));
+                    }
+                }
+            }
+        }
+
+        private async Task PublishAsync()
+        {
+            try
+            {
+                await foreach (PreparedUpload prepared in _publications.Reader.ReadAllAsync(_shutdown.Token))
+                {
+                    await PublishWorkItemAsync(prepared);
+                }
+            }
+            catch (OperationCanceledException) when (_shutdown.IsCancellationRequested)
+            {
+            }
+        }
+
+        private async Task PublishWorkItemAsync(PreparedUpload prepared)
+        {
+            JobUpload job = prepared.Job;
+            bool terminalRecorded = false;
+            await prepared.PreparationSlotReleased;
+            Interlocked.Decrement(ref _queuedPublications);
+            job.BeginPublication();
+            Interlocked.Increment(ref _activePublications);
+            LogProgress(job, prepared.CompletionOnly ? "publishing job completion" : $"publishing '{prepared.WorkItemName}'");
+
+            try
+            {
+                job.CancellationToken.ThrowIfCancellationRequested();
+
+                OperationResult<int> testRun = await job.GetOrCreateTestRunAsync(() => TryExecuteAsync(
+                    () => _azdo.CreateTestRunAsync(job.HelixJob.TestRunName, job.CancellationToken),
+                    "create the Azure DevOps test run",
+                    job.HelixJob,
+                    workItemName: null,
+                    testRunId: 0,
+                    job.CancellationToken));
+                if (!testRun.Success)
+                {
+                    terminalRecorded = true;
+                    ExecuteTerminalAction(job, job.CompletePublication(success: false, prepared.WorkItemName, summary: null));
+                    return;
+                }
+
+                TestResultUploadSummary summary = new(true, 0);
+                if (!prepared.CompletionOnly)
+                {
+                    OperationResult<TestResultUploadSummary> publication = await TryExecuteAsync(
+                        () => _azdo.PublishTestResultsAsync(
+                            testRun.Result,
+                            prepared.Results,
+                            job.CancellationToken),
+                        "publish the test results to Azure DevOps",
+                        job.HelixJob,
+                        prepared.WorkItemName,
+                        testRun.Result,
+                        job.CancellationToken);
+                    if (!publication.Success)
+                    {
+                        terminalRecorded = true;
+                        ExecuteTerminalAction(job, job.CompletePublication(success: false, prepared.WorkItemName, summary: null));
+                        return;
+                    }
+
+                    summary = publication.Result;
+                }
+
+                terminalRecorded = true;
+                TerminalAction action = job.CompletePublication(
+                    success: true,
+                    prepared.WorkItemName,
+                    summary);
+                await ExecuteTerminalActionAsync(job, action, testRun.Result);
+            }
+            catch (OperationCanceledException) when (
+                job.CancellationToken.IsCancellationRequested || _shutdown.IsCancellationRequested)
+            {
+                if (!terminalRecorded)
+                {
+                    ExecuteTerminalAction(job, job.CompletePublication(success: false, prepared.WorkItemName, summary: null));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "{Prefix}Unexpected failure publishing test results for '{JobName}/{WorkItemName}'. "
+                    + "The run remains untagged and a later monitor invocation may retry the upload.",
+                    AzdoWarningPrefix,
+                    job.HelixJob.DisplayName,
+                    prepared.WorkItemName);
+                if (!terminalRecorded)
+                {
+                    ExecuteTerminalAction(job, job.CompletePublication(success: false, prepared.WorkItemName, summary: null));
+                }
+                else
+                {
+                    FinalizeFailedJob(job);
+                }
+            }
+            finally
+            {
+                Interlocked.Decrement(ref _activePublications);
+            }
+        }
+
+        private async Task ExecuteTerminalActionAsync(JobUpload job, TerminalAction action, int testRunId)
+        {
+            if (action == TerminalAction.None)
+            {
+                return;
+            }
+
+            if (action == TerminalAction.Fail)
+            {
+                FinalizeFailedJob(job);
+                return;
+            }
+
+            try
+            {
+                IReadOnlyCollection<string> failedWorkItems = job.SnapshotFailedWorkItems();
+                if (_options.FailWorkItemsWithFailedTests && failedWorkItems.Count > 0)
+                {
+                    _monitorState.ObserveTestResults(failedWorkItems.ToDictionary(
+                        workItemName => (job.HelixJob.JobName, workItemName),
+                        _ => new TestResultUploadSummary(false, 0)));
+                }
+
+                OperationResult<bool> completed = await TryExecuteAsync(
+                    async () =>
+                    {
+                        await _azdo.CompleteTestRunAsync(
+                            testRunId,
+                            job.HelixJob.JobName,
+                            failedWorkItems,
+                            job.CancellationToken);
+                        return true;
+                    },
+                    "complete and tag the Azure DevOps test run",
+                    job.HelixJob,
+                    workItemName: null,
+                    testRunId,
+                    job.CancellationToken);
+                if (!completed.Success)
+                {
+                    FinalizeFailedJob(job);
+                    return;
+                }
+
+                _monitorState.TryMarkHelixJobProcessed(job.HelixJob.JobName);
+                if (job.TryFinish())
+                {
+                    LogProgress(job, "completed");
+                    _logger.LogInformation(
+                        "{UploadedCount} test results for job '{JobName}' processed.",
+                        job.UploadedCount,
+                        job.HelixJob.DisplayName);
+                }
+            }
+            catch (OperationCanceledException) when (
+                job.CancellationToken.IsCancellationRequested || _shutdown.IsCancellationRequested)
+            {
+                FinalizeFailedJob(job);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "{Prefix}Unexpected failure completing test-result processing for job '{JobName}'. "
+                    + "The run remains untagged and a later monitor invocation may retry the upload.",
+                    AzdoWarningPrefix,
+                    job.HelixJob.DisplayName);
+                FinalizeFailedJob(job);
+            }
+        }
+
+        private void ExecuteTerminalAction(JobUpload job, TerminalAction action)
+        {
+            if (action == TerminalAction.Fail)
+            {
+                FinalizeFailedJob(job);
+            }
+        }
+
+        private void FinalizeFailedJob(JobUpload job)
+        {
+            _monitorState.MarkHelixJobUploadFailed(job.HelixJob.JobName);
+            if (job.TryFinish())
+            {
+                LogProgress(job, "failed");
+            }
+        }
+
+        private Task<OperationResult<T>> TryExecuteAsync<T>(
             Func<Task<T>> operation,
             string operationDescription,
             HelixJobInfo helixJob,
+            string workItemName,
             int testRunId,
             CancellationToken cancellationToken)
             => TryExecuteWithRetryAsync(
                 operation,
                 operationDescription,
                 helixJob,
+                workItemName,
                 testRunId,
                 retryCount: 0,
                 cancellationToken);
 
-        private async Task<(bool Success, T Result)> TryExecuteWithRetryAsync<T>(
+        private async Task<OperationResult<T>> TryExecuteWithRetryAsync<T>(
             Func<Task<T>> operation,
             string operationDescription,
             HelixJobInfo helixJob,
+            string workItemName,
             int testRunId,
             int retryCount,
             CancellationToken cancellationToken)
@@ -232,10 +692,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     MaxAttempts = retryCount + 1,
                     RetryDelayCallback = (failedAttempt, delay) =>
                         _logger.LogDebug(
-                            "Failed to {OperationDescription} for job {JobName}. Test run ID was {TestRunId}. "
+                            "Failed to {OperationDescription} for '{JobName}/{WorkItemName}'. Test run ID was {TestRunId}. "
                             + "Waiting {RetryDelay} before attempt {NextAttempt} of {AttemptCount}.",
                             operationDescription,
                             helixJob.DisplayName,
+                            workItemName ?? "(job)",
                             testRunId,
                             delay,
                             failedAttempt + 1,
@@ -255,11 +716,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                             && TransientFailureDetector.IsTransient(ex))
                         {
                             lastException = ex;
-                            _logger.LogDebug(ex,
-                                "Failed to {OperationDescription} for job {JobName}. Test run ID was {TestRunId}. "
+                            _logger.LogDebug(
+                                ex,
+                                "Failed to {OperationDescription} for '{JobName}/{WorkItemName}'. Test run ID was {TestRunId}. "
                                 + "Transient attempt {Attempt} of {AttemptCount} failed.",
                                 operationDescription,
                                 helixJob.DisplayName,
+                                workItemName ?? "(job)",
                                 testRunId,
                                 attempt + 1,
                                 retryCount + 1);
@@ -274,7 +737,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     throw lastException ?? new InvalidOperationException("Upload retry loop exited unexpectedly.");
                 }
 
-                return (true, result);
+                return new OperationResult<T>(true, result);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -287,34 +750,53 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         ? "Transient retry limit reached."
                         : "The operation may have partially completed and is not safe to replay in this invocation."
                     : "The failure is not retryable.";
-                _logger.LogWarning(ex,
-                    "{Prefix}Failed to {OperationDescription} for job {JobName}. Test run ID was {TestRunId}. "
+                _logger.LogWarning(
+                    ex,
+                    "{Prefix}Failed to {OperationDescription} for '{JobName}/{WorkItemName}'. Test run ID was {TestRunId}. "
                     + "{FailureKind} The run remains untagged and a later monitor invocation may retry the upload.",
                     AzdoWarningPrefix,
                     operationDescription,
                     helixJob.DisplayName,
+                    workItemName ?? "(job)",
                     testRunId,
                     failureKind);
-                return (false, default);
+                return new OperationResult<T>(false, default);
             }
         }
 
-        private void SetPhase(PendingUpload upload, string phase)
+        private void LogProgress(JobUpload job, string phase)
         {
-            upload.SetPhase(phase);
-            if (_options.Verbose)
+            job.SetPhase(phase);
+            if (!_options.Verbose)
             {
-                _logger.LogDebug(
-                    "Test result upload for job '{JobName}' entered phase '{Phase}' after {Elapsed}.",
-                    upload.HelixJob.DisplayName,
-                    phase,
-                    DateTimeOffset.UtcNow - upload.StartedAt);
+                return;
             }
+
+            JobProgress progress = job.SnapshotProgress();
+            _logger.LogDebug(
+                "Test result pipeline: job '{JobName}', phase='{Phase}', "
+                + "queued={Queued}, preparing={Preparing}, prepared={Prepared}, publishing={Publishing}, completed={Completed}/{Total}; "
+                + "processing limiter={ActivePreparations}/{ProcessingLimit}, publishing limiter={ActivePublications}/{PublicationLimit}, "
+                + "prepared queue={PreparedQueue}.",
+                job.HelixJob.DisplayName,
+                phase,
+                progress.Queued,
+                progress.Preparing,
+                progress.Prepared,
+                progress.Publishing,
+                progress.Completed,
+                progress.Total,
+                Volatile.Read(ref _activePreparations),
+                _options.TestResultProcessingParallelism,
+                Volatile.Read(ref _activePublications),
+                _options.TestResultUploadParallelism,
+                Volatile.Read(ref _queuedPublications));
         }
 
-        private void LogPendingUploads()
+        private void LogPendingUploads(IEnumerable<JobUpload> uploads)
         {
-            if (_pending.Count == 0)
+            JobUpload[] pending = [..uploads];
+            if (pending.Length == 0)
             {
                 return;
             }
@@ -322,40 +804,352 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             DateTimeOffset now = DateTimeOffset.UtcNow;
             string details = string.Join(
                 Environment.NewLine,
-                _pending
+                pending
                     .OrderBy(upload => upload.StartedAt)
                     .Select(upload =>
                     {
-                        (string phase, DateTimeOffset phaseStartedAt) = upload.GetPhase();
-                        return $"- {upload.HelixJob.DisplayName}: phase='{phase}', "
-                            + $"phase elapsed={now - phaseStartedAt:c}, total elapsed={now - upload.StartedAt:c}";
+                        JobProgress progress = upload.SnapshotProgress();
+                        return $"- {upload.HelixJob.DisplayName}: phase='{progress.Phase}', "
+                            + $"queued={progress.Queued}, preparing={progress.Preparing}, prepared={progress.Prepared}, "
+                            + $"publishing={progress.Publishing}, completed={progress.Completed}/{progress.Total}, "
+                            + $"phase elapsed={now - progress.PhaseStartedAt:c}, "
+                            + $"total elapsed={now - upload.StartedAt:c}";
                     }));
 
             _logger.LogDebug(
-                "{Count} test result upload(s) remain pending:{nl}{Details}",
-                _pending.Count,
+                "{Count} test result upload(s) remain pending "
+                + "(processing limiter={ActivePreparations}/{ProcessingLimit}, "
+                + "publishing limiter={ActivePublications}/{PublicationLimit}, prepared queue={PreparedQueue}):{nl}{Details}",
+                pending.Length,
+                Volatile.Read(ref _activePreparations),
+                _options.TestResultProcessingParallelism,
+                Volatile.Read(ref _activePublications),
+                _options.TestResultUploadParallelism,
+                Volatile.Read(ref _queuedPublications),
                 Environment.NewLine,
                 details);
         }
 
-        private sealed class PendingUpload
+        private void FailAllPendingJobs()
+        {
+            JobUpload[] pending;
+            lock (_pendingLock)
+            {
+                pending = [.._pending];
+            }
+
+            foreach (JobUpload job in pending)
+            {
+                FinalizeFailedJob(job);
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            _shutdown.Cancel();
+            _jobs.Writer.TryComplete();
+            _readyJobs.Writer.TryComplete();
+            _preparations.Writer.TryComplete();
+            _publications.Writer.TryComplete();
+            FailAllPendingJobs();
+            ObserveTask(_dispatcher);
+            foreach (Task worker in _initializationWorkers)
+            {
+                ObserveTask(worker);
+            }
+            foreach (Task worker in _preparationWorkers)
+            {
+                ObserveTask(worker);
+            }
+            foreach (Task worker in _publicationWorkers)
+            {
+                ObserveTask(worker);
+            }
+        }
+
+        private static void ObserveTask(Task task)
+        {
+            if (task.IsFaulted)
+            {
+                _ = task.Exception;
+            }
+        }
+
+        private readonly record struct OperationResult<T>(bool Success, T Result);
+
+        private enum TerminalAction
+        {
+            None,
+            Fail,
+            Complete,
+        }
+
+        private sealed record WorkItemUpload(
+            JobUpload Job,
+            string WorkItemName,
+            bool CompletionOnly);
+
+        private sealed class PreparedUpload(
+            JobUpload job,
+            string workItemName,
+            bool completionOnly,
+            PreparedWorkItemTestResults results)
+        {
+            private readonly TaskCompletionSource _preparationSlotReleased =
+                new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            public JobUpload Job { get; } = job;
+
+            public string WorkItemName { get; } = workItemName;
+
+            public bool CompletionOnly { get; } = completionOnly;
+
+            public PreparedWorkItemTestResults Results { get; } = results;
+
+            public Task PreparationSlotReleased => _preparationSlotReleased.Task;
+
+            public void ReleasePreparationSlot()
+                => _preparationSlotReleased.TrySetResult();
+        }
+
+        private sealed record JobProgress(
+            string Phase,
+            int Queued,
+            int Preparing,
+            int Prepared,
+            int Publishing,
+            int Completed,
+            int Total,
+            DateTimeOffset PhaseStartedAt);
+
+        private sealed class JobUpload
         {
             private readonly object _sync = new();
+            private readonly string[] _workItemNames;
+            private readonly HashSet<string> _failedWorkItems = new(StringComparer.OrdinalIgnoreCase);
+            private readonly TaskCompletionSource _completion =
+                new(TaskCreationOptions.RunContinuationsAsynchronously);
+            private int _nextWorkItem;
+            private int _queued;
+            private int _preparing;
+            private int _prepared;
+            private int _publishing;
+            private int _completed;
+            private long _uploadedCount;
+            private bool _failed;
+            private bool _finished;
             private string _phase = "queued";
             private DateTimeOffset _phaseStartedAt;
+            private HelixTestResultsContext _resultsContext;
+            private Task<OperationResult<int>> _testRun;
 
-            public PendingUpload(HelixJobInfo helixJob)
+            public JobUpload(
+                HelixJobInfo helixJob,
+                string[] workItemNames,
+                CancellationToken cancellationToken)
             {
                 HelixJob = helixJob;
+                _workItemNames = workItemNames;
+                CancellationToken = cancellationToken;
                 StartedAt = DateTimeOffset.UtcNow;
                 _phaseStartedAt = StartedAt;
+                _queued = Total;
             }
 
             public HelixJobInfo HelixJob { get; }
 
+            public CancellationToken CancellationToken { get; }
+
             public DateTimeOffset StartedAt { get; }
 
-            public Task Task { get; set; }
+            public Task Completion => _completion.Task;
+
+            public int Total => Math.Max(1, _workItemNames.Length);
+
+            public long UploadedCount
+            {
+                get { lock (_sync) { return _uploadedCount; } }
+            }
+
+            public HelixTestResultsContext ResultsContext
+            {
+                get
+                {
+                    lock (_sync)
+                    {
+                        return _resultsContext
+                            ?? throw new InvalidOperationException("The Helix results context has not been initialized.");
+                    }
+                }
+            }
+
+            public bool HasUnscheduledWorkItems
+            {
+                get { lock (_sync) { return _nextWorkItem < Total; } }
+            }
+
+            public bool TryTakeNextWorkItem(out WorkItemUpload workItem)
+            {
+                lock (_sync)
+                {
+                    if (_nextWorkItem >= Total)
+                    {
+                        workItem = null;
+                        return false;
+                    }
+
+                    bool completionOnly = _workItemNames.Length == 0;
+                    string workItemName = completionOnly ? null : _workItemNames[_nextWorkItem];
+                    _nextWorkItem++;
+                    workItem = new WorkItemUpload(this, workItemName, completionOnly);
+                    return true;
+                }
+            }
+
+            public TerminalAction SkipUnscheduledWorkItems()
+            {
+                lock (_sync)
+                {
+                    int skipped = Total - _nextWorkItem;
+                    _nextWorkItem = Total;
+                    _queued -= skipped;
+                    _completed += skipped;
+                    _failed = true;
+                    return GetTerminalActionLocked();
+                }
+            }
+
+            public TerminalAction FailAllWorkItems()
+            {
+                lock (_sync)
+                {
+                    _nextWorkItem = Total;
+                    _queued = 0;
+                    _completed = Total;
+                    _failed = true;
+                    return TerminalAction.Fail;
+                }
+            }
+
+            public void BeginPreparation()
+            {
+                lock (_sync)
+                {
+                    _queued--;
+                    _preparing++;
+                }
+            }
+
+            public void MovePreparationToPublicationQueue()
+            {
+                lock (_sync)
+                {
+                    _preparing--;
+                    _prepared++;
+                }
+            }
+
+            public TerminalAction CompletePreparation(bool success)
+            {
+                lock (_sync)
+                {
+                    _preparing--;
+                    _completed++;
+                    _failed |= !success;
+                    return GetTerminalActionLocked();
+                }
+            }
+
+            public TerminalAction CompleteQueuedPublication(bool success)
+            {
+                lock (_sync)
+                {
+                    _prepared--;
+                    _completed++;
+                    _failed |= !success;
+                    return GetTerminalActionLocked();
+                }
+            }
+
+            public void BeginPublication()
+            {
+                lock (_sync)
+                {
+                    _prepared--;
+                    _publishing++;
+                }
+            }
+
+            public TerminalAction CompletePublication(
+                bool success,
+                string workItemName,
+                TestResultUploadSummary summary)
+            {
+                lock (_sync)
+                {
+                    _publishing--;
+                    _completed++;
+                    _failed |= !success;
+                    if (success && summary is not null)
+                    {
+                        _uploadedCount += summary.UploadedCount;
+                        if (!summary.AllPassed && !string.IsNullOrEmpty(workItemName))
+                        {
+                            _failedWorkItems.Add(workItemName);
+                        }
+                    }
+
+                    return GetTerminalActionLocked();
+                }
+            }
+
+            public void SetResultsContext(HelixTestResultsContext context)
+            {
+                lock (_sync)
+                {
+                    _resultsContext = context
+                        ?? throw new ArgumentNullException(nameof(context));
+                }
+            }
+
+            public Task<OperationResult<int>> GetOrCreateTestRunAsync(
+                Func<Task<OperationResult<int>>> factory)
+            {
+                lock (_sync)
+                {
+                    return _testRun ??= factory();
+                }
+            }
+
+            public IReadOnlyCollection<string> SnapshotFailedWorkItems()
+            {
+                lock (_sync)
+                {
+                    return [.._failedWorkItems.OrderBy(name => name, StringComparer.OrdinalIgnoreCase)];
+                }
+            }
+
+            public JobProgress SnapshotProgress()
+            {
+                lock (_sync)
+                {
+                    return new JobProgress(
+                        _phase,
+                        _queued,
+                        _preparing,
+                        _prepared,
+                        _publishing,
+                        _completed,
+                        Total,
+                        _phaseStartedAt);
+                }
+            }
 
             public void SetPhase(string phase)
             {
@@ -366,14 +1160,30 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
             }
 
-            public (string Phase, DateTimeOffset PhaseStartedAt) GetPhase()
+            public bool TryFinish()
             {
                 lock (_sync)
                 {
-                    return (_phase, _phaseStartedAt);
+                    if (_finished)
+                    {
+                        return false;
+                    }
+
+                    _finished = true;
+                    _completion.TrySetResult();
+                    return true;
                 }
             }
-        }
 
+            private TerminalAction GetTerminalActionLocked()
+            {
+                if (_completed < Total)
+                {
+                    return TerminalAction.None;
+                }
+
+                return _failed ? TerminalAction.Fail : TerminalAction.Complete;
+            }
+        }
     }
 }

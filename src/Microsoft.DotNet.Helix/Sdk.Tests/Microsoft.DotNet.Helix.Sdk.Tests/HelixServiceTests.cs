@@ -106,12 +106,23 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             blobClientFactory.FailDownloadsFor.Add("https://storage/failed.trx");
             var fileSystem = new MockFileSystem(directorySeparator: Path.DirectorySeparatorChar.ToString());
 
-            IReadOnlyList<WorkItemTestResults> results = await CreateService(api.Api.Object, blobClientFactory, fileSystem)
-                .DownloadTestResultsAsync("job:name", ["work:item", "no-results"], "work", CancellationToken.None);
+            HelixService service = CreateService(api.Api.Object, blobClientFactory, fileSystem);
+            HelixTestResultsContext context = await service.CreateTestResultsContextAsync(
+                "job:name",
+                "work",
+                CancellationToken.None);
+            WorkItemTestResults result = await service.DownloadTestResultsAsync(
+                context,
+                "work:item",
+                CancellationToken.None);
+            WorkItemTestResults noResults = await service.DownloadTestResultsAsync(
+                context,
+                "no-results",
+                CancellationToken.None);
 
-            WorkItemTestResults result = Assert.Single(results);
             Assert.Equal("job:name", result.JobName);
             Assert.Equal("work:item", result.WorkItemName);
+            Assert.Empty(noResults.TestResultFiles);
             string jobDirectory = fileSystem.PathCombine("work", SanitizeForCurrentPlatform("job:name"));
             string workItemDirectory = fileSystem.PathCombine(jobDirectory, SanitizeForCurrentPlatform("work:item"));
             string expectedResultFile = fileSystem.PathCombine(workItemDirectory, NormalizeForCurrentPlatform("nested/testResults.xml"));
@@ -123,6 +134,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 [new DownloadCall("https://storage/nested/testResults.xml", "?resultSas", expectedResultFile),
                  new DownloadCall("https://storage/failed.trx", "?resultSas", fileSystem.PathCombine(workItemDirectory, "failed.trx"))],
                 blobClientFactory.Downloads);
+            api.Job.Verify(
+                j => j.ResultsAsync("job:name", It.IsAny<CancellationToken>()),
+                Times.Once);
         }
 
         [Fact]
@@ -142,8 +156,15 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             blobClientFactory.DownloadFailures["https://storage/first.trx"] =
                 new HttpRequestException("Injected transient failure.", null, HttpStatusCode.ServiceUnavailable);
 
-            Func<Task> action = () => CreateService(api.Api.Object, blobClientFactory, new MockFileSystem())
-                .DownloadTestResultsAsync("job", ["work-item"], "work", CancellationToken.None);
+            HelixService service = CreateService(api.Api.Object, blobClientFactory, new MockFileSystem());
+            HelixTestResultsContext context = await service.CreateTestResultsContextAsync(
+                "job",
+                "work",
+                CancellationToken.None);
+            Func<Task> action = () => service.DownloadTestResultsAsync(
+                context,
+                "work-item",
+                CancellationToken.None);
 
             await Assert.ThrowsAsync<IOException>(action);
             Assert.Equal(2, blobClientFactory.Downloads.Count);

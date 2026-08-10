@@ -68,6 +68,12 @@ parameters:
   type: number
   default: 8
 
+# Maximum number of work items concurrently discovering, downloading, parsing,
+# aggregating, and preparing test results (--test-result-processing-parallelism).
+- name: testResultProcessingParallelism
+  type: number
+  default: 4
+
 # When 'true' (the default), Helix work items that exit 0 but have failed AzDO test results
 # are treated as failed: they count toward the monitor's exit code and are resubmitted by a
 # later invocation's retry pass. Set to 'false' to fall back to exit-code-only outcomes.
@@ -207,6 +213,7 @@ jobs:
         --helix-base-uri              '${{ parameters.helixBaseUri }}'
         --polling-interval-seconds    '${{ parameters.pollingIntervalSeconds }}'
         --test-result-upload-parallelism '${{ parameters.testResultUploadParallelism }}'
+        --test-result-processing-parallelism '${{ parameters.testResultProcessingParallelism }}'
         --fail-on-failed-tests        '${{ parameters.failWorkItemsWithFailedTests }}'
         --allow-no-helix-jobs         '${{ parameters.allowNoHelixJobs }}'
         --use-fully-qualified-test-name '${{ parameters.useFullyQualifiedTestName }}'

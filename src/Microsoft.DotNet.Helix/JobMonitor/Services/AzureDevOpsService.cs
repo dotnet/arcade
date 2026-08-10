@@ -21,9 +21,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 {
     internal sealed class AzureDevOpsService : IAzureDevOpsService, IDisposable
     {
-        // Keep parsing and materialization bounded independently from the HTTP request scheduler.
-        internal const int WorkItemUploadParallelism = 4;
-
         // A test run tag is applied to every completed test run so we can recover the Helix job
         // name on a subsequent monitor attempt. The Helix job name (a GUID) is encoded as
         // "{HelixJobTagPrefix}{guidWithoutDashes}" because Azure DevOps only accepts alphanumeric
@@ -56,6 +53,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly ILogger _logger;
         private readonly HttpClient _azdoClient;
         private readonly AzureDevOpsRequestScheduler _resultUploadScheduler;
+        private readonly AzureDevOpsResultPublisher _resultPublisher;
 
         public AzureDevOpsService(JobMonitorOptions options, ILogger logger)
         {
@@ -64,6 +62,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _azdoClient = new HttpClient();
             _resultUploadScheduler = new AzureDevOpsRequestScheduler(options.TestResultUploadParallelism, logger);
             InitializeClient();
+            _resultPublisher = CreateResultPublisher(testRunId: 0);
         }
 
         internal AzureDevOpsService(JobMonitorOptions options, ILogger logger, HttpClient azdoClient)
@@ -73,6 +72,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _azdoClient = azdoClient ?? throw new ArgumentNullException(nameof(azdoClient));
             _resultUploadScheduler = new AzureDevOpsRequestScheduler(options.TestResultUploadParallelism, logger);
             InitializeClient();
+            _resultPublisher = CreateResultPublisher(testRunId: 0);
         }
 
         private void InitializeClient()
@@ -401,10 +401,70 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 cancellationToken: cancellationToken);
         }
 
-        public async Task<IReadOnlyDictionary<(string JobName, string WorkItemName), TestResultUploadSummary>> UploadTestResultsAsync(
-            int testRunId,
-            IReadOnlyList<WorkItemTestResults> results,
+        public async Task<PreparedWorkItemTestResults> PrepareTestResultsAsync(
+            WorkItemTestResults results,
             CancellationToken cancellationToken)
+        {
+            if (results.TestResultFiles.Count == 0)
+            {
+                _logger.LogInformation(
+                    "No test results to upload for work item {WorkItemId} in job {JobName}",
+                    results.WorkItemName,
+                    results.JobName);
+                return new PreparedWorkItemTestResults(results, PreparedResults: null);
+            }
+
+            DateTimeOffset startedAt = DateTimeOffset.UtcNow;
+            _logger.LogDebug(
+                "Preparing {FileCount} test-result file(s) for work item '{WorkItemName}' in job '{JobName}'.",
+                results.TestResultFiles.Count,
+                results.WorkItemName,
+                results.JobName);
+            AzureDevOpsResultPublisher.PreparedTestResults prepared = await _resultPublisher.PrepareTestResultsAsync(
+                results.TestResultFiles,
+                new
+                {
+                    HelixJobId = results.JobName,
+                    HelixWorkItemName = results.WorkItemName
+                },
+                cancellationToken);
+            _logger.LogDebug(
+                "Prepared work item '{WorkItemName}' in job '{JobName}' after {Elapsed}.",
+                results.WorkItemName,
+                results.JobName,
+                DateTimeOffset.UtcNow - startedAt);
+            return new PreparedWorkItemTestResults(results, prepared);
+        }
+
+        public async Task<TestResultUploadSummary> PublishTestResultsAsync(
+            int testRunId,
+            PreparedWorkItemTestResults results,
+            CancellationToken cancellationToken)
+        {
+            if (results.PreparedResults is null)
+            {
+                return new TestResultUploadSummary(true, 0);
+            }
+
+            DateTimeOffset startedAt = DateTimeOffset.UtcNow;
+            _logger.LogDebug(
+                "Publishing prepared test results for work item '{WorkItemName}' in job '{JobName}' to test run {TestRunId}.",
+                results.WorkItem.WorkItemName,
+                results.WorkItem.JobName,
+                testRunId);
+            TestResultUploadSummary summary = await _resultPublisher.PublishTestResultsAsync(
+                testRunId.ToString(CultureInfo.InvariantCulture),
+                results.PreparedResults,
+                cancellationToken);
+            _logger.LogDebug(
+                "Published work item '{WorkItemName}' in job '{JobName}' after {Elapsed}.",
+                results.WorkItem.WorkItemName,
+                results.WorkItem.JobName,
+                DateTimeOffset.UtcNow - startedAt);
+            return summary;
+        }
+
+        private AzureDevOpsResultPublisher CreateResultPublisher(int testRunId)
         {
             var reportingParameters = new AzureDevOpsReportingParameters(
                 new Uri(_options.CollectionUri, UriKind.Absolute),
@@ -412,80 +472,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 testRunId.ToString(CultureInfo.InvariantCulture),
                 _options.SystemAccessToken,
                 _options.UseFullyQualifiedTestName);
-            using var publisher = new AzureDevOpsResultPublisher(
+            return new AzureDevOpsResultPublisher(
                 reportingParameters,
                 _logger,
                 _resultUploadScheduler);
-
-            async Task<TestResultUploadSummary> UploadWorkItemAsync(WorkItemTestResults workItem)
-            {
-                if (workItem.TestResultFiles.Count == 0)
-                {
-                    _logger.LogInformation("No test results to upload for work item {WorkItemId} in job {JobName}", workItem.WorkItemName, workItem.JobName);
-                    return new TestResultUploadSummary(true, 0);
-                }
-
-                DateTimeOffset uploadStartedAt = DateTimeOffset.UtcNow;
-                _logger.LogDebug(
-                    "Preparing and publishing {FileCount} test-result file(s) for work item '{WorkItemName}' in job '{JobName}'.",
-                    workItem.TestResultFiles.Count,
-                    workItem.WorkItemName,
-                    workItem.JobName);
-                AzureDevOpsResultPublisher.PreparedTestResults prepared = await publisher.PrepareTestResultsAsync(
-                    workItem.TestResultFiles,
-                    new
-                    {
-                        HelixJobId = workItem.JobName,
-                        HelixWorkItemName = workItem.WorkItemName
-                    },
-                    cancellationToken);
-                TestResultUploadSummary summary = await publisher.PublishTestResultsAsync(prepared, cancellationToken);
-                _logger.LogDebug(
-                    "Work item '{WorkItemName}' in job '{JobName}' finished preparing and publishing after {UploadElapsed}.",
-                    workItem.WorkItemName,
-                    workItem.JobName,
-                    DateTimeOffset.UtcNow - uploadStartedAt);
-                return summary;
-            }
-
-            (WorkItemTestResults WorkItem, TestResultUploadSummary Summary)[] testSummaries =
-                await SelectAsyncWithConcurrency(
-                    results,
-                    WorkItemUploadParallelism,
-                    async result => (result, await UploadWorkItemAsync(result)));
-            return testSummaries.ToDictionary(t => (t.WorkItem.JobName, t.WorkItem.WorkItemName), t => t.Summary);
-        }
-
-        internal static async Task<TResult[]> SelectAsyncWithConcurrency<T, TResult>(
-            IReadOnlyList<T> items,
-            int maximumConcurrency,
-            Func<T, Task<TResult>> selector)
-        {
-            if (maximumConcurrency <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(maximumConcurrency));
-            }
-
-            var results = new TResult[items.Count];
-            int nextIndex = -1;
-
-            async Task ProcessAsync()
-            {
-                while (true)
-                {
-                    int index = Interlocked.Increment(ref nextIndex);
-                    if (index >= items.Count)
-                    {
-                        return;
-                    }
-
-                    results[index] = await selector(items[index]);
-                }
-            }
-
-            int workerCount = Math.Min(maximumConcurrency, items.Count);
-            await Task.WhenAll(Enumerable.Range(0, workerCount).Select(_ => ProcessAsync()));
-            return results;
         }
 
         private async Task<JObject> SendAsync(
@@ -634,6 +624,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         public void Dispose()
         {
+            _resultPublisher.Dispose();
             _azdoClient.Dispose();
             _resultUploadScheduler.Dispose();
         }

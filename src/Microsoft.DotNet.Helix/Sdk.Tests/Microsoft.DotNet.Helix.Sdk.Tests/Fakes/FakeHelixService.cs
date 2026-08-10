@@ -21,12 +21,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         private readonly HashSet<string> _downloadFailureJobs = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Queue<Exception>> _downloadFailures = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, IReadOnlyCollection<WorkItemSummary>> _customWorkItems = new(StringComparer.OrdinalIgnoreCase);
+        private readonly object _downloadSync = new();
         private int _getJobsCallCount;
 
         /// <summary>
         /// Adds a Helix response. Each call to <see cref="GetJobsForBuildAsync"/> returns the next
         /// response in order. Once all responses are consumed, the last one is repeated.
-        /// <see cref="ListWorkItemsAsync"/> and <see cref="DownloadTestResultsAsync"/> use
+        /// <see cref="ListWorkItemsAsync"/> and test-result downloads use
         /// the same current response for pass/fail and result data.
         /// </summary>
         public FakeHelixService AddResponse(
@@ -69,6 +70,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         public int GetJobsCallCount => _getJobsCallCount;
 
         public ConcurrentBag<string> CanceledJobs { get; } = [];
+        public ConcurrentBag<(string JobName, string WorkItemName)> DownloadCalls { get; } = [];
+        public ConcurrentDictionary<string, int> ResultsContextCallCounts { get; } =
+            new(StringComparer.OrdinalIgnoreCase);
 
         private HelixSnapshot CurrentSnapshot
         {
@@ -92,35 +96,46 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             return Task.FromResult<IReadOnlyList<HelixJobInfo>>(_responses[index].Jobs);
         }
 
-        public Task<IReadOnlyList<WorkItemTestResults>> DownloadTestResultsAsync(
-            string jobName, IReadOnlyCollection<string> workItemNames, string workingDirectory, CancellationToken cancellationToken)
+        public Task<HelixTestResultsContext> CreateTestResultsContextAsync(
+            string jobName,
+            string workingDirectory,
+            CancellationToken cancellationToken)
         {
-            if (_downloadFailureJobs.Contains(jobName))
+            cancellationToken.ThrowIfCancellationRequested();
+            ResultsContextCallCounts.AddOrUpdate(jobName, 1, static (_, count) => count + 1);
+            return Task.FromResult(new HelixTestResultsContext(jobName, workingDirectory, ResultsSas: "?fake"));
+        }
+
+        public Task<WorkItemTestResults> DownloadTestResultsAsync(
+            HelixTestResultsContext context,
+            string workItemName,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            DownloadCalls.Add((context.JobName, workItemName));
+
+            lock (_downloadSync)
             {
-                throw new InvalidOperationException($"Injected download failure for Helix job '{jobName}'.");
+                if (_downloadFailureJobs.Contains(context.JobName))
+                {
+                    throw new InvalidOperationException($"Injected download failure for Helix job '{context.JobName}'.");
+                }
+
+                if (_downloadFailures.TryGetValue(context.JobName, out Queue<Exception> failures)
+                    && failures.Count > 0)
+                {
+                    throw failures.Dequeue();
+                }
             }
 
-            if (_downloadFailures.TryGetValue(jobName, out Queue<Exception> failures)
-                && failures.Count > 0)
+            if (CurrentSnapshot.TestResultsByJob.TryGetValue(context.JobName, out List<WorkItemTestResults> explicitResults))
             {
-                throw failures.Dequeue();
+                WorkItemTestResults result = explicitResults.FirstOrDefault(result =>
+                    string.Equals(result.WorkItemName, workItemName, StringComparison.OrdinalIgnoreCase));
+                return Task.FromResult(result ?? new WorkItemTestResults(context.JobName, workItemName, []));
             }
 
-            if (CurrentSnapshot.TestResultsByJob.TryGetValue(jobName, out List<WorkItemTestResults> explicitResults))
-            {
-                return Task.FromResult<IReadOnlyList<WorkItemTestResults>>(explicitResults);
-            }
-
-            workItemNames = workItemNames
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .DefaultIfEmpty($"{jobName}-synthetic")
-                .ToList();
-
-            IReadOnlyList<WorkItemTestResults> generated = workItemNames
-                .Select(wi => new WorkItemTestResults(jobName, wi, []))
-                .ToList();
-
-            return Task.FromResult(generated);
+            return Task.FromResult(new WorkItemTestResults(context.JobName, workItemName, []));
         }
 
         public Task<IReadOnlyCollection<WorkItemSummary>> ListWorkItemsAsync(
