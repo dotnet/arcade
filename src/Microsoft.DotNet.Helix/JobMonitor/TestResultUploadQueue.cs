@@ -36,6 +36,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly Channel<WorkItemUpload> _preparations;
         private readonly Channel<PreparedUpload> _publications;
         private readonly SemaphoreSlim _processingLimiter;
+        private readonly SemaphoreSlim _jobAdmissionPermits;
+        private readonly int _jobAdmissionCapacity;
         private readonly Task _dispatchStart;
         private readonly CancellationTokenSource _shutdown = new();
         private readonly Task _dispatcher;
@@ -44,6 +46,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly Task[] _publicationWorkers;
         private readonly object _pendingLock = new();
         private readonly List<JobUpload> _pending = [];
+        private readonly object _enqueueLock = new();
+        private TaskCompletionSource _enqueueBarrier;
+        private int _inProgressEnqueueCount;
+        private int _admittedJobCount;
+        private int _maximumAdmittedJobCount;
+        private bool _acceptingEnqueues = true;
         private int _activePreparations;
         private int _queuedPublications;
         private int _activePublications;
@@ -69,6 +77,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             int publicationCapacity = Math.Max(
                 options.TestResultProcessingParallelism,
                 options.TestResultUploadParallelism);
+            _jobAdmissionCapacity = ActiveJobWindowCapacity + jobCapacity;
+            _jobAdmissionPermits = new SemaphoreSlim(
+                _jobAdmissionCapacity,
+                _jobAdmissionCapacity);
 
             _jobs = Channel.CreateBounded<JobUpload>(new BoundedChannelOptions(jobCapacity)
             {
@@ -81,7 +93,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             // service without admitting an unbounded number of JobUpload states.
             _readyJobs = new BoundedRotatingJobQueue(
                 ActiveJobWindowCapacity,
-                ActiveJobWindowCapacity + jobCapacity,
                 _shutdown.Token);
             _preparations = Channel.CreateBounded<WorkItemUpload>(new BoundedChannelOptions(preparationCapacity)
             {
@@ -122,35 +133,56 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             IReadOnlyCollection<WorkItemSummary> workItems,
             CancellationToken cancellationToken)
         {
-            ObjectDisposedException.ThrowIf(_disposed, this);
-
-            string[] workItemNames =
-            [
-                ..workItems
-                    .Select(w => w.Name)
-                    .Where(name => !string.IsNullOrEmpty(name))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-            ];
-            var upload = new JobUpload(helixJob, workItemNames, cancellationToken);
-
-            _logger.LogInformation(
-                "Queued {Count} work item(s) from job '{JobName}' for test-result processing.",
-                workItemNames.Length,
-                helixJob.DisplayName);
-            LogProgress(upload, "queued");
-
+            BeginEnqueue();
+            JobAdmissionLease admission = null;
+            JobUpload upload = null;
             try
             {
-                await _jobs.Writer.WriteAsync(upload, cancellationToken);
+                admission = await AcquireJobAdmissionAsync(cancellationToken);
+
+                string[] workItemNames =
+                [
+                    ..workItems
+                        .Select(w => w.Name)
+                        .Where(name => !string.IsNullOrEmpty(name))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                ];
+                upload = new JobUpload(
+                    helixJob,
+                    workItemNames,
+                    cancellationToken,
+                    admission);
+                admission = null;
+
                 lock (_pendingLock)
                 {
                     _pending.Add(upload);
                 }
+
+                _logger.LogInformation(
+                    "Queued {Count} work item(s) from job '{JobName}' for test-result processing.",
+                    workItemNames.Length,
+                    helixJob.DisplayName);
+                LogProgress(upload, "queued");
+
+                await _jobs.Writer.WriteAsync(upload, cancellationToken);
             }
             catch
             {
-                FinalizeFailedJob(upload);
+                if (upload is not null)
+                {
+                    upload.ReleaseAdmission();
+                    FinalizeFailedJob(upload);
+                }
+                else
+                {
+                    admission?.Release();
+                }
                 throw;
+            }
+            finally
+            {
+                EndEnqueue();
             }
         }
 
@@ -169,16 +201,118 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 Volatile.Read(ref _activePublications));
 
         internal (
-            int Retained,
-            int MaximumRetained,
+            int Admitted,
+            int MaximumAdmitted,
             int Capacity,
+            int AvailablePermits,
+            int ScheduledRetained,
             int Active,
             int ActiveCapacity,
             int Waiting) SnapshotJobAdmission()
-            => _readyJobs.Snapshot();
+        {
+            (int retained, int active, int activeCapacity, int waiting) = _readyJobs.Snapshot();
+            return (
+                Volatile.Read(ref _admittedJobCount),
+                Volatile.Read(ref _maximumAdmittedJobCount),
+                _jobAdmissionCapacity,
+                _jobAdmissionPermits.CurrentCount,
+                retained,
+                active,
+                activeCapacity,
+                waiting);
+        }
+
+        private void BeginEnqueue()
+        {
+            lock (_enqueueLock)
+            {
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                if (!_acceptingEnqueues)
+                {
+                    throw new InvalidOperationException(
+                        "Test-result processing is draining and no longer accepts new jobs.");
+                }
+
+                _inProgressEnqueueCount++;
+            }
+        }
+
+        private void EndEnqueue()
+        {
+            lock (_enqueueLock)
+            {
+                _inProgressEnqueueCount--;
+                if (_inProgressEnqueueCount == 0)
+                {
+                    _enqueueBarrier?.TrySetResult();
+                }
+            }
+        }
+
+        private Task BeginDrain()
+        {
+            lock (_enqueueLock)
+            {
+                _acceptingEnqueues = false;
+                if (_inProgressEnqueueCount == 0)
+                {
+                    return Task.CompletedTask;
+                }
+
+                _enqueueBarrier ??= new TaskCompletionSource(
+                    TaskCreationOptions.RunContinuationsAsynchronously);
+                return _enqueueBarrier.Task;
+            }
+        }
+
+        private async Task<JobAdmissionLease> AcquireJobAdmissionAsync(
+            CancellationToken cancellationToken)
+        {
+            using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken,
+                _shutdown.Token);
+            bool acquired = false;
+            try
+            {
+                await _jobAdmissionPermits.WaitAsync(linkedCancellation.Token);
+                acquired = true;
+                linkedCancellation.Token.ThrowIfCancellationRequested();
+
+                int admitted = Interlocked.Increment(ref _admittedJobCount);
+                int observed;
+                while (admitted > (observed = Volatile.Read(ref _maximumAdmittedJobCount)))
+                {
+                    if (Interlocked.CompareExchange(
+                        ref _maximumAdmittedJobCount,
+                        admitted,
+                        observed) == observed)
+                    {
+                        break;
+                    }
+                }
+
+                acquired = false;
+                return new JobAdmissionLease(this);
+            }
+            finally
+            {
+                if (acquired)
+                {
+                    _jobAdmissionPermits.Release();
+                }
+            }
+        }
+
+        private void ReleaseJobAdmission()
+        {
+            Interlocked.Decrement(ref _admittedJobCount);
+            _jobAdmissionPermits.Release();
+        }
 
         public async Task DrainAsync(CancellationToken cancellationToken)
         {
+            await BeginDrain().WaitAsync(cancellationToken);
+
             bool loggedWait = false;
             while (true)
             {
@@ -292,6 +426,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             if (!initialized)
             {
+                job.ReleaseAdmission();
                 ExecuteTerminalAction(job, job.FailAllWorkItems());
                 return;
             }
@@ -299,15 +434,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             try
             {
                 LogProgress(job, "queued for work-item preparation");
-                await _readyJobs.EnqueueAsync(job, job.CancellationToken);
-            }
-            catch (OperationCanceledException) when (
-                job.CancellationToken.IsCancellationRequested || _shutdown.IsCancellationRequested)
-            {
-                ExecuteTerminalAction(job, job.FailAllWorkItems());
+                _readyJobs.Enqueue(job);
             }
             catch (ObjectDisposedException) when (_shutdown.IsCancellationRequested)
             {
+                job.ReleaseAdmission();
                 ExecuteTerminalAction(job, job.FailAllWorkItems());
             }
         }
@@ -339,6 +470,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     finally
                     {
                         _readyJobs.CompleteTurn(job, hasMoreWork);
+                        if (!hasMoreWork)
+                        {
+                            job.ReleaseAdmission();
+                        }
                     }
                 }
             }
@@ -848,18 +983,24 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             foreach (JobUpload job in pending)
             {
+                job.ReleaseAdmission();
                 FinalizeFailedJob(job);
             }
         }
 
         public void Dispose()
         {
-            if (_disposed)
+            lock (_enqueueLock)
             {
-                return;
+                if (_disposed)
+                {
+                    return;
+                }
+
+                _disposed = true;
+                _acceptingEnqueues = false;
             }
 
-            _disposed = true;
             _shutdown.Cancel();
             _jobs.Writer.TryComplete();
             _readyJobs.Dispose();
@@ -889,24 +1030,33 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
         }
 
+        private sealed class JobAdmissionLease(TestResultUploadQueue owner)
+        {
+            private int _released;
+
+            public void Release()
+            {
+                if (Interlocked.Exchange(ref _released, 1) == 0)
+                {
+                    owner.ReleaseJobAdmission();
+                }
+            }
+        }
+
         private sealed class BoundedRotatingJobQueue : IDisposable
         {
             private readonly object _sync = new();
             private readonly Queue<JobUpload> _active = [];
             private readonly Queue<JobUpload> _waiting = [];
-            private readonly SemaphoreSlim _capacitySlots;
             private readonly SemaphoreSlim _activeAvailable = new(0);
             private readonly int _activeCapacity;
-            private readonly int _capacity;
             private readonly CancellationToken _shutdownToken;
             private int _inFlightCount;
             private int _retainedCount;
-            private int _maximumRetainedCount;
             private bool _disposed;
 
             public BoundedRotatingJobQueue(
                 int activeCapacity,
-                int capacity,
                 CancellationToken shutdownToken)
             {
                 if (activeCapacity <= 0)
@@ -914,44 +1064,18 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     throw new ArgumentOutOfRangeException(nameof(activeCapacity));
                 }
 
-                if (capacity < activeCapacity)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(capacity));
-                }
-
                 _activeCapacity = activeCapacity;
-                _capacity = capacity;
                 _shutdownToken = shutdownToken;
-                _capacitySlots = new SemaphoreSlim(capacity, capacity);
             }
 
-            public async Task EnqueueAsync(JobUpload job, CancellationToken cancellationToken)
+            public void Enqueue(JobUpload job)
             {
-                using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(
-                    cancellationToken,
-                    _shutdownToken);
-                bool capacityAcquired = false;
-                try
+                lock (_sync)
                 {
-                    await _capacitySlots.WaitAsync(linkedCancellation.Token);
-                    capacityAcquired = true;
-
-                    lock (_sync)
-                    {
-                        ObjectDisposedException.ThrowIf(_disposed, this);
-                        _waiting.Enqueue(job);
-                        _retainedCount++;
-                        _maximumRetainedCount = Math.Max(_maximumRetainedCount, _retainedCount);
-                        PromoteWaitingJobsLocked();
-                        capacityAcquired = false;
-                    }
-                }
-                finally
-                {
-                    if (capacityAcquired)
-                    {
-                        _capacitySlots.Release();
-                    }
+                    ObjectDisposedException.ThrowIf(_disposed, this);
+                    _waiting.Enqueue(job);
+                    _retainedCount++;
+                    PromoteWaitingJobsLocked();
                 }
             }
 
@@ -969,7 +1093,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             public void CompleteTurn(JobUpload job, bool hasMoreWork)
             {
-                bool releaseCapacity = false;
                 lock (_sync)
                 {
                     if (_inFlightCount <= 0)
@@ -988,22 +1111,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     else
                     {
                         _retainedCount--;
-                        releaseCapacity = true;
                     }
 
                     PromoteWaitingJobsLocked();
                 }
 
-                if (releaseCapacity)
-                {
-                    _capacitySlots.Release();
-                }
             }
 
             public (
                 int Retained,
-                int MaximumRetained,
-                int Capacity,
                 int Active,
                 int ActiveCapacity,
                 int Waiting) Snapshot()
@@ -1012,8 +1128,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 {
                     return (
                         _retainedCount,
-                        _maximumRetainedCount,
-                        _capacity,
                         _active.Count + _inFlightCount,
                         _activeCapacity,
                         _waiting.Count);
@@ -1111,15 +1225,18 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             private DateTimeOffset _phaseStartedAt;
             private HelixTestResultsContext _resultsContext;
             private Task<OperationResult<int>> _testRun;
+            private readonly JobAdmissionLease _admission;
 
             public JobUpload(
                 HelixJobInfo helixJob,
                 string[] workItemNames,
-                CancellationToken cancellationToken)
+                CancellationToken cancellationToken,
+                JobAdmissionLease admission)
             {
                 HelixJob = helixJob;
                 _workItemNames = workItemNames;
                 CancellationToken = cancellationToken;
+                _admission = admission;
                 StartedAt = DateTimeOffset.UtcNow;
                 _phaseStartedAt = StartedAt;
                 _queued = Total;
@@ -1139,6 +1256,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 get { lock (_sync) { return _uploadedCount; } }
             }
+
+            public void ReleaseAdmission()
+                => _admission.Release();
 
             public HelixTestResultsContext ResultsContext
             {

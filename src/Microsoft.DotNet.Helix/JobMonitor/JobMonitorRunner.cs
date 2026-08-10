@@ -397,6 +397,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 if (_state.TryQueueHelixJobUpload(helixJob.JobName))
                 {
+                    // Await admission so the bounded pipeline backpressures job discovery
+                    // instead of accumulating blocked enqueue operations and payload copies.
                     await _uploads.EnqueueAsync(helixJob, workItems, cancellationToken);
                 }
             }

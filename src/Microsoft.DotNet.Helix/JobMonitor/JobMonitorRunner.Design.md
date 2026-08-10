@@ -473,7 +473,10 @@ run is considered durable.
 - A bounded rotating admission window gives each active job one work-item turn.
   When jobs are waiting, the just-serviced partial job rotates behind them, so
   jobs beyond the window are not starved. Admission, preparation, and prepared
-  result queues all apply backpressure. Fixed workers discover, download, parse,
+  result queues all apply backpressure. The admission permit is acquired before
+  materializing a job's work-item names and is released when that job leaves
+  scheduling. Drain closes admission and first waits for any enqueue already in
+  progress to register or cancel. Fixed workers discover, download, parse,
   aggregate, and prepare individual work items. Prepared results cross a bounded
   queue to independent publishing workers, so slow AzDO writes do not hold
   preparation slots.

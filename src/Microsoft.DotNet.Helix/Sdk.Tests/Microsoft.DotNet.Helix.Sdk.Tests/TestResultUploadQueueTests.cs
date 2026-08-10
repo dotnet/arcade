@@ -212,9 +212,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public async Task AdmissionBackpressureBoundsRetainedJobStates()
+        public async Task SequentialEnqueueBackpressuresBeforeMaterializingBeyondCapacity()
         {
-            const int jobCount = 120;
             var dispatchStart = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             var helix = new PipelineHelixService();
             var azdo = new PipelineAzureDevOpsService();
@@ -227,31 +226,145 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 uploadParallelism: 1,
                 dispatchStart: dispatchStart.Task);
 
-            Task[] enqueues =
-            [
-                ..Enumerable.Range(0, jobCount).Select(index =>
-                {
-                    string jobName = $"bounded-{index:D3}";
-                    return EnqueueAsync(queue, state, Job(jobName), WorkItems(jobName, 1));
-                })
-            ];
-
             int capacity = queue.SnapshotJobAdmission().Capacity;
-            await WaitUntilAsync(() => queue.SnapshotJobAdmission().Retained == capacity);
+            for (int i = 0; i < capacity; i++)
+            {
+                string jobName = $"bounded-{i:D3}";
+                await EnqueueAsync(queue, state, Job(jobName), WorkItems(jobName, 1));
+            }
+
+            Task blockedEnqueue = EnqueueAsync(
+                queue,
+                state,
+                Job("blocked"),
+                WorkItems("blocked", 1));
+            await WaitUntilAsync(() => queue.SnapshotJobAdmission().Admitted == capacity);
 
             var stalled = queue.SnapshotJobAdmission();
-            stalled.Retained.Should().Be(capacity);
-            stalled.MaximumRetained.Should().Be(capacity);
+            blockedEnqueue.IsCompleted.Should().BeFalse();
+            stalled.Admitted.Should().Be(capacity);
+            stalled.MaximumAdmitted.Should().Be(capacity);
+            stalled.AvailablePermits.Should().Be(0);
             stalled.Active.Should().BeLessThanOrEqualTo(stalled.ActiveCapacity);
 
             dispatchStart.TrySetResult();
-            await Task.WhenAll(enqueues).WaitAsync(Timeout);
+            await blockedEnqueue.WaitAsync(Timeout);
             await queue.DrainAsync(CancellationToken.None).WaitAsync(Timeout);
 
-            for (int i = 0; i < jobCount; i++)
+            for (int i = 0; i < capacity; i++)
             {
                 state.IsHelixJobProcessed($"bounded-{i:D3}").Should().BeTrue();
             }
+            state.IsHelixJobProcessed("blocked").Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task DrainWaitsForEnqueueBlockedOnAdmission()
+        {
+            var dispatchStart = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var blockedJobStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var blockedJobRelease = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var helix = new PipelineHelixService
+            {
+                DownloadAsync = async (context, workItemName, cancellationToken) =>
+                {
+                    if (context.JobName == "blocked-drain")
+                    {
+                        blockedJobStarted.TrySetResult();
+                        await blockedJobRelease.Task.WaitAsync(Timeout, cancellationToken);
+                    }
+
+                    return Result(context.JobName, workItemName);
+                },
+            };
+            var azdo = new PipelineAzureDevOpsService();
+            var state = new MonitorState();
+            using var queue = CreateQueue(
+                helix,
+                azdo,
+                state,
+                processingParallelism: 1,
+                uploadParallelism: 1,
+                dispatchStart: dispatchStart.Task);
+
+            int capacity = queue.SnapshotJobAdmission().Capacity;
+            for (int i = 0; i < capacity; i++)
+            {
+                string jobName = $"drain-{i:D3}";
+                await EnqueueAsync(queue, state, Job(jobName), WorkItems(jobName, 1));
+            }
+
+            Task blockedEnqueue = EnqueueAsync(
+                queue,
+                state,
+                Job("blocked-drain"),
+                WorkItems("blocked-drain", 1));
+            await WaitUntilAsync(() => queue.SnapshotJobAdmission().Admitted == capacity);
+
+            Task drain = queue.DrainAsync(CancellationToken.None);
+            drain.IsCompleted.Should().BeFalse();
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                queue.EnqueueAsync(
+                    Job("late"),
+                    WorkItems("late", 1),
+                    CancellationToken.None));
+
+            dispatchStart.TrySetResult();
+            await blockedEnqueue.WaitAsync(Timeout);
+            await blockedJobStarted.Task.WaitAsync(Timeout);
+            await WaitUntilAsync(() => Enumerable.Range(0, capacity).All(
+                index => state.IsHelixJobProcessed($"drain-{index:D3}")));
+
+            drain.IsCompleted.Should().BeFalse(
+                "the enqueue that began before draining must be registered and included");
+            blockedJobRelease.TrySetResult();
+            await drain.WaitAsync(Timeout);
+            state.IsHelixJobProcessed("blocked-drain").Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task AdmissionPermitsReleaseOnFailureAndCancellation()
+        {
+            var dispatchStart = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var helix = new PipelineHelixService
+            {
+                ContextAsync = (jobName, _, _) => jobName == "context-failure"
+                    ? throw new InvalidOperationException("Injected context failure.")
+                    : Task.FromResult(new HelixTestResultsContext(jobName, "work", ResultsSas: "?sas")),
+            };
+            var azdo = new PipelineAzureDevOpsService();
+            var state = new MonitorState();
+            using var queue = CreateQueue(
+                helix,
+                azdo,
+                state,
+                processingParallelism: 1,
+                uploadParallelism: 1,
+                dispatchStart: dispatchStart.Task);
+
+            int capacity = queue.SnapshotJobAdmission().Capacity;
+            await EnqueueAsync(queue, state, Job("context-failure"), WorkItems("context-failure", 1));
+            await WaitUntilAsync(() => queue.SnapshotJobAdmission().Admitted == 0);
+            queue.SnapshotJobAdmission().AvailablePermits.Should().Be(capacity);
+
+            using var cancellation = new CancellationTokenSource();
+            await EnqueueAsync(
+                queue,
+                state,
+                Job("cancelled"),
+                WorkItems("cancelled", 2),
+                cancellation.Token);
+            await WaitUntilAsync(() => queue.SnapshotJobAdmission().ScheduledRetained == 1);
+            cancellation.Cancel();
+            dispatchStart.TrySetResult();
+            await WaitUntilAsync(() => queue.SnapshotJobAdmission().Admitted == 0);
+            queue.SnapshotJobAdmission().AvailablePermits.Should().Be(capacity);
+
+            await EnqueueAsync(queue, state, Job("after-release"), WorkItems("after-release", 1));
+            await queue.DrainAsync(CancellationToken.None).WaitAsync(Timeout);
+            state.IsHelixJobProcessed("context-failure").Should().BeFalse();
+            state.IsHelixJobProcessed("cancelled").Should().BeFalse();
+            state.IsHelixJobProcessed("after-release").Should().BeTrue();
         }
 
         [Fact]
@@ -296,10 +409,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             await WaitUntilAsync(() => helix.ContextCounts.Count == largeJobCount + 1);
 
             var stalled = queue.SnapshotJobAdmission();
-            stalled.Retained.Should().Be(largeJobCount + 1);
+            stalled.Admitted.Should().Be(largeJobCount + 1);
+            stalled.ScheduledRetained.Should().Be(largeJobCount + 1);
             stalled.Active.Should().Be(stalled.ActiveCapacity);
             stalled.Waiting.Should().Be(2);
-            stalled.MaximumRetained.Should().BeLessThanOrEqualTo(stalled.Capacity);
+            stalled.MaximumAdmitted.Should().BeLessThanOrEqualTo(stalled.Capacity);
 
             dispatchStart.TrySetResult();
             await smallJobStarted.Task.WaitAsync(Timeout);
@@ -540,11 +654,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             TestResultUploadQueue queue,
             MonitorState state,
             HelixJobInfo job,
-            IReadOnlyCollection<WorkItemSummary> workItems)
+            IReadOnlyCollection<WorkItemSummary> workItems,
+            CancellationToken cancellationToken = default)
         {
             state.ObserveJobs([job]);
             state.TryQueueHelixJobUpload(job.JobName).Should().BeTrue();
-            await queue.EnqueueAsync(job, workItems, CancellationToken.None);
+            await queue.EnqueueAsync(job, workItems, cancellationToken);
         }
 
         private static HelixJobInfo Job(string jobName)
