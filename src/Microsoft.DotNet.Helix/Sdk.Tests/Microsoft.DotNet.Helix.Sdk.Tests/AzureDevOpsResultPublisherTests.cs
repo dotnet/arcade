@@ -6,6 +6,7 @@ using System.Collections;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Threading;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -27,6 +28,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 NullLogger.Instance);
 
             FieldInfo field = typeof(AzureDevOpsResultPublisher).GetField("_httpClient", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(field);
+
             var client = Assert.IsType<HttpClient>(field.GetValue(publisher));
 
             Assert.Equal(TimeSpan.FromMinutes(5), client.Timeout);
@@ -66,13 +69,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.Equal(
                 fullyQualifiedName,
-                publishedTest.GetType().GetProperty("TestCaseTitle").GetValue(publishedTest));
+                GetRequiredPropertyValue(publishedTest, "TestCaseTitle"));
 
             object dataRowResult = GetSingleSubResult(publishedTest);
 
             Assert.Equal(
                 dataRowName,
-                dataRowResult.GetType().GetProperty("DisplayName").GetValue(dataRowResult));
+                GetRequiredPropertyValue(dataRowResult, "DisplayName"));
         }
 
         [Fact]
@@ -118,10 +121,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.Equal(
                 dataRowName,
-                publishedRow.GetType().GetProperty("DisplayName").GetValue(publishedRow));
+                GetRequiredPropertyValue(publishedRow, "DisplayName"));
             Assert.Equal(
                 $"{fullyQualifiedName} (Attempt #1 - {dataRowName})",
-                publishedAttempt.GetType().GetProperty("DisplayName").GetValue(publishedAttempt));
+                GetRequiredPropertyValue(publishedAttempt, "DisplayName"));
         }
 
         private static object ConvertSingleResult(
@@ -131,19 +134,97 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             MethodInfo convertResults = typeof(AzureDevOpsResultPublisher).GetMethod(
                 "ConvertResults",
                 BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(convertResults);
+
             var convertedResults = Assert.IsAssignableFrom<IEnumerable>(
                 convertResults.Invoke(publisher, new object[] { new[] { test }, new object() }));
             object convertedResult = Assert.Single(convertedResults.Cast<object>());
 
-            return convertedResult.GetType().GetProperty("Converted").GetValue(convertedResult);
+            return GetRequiredPropertyValue(convertedResult, "Converted");
         }
 
         private static object GetSingleSubResult(object publishedResult)
         {
             var subResults = Assert.IsAssignableFrom<IEnumerable>(
-                publishedResult.GetType().GetProperty("SubResults").GetValue(publishedResult));
+                GetRequiredPropertyValue(publishedResult, "SubResults"));
 
             return Assert.Single(subResults.Cast<object>());
+        }
+
+        private static object GetRequiredPropertyValue(object instance, string propertyName)
+        {
+            PropertyInfo property = instance.GetType().GetProperty(propertyName);
+            Assert.NotNull(property);
+
+            object value = property.GetValue(instance);
+            Assert.NotNull(value);
+            return value;
+        }
+
+        [Theory]
+        [InlineData("Passed", true)]
+        [InlineData("NotExecuted", true)]
+        [InlineData("Inconclusive", true)]
+        [InlineData("Failed", false)]
+        [InlineData("None", false)]
+        public void ComputeAllPassed_SingleResult_OnlyFailedAndNoneCountAsFailure(string result, bool expectedAllPassed)
+        {
+            var results = new[] { new AggregatedResult(AggregationType.Single, "Test1", 1, result) };
+
+            Assert.Equal(expectedAllPassed, AzureDevOpsResultPublisher.ComputeAllPassed(results));
+        }
+
+        [Fact]
+        public void ComputeAllPassed_InconclusiveDataDrivenRollup_DoesNotFailTheWorkItem()
+        {
+            // Mirrors the rollup the aggregator produces for a theory with some passing and some
+            // skipped data rows: no data row failed, but the mix isn't a clean pass or skip either.
+            var results = new[]
+            {
+                new AggregatedResult(AggregationType.Single, "Test1", 1, "Passed"),
+                new AggregatedResult(AggregationType.DataDriven, "Test2", 1, "Inconclusive"),
+            };
+
+            Assert.True(AzureDevOpsResultPublisher.ComputeAllPassed(results));
+        }
+
+        [Fact]
+        public void ComputeAllPassed_AnyFailedResult_FailsTheWorkItem()
+        {
+            var results = new[]
+            {
+                new AggregatedResult(AggregationType.Single, "Test1", 1, "Passed"),
+                new AggregatedResult(AggregationType.DataDriven, "Test2", 1, "Failed"),
+            };
+
+            Assert.False(AzureDevOpsResultPublisher.ComputeAllPassed(results));
+        }
+
+        [Fact]
+        public void HttpClientTimeoutIsTransient()
+        {
+            Assert.True(AzureDevOpsResultPublisher.IsTransientException(
+                new OperationCanceledException("The request timed out.", new TimeoutException()),
+                CancellationToken.None));
+        }
+
+        [Fact]
+        public void CallerCancellationIsNotTransient()
+        {
+            using var cancellation = new CancellationTokenSource();
+            cancellation.Cancel();
+
+            Assert.False(AzureDevOpsResultPublisher.IsTransientException(
+                new OperationCanceledException("The request timed out.", new TimeoutException()),
+                cancellation.Token));
+        }
+
+        [Fact]
+        public void CancellationWithoutTimeoutIsNotTransient()
+        {
+            Assert.False(AzureDevOpsResultPublisher.IsTransientException(
+                new OperationCanceledException(),
+                CancellationToken.None));
         }
     }
 }

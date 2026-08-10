@@ -53,12 +53,14 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal("FeaturesSupport(\"classlib\",True,\"netstandard2.0\")", result);
         }
 
-        [Fact]
-        public void EmptyDisplayName_AsDataDrivenSubResult_DoesNotRepeatFullyQualifiedName()
+        [Theory]
+        [InlineData("")]
+        [InlineData(null)]
+        public void MissingDisplayName_AsDataDrivenSubResult_DoesNotRepeatFullyQualifiedName(string displayName)
         {
             string result = TestNameFormatter.FormatDisplayName(
                 "Ns.MyTests.Theory",
-                "",
+                displayName,
                 isDataDrivenSubResult: true);
 
             Assert.Empty(result);

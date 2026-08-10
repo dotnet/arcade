@@ -78,6 +78,7 @@ Useful parameters:
 - `helixAccessToken`: optional token for authenticated Helix access on internal builds.
 - `pollingIntervalSeconds`: how often the job monitor checks for new completed jobs.
 - `timeoutInMinutes`: overall timeout for the job monitor.
+- `continueOnError`: allow the pipeline to continue when the monitor job fails. Defaults to `false`.
 - `useFullyQualifiedTestName`: report fully qualified test names to Azure DevOps (see [Fully qualified test names](#fully-qualified-test-names)). Defaults to `false`.
 
 Behavior notes:
@@ -142,6 +143,10 @@ What this means in practice:
    The monitor will resubmit only the failed work items.
 3. If the failure is a real product/test bug, fix it and push a new commit — that triggers a new
    build with a fresh submitter + monitor pair.
+
+By default, the monitor fails when its stage completes without producing any Helix jobs in any
+attempt. For stages where an empty test selection is expected, set `allowNoHelixJobs: true` on the
+monitor template. The equivalent tool switch is `--allow-no-helix-jobs`.
 
 #### Fully qualified test names
 

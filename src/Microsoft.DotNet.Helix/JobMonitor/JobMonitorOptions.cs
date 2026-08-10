@@ -3,6 +3,7 @@
 
 using System;
 using System.CommandLine;
+using Azure.Identity;
 
 namespace Microsoft.DotNet.Helix.JobMonitor
 {
@@ -44,6 +45,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         public string StageName { get; set; }
 
+        /// <summary>
+        /// Attempt number of the Azure DevOps pipeline stage the monitor is running in. Used to
+        /// scope monitoring to Helix jobs submitted by the current stage attempt (matched against
+        /// each job's <c>System.StageAttempt</c> property). When empty the monitor falls back to
+        /// build + stage scope and tracks jobs from every attempt. Defaults to the
+        /// SYSTEM_STAGEATTEMPT environment variable.
+        /// </summary>
+        public string StageAttempt { get; set; }
+
         public int TestResultUploadParallelism { get; set; } = 4;
 
         /// <summary>
@@ -54,6 +64,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// code and AzDO test failures do not influence retries or the final exit code.
         /// </summary>
         public bool FailWorkItemsWithFailedTests { get; set; } = true;
+
+        /// <summary>
+        /// When true, the monitor may succeed when the stage completes without producing any
+        /// Helix jobs in any attempt. Defaults to false so missing submissions fail the monitor.
+        /// </summary>
+        public bool AllowNoHelixJobs { get; set; }
 
         public bool Verbose { get; set; }
 
@@ -139,6 +155,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 Description = "Name of the Azure DevOps pipeline stage the monitor is running in. Used to scope monitoring to that stage. Defaults to the SYSTEM_STAGENAME environment variable."
             };
 
+            Option<string> stageAttemptOption = new("--stage-attempt")
+            {
+                Description = "Attempt number of the Azure DevOps pipeline stage the monitor is running in. Used to scope monitoring to Helix jobs submitted by the current stage attempt so retries do not re-discover a previous attempt's work. Defaults to the SYSTEM_STAGEATTEMPT environment variable."
+            };
+
             Option<int> testResultUploadParallelismOption = new("--test-result-upload-parallelism")
             {
                 Description = "Maximum number of work items whose test results can be uploaded to Azure DevOps in parallel.",
@@ -149,6 +170,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 Description = "When true (default), Helix work items that exit 0 but have failed AzDO test results are treated as failed (counted toward the monitor's exit code and resubmitted by a later invocation's retry pass). Pass --fail-on-failed-tests false to fall back to exit-code-only outcomes.",
                 DefaultValueFactory = _ => true
+            };
+
+            Option<bool> allowNoHelixJobsOption = new("--allow-no-helix-jobs")
+            {
+                Description = "Allow the monitor to succeed when the stage completes without producing any Helix jobs in any attempt."
             };
 
             Option<bool> verboseOption = new("--verbose")
@@ -180,8 +206,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             rootCommand.Options.Add(jobMonitorNameOption);
             rootCommand.Options.Add(workingDirectoryOption);
             rootCommand.Options.Add(stageNameOption);
+            rootCommand.Options.Add(stageAttemptOption);
             rootCommand.Options.Add(testResultUploadParallelismOption);
             rootCommand.Options.Add(failWorkItemsWithFailedTestsOption);
+            rootCommand.Options.Add(allowNoHelixJobsOption);
             rootCommand.Options.Add(verboseOption);
             rootCommand.Options.Add(useFullyQualifiedTestNameOption);
 
@@ -202,8 +230,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     JobMonitorName = parseResult.GetValue(jobMonitorNameOption),
                     WorkingDirectory = parseResult.GetValue(workingDirectoryOption),
                     StageName = parseResult.GetValue(stageNameOption),
+                    StageAttempt = parseResult.GetValue(stageAttemptOption),
                     TestResultUploadParallelism = parseResult.GetValue(testResultUploadParallelismOption),
                     FailWorkItemsWithFailedTests = parseResult.GetValue(failWorkItemsWithFailedTestsOption),
+                    AllowNoHelixJobs = parseResult.GetValue(allowNoHelixJobsOption),
                     Verbose = parseResult.GetValue(verboseOption),
                     UseFullyQualifiedTestName = parseResult.GetValue(useFullyQualifiedTestNameOption),
                 };
@@ -225,7 +255,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             HelixAccessToken ??= Environment.GetEnvironmentVariable("HELIX_ACCESSTOKEN");
 #if DEBUG
-            SystemAccessToken ??= new Azure.Identity.DefaultAzureCredential(includeInteractiveCredentials: true)
+            SystemAccessToken ??= new ChainedTokenCredential(
+                    new AzureCliCredential(),
+                    new VisualStudioCredential(),
+                    new VisualStudioCodeCredential())
                 .GetToken(new Azure.Core.TokenRequestContext(["499b84ac-1321-427f-aa17-267ca6975798/.default"]))
                 .Token;
 #endif
@@ -238,6 +271,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             BuildReason ??= Environment.GetEnvironmentVariable("BUILD_REASON");
             SourceBranch ??= Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH");
             StageName ??= Environment.GetEnvironmentVariable("SYSTEM_STAGENAME");
+            StageAttempt ??= Environment.GetEnvironmentVariable("SYSTEM_STAGEATTEMPT");
         }
 
         private void Validate()
