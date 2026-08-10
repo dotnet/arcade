@@ -5,9 +5,12 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -354,6 +357,141 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.True(stopwatch.Elapsed >= TimeSpan.FromMilliseconds(200), $"Elapsed: {stopwatch.Elapsed}");
         }
 
+        [Fact]
+        public async Task TooManyRequestsWithoutRetryAfter_DelaysOtherPublishers()
+        {
+            var responseContentRead = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            int requestCount = 0;
+            using var scheduler = new AzureDevOpsRequestScheduler(
+                1,
+                NullLogger.Instance,
+                TimeSpan.FromMilliseconds(300));
+            using var client = new HttpClient(new DelegateHandler((_, _) =>
+            {
+                if (Interlocked.Increment(ref requestCount) == 1)
+                {
+                    return Task.FromResult(new HttpResponseMessage(HttpStatusCode.TooManyRequests)
+                    {
+                        Content = new SignalingContent("throttled", responseContentRead)
+                    });
+                }
+
+                return Task.FromResult(EmptyResultResponse());
+            }));
+            using var firstPublisher = CreatePublisher("1", scheduler, client);
+            using var secondPublisher = CreatePublisher("2", scheduler, client);
+            using var cancellation = new CancellationTokenSource();
+
+            Task<TestResultUploadSummary> firstUpload = firstPublisher.PublishTestResultsAsync(
+                firstPublisher.PrepareTestResults([Result("first", "Passed")], new { }),
+                cancellation.Token);
+            await responseContentRead.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            cancellation.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => firstUpload);
+
+            var stopwatch = Stopwatch.StartNew();
+            await secondPublisher.PublishTestResultsAsync(
+                secondPublisher.PrepareTestResults([Result("second", "Passed")], new { }));
+
+            Assert.True(stopwatch.Elapsed >= TimeSpan.FromMilliseconds(200), $"Elapsed: {stopwatch.Elapsed}");
+        }
+
+        [Fact]
+        public async Task Dispose_CancelsInFlightSendAndCompletesPendingRequests()
+        {
+            var scheduler = new AzureDevOpsRequestScheduler(1, NullLogger.Instance);
+            var sendStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var sendCancelled = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            int pendingSendCount = 0;
+
+            Task<HttpResponseMessage> inFlight = scheduler.SendAsync(
+                async cancellationToken =>
+                {
+                    sendStarted.TrySetResult(true);
+                    try
+                    {
+                        await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        sendCancelled.TrySetResult(true);
+                        throw;
+                    }
+
+                    return EmptyResultResponse();
+                },
+                CancellationToken.None);
+            await sendStarted.Task.WaitAsync(TimeSpan.FromSeconds(10));
+
+            Task<HttpResponseMessage> pending = scheduler.SendAsync(
+                _ =>
+                {
+                    Interlocked.Increment(ref pendingSendCount);
+                    return Task.FromResult(EmptyResultResponse());
+                },
+                CancellationToken.None);
+
+            scheduler.Dispose();
+
+            Assert.True(sendCancelled.Task.IsCompleted);
+            await Assert.ThrowsAsync<ObjectDisposedException>(() => inFlight);
+            await Assert.ThrowsAsync<ObjectDisposedException>(() => pending);
+            Assert.Equal(0, Volatile.Read(ref pendingSendCount));
+            Assert.Equal(0, scheduler.ActiveRequestCount);
+        }
+
+        [Fact]
+        public async Task Dispose_CancelsAlreadyDequeuedAdmissionDelay()
+        {
+            var scheduler = new AzureDevOpsRequestScheduler(1, NullLogger.Instance, TimeSpan.FromSeconds(30));
+            using HttpResponseMessage throttled = await scheduler.SendAsync(
+                _ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.TooManyRequests)),
+                CancellationToken.None);
+            int sendCount = 0;
+            Task<HttpResponseMessage> delayed = scheduler.SendAsync(
+                _ =>
+                {
+                    Interlocked.Increment(ref sendCount);
+                    return Task.FromResult(EmptyResultResponse());
+                },
+                CancellationToken.None);
+
+            Assert.True(
+                SpinWait.SpinUntil(() => scheduler.ActiveRequestCount == 1, TimeSpan.FromSeconds(10)),
+                "The request was not dequeued for admission.");
+
+            var stopwatch = Stopwatch.StartNew();
+            scheduler.Dispose();
+
+            await Assert.ThrowsAsync<ObjectDisposedException>(() => delayed);
+            Assert.Equal(0, Volatile.Read(ref sendCount));
+            Assert.Equal(0, scheduler.ActiveRequestCount);
+            Assert.True(stopwatch.Elapsed < TimeSpan.FromSeconds(5), $"Dispose elapsed: {stopwatch.Elapsed}");
+        }
+
+        [Fact]
+        public async Task CallerCancellation_RemainsCallerCancellation()
+        {
+            using var scheduler = new AzureDevOpsRequestScheduler(1, NullLogger.Instance);
+            using var cancellation = new CancellationTokenSource();
+            var sendStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Task<HttpResponseMessage> request = scheduler.SendAsync(
+                async cancellationToken =>
+                {
+                    sendStarted.TrySetResult(true);
+                    await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                    return EmptyResultResponse();
+                },
+                cancellation.Token);
+
+            await sendStarted.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            cancellation.Cancel();
+
+            OperationCanceledException exception =
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(() => request);
+            Assert.Equal(cancellation.Token, exception.CancellationToken);
+        }
+
         private static AzureDevOpsResultPublisher CreatePublisher(
             string runId,
             AzureDevOpsRequestScheduler scheduler,
@@ -404,6 +542,25 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 HttpRequestMessage request,
                 CancellationToken cancellationToken)
                 => sendAsync(request, cancellationToken);
+        }
+
+        private sealed class SignalingContent(
+            string content,
+            TaskCompletionSource<bool> readStarted) : HttpContent
+        {
+            private readonly byte[] _content = Encoding.UTF8.GetBytes(content);
+
+            protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)
+            {
+                readStarted.TrySetResult(true);
+                await stream.WriteAsync(_content);
+            }
+
+            protected override bool TryComputeLength(out long length)
+            {
+                length = _content.Length;
+                return true;
+            }
         }
     }
 }

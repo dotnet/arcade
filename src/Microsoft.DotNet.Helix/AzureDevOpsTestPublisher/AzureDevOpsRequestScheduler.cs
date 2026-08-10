@@ -13,23 +13,41 @@ namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 /// </summary>
 public sealed class AzureDevOpsRequestScheduler : IDisposable
 {
+    private static readonly TimeSpan s_defaultTooManyRequestsDelay = TimeSpan.FromSeconds(30);
+
     private readonly Channel<ScheduledRequest> _requests;
     private readonly CancellationTokenSource _disposeCancellation = new();
     private readonly Task[] _workers;
     private readonly ILogger _logger;
+    private readonly TimeSpan _tooManyRequestsDelay;
     private readonly object _delayLock = new();
     private DateTimeOffset _delayUntil;
-    private bool _disposed;
+    private int _activeRequestCount;
+    private int _disposed;
 
     public AzureDevOpsRequestScheduler(int maximumConcurrency, ILogger logger)
+        : this(maximumConcurrency, logger, s_defaultTooManyRequestsDelay)
+    {
+    }
+
+    internal AzureDevOpsRequestScheduler(
+        int maximumConcurrency,
+        ILogger logger,
+        TimeSpan tooManyRequestsDelay)
     {
         if (maximumConcurrency <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(maximumConcurrency));
         }
 
+        if (tooManyRequestsDelay < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(tooManyRequestsDelay));
+        }
+
         MaximumConcurrency = maximumConcurrency;
         _logger = logger;
+        _tooManyRequestsDelay = tooManyRequestsDelay;
         _requests = Channel.CreateBounded<ScheduledRequest>(new BoundedChannelOptions(maximumConcurrency * 2)
         {
             FullMode = BoundedChannelFullMode.Wait,
@@ -41,15 +59,28 @@ public sealed class AzureDevOpsRequestScheduler : IDisposable
 
     public int MaximumConcurrency { get; }
 
+    internal int ActiveRequestCount => Volatile.Read(ref _activeRequestCount);
+
     internal async Task<HttpResponseMessage> SendAsync(
         Func<CancellationToken, Task<HttpResponseMessage>> sendAsync,
         CancellationToken cancellationToken)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
+        ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
 
         var request = new ScheduledRequest(sendAsync, cancellationToken);
-        await _requests.Writer.WriteAsync(request, cancellationToken);
-        return await request.Completion.Task.WaitAsync(cancellationToken);
+        try
+        {
+            await _requests.Writer.WriteAsync(request, cancellationToken);
+            return await request.Completion.Task.WaitAsync(cancellationToken);
+        }
+        catch (ChannelClosedException) when (Volatile.Read(ref _disposed) != 0)
+        {
+            throw new ObjectDisposedException(nameof(AzureDevOpsRequestScheduler));
+        }
+        catch (ObjectDisposedException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw new OperationCanceledException(cancellationToken);
+        }
     }
 
     private async Task ProcessRequestsAsync()
@@ -64,20 +95,37 @@ public sealed class AzureDevOpsRequestScheduler : IDisposable
                     continue;
                 }
 
+                Interlocked.Increment(ref _activeRequestCount);
                 try
                 {
-                    await WaitForAdmissionAsync(request.CancellationToken);
-                    HttpResponseMessage response = await request.SendAsync(request.CancellationToken);
-                    RecordDelay(response);
-                    request.Completion.TrySetResult(response);
+                    using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(
+                        request.CancellationToken,
+                        _disposeCancellation.Token);
+
+                    try
+                    {
+                        await WaitForAdmissionAsync(linkedCancellation.Token);
+                        HttpResponseMessage response = await request.SendAsync(linkedCancellation.Token);
+                        RecordDelay(response);
+                        request.Completion.TrySetResult(response);
+                    }
+                    catch (OperationCanceledException) when (request.CancellationToken.IsCancellationRequested)
+                    {
+                        request.Completion.TrySetCanceled(request.CancellationToken);
+                    }
+                    catch (OperationCanceledException) when (_disposeCancellation.IsCancellationRequested)
+                    {
+                        request.Completion.TrySetException(
+                            new ObjectDisposedException(nameof(AzureDevOpsRequestScheduler)));
+                    }
+                    catch (Exception ex)
+                    {
+                        request.Completion.TrySetException(ex);
+                    }
                 }
-                catch (OperationCanceledException) when (request.CancellationToken.IsCancellationRequested)
+                finally
                 {
-                    request.Completion.TrySetCanceled(request.CancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    request.Completion.TrySetException(ex);
+                    Interlocked.Decrement(ref _activeRequestCount);
                 }
             }
         }
@@ -107,13 +155,19 @@ public sealed class AzureDevOpsRequestScheduler : IDisposable
 
     private void RecordDelay(HttpResponseMessage response)
     {
-        TimeSpan delay = GetRetryAfterDelay(response) ?? TimeSpan.Zero;
+        TimeSpan? retryAfterDelay = GetRetryAfterDelay(response);
+        TimeSpan delay = retryAfterDelay ?? TimeSpan.Zero;
 
         if (response.Headers.TryGetValues("X-RateLimit-Delay", out IEnumerable<string>? delayValues)
             && double.TryParse(delayValues.FirstOrDefault(), NumberStyles.Float, CultureInfo.InvariantCulture, out double delaySeconds)
             && delaySeconds > 0)
         {
             delay = TimeSpan.FromSeconds(Math.Max(delay.TotalSeconds, delaySeconds));
+        }
+
+        if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests && retryAfterDelay is null)
+        {
+            delay = delay > _tooManyRequestsDelay ? delay : _tooManyRequestsDelay;
         }
 
         if (delay <= TimeSpan.Zero)
@@ -157,20 +211,27 @@ public sealed class AzureDevOpsRequestScheduler : IDisposable
 
     public void Dispose()
     {
-        if (_disposed)
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
         {
             return;
         }
 
-        _disposed = true;
         _requests.Writer.TryComplete();
         _disposeCancellation.Cancel();
-        _disposeCancellation.Dispose();
 
         while (_requests.Reader.TryRead(out ScheduledRequest? request))
         {
             request.Completion.TrySetException(new ObjectDisposedException(nameof(AzureDevOpsRequestScheduler)));
         }
+
+        Task.WhenAll(_workers).GetAwaiter().GetResult();
+
+        while (_requests.Reader.TryRead(out ScheduledRequest? request))
+        {
+            request.Completion.TrySetException(new ObjectDisposedException(nameof(AzureDevOpsRequestScheduler)));
+        }
+
+        _disposeCancellation.Dispose();
     }
 
     private sealed record ScheduledRequest(

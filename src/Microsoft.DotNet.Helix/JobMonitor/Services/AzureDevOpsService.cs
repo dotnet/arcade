@@ -21,6 +21,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 {
     internal sealed class AzureDevOpsService : IAzureDevOpsService, IDisposable
     {
+        // Keep parsing and materialization bounded independently from the HTTP request scheduler.
+        internal const int WorkItemUploadParallelism = 4;
+
         // A test run tag is applied to every completed test run so we can recover the Helix job
         // name on a subsequent monitor attempt. The Helix job name (a GUID) is encoded as
         // "{HelixJobTagPrefix}{guidWithoutDashes}" because Azure DevOps only accepts alphanumeric
@@ -445,8 +448,44 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return summary;
             }
 
-            (WorkItemTestResults WorkItem, TestResultUploadSummary Summary)[] testSummaries = await Task.WhenAll(results.Select(async result => (result, await UploadWorkItemAsync(result))));
+            (WorkItemTestResults WorkItem, TestResultUploadSummary Summary)[] testSummaries =
+                await SelectAsyncWithConcurrency(
+                    results,
+                    WorkItemUploadParallelism,
+                    async result => (result, await UploadWorkItemAsync(result)));
             return testSummaries.ToDictionary(t => (t.WorkItem.JobName, t.WorkItem.WorkItemName), t => t.Summary);
+        }
+
+        internal static async Task<TResult[]> SelectAsyncWithConcurrency<T, TResult>(
+            IReadOnlyList<T> items,
+            int maximumConcurrency,
+            Func<T, Task<TResult>> selector)
+        {
+            if (maximumConcurrency <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(maximumConcurrency));
+            }
+
+            var results = new TResult[items.Count];
+            int nextIndex = -1;
+
+            async Task ProcessAsync()
+            {
+                while (true)
+                {
+                    int index = Interlocked.Increment(ref nextIndex);
+                    if (index >= items.Count)
+                    {
+                        return;
+                    }
+
+                    results[index] = await selector(items[index]);
+                }
+            }
+
+            int workerCount = Math.Min(maximumConcurrency, items.Count);
+            await Task.WhenAll(Enumerable.Range(0, workerCount).Select(_ => ProcessAsync()));
+            return results;
         }
 
         private async Task<JObject> SendAsync(
