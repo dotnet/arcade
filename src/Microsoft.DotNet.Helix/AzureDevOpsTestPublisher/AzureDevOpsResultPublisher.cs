@@ -354,9 +354,11 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         IEnumerable<ChunkPair> zippedSubTests = (test.Converted.SubResults ?? [])
             .Zip(test.Aggregated.SubResults, (converted, aggregated) => new ChunkPair(converted, aggregated));
 
+        // Each emitted hierarchy includes the copied top-level result, leaving the remaining
+        // node budget for its sub-results.
         foreach (List<ChunkPair> hierarchyPart in PartitionBySize(
             zippedSubTests,
-            maximumNodesPerHierarchy,
+            maximumNodesPerHierarchy - 1,
             static pair => CountResultTreeNodes(pair.Converted)))
         {
             yield return new ConvertedResult(

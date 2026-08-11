@@ -155,6 +155,20 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal(new[] { 1000, 1 }, handler.RequestResultCounts);
         }
 
+        [Fact]
+        public async Task UploadTestResultsWithCountAsync_SplitHierarchiesIncludeRootInNodeLimit()
+        {
+            var handler = new RecordingResultHandler();
+            using var publisher = CreatePublisher(handler);
+            AggregatedResult[] results = [CreateDataDrivenResult("Theory", 950)];
+
+            long uploadedCount = await publisher.UploadTestResultsWithCountAsync(results, new { });
+
+            Assert.Equal(2, uploadedCount);
+            Assert.Equal(new[] { 2 }, handler.RequestResultCounts);
+            Assert.Equal(new[] { 950, 2 }, handler.RequestHierarchyNodeCounts.Single());
+        }
+
         private static AzureDevOpsResultPublisher CreatePublisher(HttpMessageHandler handler)
             => new(
                 new AzureDevOpsReportingParameters(
@@ -178,6 +192,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         private sealed class RecordingResultHandler : HttpMessageHandler
         {
             public List<int> RequestResultCounts { get; } = [];
+            public List<int[]> RequestHierarchyNodeCounts { get; } = [];
 
             protected override async Task<HttpResponseMessage> SendAsync(
                 HttpRequestMessage request,
@@ -187,6 +202,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     await request.Content.ReadAsStringAsync(cancellationToken));
                 int resultCount = requestBody.RootElement.GetArrayLength();
                 RequestResultCounts.Add(resultCount);
+                RequestHierarchyNodeCounts.Add(
+                    [.. requestBody.RootElement.EnumerateArray().Select(CountHierarchyNodes)]);
 
                 string responseBody = JsonSerializer.Serialize(new
                 {
@@ -196,6 +213,17 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 {
                     Content = new StringContent(responseBody)
                 };
+            }
+
+            private static int CountHierarchyNodes(JsonElement result)
+            {
+                if (!result.TryGetProperty("subResults", out JsonElement subResults) ||
+                    subResults.ValueKind != JsonValueKind.Array)
+                {
+                    return 1;
+                }
+
+                return 1 + subResults.EnumerateArray().Sum(CountHierarchyNodes);
             }
         }
 
