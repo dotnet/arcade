@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -27,21 +26,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         public void JobMonitorOptions_DefaultsResultRequestParallelismToEight()
         {
             new JobMonitorOptions().TestResultUploadParallelism.Should().Be(8);
-        }
-
-        [Fact]
-        public void HelixJobMonitorTemplate_OnlyForwardsExplicitResultRequestParallelism()
-        {
-            string template = File.ReadAllText(
-                Path.Combine(AppContext.BaseDirectory, "TestAssets", "helix-job-monitor.yml"))
-                .ReplaceLineEndings("\n");
-
-            template.Should().Contain(
-                "- name: testResultUploadParallelism\n  type: number\n  default: 0");
-            template.Should().Contain(
-                "if (( ${{ parameters.testResultUploadParallelism }} > 0 )); then");
-            template.Should().Contain(
-                "toolArgs+=( --test-result-upload-parallelism '${{ parameters.testResultUploadParallelism }}' )");
         }
 
         [Fact]

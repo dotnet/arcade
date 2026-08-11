@@ -184,7 +184,7 @@ public sealed class AzureDevOpsRequestScheduler : IDisposable
             }
         }
 
-        _logger.LogDebug(
+        _logger.LogWarning(
             "Azure DevOps requested a global result-upload delay of {DelaySeconds:0.###}s.",
             delay.TotalSeconds);
     }
@@ -223,15 +223,6 @@ public sealed class AzureDevOpsRequestScheduler : IDisposable
         {
             request.Completion.TrySetException(new ObjectDisposedException(nameof(AzureDevOpsRequestScheduler)));
         }
-
-        Task.WhenAll(_workers).GetAwaiter().GetResult();
-
-        while (_requests.Reader.TryRead(out ScheduledRequest? request))
-        {
-            request.Completion.TrySetException(new ObjectDisposedException(nameof(AzureDevOpsRequestScheduler)));
-        }
-
-        _disposeCancellation.Dispose();
     }
 
     private sealed record ScheduledRequest(
