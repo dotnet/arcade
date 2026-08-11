@@ -323,33 +323,17 @@ jobs:
             [ -z "${url}" ] && continue
             rm -rf /tmp/ax /tmp/a.zip
             mkdir -p /tmp/ax
-            # Download to a real file rather than through a pipe. curl retries
-            # transient failures (5xx/429/timeouts), and a retry can only
-            # restart cleanly when the output is seekable: writing to a pipe
-            # leaves curl unable to rewind, so the retried body is APPENDED to
-            # whatever was already emitted. A 503 whose error page is written
-            # before the retry therefore yields `<error page><zip>` — a corrupt
-            # archive delivered with exit status 0, which no curl status check
-            # can catch and which later surfaces only as an unreadable archive,
-            # costing the whole leg and with it the entire analysis (see the
-            # all-legs guard below). `--fail` additionally keeps HTTP error
-            # bodies out of the file. `curl_rc` is now just `$?` — there is no
-            # pipeline left whose PIPESTATUS could be misread.
-            # `ulimit -f` replaces the disk backstop that `head -c` used to
-            # provide, bounding a response that declares no Content-Length.
-            # It is only a backstop: the authoritative rejection is the
-            # `-ge MAX_ZIP_BYTES` guard below, which catches an oversized
-            # artifact wherever the kernel-level cap happens to land.
-            # The block size is deliberately NOT relied upon. bash's builtin
-            # uses 1024-byte blocks while POSIX specifies 512 for the
-            # standalone utility, so dividing by 512 yields a cap of exactly
-            # MAX_ZIP_BYTES under the 512 reading and twice that under the
-            # 1024 reading. Both are >= MAX_ZIP_BYTES, so a valid artifact is
-            # never truncated, and anything that reaches MAX_ZIP_BYTES is
-            # skipped by the guard either way. SIGXFSZ is ignored so curl
-            # stops with an ordinary write error (23) at the cap instead of
-            # dying on a signal, which would make the runner log a bare
-            # "File size limit exceeded (core dumped)".
+            # Download to a file, never a pipe: curl retries transient
+            # 5xx/429/timeouts but can only rewind seekable output, so through
+            # a pipe the retried body is APPENDED — a 503 error page followed
+            # by a retry yields a corrupt `<error page><zip>` that still exits
+            # 0. `--fail` keeps error bodies off disk.
+            # `ulimit -f` is only a disk backstop for a response that declares
+            # no Content-Length; the `-ge MAX_ZIP_BYTES` guard below is
+            # authoritative. Divide by 512 so the cap is >= MAX_ZIP_BYTES under
+            # either block-size reading (bash uses 1024, POSIX says 512).
+            # SIGXFSZ is ignored so hitting the cap is an ordinary write error
+            # (23) rather than a "File size limit exceeded (core dumped)" log.
             (
               ulimit -f $((MAX_ZIP_BYTES / 512))
               trap '' XFSZ
@@ -363,43 +347,31 @@ jobs:
             if [ "${ZIP_BYTES}" -ge "${MAX_ZIP_BYTES}" ]; then
               echo "::warning::Skipping ${name}: download reached the ${MAX_ZIP_BYTES}-byte cap."; continue
             fi
-            # Checked after the size guards: hitting the `ulimit -f` cap ends
-            # the transfer with a write error, and that case is reported as an
-            # oversized artifact just above rather than as a generic failure.
+            # After the size guards: hitting the ulimit cap is reported as an
+            # oversized artifact above, not as a generic transfer failure.
             if [ "${curl_rc}" -ne 0 ]; then
               echo "::warning::Skipping ${name}: download failed or was truncated (curl exit ${curl_rc})."; continue
             fi
-            # Bound the probe with `timeout` so a hostile/huge archive can't
-            # hang the runner. `unzip -Zt` prints ONE summary line
-            # ("<n> files, <x> bytes uncompressed, <y> bytes compressed")
-            # instead of `unzip -l`'s per-entry listing, so the total is read
-            # from a fixed column rather than by `tail -1`-ing a table whose
-            # last line shifts with the entry list. Take the LAST line, not
-            # every line: Info-ZIP prepends warning text to STDOUT for a
-            # recoverable archive, and `awk '{print $3}'` over all lines would
-            # yield a multi-line value whose first line is the warning's byte
-            # count — which `grep -qE '^[0-9]+$'` below would accept, because
-            # `grep -q` matches if ANY line matches. Run the pipeline in a
-            # subshell with `pipefail` and FAIL CLOSED on a non-zero exit: if
-            # `timeout` kills the probe, its partial output can still end in a
-            # numeric column and undercount the total, bypassing the size guard
-            # below — so a failed probe skips the artifact rather than trusting
-            # the parsed value.
+            # `unzip -Zt` prints ONE summary line ("<n> files, <x> bytes
+            # uncompressed, ..."), so the total comes from a fixed column
+            # instead of the shifting last row of `unzip -l`. Use `END{}`:
+            # Info-ZIP prepends warnings on STDOUT for a recoverable archive,
+            # and a multi-line value would still pass the `grep -qE` check
+            # below, since `grep -q` matches if ANY line matches. `timeout`
+            # bounds a hostile archive; pipefail + fail-closed because a killed
+            # probe's partial output can end in a numeric column and undercount.
             UNCOMP=$(set -o pipefail; timeout 60 unzip -Zt /tmp/a.zip 2>/dev/null | awk 'END{print $3}') \
               || { echo "::warning::Skipping ${name}: 'unzip -Zt' failed or timed out; cannot verify uncompressed size."; continue; }
-            # Fail safe: if the uncompressed size isn't a plain integer (corrupt
-            # zip / unexpected or timed-out `unzip -Zt` output), we can't verify
-            # it — skip the artifact rather than let a non-numeric value bypass
-            # the `-gt` guard.
+            # Fail safe: a non-numeric size (corrupt zip, unexpected or
+            # timed-out output) can't be verified, so skip rather than let it
+            # bypass the guards below.
             if ! printf '%s' "${UNCOMP}" | grep -qE '^[0-9]+$'; then
               echo "::warning::Skipping ${name}: could not determine uncompressed size (unparseable/timed-out unzip output)."; continue
             fi
-            # ZIP64 uncompressed sizes can reach ~20 digits — beyond Bash's
-            # signed 64-bit range, where `-gt` (and the cumulative `$((...))`
-            # below) error out and, under `set +e`, would let an oversized
-            # archive slip past the guard. Any value with more digits than the
-            # limit is unambiguously larger, so reject on decimal length first;
-            # after this, UNCOMP fits safely in the integer range used below.
+            # ZIP64 sizes can reach ~20 digits, overflowing Bash's signed
+            # 64-bit `-gt` (and the `$((...))` below), which under `set +e`
+            # would let an oversized archive through. More digits than the
+            # limit is unambiguously larger, so reject on length first.
             if [ "${#UNCOMP}" -gt "${#MAX_UNZIP_BYTES}" ]; then
               echo "::warning::Skipping ${name}: uncompressed size has ${#UNCOMP} digits, exceeding the ${MAX_UNZIP_BYTES} guard (possible zip bomb)."; continue
             fi
@@ -414,9 +386,8 @@ jobs:
             # then extract `*.binlog` entries *preserving* their in-archive
             # paths (no `-j`) under a fresh dir + timeout, so two binlogs that
             # share a basename in different folders don't overwrite each other.
-            # Stream the entry listing through `grep` under a `timeout` (no full
-            # in-memory buffer of entry names, which a many-entry archive could
-            # bloat) and use PIPESTATUS to separate the failure modes: a
+            # The listing is streamed through `grep` (no full in-memory buffer
+            # of entry names) and PIPESTATUS separates the failure modes: a
             # non-zero listing exit (error/timeout) FAILS CLOSED; a grep match
             # means a suspicious absolute/`..` path.
             timeout 60 unzip -Z1 /tmp/a.zip 2>/dev/null | grep -qE '(^/|(^|/)\.\.(/|$))'
@@ -429,23 +400,20 @@ jobs:
             fi
             timeout 120 unzip -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 \
               || { echo "::warning::Skipping ${name}: extraction failed or timed out."; continue; }
-            # Consume the cumulative budget only once the archive actually
-            # extracted — not on a suspicious-path or extraction-failure skip
-            # above — so a skipped leg can't wrongly exhaust the budget and
-            # force later legs to be dropped as "incomplete".
+            # Consume the budget only once the archive actually extracted, so a
+            # skipped leg can't exhaust it and force later legs to be dropped.
             TOTAL_BYTES=$((TOTAL_BYTES + UNCOMP))
             i=0
             leg_staged=0
             while IFS= read -r bl; do
               [ -f "${bl}" ] || continue
-              # Every destination is uniquely prefixed with the artifact index
-              # (`ai`) and a per-file counter (`i`), so neither a cross-artifact
-              # sanitize collision nor same-basename entries within one archive
-              # can overwrite a previously staged leg's binlog. `safe_name` is
-              # kept only for readability.
+              # Prefixing with the artifact index (`ai`) and per-file counter
+              # (`i`) keeps destinations unique, so neither a cross-artifact
+              # sanitize collision nor same-basename entries can overwrite a
+              # staged binlog. `safe_name` is kept only for readability.
               dest="/tmp/binlogs/${ai}_${i}_${safe_name}.binlog"
-              # Only count a staged binlog when the copy actually succeeds —
-              # `set +e` is on, so a failed `cp` must not inflate the counts.
+              # Count only a successful copy — `set +e` is on, so a failed `cp`
+              # must not inflate the counts.
               if cp "${bl}" "${dest}"; then
                 count=$((count + 1))
                 i=$((i + 1))
@@ -460,12 +428,10 @@ jobs:
           echo "Extracted ${count} binlog(s) from ${staged_legs}/${#names[@]} legs into /tmp/binlogs:"
           ls -la /tmp/binlogs || true
           [ "${count}" -eq 0 ] && { echo "::warning::No *.binlog found in any Logs_Build_* artifact of build ${BUILD_ID}."; emit_none; }
-          # Fail CLOSED on a partial set: if any Logs_Build_* leg did not yield
-          # a usable binlog (download/extract failure, size-guard skip, or no
-          # binlog inside), we cannot see every leg. Activating anyway would let
-          # the agent treat the retrieved legs as the whole build and possibly
-          # mis-classify a real build break in a missing leg as a clean compile /
-          # non-build failure. A later build/check will re-trigger the analysis.
+          # Fail CLOSED on a partial set: if any leg yielded no usable binlog we
+          # cannot see the whole build, and activating anyway could let the
+          # agent mis-classify a real break in a missing leg as a clean compile.
+          # A later build/check will re-trigger the analysis.
           if [ "${staged_legs}" -ne "${#names[@]}" ]; then
             echo "::warning::Only ${staged_legs} of ${#names[@]} Logs_Build_* legs produced a usable binlog; skipping to avoid analyzing an incomplete build (a missing leg could be the one that failed)."
             emit_none
