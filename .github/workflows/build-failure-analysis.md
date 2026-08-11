@@ -336,8 +336,12 @@ jobs:
             # bodies out of the file. `curl_rc` is now just `$?` — there is no
             # pipeline left whose PIPESTATUS could be misread.
             # The hard cap that `head -c` used to enforce is preserved with
-            # `ulimit -f` (1 KiB units), which the kernel applies even to a
-            # response that declares no Content-Length. SIGXFSZ is ignored so
+            # `ulimit -f`, which the kernel applies even to a
+            # response that declares no Content-Length. The unit is bash's
+            # 1024-byte block, not the 512-byte block POSIX specifies for the
+            # standalone `ulimit` utility; this step runs under `shell: bash`,
+            # and `ulimit -f 1` was measured to cap a file at 1024 bytes.
+            # SIGXFSZ is ignored so
             # curl stops with an ordinary write error (23) at the cap instead
             # of dying on a signal, which would make the runner log a bare
             # "File size limit exceeded (core dumped)".

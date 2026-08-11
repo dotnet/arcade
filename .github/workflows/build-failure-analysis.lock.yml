@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"b4cbfa8f0d935f24d595980881f31dc575ed9475a9e4decd7b940190621119db","body_hash":"e13db1f2210b3d8df4dd6d0111f7d4eadfd7dac1d5b29fc4f57335fe5d4c8710","compiler_version":"v0.77.5","strict":true,"agent_id":"copilot"}
+# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"c0c490174db454eb57aea174b8ecd2ef18a76abf37ff01fa1a5a474a29ab341b","body_hash":"e13db1f2210b3d8df4dd6d0111f7d4eadfd7dac1d5b29fc4f57335fe5d4c8710","compiler_version":"v0.77.5","strict":true,"agent_id":"copilot"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"3ea13c02d765410340d533515cb31a7eef2baaf0","version":"v0.77.5"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.58"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.58"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.58"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.22"},{"image":"ghcr.io/github/github-mcp-server:v1.1.0"},{"image":"mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-binlog-mcp-amd64"},{"image":"node:lts-alpine","digest":"sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14","pinned_image":"node:lts-alpine@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -211,20 +211,20 @@ jobs:
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_113d7909fbac1eaa_EOF'
+          cat << 'GH_AW_PROMPT_a6b33b3db9bd4e32_EOF'
           <system>
-          GH_AW_PROMPT_113d7909fbac1eaa_EOF
+          GH_AW_PROMPT_a6b33b3db9bd4e32_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_113d7909fbac1eaa_EOF'
+          cat << 'GH_AW_PROMPT_a6b33b3db9bd4e32_EOF'
           <safe-output-tools>
           Tools: add_comment(max:5), create_pull_request_review_comment(max:25), missing_tool, missing_data, noop(max:5)
           </safe-output-tools>
-          GH_AW_PROMPT_113d7909fbac1eaa_EOF
+          GH_AW_PROMPT_a6b33b3db9bd4e32_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_113d7909fbac1eaa_EOF'
+          cat << 'GH_AW_PROMPT_a6b33b3db9bd4e32_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if github.actor}}
@@ -253,13 +253,13 @@ jobs:
           {{/if}}
           </github-context>
           
-          GH_AW_PROMPT_113d7909fbac1eaa_EOF
+          GH_AW_PROMPT_a6b33b3db9bd4e32_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_113d7909fbac1eaa_EOF'
+          cat << 'GH_AW_PROMPT_a6b33b3db9bd4e32_EOF'
           </system>
           {{#runtime-import .github/workflows/shared/build-failure-analysis-shared.md}}
           {{#runtime-import .github/workflows/build-failure-analysis.md}}
-          GH_AW_PROMPT_113d7909fbac1eaa_EOF
+          GH_AW_PROMPT_a6b33b3db9bd4e32_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -491,9 +491,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_a14cb6c2620050ea_EOF'
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_a54d0bb4a3f9ed8b_EOF'
           {"add_comment":{"hide_older_comments":true,"max":5,"target":"*"},"create_pull_request_review_comment":{"max":25,"side":"RIGHT","target":"*"},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":5,"report-as-issue":"false"},"report_incomplete":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_a14cb6c2620050ea_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_a54d0bb4a3f9ed8b_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -725,7 +725,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_62809ffb49d890ae_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_32eda50efba76e03_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "binlog-mcp": {
@@ -783,7 +783,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_62809ffb49d890ae_EOF
+          GH_AW_MCP_CONFIG_32eda50efba76e03_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
@@ -1613,8 +1613,12 @@ jobs:
             # bodies out of the file. `curl_rc` is now just `$?` — there is no
             # pipeline left whose PIPESTATUS could be misread.
             # The hard cap that `head -c` used to enforce is preserved with
-            # `ulimit -f` (1 KiB units), which the kernel applies even to a
-            # response that declares no Content-Length. SIGXFSZ is ignored so
+            # `ulimit -f`, which the kernel applies even to a
+            # response that declares no Content-Length. The unit is bash's
+            # 1024-byte block, not the 512-byte block POSIX specifies for the
+            # standalone `ulimit` utility; this step runs under `shell: bash`,
+            # and `ulimit -f 1` was measured to cap a file at 1024 bytes.
+            # SIGXFSZ is ignored so
             # curl stops with an ordinary write error (23) at the cap instead
             # of dying on a signal, which would make the runner log a bare
             # "File size limit exceeded (core dumped)".
