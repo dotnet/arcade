@@ -8,7 +8,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
+using Microsoft.DotNet.Helix.JobMonitor.ResultPublishing;
 using Microsoft.DotNet.Helix.JobMonitor;
 
 namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes

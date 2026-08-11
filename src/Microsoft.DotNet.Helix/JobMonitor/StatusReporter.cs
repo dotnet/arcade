@@ -4,8 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
 using Microsoft.Extensions.Logging;
@@ -14,7 +12,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 {
     /// <summary>
     /// Owns every log line the monitor emits about progress, completions, failures, and
-    /// the timeout report. Reads from a shared <see cref="MonitorState"/> so the runner's
+    /// the timeout report. Reads from a shared <see cref="MonitorLedger"/> so the runner's
     /// main loop only has to call into a small number of intent-named methods.
     /// </summary>
     internal sealed class StatusReporter
@@ -33,14 +31,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private readonly ILogger _logger;
         private readonly JobMonitorOptions _options;
-        private readonly IHelixService _helix;
-        private readonly MonitorState _state;
+        private readonly MonitorLedger _state;
 
-        public StatusReporter(ILogger logger, JobMonitorOptions options, IHelixService helix, MonitorState state)
+        public StatusReporter(ILogger logger, JobMonitorOptions options, MonitorLedger state)
         {
             _logger = logger;
             _options = options;
-            _helix = helix;
             _state = state;
         }
 
@@ -62,6 +58,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public void LogRetryPassFoundNothing()
         {
             _logger.LogInformation("No failed jobs found to resubmit");
+        }
+
+        public void LogUnresubmittablePreviousWork(HelixJobInfo job, int workItemCount)
+        {
+            LogWarning(
+                $"Could not resubmit {workItemCount} unfinished/failed work item(s) from a previous attempt of "
+                + $"{job.DisplayName} (e.g. its Helix queue may have been removed). Marking them as failed so "
+                + "this build does not wait indefinitely.");
         }
 
         public void LogRetryPassStart()
@@ -133,7 +137,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     continue;
                 }
 
-                LogWarning($"Work item '{workItem.Name}' in job '{helixJob.DisplayName}' failed ({workItem.FormattedState}).{Environment.NewLine}Console: {MonitorState.GetConsoleOutputText(workItem.ConsoleOutputUri)}");
+                LogWarning($"Work item '{workItem.Name}' in job '{helixJob.DisplayName}' failed ({workItem.FormattedState}).{Environment.NewLine}Console: {MonitorLedger.GetConsoleOutputText(workItem.ConsoleOutputUri)}");
             }
         }
 
@@ -142,25 +146,22 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// and work items). Also emits per-failure console-link warnings for any failed
         /// work items observed in this poll that haven't been reported yet.
         /// </summary>
-        public async Task LogPollStatusAsync(
-            IReadOnlyList<HelixJobInfo> jobs,
-            IReadOnlySet<string> completedJobNames,
-            CancellationToken cancellationToken)
+        public void LogPollStatus(MonitorSnapshot snapshot)
         {
             List<HelixJobInfo> orderedJobs =
             [
-                ..jobs.OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
+                ..snapshot.StageJobs.OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
             ];
 
             var workItemsByJob = new Dictionary<string, IReadOnlyCollection<WorkItemSummary>>(StringComparer.OrdinalIgnoreCase);
             foreach (HelixJobInfo job in orderedJobs)
             {
-                IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(job.JobName, cancellationToken);
+                IReadOnlyCollection<WorkItemSummary> workItems = snapshot.WorkItemsByJob[job.JobName];
                 LogFailedWorkItemConsoleLinks(job, workItems.Where(wi => wi.IsFailedAndTerminal));
                 workItemsByJob[job.JobName] = workItems;
             }
 
-            JobWorkItemStatusCounts counts = ComputeCounts(orderedJobs, workItemsByJob, completedJobNames);
+            JobWorkItemStatusCounts counts = ComputeCounts(orderedJobs, workItemsByJob, snapshot.CompletedJobNames);
 
             _logger.LogInformation(
                 "ℹ️ Status: {ProcessedJobs} processed / {CompletedJobs} completed / {RunningJobs} running / {WaitingJobs} waiting jobs{nl}"
@@ -177,8 +178,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             if (_options.Verbose)
             {
-                LogVerboseTree(orderedJobs, workItemsByJob, completedJobNames);
+                LogVerboseTree(orderedJobs, workItemsByJob, snapshot.CompletedJobNames);
             }
+
         }
 
         public void LogFinalSummary(int totalAssociatedJobCount)
@@ -255,7 +257,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             List<HelixJobInfo> unfinishedHelixJobs =
             [
-                ..MonitorState.GetLatestHelixJobAttempts(_state.SnapshotAssociatedJobs())
+                ..MonitorLedger.GetLatestHelixJobAttempts(_state.SnapshotAssociatedJobs())
                     .Where(j => !j.IsCompleted || !_state.IsHelixJobProcessed(j.JobName))
                     .OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
             ];
@@ -351,7 +353,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 WorkItemSummary workItem = orderedWorkItems[i];
                 string connector = i == orderedWorkItems.Count - 1 ? "└─" : "├─";
                 string console = workItem.IsFailedAndTerminal
-                    ? $" | Console: {MonitorState.GetConsoleOutputText(workItem.ConsoleOutputUri)}"
+                    ? $" | Console: {MonitorLedger.GetConsoleOutputText(workItem.ConsoleOutputUri)}"
                     : string.Empty;
                 lines.Add($"{childPrefix}{connector} {workItem.Name} ({workItem.FormattedState}){console}");
             }

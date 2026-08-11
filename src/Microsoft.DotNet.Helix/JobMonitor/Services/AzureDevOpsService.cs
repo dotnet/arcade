@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -10,9 +11,8 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Arcade.Common;
-using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
-using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
+using Microsoft.DotNet.Helix.JobMonitor.ResultPublishing;
+using Microsoft.DotNet.Helix.JobMonitor.ResultPublishing.Model;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -52,14 +52,16 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly JobMonitorOptions _options;
         private readonly ILogger _logger;
         private readonly HttpClient _azdoClient;
-        private readonly SemaphoreSlim _uploadSemaphore;
+        private readonly AsyncConcurrencyLimiter _uploadLimiter;
+        private readonly RetryExecutor _retry;
 
         public AzureDevOpsService(JobMonitorOptions options, ILogger logger)
         {
             _options = options;
             _logger = logger;
             _azdoClient = new HttpClient();
-            _uploadSemaphore = new SemaphoreSlim(options.TestResultUploadParallelism);
+            _uploadLimiter = new AsyncConcurrencyLimiter(options.TestResultUploadParallelism);
+            _retry = new RetryExecutor(logger);
             InitializeClient();
         }
 
@@ -68,7 +70,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _options = options;
             _logger = logger;
             _azdoClient = azdoClient ?? throw new ArgumentNullException(nameof(azdoClient));
-            _uploadSemaphore = new SemaphoreSlim(options.TestResultUploadParallelism);
+            _uploadLimiter = new AsyncConcurrencyLimiter(options.TestResultUploadParallelism);
+            _retry = new RetryExecutor(logger);
             InitializeClient();
         }
 
@@ -414,7 +417,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 reportingParameters,
                 _logger);
 
-            async Task<TestResultUploadSummary> UploadWorkItemAsync(WorkItemTestResults workItem)
+            async Task<TestResultUploadSummary> UploadWorkItemAsync(WorkItemTestResults workItem, CancellationToken token)
             {
                 if (workItem.TestResultFiles.Count == 0)
                 {
@@ -428,10 +431,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     + "{AvailableSlots} slot(s) are currently available.",
                     workItem.WorkItemName,
                     workItem.JobName,
-                    _uploadSemaphore.CurrentCount);
-                await _uploadSemaphore.WaitAsync(cancellationToken);
-
-                try
+                    _uploadLimiter.AvailableSlots);
+                return await _uploadLimiter.RunAsync(async uploadToken =>
                 {
                     DateTimeOffset uploadStartedAt = DateTimeOffset.UtcNow;
                     _logger.LogDebug(
@@ -448,22 +449,29 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                             HelixJobId = workItem.JobName,
                             HelixWorkItemName = workItem.WorkItemName
                         },
-                        cancellationToken);
+                        uploadToken);
                     _logger.LogDebug(
                         "Work item '{WorkItemName}' in job '{JobName}' finished parsing and publishing after {UploadElapsed}.",
                         workItem.WorkItemName,
                         workItem.JobName,
                         DateTimeOffset.UtcNow - uploadStartedAt);
                     return summary;
-                }
-                finally
-                {
-                    _uploadSemaphore.Release();
-                }
+                }, token);
             }
 
-            (WorkItemTestResults WorkItem, TestResultUploadSummary Summary)[] testSummaries = await Task.WhenAll(results.Select(async result => (result, await UploadWorkItemAsync(result))));
-            return testSummaries.ToDictionary(t => (t.WorkItem.JobName, t.WorkItem.WorkItemName), t => t.Summary);
+            var summaries = new ConcurrentDictionary<(string JobName, string WorkItemName), TestResultUploadSummary>();
+            using var queue = new AsyncWorkQueue<WorkItemTestResults>(
+                _options.TestResultUploadParallelism,
+                Math.Max(_options.TestResultUploadParallelism * 2, 1),
+                async (workItem, token) => summaries[(workItem.JobName, workItem.WorkItemName)] =
+                    await UploadWorkItemAsync(workItem, token));
+            foreach (WorkItemTestResults result in results)
+            {
+                await queue.EnqueueAsync(result, cancellationToken);
+            }
+
+            await queue.CompleteAndDrainAsync(cancellationToken);
+            return summaries;
         }
 
         private async Task<JObject> SendAsync(
@@ -515,45 +523,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return await SendOnceAsync();
             }
 
-            string result = null;
-            Exception lastException = null;
-            var retryHandler = new ExponentialRetry
-            {
-                MaxAttempts = 5,
-                DelayBase = 2,
-                DelayConstant = 0,
-                MinRandomFactor = 1,
-                MaxRandomFactor = 1,
-                RetryDelayCallback = (failedAttempt, delay) =>
-                    _logger.LogDebug(
-                        "Azure DevOps {Method} request to '{RequestUri}' failed on attempt {Attempt} of {AttemptCount}. "
-                        + "Waiting {RetryDelay} before the next attempt.",
-                        method,
-                        requestUri,
-                        failedAttempt,
-                        5,
-                        delay),
-            };
-
-            bool succeeded = await retryHandler.RunAsync(
-                async _ =>
-                {
-                    try
-                    {
-                        result = await SendOnceAsync();
-                        return RetryResult.Success;
-                    }
-                    catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
-                    {
-                        lastException = ex;
-                        return RetryResult.Retry();
-                    }
-                },
+            return await _retry.ExecuteAsync(
+                _ => SendOnceAsync(),
+                $"send Azure DevOps {method} request to '{requestUri}'",
                 cancellationToken);
-
-            return succeeded
-                ? result
-                : throw lastException ?? new InvalidOperationException("Retry failed without completing the Azure DevOps request.");
         }
 
         // Honors Azure DevOps rate limiting guidance:
@@ -613,7 +586,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public void Dispose()
         {
             _azdoClient.Dispose();
-            _uploadSemaphore.Dispose();
+            _uploadLimiter.Dispose();
         }
     }
 }

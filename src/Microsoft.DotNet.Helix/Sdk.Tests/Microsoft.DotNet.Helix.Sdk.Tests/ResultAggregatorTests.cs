@@ -3,8 +3,8 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
-using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
+using Microsoft.DotNet.Helix.JobMonitor.ResultPublishing;
+using Microsoft.DotNet.Helix.JobMonitor.ResultPublishing.Model;
 using Xunit;
 
 namespace Microsoft.DotNet.Helix.Sdk.Tests

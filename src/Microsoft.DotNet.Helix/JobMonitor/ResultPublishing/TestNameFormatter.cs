@@ -1,7 +1,9 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
+#nullable enable
+
+namespace Microsoft.DotNet.Helix.JobMonitor.ResultPublishing;
 
 /// <summary>
 /// Builds the human-visible test title (AzDO <c>testCaseTitle</c>) shown when a job opts in to

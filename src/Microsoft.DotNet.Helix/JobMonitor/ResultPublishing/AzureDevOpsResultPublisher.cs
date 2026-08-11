@@ -1,17 +1,23 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+#nullable enable
+
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Net.Sockets;
 using Microsoft.Arcade.Common;
-using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
+using Microsoft.DotNet.Helix.JobMonitor.ResultPublishing.Model;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
+namespace Microsoft.DotNet.Helix.JobMonitor.ResultPublishing;
 
+/// <summary>
+/// Translates local test result files into Azure DevOps test cases, preserving rerun/data-driven
+/// structure and attaching per-test output after Azure DevOps assigns result identifiers.
+/// </summary>
 public sealed class AzureDevOpsResultPublisher : IDisposable
 {
     private const int DefaultAttemptCount = 10;
@@ -51,6 +57,8 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
     {
         var testResultReader = new LocalTestResultsReader(_logger, _azdoParameters.TestResultAttachmentMode);
 
+        // Files within one work item are independent inputs, so parse them concurrently before
+        // aggregation establishes cross-file rerun and data-driven relationships.
         async Task<IReadOnlyList<TestResult>> ParseAsync(string file)
         {
             DateTimeOffset startedAt = DateTimeOffset.UtcNow;
@@ -72,6 +80,8 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             return new TestResultUploadSummary(true, 0);
         }
 
+        // Aggregation converts framework-specific rows into the hierarchy Azure DevOps expects:
+        // one logical result with nested data rows or rerun attempts where applicable.
         IReadOnlyList<AggregatedResult> aggregatedResults = new ResultAggregator().Aggregate(parsedResults, _azdoParameters.UseFullyQualifiedTestName);
         if (aggregatedResults.Count == 0)
         {
@@ -101,6 +111,9 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             long publishedTestCount = 0;
             IReadOnlyList<AggregatedResult> resultList = results as IReadOnlyList<AggregatedResult> ?? results.ToList();
             var converted = ConvertResults(resultList, resultMetadata).ToList();
+
+            // Azure DevOps constrains both request count and payload size. Batch enforces both so
+            // one unusually large result cannot force an oversized request.
             foreach (List<ConvertedResult> batch in Batch(converted, 1000, static t => Size(t.Converted)))
             {
                 IReadOnlyList<PublishedTestCase> publishedTests = await PublishResultsAsync(batch, cancellationToken);
@@ -141,6 +154,8 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
 
         List<PublishedTestCase> publishedTestCases = [];
 
+        // The response preserves request order. Pair each assigned Azure DevOps ID with its
+        // original aggregate so attachments can be uploaded to the correct result hierarchy.
         foreach ((PublishedTestCaseResultReference published, AggregatedResult original, PublishedTestCase testCase) in publishedResults.Zip(originalList, testCaseResults))
         {
             if (published.Id == -1)
@@ -154,6 +169,8 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                 IReadOnlyList<AggregatedResult> originalSubResults,
                 long testId)
             {
+                // Azure DevOps assigns IDs recursively to data rows and rerun attempts. Walk both
+                // trees in lockstep; a shape mismatch means attachment placement is unsafe.
                 if (publishedSubResults is null || publishedSubResults.Count == 0)
                 {
                     if (originalSubResults.Count > 0)
@@ -233,6 +250,8 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         string comment = JsonSerializer.Serialize(resultMetadata) ?? string.Empty;
         bool useFullyQualifiedName = _azdoParameters.UseFullyQualifiedTestName;
 
+        // Keep stable identity separate from presentation. AutomatedTestName controls Azure
+        // DevOps history matching, while TestCaseTitle may retain a richer framework display name.
         string DisplayNameFor(AggregatedResult result)
             => useFullyQualifiedName
                 ? TestNameFormatter.FormatDisplayName(result.FullyQualifiedName, result.Name)

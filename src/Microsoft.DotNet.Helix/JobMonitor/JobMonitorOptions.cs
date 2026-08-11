@@ -4,7 +4,7 @@
 using System;
 using System.CommandLine;
 using Azure.Identity;
-using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
+using Microsoft.DotNet.Helix.JobMonitor.ResultPublishing.Model;
 
 namespace Microsoft.DotNet.Helix.JobMonitor
 {

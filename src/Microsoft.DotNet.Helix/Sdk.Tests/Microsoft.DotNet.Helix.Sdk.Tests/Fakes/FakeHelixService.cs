@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         private readonly HashSet<string> _downloadFailureJobs = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Queue<Exception>> _downloadFailures = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, IReadOnlyCollection<WorkItemSummary>> _customWorkItems = new(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, int> _listWorkItemsCallCounts = new(StringComparer.OrdinalIgnoreCase);
         private int _getJobsCallCount;
 
         /// <summary>
@@ -67,6 +68,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
 
         /// <summary>Number of times <see cref="GetJobsForBuildAsync"/> has been called.</summary>
         public int GetJobsCallCount => _getJobsCallCount;
+
+        public int GetListWorkItemsCallCount(string jobName)
+            => _listWorkItemsCallCounts.TryGetValue(jobName, out int count) ? count : 0;
 
         public ConcurrentBag<string> CanceledJobs { get; } = [];
 
@@ -127,6 +131,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             string jobName,
             CancellationToken _)
         {
+            _listWorkItemsCallCounts.AddOrUpdate(jobName, 1, static (_, count) => count + 1);
+
             if (_customWorkItems.TryGetValue(jobName, out IReadOnlyCollection<WorkItemSummary> customWorkItems))
             {
                 return Task.FromResult(customWorkItems);

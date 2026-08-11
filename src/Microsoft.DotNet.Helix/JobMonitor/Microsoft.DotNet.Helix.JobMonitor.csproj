@@ -8,6 +8,7 @@
     <RollForward>Major</RollForward>
     <ToolCommandName>dotnet-helix-job-monitor</ToolCommandName>
     <Description>Standalone Helix Job Monitor tool for Azure DevOps pipelines</Description>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,7 +25,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Common\Microsoft.Arcade.Common\Microsoft.Arcade.Common.csproj" />
-    <ProjectReference Include="..\AzureDevOpsTestPublisher\Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.csproj" />
     <ProjectReference Include="..\Client\CSharp\Microsoft.DotNet.Helix.Client.csproj" />
   </ItemGroup>
 

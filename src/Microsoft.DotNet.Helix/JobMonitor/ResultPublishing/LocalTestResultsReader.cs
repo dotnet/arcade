@@ -1,12 +1,14 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+#nullable enable
+
 using System.Globalization;
 using System.Xml.Linq;
-using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
+using Microsoft.DotNet.Helix.JobMonitor.ResultPublishing.Model;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
+namespace Microsoft.DotNet.Helix.JobMonitor.ResultPublishing;
 
 public sealed class LocalTestResultsReader(
     ILogger logger,

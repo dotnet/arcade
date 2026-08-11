@@ -12,7 +12,7 @@ using Microsoft.Arcade.Common;
 using Microsoft.DotNet.Helix.Client;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
-using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
+using Microsoft.DotNet.Helix.JobMonitor.ResultPublishing;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -25,6 +25,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly IHelixApi _helixApi;
         private readonly IBlobClientFactory _blobClientFactory;
         private readonly IFileSystem _fileSystem;
+        private readonly RetryExecutor _retry;
 
         public HelixService(IHelixApi helixApi, ILogger logger)
             : this(helixApi, logger, new AzureBlobClientFactory(), new FileSystem())
@@ -41,6 +42,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _blobClientFactory = blobClientFactory ?? throw new ArgumentNullException(nameof(blobClientFactory));
             _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
+            _retry = new RetryExecutor(_logger);
         }
 
         public async Task<IReadOnlyList<HelixJobInfo>> GetJobsForBuildAsync(
@@ -393,45 +395,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         }
 
         private async Task<T> RetryAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken)
-        {
-            Exception last = null;
-            T result = default;
-            var retryHandler = new ExponentialRetry
-            {
-                MaxAttempts = 5,
-                DelayBase = 2,
-                DelayConstant = 0,
-                MinRandomFactor = 1,
-                MaxRandomFactor = 1,
-                RetryDelayCallback = (failedAttempt, delay) =>
-                    _logger.LogDebug(
-                        "Transient Helix request failure on attempt {Attempt} of {AttemptCount}. "
-                        + "Waiting {RetryDelay} before the next attempt.",
-                        failedAttempt,
-                        5,
-                        delay),
-            };
-
-            bool succeeded = await retryHandler.RunAsync(
-                async _ =>
-                {
-                    try
-                    {
-                        result = await action();
-                        return RetryResult.Success;
-                    }
-                    catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
-                    {
-                        last = ex;
-                        return RetryResult.Retry();
-                    }
-                },
-                cancellationToken);
-
-            return succeeded
-                ? result
-                : throw last ?? new InvalidOperationException("Retry failed without capturing an exception.");
-        }
+            => await _retry.ExecuteAsync(_ => action(), "perform a Helix service request", cancellationToken);
 
         private static string GetStringPropertyFromProperties(JToken properties, string name)
         {

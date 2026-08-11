@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
+using Microsoft.DotNet.Helix.JobMonitor.ResultPublishing;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
 
@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
     /// an internal lock; collections are never exposed directly so callers cannot enumerate
     /// or mutate them outside the lock.
     /// </summary>
-    internal sealed class MonitorState
+    internal sealed class MonitorLedger
     {
         private readonly object _sync = new();
 

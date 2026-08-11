@@ -3719,7 +3719,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
         /// <summary>
         /// A Helix work item passes by exit code (0) but the AzDO upload reports that its test
-        /// results contained failures. <see cref="MonitorState.ObserveTestResults"/> should mark
+        /// results contained failures. <see cref="MonitorLedger.ObserveTestResults"/> should mark
         /// the work item as failed so the monitor exits 1.
         /// </summary>
         [Fact]
@@ -3885,7 +3885,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
         /// <summary>
         /// When <see cref="JobMonitorOptions.FailWorkItemsWithFailedTests"/> is false, neither
-        /// the retry pass nor <see cref="MonitorState.ObserveTestResults"/> should promote
+        /// the retry pass nor <see cref="MonitorLedger.ObserveTestResults"/> should promote
         /// test failures to work-item failures. The monitor exits 0 even though the upload
         /// reports failed tests and AzDO has prior failed tests recorded for the same item.
         /// </summary>
