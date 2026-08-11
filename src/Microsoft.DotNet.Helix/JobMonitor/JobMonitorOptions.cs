@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// </summary>
         public string StageAttempt { get; set; }
 
-        public int TestResultUploadParallelism { get; set; } = 4;
+        public int TestResultUploadParallelism { get; set; } = 8;
 
         public TestResultAttachmentMode TestResultAttachmentMode { get; set; } = TestResultAttachmentMode.Failed;
 
@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             Option<int> testResultUploadParallelismOption = new("--test-result-upload-parallelism")
             {
                 Description = "Maximum number of work items whose test results can be uploaded to Azure DevOps in parallel.",
-                DefaultValueFactory = _ => 4
+                DefaultValueFactory = _ => 8
             };
 
             Option<TestResultAttachmentMode> testResultAttachmentModeOption = new("--test-result-attachment-mode")

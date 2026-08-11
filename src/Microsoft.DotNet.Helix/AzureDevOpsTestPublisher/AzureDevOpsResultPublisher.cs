@@ -15,6 +15,13 @@ namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 public sealed class AzureDevOpsResultPublisher : IDisposable
 {
     private const int DefaultAttemptCount = 10;
+    // Azure DevOps rejects requests containing more than 1,000 top-level TestCaseResult objects.
+    // Nested sub-results do not count toward this limit.
+    private const int MaximumResultsPerRequest = 1000;
+
+    // Preserve the legacy bound on the recursive size of one result hierarchy independently
+    // from the top-level per-request limit.
+    private const int MaximumNodesPerResultHierarchy = 950;
     private static readonly TimeSpan s_maximumRetryDelay = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan s_httpClientTimeout = TimeSpan.FromMinutes(5);
     private static readonly JsonSerializerOptions s_serializerOptions = new(JsonSerializerDefaults.Web)
@@ -36,9 +43,17 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
     public AzureDevOpsResultPublisher(
         AzureDevOpsReportingParameters azdoParameters,
         ILogger logger)
+        : this(azdoParameters, logger, CreateHttpClient(azdoParameters.AccessToken))
+    {
+    }
+
+    internal AzureDevOpsResultPublisher(
+        AzureDevOpsReportingParameters azdoParameters,
+        ILogger logger,
+        HttpClient httpClient)
     {
         _azdoParameters = azdoParameters;
-        _httpClient = CreateHttpClient(azdoParameters.AccessToken);
+        _httpClient = httpClient;
         _logger = logger;
     }
 
@@ -101,9 +116,9 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             long publishedTestCount = 0;
             IReadOnlyList<AggregatedResult> resultList = results as IReadOnlyList<AggregatedResult> ?? results.ToList();
             var converted = ConvertResults(resultList, resultMetadata).ToList();
-            foreach (List<ConvertedResult> batch in Batch(converted, 1000, static t => Size(t.Converted)))
+            foreach (List<ConvertedResult> requestBatch in CreateResultRequestBatches(converted))
             {
-                IReadOnlyList<PublishedTestCase> publishedTests = await PublishResultsAsync(batch, cancellationToken);
+                IReadOnlyList<PublishedTestCase> publishedTests = await PublishResultsAsync(requestBatch, cancellationToken);
                 publishedTestCount += publishedTests.Count;
             }
 
@@ -304,16 +319,33 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         var converted = results.Select(ConvertResult).ToList();
         foreach (ConvertedResult? result in converted)
         {
-            foreach (ConvertedResult chunk in Chunk(result, 950))
+            foreach (ConvertedResult hierarchyPart in SplitOversizedResultHierarchy(
+                result,
+                MaximumNodesPerResultHierarchy))
             {
-                yield return chunk;
+                yield return hierarchyPart;
             }
         }
     }
 
-    private static IEnumerable<ConvertedResult> Chunk(ConvertedResult test, int limit)
+    /// <summary>
+    /// Groups converted top-level results into Azure DevOps request bodies. Each item counts
+    /// once regardless of how many nested sub-results it contains.
+    /// </summary>
+    private static IEnumerable<List<ConvertedResult>> CreateResultRequestBatches(
+        IEnumerable<ConvertedResult> results)
+        => PartitionBySize(results, MaximumResultsPerRequest, static _ => 1);
+
+    /// <summary>
+    /// Splits one logical data-driven or rerun result into multiple top-level payload entries
+    /// when its recursive hierarchy exceeds <paramref name="maximumNodesPerHierarchy"/>.
+    /// This is separate from grouping top-level entries into Azure DevOps request batches.
+    /// </summary>
+    private static IEnumerable<ConvertedResult> SplitOversizedResultHierarchy(
+        ConvertedResult test,
+        int maximumNodesPerHierarchy)
     {
-        if (Size(test.Converted) <= limit)
+        if (CountResultTreeNodes(test.Converted) <= maximumNodesPerHierarchy)
         {
             yield return test;
             yield break;
@@ -322,16 +354,19 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         IEnumerable<ChunkPair> zippedSubTests = (test.Converted.SubResults ?? [])
             .Zip(test.Aggregated.SubResults, (converted, aggregated) => new ChunkPair(converted, aggregated));
 
-        foreach (List<ChunkPair> zippedBatch in Batch(zippedSubTests, limit, static pair => Size(pair.Converted)))
+        foreach (List<ChunkPair> hierarchyPart in PartitionBySize(
+            zippedSubTests,
+            maximumNodesPerHierarchy,
+            static pair => CountResultTreeNodes(pair.Converted)))
         {
             yield return new ConvertedResult(
-                test.Converted with { SubResults = [.. zippedBatch.Select(static x => x.Converted)], Id = null },
+                test.Converted with { SubResults = [.. hierarchyPart.Select(static x => x.Converted)], Id = null },
                 new AggregatedResult(
                     test.Aggregated.AggregationType,
                     test.Aggregated.Name,
                     test.Aggregated.DurationSeconds,
                     test.Aggregated.Result,
-                    [.. zippedBatch.Select(static x => x.Aggregated)],
+                    [.. hierarchyPart.Select(static x => x.Aggregated)],
                     test.Aggregated.Attachments,
                     test.Aggregated.FailureMessage,
                     test.Aggregated.StackTrace,
@@ -341,43 +376,50 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         }
     }
 
-    private static int Size(PublishedTestCase test)
+    private static int CountResultTreeNodes(PublishedTestCase test)
     {
-        return 1 + (test.SubResults?.Sum(Size) ?? 0);
+        return 1 + (test.SubResults?.Sum(CountResultTreeNodes) ?? 0);
     }
 
-    private static int Size(PublishedSubResult test)
+    private static int CountResultTreeNodes(PublishedSubResult test)
     {
-        return 1 + (test.SubResults?.Sum(Size) ?? 0);
+        return 1 + (test.SubResults?.Sum(CountResultTreeNodes) ?? 0);
     }
 
-    private static IEnumerable<List<T>> Batch<T>(IEnumerable<T> items, int limit, Func<T, int> getSize)
+    /// <summary>
+    /// Partitions items in order so the sum of <paramref name="getSize"/> values in each
+    /// partition does not exceed <paramref name="maximumPartitionSize"/>.
+    /// </summary>
+    private static IEnumerable<List<T>> PartitionBySize<T>(
+        IEnumerable<T> items,
+        int maximumPartitionSize,
+        Func<T, int> getSize)
     {
-        var currentBatch = new List<T>();
+        var currentPartition = new List<T>();
         int currentSize = 0;
 
         foreach (T? item in items)
         {
             int size = getSize(item);
-            if (size > limit)
+            if (size > maximumPartitionSize)
             {
-                throw new InvalidOperationException("Cannot split a result larger than the batching limit.");
+                throw new InvalidOperationException("Cannot partition an item larger than the size limit.");
             }
 
-            if (currentSize + size > limit && currentBatch.Count > 0)
+            if (currentSize + size > maximumPartitionSize && currentPartition.Count > 0)
             {
-                yield return currentBatch;
-                currentBatch = [];
+                yield return currentPartition;
+                currentPartition = [];
                 currentSize = 0;
             }
 
-            currentBatch.Add(item);
+            currentPartition.Add(item);
             currentSize += size;
         }
 
-        if (currentBatch.Count > 0)
+        if (currentPartition.Count > 0)
         {
-            yield return currentBatch;
+            yield return currentPartition;
         }
     }
 

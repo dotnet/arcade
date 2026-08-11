@@ -2,9 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Microsoft.DotNet.Helix.JobMonitor;
@@ -25,6 +30,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.Equal(TestResultAttachmentMode.Failed, reportingParameters.TestResultAttachmentMode);
             Assert.Equal(TestResultAttachmentMode.Failed, new JobMonitorOptions().TestResultAttachmentMode);
+        }
+
+        [Fact]
+        public void JobMonitorUploadParallelismDefaultsToEight()
+        {
+            Assert.Equal(8, new JobMonitorOptions().TestResultUploadParallelism);
         }
 
         [Fact]
@@ -108,6 +119,84 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.False(AzureDevOpsResultPublisher.IsTransientException(
                 new OperationCanceledException(),
                 CancellationToken.None));
+        }
+
+        [Fact]
+        public async Task UploadTestResultsWithCountAsync_BatchesByTopLevelResultCount()
+        {
+            var handler = new RecordingResultHandler();
+            using var publisher = CreatePublisher(handler);
+            AggregatedResult[] results =
+            [
+                CreateDataDrivenResult("First", 600),
+                CreateDataDrivenResult("Second", 600),
+            ];
+
+            long uploadedCount = await publisher.UploadTestResultsWithCountAsync(results, new { });
+
+            Assert.Equal(2, uploadedCount);
+            Assert.Equal(new[] { 2 }, handler.RequestResultCounts);
+        }
+
+        [Fact]
+        public async Task UploadTestResultsWithCountAsync_SplitsMoreThanOneThousandTopLevelResults()
+        {
+            var handler = new RecordingResultHandler();
+            using var publisher = CreatePublisher(handler);
+            AggregatedResult[] results =
+            [
+                .. Enumerable.Range(0, 1001)
+                    .Select(i => new AggregatedResult(AggregationType.Single, $"Test{i}", 1, "Passed"))
+            ];
+
+            long uploadedCount = await publisher.UploadTestResultsWithCountAsync(results, new { });
+
+            Assert.Equal(1001, uploadedCount);
+            Assert.Equal(new[] { 1000, 1 }, handler.RequestResultCounts);
+        }
+
+        private static AzureDevOpsResultPublisher CreatePublisher(HttpMessageHandler handler)
+            => new(
+                new AzureDevOpsReportingParameters(
+                    new Uri("https://dev.azure.com/dnceng-public/"),
+                    "public",
+                    "123"),
+                NullLogger.Instance,
+                new HttpClient(handler));
+
+        private static AggregatedResult CreateDataDrivenResult(string name, int subResultCount)
+            => new(
+                AggregationType.DataDriven,
+                name,
+                subResultCount,
+                "Passed",
+                [
+                    .. Enumerable.Range(0, subResultCount)
+                        .Select(i => new AggregatedResult(AggregationType.Single, $"{name}_{i}", 1, "Passed"))
+                ]);
+
+        private sealed class RecordingResultHandler : HttpMessageHandler
+        {
+            public List<int> RequestResultCounts { get; } = [];
+
+            protected override async Task<HttpResponseMessage> SendAsync(
+                HttpRequestMessage request,
+                CancellationToken cancellationToken)
+            {
+                using JsonDocument requestBody = JsonDocument.Parse(
+                    await request.Content.ReadAsStringAsync(cancellationToken));
+                int resultCount = requestBody.RootElement.GetArrayLength();
+                RequestResultCounts.Add(resultCount);
+
+                string responseBody = JsonSerializer.Serialize(new
+                {
+                    value = Enumerable.Range(1, resultCount).Select(id => new { id })
+                });
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(responseBody)
+                };
+            }
         }
 
     }
