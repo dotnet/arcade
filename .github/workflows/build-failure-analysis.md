@@ -335,18 +335,23 @@ jobs:
             # all-legs guard below). `--fail` additionally keeps HTTP error
             # bodies out of the file. `curl_rc` is now just `$?` — there is no
             # pipeline left whose PIPESTATUS could be misread.
-            # The hard cap that `head -c` used to enforce is preserved with
-            # `ulimit -f`, which the kernel applies even to a
-            # response that declares no Content-Length. The unit is bash's
-            # 1024-byte block, not the 512-byte block POSIX specifies for the
-            # standalone `ulimit` utility; this step runs under `shell: bash`,
-            # and `ulimit -f 1` was measured to cap a file at 1024 bytes.
-            # SIGXFSZ is ignored so
-            # curl stops with an ordinary write error (23) at the cap instead
-            # of dying on a signal, which would make the runner log a bare
+            # `ulimit -f` replaces the disk backstop that `head -c` used to
+            # provide, bounding a response that declares no Content-Length.
+            # It is only a backstop: the authoritative rejection is the
+            # `-ge MAX_ZIP_BYTES` guard below, which catches an oversized
+            # artifact wherever the kernel-level cap happens to land.
+            # The block size is deliberately NOT relied upon. bash's builtin
+            # uses 1024-byte blocks while POSIX specifies 512 for the
+            # standalone utility, so dividing by 512 yields a cap of exactly
+            # MAX_ZIP_BYTES under the 512 reading and twice that under the
+            # 1024 reading. Both are >= MAX_ZIP_BYTES, so a valid artifact is
+            # never truncated, and anything that reaches MAX_ZIP_BYTES is
+            # skipped by the guard either way. SIGXFSZ is ignored so curl
+            # stops with an ordinary write error (23) at the cap instead of
+            # dying on a signal, which would make the runner log a bare
             # "File size limit exceeded (core dumped)".
             (
-              ulimit -f $((MAX_ZIP_BYTES / 1024))
+              ulimit -f $((MAX_ZIP_BYTES / 512))
               trap '' XFSZ
               curl -sSL --fail --retry 3 --retry-delay 2 --max-time 600 -o /tmp/a.zip "${url}"
             ) 2>/dev/null
