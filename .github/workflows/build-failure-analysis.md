@@ -323,33 +323,40 @@ jobs:
             [ -z "${url}" ] && continue
             rm -rf /tmp/ax /tmp/a.zip
             mkdir -p /tmp/ax
-            # Hard-cap the bytes written to disk regardless of Content-Length:
-            # stream through `head -c` (cap + 1) and bound total time. This
-            # closes the gap where `curl --max-filesize` alone would let a
-            # length-less response write unbounded data before any post-check.
-            # `curl_rc` captures curl's OWN status: the pipeline's status is
-            # `head`'s (which succeeds even when curl dies mid-transfer), so a
-            # timed-out or interrupted download would otherwise be invisible
-            # here and only resurface below as an unreadable archive —
-            # indistinguishable from a hostile one, and costing the whole leg
-            # and with it the entire analysis (see the all-legs guard below).
-            # Nothing is appended to the pipeline and errexit is not toggled
-            # around it: this step already runs with errexit off (`set +e` at
-            # the top), so the pipeline cannot abort it, and a trailing
-            # `|| true` would run `true` — itself a command — resetting
-            # PIPESTATUS before curl's status could be read.
-            curl -sSL --retry 3 --retry-delay 2 --max-time 600 "${url}" 2>/dev/null | head -c $((MAX_ZIP_BYTES + 1)) > /tmp/a.zip
-            curl_rc=${PIPESTATUS[0]}
+            # Download to a real file rather than through a pipe. curl retries
+            # transient failures (5xx/429/timeouts), and a retry can only
+            # restart cleanly when the output is seekable: writing to a pipe
+            # leaves curl unable to rewind, so the retried body is APPENDED to
+            # whatever was already emitted. A 503 whose error page is written
+            # before the retry therefore yields `<error page><zip>` — a corrupt
+            # archive delivered with exit status 0, which no curl status check
+            # can catch and which later surfaces only as an unreadable archive,
+            # costing the whole leg and with it the entire analysis (see the
+            # all-legs guard below). `--fail` additionally keeps HTTP error
+            # bodies out of the file. `curl_rc` is now just `$?` — there is no
+            # pipeline left whose PIPESTATUS could be misread.
+            # The hard cap that `head -c` used to enforce is preserved with
+            # `ulimit -f` (1 KiB units), which the kernel applies even to a
+            # response that declares no Content-Length. SIGXFSZ is ignored so
+            # curl stops with an ordinary write error (23) at the cap instead
+            # of dying on a signal, which would make the runner log a bare
+            # "File size limit exceeded (core dumped)".
+            (
+              ulimit -f $((MAX_ZIP_BYTES / 1024))
+              trap '' XFSZ
+              curl -sSL --fail --retry 3 --retry-delay 2 --max-time 600 -o /tmp/a.zip "${url}"
+            ) 2>/dev/null
+            curl_rc=$?
             ZIP_BYTES=$(stat -c%s /tmp/a.zip 2>/dev/null || echo 0)
             if [ "${ZIP_BYTES}" -eq 0 ]; then
               echo "::warning::Skipping ${name}: empty or failed download."; continue
             fi
-            if [ "${ZIP_BYTES}" -gt "${MAX_ZIP_BYTES}" ]; then
-              echo "::warning::Skipping ${name}: download exceeded ${MAX_ZIP_BYTES} bytes."; continue
+            if [ "${ZIP_BYTES}" -ge "${MAX_ZIP_BYTES}" ]; then
+              echo "::warning::Skipping ${name}: download reached the ${MAX_ZIP_BYTES}-byte cap."; continue
             fi
-            # Only here can a non-zero curl status mean a genuinely failed
-            # transfer: an oversized artifact makes `head` close the pipe early
-            # and curl exit on SIGPIPE, and that case was just skipped above.
+            # Checked after the size guards: hitting the `ulimit -f` cap ends
+            # the transfer with a write error, and that case is reported as an
+            # oversized artifact just above rather than as a generic failure.
             if [ "${curl_rc}" -ne 0 ]; then
               echo "::warning::Skipping ${name}: download failed or was truncated (curl exit ${curl_rc})."; continue
             fi
@@ -358,17 +365,18 @@ jobs:
             # ("<n> files, <x> bytes uncompressed, <y> bytes compressed")
             # instead of `unzip -l`'s per-entry listing, so the total is read
             # from a fixed column rather than by `tail -1`-ing a table whose
-            # last line shifts with the entry list. (Measured on real
-            # `Logs_Build_*` legs both forms agree and both are fast — this is
-            # a robustness and parsing change, not a speed fix; the observed
-            # "failed or timed out" warnings came from unreadable archives,
-            # which the curl status check above now reports accurately.) Run
-            # the pipeline in a subshell with `pipefail` and FAIL CLOSED on a
-            # non-zero exit: if `timeout` kills the probe, its partial output
-            # can still end in a numeric column and undercount the total,
-            # bypassing the size guard below — so a failed probe skips the
-            # artifact rather than trusting the parsed value.
-            UNCOMP=$(set -o pipefail; timeout 60 unzip -Zt /tmp/a.zip 2>/dev/null | awk '{print $3}') \
+            # last line shifts with the entry list. Take the LAST line, not
+            # every line: Info-ZIP prepends warning text to STDOUT for a
+            # recoverable archive, and `awk '{print $3}'` over all lines would
+            # yield a multi-line value whose first line is the warning's byte
+            # count — which `grep -qE '^[0-9]+$'` below would accept, because
+            # `grep -q` matches if ANY line matches. Run the pipeline in a
+            # subshell with `pipefail` and FAIL CLOSED on a non-zero exit: if
+            # `timeout` kills the probe, its partial output can still end in a
+            # numeric column and undercount the total, bypassing the size guard
+            # below — so a failed probe skips the artifact rather than trusting
+            # the parsed value.
+            UNCOMP=$(set -o pipefail; timeout 60 unzip -Zt /tmp/a.zip 2>/dev/null | awk 'END{print $3}') \
               || { echo "::warning::Skipping ${name}: 'unzip -Zt' failed or timed out; cannot verify uncompressed size."; continue; }
             # Fail safe: if the uncompressed size isn't a plain integer (corrupt
             # zip / unexpected or timed-out `unzip -Zt` output), we can't verify
@@ -523,7 +531,10 @@ steps:
           LIST="${LIST}${BINLOG_DIR}/$(basename "$f")"$'\n'
         done
       fi
-      FIRST=$(printf '%s' "$LIST" | head -1)
+      # `shell: bash` puts this step under `-eo pipefail`, so take the first
+      # entry with a parameter expansion instead of `printf | head -1`: a pipe
+      # whose reader exits early would raise SIGPIPE and abort the step.
+      FIRST=${LIST%%$'\n'*}
       {
         echo "GH_AW_BUILD_OUTCOME=failure"
         echo "GH_AW_BINLOG_DIR=${BINLOG_DIR}"

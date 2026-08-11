@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"6f49a1b0853bb3e7ed7316cfa77c959be4feed6a46f1c9f61881120e6698eed4","body_hash":"de7f95d32118d8b18023824a90c693250c6556451686d60bbf5170c04bb5a87d","compiler_version":"v0.77.5","strict":true,"agent_id":"copilot"}
+# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"7fdb081db5665551cb73659c071800cedaa9fa950f4a6d92212a45815751a571","body_hash":"de7f95d32118d8b18023824a90c693250c6556451686d60bbf5170c04bb5a87d","compiler_version":"v0.77.5","strict":true,"agent_id":"copilot"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"3ea13c02d765410340d533515cb31a7eef2baaf0","version":"v0.77.5"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.58"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.58"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.58"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.22"},{"image":"ghcr.io/github/github-mcp-server:v1.1.0"},{"image":"mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-binlog-mcp-amd64"},{"image":"node:lts-alpine","digest":"sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14","pinned_image":"node:lts-alpine@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -243,20 +243,20 @@ jobs:
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_ad77b86f985d9467_EOF'
+          cat << 'GH_AW_PROMPT_b618123af0fdb9e8_EOF'
           <system>
-          GH_AW_PROMPT_ad77b86f985d9467_EOF
+          GH_AW_PROMPT_b618123af0fdb9e8_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_ad77b86f985d9467_EOF'
+          cat << 'GH_AW_PROMPT_b618123af0fdb9e8_EOF'
           <safe-output-tools>
           Tools: add_comment(max:5), create_pull_request_review_comment(max:25), missing_tool, missing_data, noop(max:5)
           </safe-output-tools>
-          GH_AW_PROMPT_ad77b86f985d9467_EOF
+          GH_AW_PROMPT_b618123af0fdb9e8_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_ad77b86f985d9467_EOF'
+          cat << 'GH_AW_PROMPT_b618123af0fdb9e8_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if github.actor}}
@@ -285,16 +285,16 @@ jobs:
           {{/if}}
           </github-context>
           
-          GH_AW_PROMPT_ad77b86f985d9467_EOF
+          GH_AW_PROMPT_b618123af0fdb9e8_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
           if [ "$GITHUB_EVENT_NAME" = "issue_comment" ] && [ -n "$GH_AW_IS_PR_COMMENT" ] || [ "$GITHUB_EVENT_NAME" = "pull_request_review_comment" ] || [ "$GITHUB_EVENT_NAME" = "pull_request_review" ]; then
             cat "${RUNNER_TEMP}/gh-aw/prompts/pr_context_prompt.md"
           fi
-          cat << 'GH_AW_PROMPT_ad77b86f985d9467_EOF'
+          cat << 'GH_AW_PROMPT_b618123af0fdb9e8_EOF'
           </system>
           {{#runtime-import .github/workflows/shared/build-failure-analysis-shared.md}}
           {{#runtime-import .github/workflows/build-failure-analysis-command.md}}
-          GH_AW_PROMPT_ad77b86f985d9467_EOF
+          GH_AW_PROMPT_b618123af0fdb9e8_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -454,7 +454,7 @@ jobs:
           GH_AW_PR_MERGE_SHA_VALUE: ${{ needs.fetch-binlog.outputs.pr-merge-sha }}
           GH_AW_PR_NUMBER_VALUE: ${{ needs.fetch-binlog.outputs.pr-number }}
         name: Export agent context
-        run: "# See build-failure-analysis.md for the binlog path conventions. The\n# per-leg binlogs are read through the binlog-mcp MCP server (mounted at\n# `/data/binlogs`); GH_AW_BINLOG_HOST_PATH points at the Azure DevOps\n# build for human-facing references.\nBINLOG_DIR=\"/data/binlogs\"\nLIST=\"\"\nif [ \"${GH_AW_BINLOG_FOUND_VALUE:-false}\" = \"true\" ] && [ -d /tmp/binlogs ]; then\n  for f in /tmp/binlogs/*.binlog; do\n    [ -f \"$f\" ] || continue\n    LIST=\"${LIST}${BINLOG_DIR}/$(basename \"$f\")\"$'\\n'\n  done\nfi\nFIRST=$(printf '%s' \"$LIST\" | head -1)\n{\n  echo \"GH_AW_BUILD_OUTCOME=failure\"\n  echo \"GH_AW_BINLOG_DIR=${BINLOG_DIR}\"\n  echo \"GH_AW_BINLOG_PATH=${FIRST}\"\n  echo \"GH_AW_BINLOG_HOST_PATH=${GH_AW_ADO_BUILD_URL_VALUE}\"\n  echo \"GH_AW_PR_NUMBER=${GH_AW_PR_NUMBER_VALUE}\"\n  echo \"GH_AW_PR_HEAD_SHA=${GH_AW_PR_HEAD_SHA_VALUE}\"\n  echo \"GH_AW_PR_MERGE_SHA=${GH_AW_PR_MERGE_SHA_VALUE}\"\n  echo \"GH_AW_WORKSPACE=${GH_AW_GITHUB_WORKSPACE}\"\n  echo \"GH_AW_BINLOG_LIST<<GH_AW_EOF\"\n  printf '%s' \"$LIST\"\n  echo \"GH_AW_EOF\"\n} >> \"$GITHUB_ENV\"\n"
+        run: "# See build-failure-analysis.md for the binlog path conventions. The\n# per-leg binlogs are read through the binlog-mcp MCP server (mounted at\n# `/data/binlogs`); GH_AW_BINLOG_HOST_PATH points at the Azure DevOps\n# build for human-facing references.\nBINLOG_DIR=\"/data/binlogs\"\nLIST=\"\"\nif [ \"${GH_AW_BINLOG_FOUND_VALUE:-false}\" = \"true\" ] && [ -d /tmp/binlogs ]; then\n  for f in /tmp/binlogs/*.binlog; do\n    [ -f \"$f\" ] || continue\n    LIST=\"${LIST}${BINLOG_DIR}/$(basename \"$f\")\"$'\\n'\n  done\nfi\n# `shell: bash` puts this step under `-eo pipefail`, so take the first\n# entry with a parameter expansion instead of `printf | head -1`: a pipe\n# whose reader exits early would raise SIGPIPE and abort the step.\nFIRST=${LIST%%$'\\n'*}\n{\n  echo \"GH_AW_BUILD_OUTCOME=failure\"\n  echo \"GH_AW_BINLOG_DIR=${BINLOG_DIR}\"\n  echo \"GH_AW_BINLOG_PATH=${FIRST}\"\n  echo \"GH_AW_BINLOG_HOST_PATH=${GH_AW_ADO_BUILD_URL_VALUE}\"\n  echo \"GH_AW_PR_NUMBER=${GH_AW_PR_NUMBER_VALUE}\"\n  echo \"GH_AW_PR_HEAD_SHA=${GH_AW_PR_HEAD_SHA_VALUE}\"\n  echo \"GH_AW_PR_MERGE_SHA=${GH_AW_PR_MERGE_SHA_VALUE}\"\n  echo \"GH_AW_WORKSPACE=${GH_AW_GITHUB_WORKSPACE}\"\n  echo \"GH_AW_BINLOG_LIST<<GH_AW_EOF\"\n  printf '%s' \"$LIST\"\n  echo \"GH_AW_EOF\"\n} >> \"$GITHUB_ENV\"\n"
         shell: bash
 
       - name: Configure Git credentials
@@ -527,9 +527,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_06dad09a86f410e6_EOF'
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_ed354568e029230a_EOF'
           {"add_comment":{"hide_older_comments":true,"max":5,"target":"triggering"},"create_pull_request_review_comment":{"max":25,"side":"RIGHT","target":"triggering"},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":5,"report-as-issue":"false"},"report_incomplete":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_06dad09a86f410e6_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_ed354568e029230a_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -761,7 +761,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_5069b584403b7078_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_4af86058128d4216_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "binlog-mcp": {
@@ -819,7 +819,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_5069b584403b7078_EOF
+          GH_AW_MCP_CONFIG_4af86058128d4216_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
@@ -1693,31 +1693,40 @@ jobs:
             [ -z "${url}" ] && continue
             rm -rf /tmp/ax /tmp/a.zip
             mkdir -p /tmp/ax
-            # Hard-cap the bytes written to disk regardless of Content-Length:
-            # stream through `head -c` (cap + 1) and bound total time.
-            # `curl_rc` captures curl's OWN status: the pipeline's status is
-            # `head`'s (which succeeds even when curl dies mid-transfer), so a
-            # timed-out or interrupted download would otherwise be invisible
-            # here and only resurface below as an unreadable archive —
-            # indistinguishable from a hostile one, and costing the whole leg
-            # and with it the entire analysis (see the all-legs guard below).
-            # Nothing is appended to the pipeline and errexit is not toggled
-            # around it: this step already runs with errexit off (`set +e` at
-            # the top), so the pipeline cannot abort it, and a trailing
-            # `|| true` would run `true` — itself a command — resetting
-            # PIPESTATUS before curl's status could be read.
-            curl -sSL --retry 3 --retry-delay 2 --max-time 600 "${url}" 2>/dev/null | head -c $((MAX_ZIP_BYTES + 1)) > /tmp/a.zip
-            curl_rc=${PIPESTATUS[0]}
+            # Download to a real file rather than through a pipe. curl retries
+            # transient failures (5xx/429/timeouts), and a retry can only
+            # restart cleanly when the output is seekable: writing to a pipe
+            # leaves curl unable to rewind, so the retried body is APPENDED to
+            # whatever was already emitted. A 503 whose error page is written
+            # before the retry therefore yields `<error page><zip>` — a corrupt
+            # archive delivered with exit status 0, which no curl status check
+            # can catch and which later surfaces only as an unreadable archive,
+            # costing the whole leg and with it the entire analysis (see the
+            # all-legs guard below). `--fail` additionally keeps HTTP error
+            # bodies out of the file. `curl_rc` is now just `$?` — there is no
+            # pipeline left whose PIPESTATUS could be misread.
+            # The hard cap that `head -c` used to enforce is preserved with
+            # `ulimit -f` (1 KiB units), which the kernel applies even to a
+            # response that declares no Content-Length. SIGXFSZ is ignored so
+            # curl stops with an ordinary write error (23) at the cap instead
+            # of dying on a signal, which would make the runner log a bare
+            # "File size limit exceeded (core dumped)".
+            (
+              ulimit -f $((MAX_ZIP_BYTES / 1024))
+              trap '' XFSZ
+              curl -sSL --fail --retry 3 --retry-delay 2 --max-time 600 -o /tmp/a.zip "${url}"
+            ) 2>/dev/null
+            curl_rc=$?
             ZIP_BYTES=$(stat -c%s /tmp/a.zip 2>/dev/null || echo 0)
             if [ "${ZIP_BYTES}" -eq 0 ]; then
               echo "::warning::Skipping ${name}: empty or failed download."; continue
             fi
-            if [ "${ZIP_BYTES}" -gt "${MAX_ZIP_BYTES}" ]; then
-              echo "::warning::Skipping ${name}: download exceeded ${MAX_ZIP_BYTES} bytes."; continue
+            if [ "${ZIP_BYTES}" -ge "${MAX_ZIP_BYTES}" ]; then
+              echo "::warning::Skipping ${name}: download reached the ${MAX_ZIP_BYTES}-byte cap."; continue
             fi
-            # Only here can a non-zero curl status mean a genuinely failed
-            # transfer: an oversized artifact makes `head` close the pipe early
-            # and curl exit on SIGPIPE, and that case was just skipped above.
+            # Checked after the size guards: hitting the `ulimit -f` cap ends
+            # the transfer with a write error, and that case is reported as an
+            # oversized artifact just above rather than as a generic failure.
             if [ "${curl_rc}" -ne 0 ]; then
               echo "::warning::Skipping ${name}: download failed or was truncated (curl exit ${curl_rc})."; continue
             fi
@@ -1726,17 +1735,18 @@ jobs:
             # ("<n> files, <x> bytes uncompressed, <y> bytes compressed")
             # instead of `unzip -l`'s per-entry listing, so the total is read
             # from a fixed column rather than by `tail -1`-ing a table whose
-            # last line shifts with the entry list. (Measured on real
-            # `Logs_Build_*` legs both forms agree and both are fast — this is
-            # a robustness and parsing change, not a speed fix; the observed
-            # "failed or timed out" warnings came from unreadable archives,
-            # which the curl status check above now reports accurately.) Run
-            # the pipeline in a subshell with `pipefail` and FAIL CLOSED on a
-            # non-zero exit: if `timeout` kills the probe, its partial output
-            # can still end in a numeric column and undercount the total,
-            # bypassing the size guard below — so a failed probe skips the
-            # artifact rather than trusting the parsed value.
-            UNCOMP=$(set -o pipefail; timeout 60 unzip -Zt /tmp/a.zip 2>/dev/null | awk '{print $3}') \
+            # last line shifts with the entry list. Take the LAST line, not
+            # every line: Info-ZIP prepends warning text to STDOUT for a
+            # recoverable archive, and `awk '{print $3}'` over all lines would
+            # yield a multi-line value whose first line is the warning's byte
+            # count — which `grep -qE '^[0-9]+$'` below would accept, because
+            # `grep -q` matches if ANY line matches. Run the pipeline in a
+            # subshell with `pipefail` and FAIL CLOSED on a non-zero exit: if
+            # `timeout` kills the probe, its partial output can still end in a
+            # numeric column and undercount the total, bypassing the size guard
+            # below — so a failed probe skips the artifact rather than trusting
+            # the parsed value.
+            UNCOMP=$(set -o pipefail; timeout 60 unzip -Zt /tmp/a.zip 2>/dev/null | awk 'END{print $3}') \
               || { echo "::warning::Skipping ${name}: 'unzip -Zt' failed or timed out; cannot verify uncompressed size."; continue; }
             # Fail safe: if the uncompressed size isn't a plain integer (corrupt
             # zip / unexpected or timed-out `unzip -Zt` output), we can't verify
