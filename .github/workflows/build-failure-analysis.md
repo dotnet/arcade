@@ -355,16 +355,19 @@ jobs:
             fi
             # Bound the probe with `timeout` so a hostile/huge archive can't
             # hang the runner. `unzip -Zt` prints ONE summary line
-            # ("<n> files, <x> bytes uncompressed, <y> bytes compressed") rather
-            # than formatting every entry the way `unzip -l` does; a
-            # `Logs_Build_*` archive holds thousands of files, and paying that
-            # per-entry cost is what pushed this probe past the timeout on the
-            # larger legs and silently cost us the analysis. Run the pipeline in
-            # a subshell with `pipefail` and FAIL CLOSED on a non-zero exit: if
-            # `timeout` kills the probe, its partial output can still end in a
-            # numeric column and undercount the total, bypassing the size guard
-            # below — so a failed/timed-out probe skips the artifact rather than
-            # trusting the parsed value.
+            # ("<n> files, <x> bytes uncompressed, <y> bytes compressed")
+            # instead of `unzip -l`'s per-entry listing, so the total is read
+            # from a fixed column rather than by `tail -1`-ing a table whose
+            # last line shifts with the entry list. (Measured on real
+            # `Logs_Build_*` legs both forms agree and both are fast — this is
+            # a robustness and parsing change, not a speed fix; the observed
+            # "failed or timed out" warnings came from unreadable archives,
+            # which the curl status check above now reports accurately.) Run
+            # the pipeline in a subshell with `pipefail` and FAIL CLOSED on a
+            # non-zero exit: if `timeout` kills the probe, its partial output
+            # can still end in a numeric column and undercount the total,
+            # bypassing the size guard below — so a failed probe skips the
+            # artifact rather than trusting the parsed value.
             UNCOMP=$(set -o pipefail; timeout 60 unzip -Zt /tmp/a.zip 2>/dev/null | awk '{print $3}') \
               || { echo "::warning::Skipping ${name}: 'unzip -Zt' failed or timed out; cannot verify uncompressed size."; continue; }
             # Fail safe: if the uncompressed size isn't a plain integer (corrupt
