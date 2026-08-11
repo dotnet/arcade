@@ -84,12 +84,10 @@ parameters:
   type: boolean
   default: false
 
-# Controls per-test output attachments. Leave empty (the default) to avoid passing the option to
-# older independently pinned monitor tools; current tools default to Failed. Set Failed, All, or
-# None only when the consuming repo's pinned monitor supports --test-result-attachment-mode.
+# Controls per-test output attachments. Defaults to Failed.
 - name: testResultAttachmentMode
   type: string
-  default: ''
+  default: Failed
   values:
   - Failed
   - All
