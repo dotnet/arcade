@@ -384,7 +384,19 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         {
             lock (_sync)
             {
-                return _testRunTask ??= create();
+                return _testRunTask ??= InvokeCreate();
+            }
+
+            Task<int> InvokeCreate()
+            {
+                try
+                {
+                    return create();
+                }
+                catch (Exception ex)
+                {
+                    return Task.FromException<int>(ex);
+                }
             }
         }
 

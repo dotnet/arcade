@@ -784,6 +784,37 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
+        public async Task PassedHelixWork_CreateTestRunFailure_IsSingleFlightAndLeavesJobUntagged()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+
+            azdo.FailNextCreate();
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"));
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["workitem-1", "workitem-2"]),
+                });
+
+            var runner = CreateRunner(azdo, helix, logger: logger);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(0);
+            azdo.CreateTestRunCallCount.Should().Be(1);
+            azdo.UploadTestResultsCallCount.Should().Be(0);
+            azdo.CompleteTestRunCallCount.Should().Be(0);
+            azdo.CompletedTestRunIds.Should().BeEmpty();
+            logger.Messages.Should().Contain(message =>
+                message.Contains("remains untagged", StringComparison.Ordinal)
+                && message.Contains("later monitor invocation can replay it", StringComparison.Ordinal));
+        }
+
+        [Fact]
         public async Task PassedHelixWork_TransientCompletionFailure_DoesNotReplayCompletionSequence()
         {
             var azdo = new FakeAzureDevOpsService();
@@ -817,6 +848,69 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             azdo.UploadTestResultsCallCount.Should().Be(1);
             azdo.CompleteTestRunCallCount.Should().Be(1);
             delayCount.Should().Be(0);
+            azdo.CompletedTestRunIds.Should().BeEmpty();
+            logger.Messages.Should().Contain(message =>
+                message.Contains("remains untagged", StringComparison.Ordinal)
+                && message.Contains("later monitor invocation can replay it", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public async Task PassedHelixWork_PermanentDownloadFailure_DoesNotCreateTestRun()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+
+            helix.FailDownloadForJob("helix-linux");
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"));
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["workitem-1"]),
+                });
+
+            var runner = CreateRunner(azdo, helix, logger: logger);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(0);
+            azdo.CreateTestRunCallCount.Should().Be(0);
+            azdo.UploadTestResultsCallCount.Should().Be(0);
+            azdo.CompleteTestRunCallCount.Should().Be(0);
+            logger.Messages.Should().Contain(message =>
+                message.Contains("remains untagged", StringComparison.Ordinal)
+                && message.Contains("later monitor invocation can replay it", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public async Task MultipleWorkItems_OneUploadFails_JobRemainsUntagged()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+
+            azdo.FailNextUpload(new InvalidOperationException("Injected permanent upload failure."));
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"));
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["workitem-1", "workitem-2"]),
+                });
+
+            JobMonitorOptions options = DefaultOptions();
+            options.TestResultUploadParallelism = 1;
+            var runner = new JobMonitorRunner(options, logger, azdo, helix, NoDelay);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(0);
+            azdo.CreateTestRunCallCount.Should().Be(1);
+            azdo.UploadTestResultsCallCount.Should().Be(2);
+            azdo.CompleteTestRunCallCount.Should().Be(0);
             azdo.CompletedTestRunIds.Should().BeEmpty();
             logger.Messages.Should().Contain(message =>
                 message.Contains("remains untagged", StringComparison.Ordinal)
@@ -3913,6 +4007,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             helix.Resubmissions.Should().BeEmpty();
             azdo.UploadedJobNames.Should().BeEquivalentTo(["helix-linux"]);
             azdo.CompletedTestRunIds.Should().ContainSingle();
+            IReadOnlyDictionary<string, IReadOnlySet<string>> failedTestWorkItems =
+                await azdo.GetFailedTestWorkItemsAsync(CancellationToken.None);
+            failedTestWorkItems["helix-linux"].Should().BeEquivalentTo(["workitem-1"]);
         }
 
         /// <summary>
@@ -4076,6 +4173,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             exitCode.Should().Be(0);
             helix.Resubmissions.Should().BeEmpty();
             azdo.UploadedJobNames.Should().BeEquivalentTo(["helix-linux"]);
+            IReadOnlyDictionary<string, IReadOnlySet<string>> failedTestWorkItems =
+                await azdo.GetFailedTestWorkItemsAsync(CancellationToken.None);
+            failedTestWorkItems["helix-linux"].Should().BeEquivalentTo(["workitem-1"]);
         }
 
         // -----------------------------------------------------------------------
