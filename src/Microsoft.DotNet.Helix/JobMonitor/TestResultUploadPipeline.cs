@@ -23,6 +23,7 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
     private readonly MonitorState _state;
     private readonly ConcurrentDictionary<string, JobUploadSession> _sessions =
         new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<int, long> _remainingWorkItemsByPoll = [];
     private readonly ActionQueue<JobUploadRequest> _jobs;
     private readonly ActionQueue<WorkItemUploadRequest> _workItems;
     private readonly ActionQueue<JobUploadSession> _finalizers;
@@ -62,22 +63,33 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         _sessions.Values.Count(static session => session.HasFailed),
         _sessions.Values.Sum(static session => session.UploadedResultCount));
 
-    public bool TryEnqueue(HelixJobInfo job, IReadOnlyCollection<WorkItemSummary> workItems)
+    public bool TryEnqueue(
+        HelixJobInfo job,
+        IReadOnlyCollection<WorkItemSummary> workItems,
+        int discoveryPoll)
     {
         if (Volatile.Read(ref _draining) != 0 || _state.IsHelixJobProcessed(job.JobName))
         {
             return false;
         }
 
-        var session = new JobUploadSession(job, workItems);
+        var session = new JobUploadSession(job, workItems, discoveryPoll);
         if (!_sessions.TryAdd(job.JobName, session))
         {
             return false;
         }
 
+        _remainingWorkItemsByPoll.AddOrUpdate(
+            discoveryPoll,
+            workItems.Count,
+            (_, remaining) => remaining + workItems.Count);
         if (!_jobs.TryEnqueue(new JobUploadRequest(session)))
         {
             _sessions.TryRemove(job.JobName, out _);
+            _remainingWorkItemsByPoll.AddOrUpdate(
+                discoveryPoll,
+                0,
+                (_, remaining) => remaining - workItems.Count);
             return false;
         }
 
@@ -85,7 +97,10 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         return true;
     }
 
-    public async Task DrainAsync(CancellationToken cancellationToken)
+    public async Task DrainAsync(
+        int finalPoll,
+        int newlyTerminalWorkItems,
+        CancellationToken cancellationToken)
     {
         if (Interlocked.Exchange(ref _draining, 1) != 0)
         {
@@ -93,6 +108,29 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         }
 
         DateTimeOffset startedAt = DateTimeOffset.UtcNow;
+        long finalPollRemainingWorkItems = GetRemainingWorkItems(finalPoll);
+        long priorPollBacklog = _remainingWorkItemsByPoll
+            .Where(pair => pair.Key != finalPoll)
+            .Sum(static pair => Math.Max(0, pair.Value));
+        long remainingWorkItems = finalPollRemainingWorkItems + priorPollBacklog;
+        int finalPollEligibleWorkItems = _sessions.Values
+            .Where(session => session.DiscoveryPoll == finalPoll)
+            .Sum(static session => session.WorkItems.Count);
+        int remainingFinalizations = _sessions.Values.Count(static session => !session.IsFinalized);
+
+        _logger.LogInformation(
+            "Starting final test result drain: {NewlyTerminalWorkItems} work item(s) were first observed "
+            + "terminal and {FinalPollEligibleWorkItems} work item upload(s) became eligible in the final poll; "
+            + "{RemainingWorkItems} work item upload(s) remain "
+            + "({FinalPollRemainingWorkItems} from the final poll, {PriorPollBacklog} from earlier polls), "
+            + "plus {RemainingFinalizations} job finalization(s).",
+            newlyTerminalWorkItems,
+            finalPollEligibleWorkItems,
+            remainingWorkItems,
+            finalPollRemainingWorkItems,
+            priorPollBacklog,
+            remainingFinalizations);
+
         _jobs.Complete();
         await _jobs.DrainAsync().WaitAsync(cancellationToken);
 
@@ -145,6 +183,11 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         }
     }
 
+    private long GetRemainingWorkItems(int discoveryPoll)
+        => _remainingWorkItemsByPoll.TryGetValue(discoveryPoll, out long remaining)
+            ? Math.Max(0, remaining)
+            : 0;
+
     private async ValueTask ProcessWorkItemAsync(
         WorkItemUploadRequest request,
         CancellationToken cancellationToken)
@@ -180,6 +223,10 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         }
         finally
         {
+            _remainingWorkItemsByPoll.AddOrUpdate(
+                session.DiscoveryPoll,
+                0,
+                static (_, remaining) => remaining - 1);
             if (session.MarkWorkItemFinished())
             {
                 await _finalizers.EnqueueAsync(session, cancellationToken);
@@ -191,37 +238,44 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         JobUploadSession session,
         CancellationToken cancellationToken)
     {
-        if (session.HasFailed)
-        {
-            _state.MarkHelixJobUploadFailed(session.Job.JobName);
-            return;
-        }
-
         try
         {
-            int testRunId = await session.GetOrCreateTestRunAsync(
-                () => _azdo.CreateTestRunAsync(session.Job.TestRunName, cancellationToken));
-            await _azdo.CompleteTestRunAsync(
-                testRunId,
-                session.Job.JobName,
-                session.FailedWorkItems,
-                cancellationToken);
+            if (session.HasFailed)
+            {
+                _state.MarkHelixJobUploadFailed(session.Job.JobName);
+                return;
+            }
 
-            _state.TryMarkHelixJobProcessed(session.Job.JobName);
-            _logger.LogInformation(
-                "{UploadedCount} test results for job '{JobName}' processed.",
-                session.UploadedResultCount,
-                session.Job.DisplayName);
+            try
+            {
+                int testRunId = await session.GetOrCreateTestRunAsync(
+                    () => _azdo.CreateTestRunAsync(session.Job.TestRunName, cancellationToken));
+                await _azdo.CompleteTestRunAsync(
+                    testRunId,
+                    session.Job.JobName,
+                    session.FailedWorkItems,
+                    cancellationToken);
+
+                _state.TryMarkHelixJobProcessed(session.Job.JobName);
+                _logger.LogInformation(
+                    "{UploadedCount} test results for job '{JobName}' processed.",
+                    session.UploadedResultCount,
+                    session.Job.DisplayName);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                session.RecordFailure();
+                _state.MarkHelixJobUploadFailed(session.Job.JobName);
+                LogUploadFailure(ex, $"complete Azure DevOps test run for job '{session.Job.DisplayName}'");
+            }
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        finally
         {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            session.RecordFailure();
-            _state.MarkHelixJobUploadFailed(session.Job.JobName);
-            LogUploadFailure(ex, $"complete Azure DevOps test run for job '{session.Job.DisplayName}'");
+            session.MarkFinalized();
         }
     }
 
@@ -289,18 +343,27 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         private readonly HashSet<string> _failedWorkItems = new(StringComparer.OrdinalIgnoreCase);
         private Task<int> _testRunTask;
         private int _finishedWorkItems;
+        private int _finalized;
         private int _failed;
         private long _uploadedResultCount;
 
-        public JobUploadSession(HelixJobInfo job, IReadOnlyCollection<WorkItemSummary> workItems)
+        public JobUploadSession(
+            HelixJobInfo job,
+            IReadOnlyCollection<WorkItemSummary> workItems,
+            int discoveryPoll)
         {
             Job = job;
             WorkItems = [.. workItems];
+            DiscoveryPoll = discoveryPoll;
         }
 
         public HelixJobInfo Job { get; }
 
         public IReadOnlyList<WorkItemSummary> WorkItems { get; }
+
+        public int DiscoveryPoll { get; }
+
+        public bool IsFinalized => Volatile.Read(ref _finalized) != 0;
 
         public bool HasFailed => Volatile.Read(ref _failed) != 0;
 
@@ -341,6 +404,8 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
 
         public bool MarkWorkItemFinished()
             => Interlocked.Increment(ref _finishedWorkItems) == WorkItems.Count;
+
+        public void MarkFinalized() => Interlocked.Exchange(ref _finalized, 1);
     }
 }
 

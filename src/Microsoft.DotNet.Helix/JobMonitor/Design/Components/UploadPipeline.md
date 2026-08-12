@@ -32,6 +32,9 @@ Each worker:
 
 Work-item concurrency is global. A build with many jobs therefore cannot create
 an unbounded task graph or multiply the configured Azure DevOps pressure.
+Consumers can tune this global budget through the
+`testResultUploadParallelism` pipeline-template parameter, which forwards to
+the monitor's `--test-result-upload-parallelism` option.
 
 ## Finalization
 

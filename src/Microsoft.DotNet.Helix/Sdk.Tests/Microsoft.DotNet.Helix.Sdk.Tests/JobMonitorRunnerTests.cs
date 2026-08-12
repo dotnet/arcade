@@ -579,8 +579,87 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             exitCode.Should().Be(0);
             logger.Messages.Should().Contain(message =>
+                message.Contains(
+                    "Starting final test result drain: 1 work item(s) were first observed terminal "
+                    + "and 1 work item upload(s) became eligible in the final poll; "
+                    + "1 work item upload(s) remain (1 from the final poll, 0 from earlier polls)",
+                    StringComparison.Ordinal));
+            logger.Messages.Should().Contain(message =>
                 message.Contains("Test result pipeline drained in", StringComparison.Ordinal)
                 && message.Contains("1 job(s), 1 work item(s), and 1 result(s)", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public async Task DrainSeparatesFinalPollArrivalsFromEarlierBacklog()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+            var uploadRelease = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            azdo.UploadBlocker = uploadRelease.Task;
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "inProgress"));
+            azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "completed", "succeeded"));
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-earlier", "finished"),
+                    HelixJob("helix-final", "running"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-earlier"] = PassFail(passed: ["earlier-workitem"]),
+                },
+                testResultsByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-earlier"] =
+                    [
+                        new WorkItemTestResults("helix-earlier", "earlier-workitem", ["earlier.trx"])
+                    ],
+                });
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-earlier", "finished"),
+                    HelixJob("helix-final", "finished"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-earlier"] = PassFail(passed: ["earlier-workitem"]),
+                    ["helix-final"] = PassFail(passed: ["final-workitem"]),
+                },
+                testResultsByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-earlier"] =
+                    [
+                        new WorkItemTestResults("helix-earlier", "earlier-workitem", ["earlier.trx"])
+                    ],
+                    ["helix-final"] =
+                    [
+                        new WorkItemTestResults("helix-final", "final-workitem", ["final.trx"])
+                    ],
+                });
+
+            var runner = new JobMonitorRunner(
+                DefaultOptions(),
+                logger,
+                azdo,
+                helix,
+                async (_, _) => await azdo.UploadStarted.Task.WaitAsync(TimeSpan.FromSeconds(5)));
+
+            Task<int> run = runner.RunAsync(CancellationToken.None);
+            await WaitForAsync(() => logger.Messages.Any(message =>
+                message.Contains("Starting final test result drain:", StringComparison.Ordinal)));
+
+            logger.Messages.Should().Contain(message =>
+                message.Contains(
+                    "1 work item(s) were first observed terminal and 1 work item upload(s) became eligible "
+                    + "in the final poll; 2 work item upload(s) remain "
+                    + "(1 from the final poll, 1 from earlier polls)",
+                    StringComparison.Ordinal));
+
+            uploadRelease.SetResult();
+            (await run.WaitAsync(TimeSpan.FromSeconds(5))).Should().Be(0);
         }
 
         [Fact]

@@ -263,6 +263,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             PollLoopState loopState,
             CancellationToken cancellationToken)
         {
+            int pollNumber = ++loopState.PollNumber;
+
             // Fetch fresh snapshots, scoped to the monitor's stage.
             IReadOnlyList<AzureDevOpsTimelineRecord> timelineRecords =
                 HelixJobMonitorUtilities.FilterRecordsToStage(
@@ -300,8 +302,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             ];
             IReadOnlyDictionary<string, IReadOnlyCollection<WorkItemSummary>> refreshedWorkItems =
                 await GetWorkItemsAsync(jobsToRefresh, cancellationToken);
+            int newlyTerminalWorkItems = 0;
             foreach ((string jobName, IReadOnlyCollection<WorkItemSummary> workItems) in refreshedWorkItems)
             {
+                int previousTerminalCount =
+                    loopState.WorkItemsByJob.TryGetValue(jobName, out IReadOnlyCollection<WorkItemSummary> previousWorkItems)
+                        ? previousWorkItems.Count(static item => item.ExitCode.HasValue)
+                        : 0;
+                int currentTerminalCount = workItems.Count(static item => item.ExitCode.HasValue);
+                // A Helix work-item exit code is immutable once assigned, so terminal counts
+                // increase monotonically without retaining or rebuilding per-item identity sets.
+                newlyTerminalWorkItems += Math.Max(0, currentTerminalCount - previousTerminalCount);
                 loopState.WorkItemsByJob[jobName] = workItems;
             }
 
@@ -314,11 +325,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             var completedJobNames = new HashSet<string>(
                 completedJobs.Select(j => j.JobName),
                 StringComparer.OrdinalIgnoreCase);
-
             // First pass: upload + reconcile for any newly-completed jobs.
             foreach (HelixJobInfo job in completedJobs.Where(j => !_state.IsHelixJobProcessed(j.JobName)))
             {
-                ReconcileCompletedJob(job, workItemsByJob[job.JobName], queueUpload: true);
+                ReconcileCompletedJob(
+                    job,
+                    workItemsByJob[job.JobName],
+                    queueUpload: true,
+                    discoveryPoll: pollNumber);
             }
 
             // Second pass: ensure outcomes for every completed job (any attempt) are reflected in
@@ -329,7 +343,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 MonitorState.GetLatestHelixJobAttempts(stageJobs)
                     .Where(j => completedJobNames.Contains(j.JobName))))
             {
-                ReconcileCompletedJob(job, workItemsByJob[job.JobName], queueUpload: false);
+                ReconcileCompletedJob(
+                    job,
+                    workItemsByJob[job.JobName],
+                    queueUpload: false,
+                    discoveryPoll: pollNumber);
             }
 
             bool shouldLogStatus = _options.Verbose
@@ -357,7 +375,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return null;
             }
 
-            await _uploads.DrainAsync(cancellationToken);
+            await _uploads.DrainAsync(pollNumber, newlyTerminalWorkItems, cancellationToken);
             _reporter.LogFinalFailedWorkItems();
             _reporter.LogFinalSummary(_state.AssociatedJobsCount);
 
@@ -384,7 +402,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private void ReconcileCompletedJob(
             HelixJobInfo helixJob,
             IReadOnlyCollection<WorkItemSummary> workItems,
-            bool queueUpload)
+            bool queueUpload,
+            int discoveryPoll)
         {
             // Already reconciled earlier in this invocation — nothing more to do (idempotent).
             if (_state.IsWorkItemOutcomesRecorded(helixJob.JobName))
@@ -410,7 +429,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             if (queueUpload && !alreadyUploadedByPriorAttempt)
             {
-                _uploads.TryEnqueue(helixJob, workItems);
+                _uploads.TryEnqueue(helixJob, workItems, discoveryPoll);
             }
 
             if (!alreadyUploadedByPriorAttempt)
@@ -538,6 +557,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// </summary>
         private sealed class PollLoopState
         {
+            public int PollNumber { get; set; }
             public int LastObservedJobCount { get; set; } = -1;
             public int LastObservedCompletedCount { get; set; } = -1;
             public DateTime LastStatusLogAt { get; set; } = DateTime.UtcNow;
