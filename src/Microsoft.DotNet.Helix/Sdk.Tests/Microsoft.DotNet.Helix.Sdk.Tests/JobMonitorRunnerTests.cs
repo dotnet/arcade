@@ -1322,12 +1322,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         /// <summary>
-        /// Backward compatibility: when the monitor's own stage attempt is unknown (no
-        /// <c>SYSTEM_STAGEATTEMPT</c>), attempt scoping is disabled and the monitor tracks jobs
-        /// from every attempt, matching the historical build + stage behavior.
+        /// When the monitor runs without stage-attempt metadata, jobs submitted in that build
+        /// follow the same contract and attempt scoping is disabled.
         /// </summary>
         [Fact]
-        public async Task AttemptScopedMonitor_UnknownMonitorAttempt_TracksAllAttempts()
+        public async Task MonitorWithoutStageAttempt_TracksJobsWithoutStageAttempt()
         {
             var azdo = new FakeAzureDevOpsService();
             var helix = new FakeHelixService();
@@ -1338,7 +1337,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 PipelineJob("Test Linux", "completed", "succeeded", parentId: "stage-test"));
 
             helix.AddResponse(
-                jobs: [HelixJob("helix-attempt1", "finished", stageName: "Test", stageAttempt: "1")],
+                jobs: [HelixJob("helix-attempt1", "finished", stageName: "Test")],
                 passFailByJob: new(StringComparer.OrdinalIgnoreCase)
                 {
                     ["helix-attempt1"] = PassFail(passed: ["workitem-1"]),
@@ -1352,6 +1351,23 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             exitCode.Should().Be(0);
             azdo.UploadedJobNames.Should().BeEquivalentTo(["helix-attempt1"]);
+        }
+
+        [Fact]
+        public void InvalidMonitorStageAttempt_IsRejectedBeforePolling()
+        {
+            JobMonitorOptions options = DefaultOptions();
+            options.StageAttempt = "invalid";
+
+            Action createRunner = () => new JobMonitorRunner(
+                options,
+                NullLogger.Instance,
+                new FakeAzureDevOpsService(),
+                new FakeHelixService(),
+                NoDelay);
+
+            createRunner.Should().Throw<FormatException>()
+                .WithMessage("*must be a positive integer*");
         }
 
         /// <summary>

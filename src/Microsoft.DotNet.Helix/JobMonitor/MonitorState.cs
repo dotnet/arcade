@@ -32,8 +32,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         // All Helix jobs the monitor has observed for this build, keyed by Helix job name.
         // Overwritten per poll so the cached entry reflects the latest Helix-side state
-        // (in particular the Finished timestamp transitioning from null to a value). Also used
-        // by GetSubmitterChainKey to walk back through PreviousHelixJobName links across polls.
+        // (in particular the Finished timestamp transitioning from null to a value). The lineage
+        // model receives snapshots of this cache when it needs to resolve predecessor links.
         private readonly Dictionary<string, HelixJobInfo> _associatedJobs = new(StringComparer.OrdinalIgnoreCase);
 
         // Upload lifecycle for each Helix job observed by this invocation. Jobs discovered from
@@ -42,9 +42,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         // tag causes a later invocation to replay the upload.
         private readonly Dictionary<string, TestResultUploadState> _testResultUploadStates = new(StringComparer.OrdinalIgnoreCase);
 
-        // Tracks the latest outcome for each logical work item, keyed by
-        // (SubmitterChainKey, WorkItemName). See GetSubmitterChainKey for the keying rationale.
-        private readonly Dictionary<(string ChainKey, string WorkItemName), bool> _workItemOutcomes
+        // Tracks the latest outcome for each logical work item.
+        private readonly Dictionary<(WorkStreamIdentity WorkStream, string WorkItemName), bool> _workItemOutcomes
             = new(WorkItemOutcomeKeyComparer.Instance);
 
         // Helix job names whose per-work-item outcomes have already been reconciled into
@@ -54,7 +53,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         // Latest known console-link information for every failed work item, keyed the same
         // way as _workItemOutcomes. Cleared per key when a later incarnation passes.
-        private readonly Dictionary<(string ChainKey, string WorkItemName), FailedWorkItemConsoleInfo> _failedWorkItemConsoleInfo
+        private readonly Dictionary<(WorkStreamIdentity WorkStream, string WorkItemName), FailedWorkItemConsoleInfo> _failedWorkItemConsoleInfo
             = new(WorkItemOutcomeKeyComparer.Instance);
 
         // Deduplication set for per-failure console-link warnings.
@@ -254,7 +253,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     return false;
                 }
 
-                string chainKey = GetSubmitterChainKeyLocked(helixJob);
+                WorkStreamIdentity workStream = GetJobLineageLocked().GetIncarnation(helixJob).WorkStream;
                 foreach (WorkItemSummary wi in workItems)
                 {
                     // Within the same AzDO submitter chain (i.e. resubmissions of the same
@@ -262,8 +261,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     // same work item name. Across different submitter chains the key differs,
                     // so identically-named work items in different AzDO jobs are tracked
                     // independently.
-                    _workItemOutcomes[(chainKey, wi.Name)] = !wi.IsFailed;
-                    TrackFailedWorkItemConsoleInfoLocked(helixJob, chainKey, wi);
+                    _workItemOutcomes[(workStream, wi.Name)] = !wi.IsFailed;
+                    TrackFailedWorkItemConsoleInfoLocked(helixJob, workStream, wi);
                 }
 
                 return true;
@@ -282,6 +281,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             lock (_sync)
             {
+                JobLineage lineage = GetJobLineageLocked();
                 foreach (KeyValuePair<(string JobName, string WorkItemName), TestResultUploadSummary> entry in testResults)
                 {
                     if (entry.Value.AllPassed)
@@ -297,17 +297,16 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     // If this job has been superseded by a later attempt whose outcomes were
                     // already reconciled, ignore late-arriving summaries from the older attempt
                     // so they cannot overwrite the newer outcome.
-                    bool supersededByReconciledAttempt = _associatedJobs.Values.Any(j =>
-                        !string.IsNullOrEmpty(j.PreviousHelixJobName)
-                        && StringComparer.OrdinalIgnoreCase.Equals(j.PreviousHelixJobName, job.JobName)
-                        && _workItemOutcomeJobs.Contains(j.JobName));
+                    bool supersededByReconciledAttempt = lineage
+                        .GetDirectSuccessors(job)
+                        .Any(successor => _workItemOutcomeJobs.Contains(successor.JobName));
                     if (supersededByReconciledAttempt)
                     {
                         continue;
                     }
 
-                    string chainKey = GetSubmitterChainKeyLocked(job);
-                    var key = (chainKey, entry.Key.WorkItemName);
+                    WorkStreamIdentity workStream = lineage.GetIncarnation(job).WorkStream;
+                    var key = (workStream, entry.Key.WorkItemName);
                     _workItemOutcomes[key] = false;
 
                     // Ensure the final failure report includes test-only failures too.
@@ -387,85 +386,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         }
 
         /// <summary>
-        /// Produces a key that rolls up work-item outcomes within a logical AzDO submitter
-        /// chain. When the job carries an AzDO <c>System.JobName</c>, the chain key is based
-        /// on that name combined with the Helix <c>QueueId</c> (so resubmissions of the same
-        /// AzDO job to the same queue share the same key while a single AzDO matrix leg that
-        /// fans out to multiple Helix queues — each producing its own Helix job under the
-        /// same <c>System.JobName</c> — stays distinct and cannot overwrite a sibling queue's
-        /// failure with a pass). When there is no submitter name (test scenarios, manual
-        /// Helix submissions), the chain is followed back through <c>PreviousHelixJobName</c>
-        /// links to the root and the root Helix job name is used instead, so that retries
-        /// still overwrite prior failures correctly.
-        /// </summary>
-        public string GetSubmitterChainKey(HelixJobInfo job)
-        {
-            lock (_sync)
-            {
-                return GetSubmitterChainKeyLocked(job);
-            }
-        }
-
-        private string GetSubmitterChainKeyLocked(HelixJobInfo job)
-        {
-            if (!string.IsNullOrEmpty(job.SubmitterJobName))
-            {
-                return FormatSubmitterChainKey(job.SubmitterJobName, job.QueueId);
-            }
-
-            HelixJobInfo current = job;
-            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            while (current is not null
-                && !string.IsNullOrEmpty(current.PreviousHelixJobName)
-                && visited.Add(current.JobName))
-            {
-                if (!_associatedJobs.TryGetValue(current.PreviousHelixJobName, out HelixJobInfo previous))
-                {
-                    return $"helix:{current.PreviousHelixJobName}";
-                }
-
-                if (!string.IsNullOrEmpty(previous.SubmitterJobName))
-                {
-                    return FormatSubmitterChainKey(previous.SubmitterJobName, previous.QueueId);
-                }
-
-                current = previous;
-            }
-
-            return $"helix:{(current?.JobName ?? job.JobName)}";
-        }
-
-        private static string FormatSubmitterChainKey(string submitterJobName, string queueId)
-            => string.IsNullOrEmpty(queueId)
-                ? $"submitter:{submitterJobName}"
-                : $"submitter:{submitterJobName}|queue:{queueId}";
-
-        /// <summary>
-        /// From an arbitrary set of Helix jobs (possibly spanning multiple stage attempts),
-        /// return the single latest incarnation of each logical work stream — one job per
-        /// submitter chain key (§5.7). Within a stream, resubmission lineage is collapsed to the
-        /// leaf, and unlinked rerun duplicates (same submitter + queue on different stage
-        /// attempts, not connected by <c>PreviousHelixJobName</c>) are broken toward the highest
-        /// stage attempt. Used by the retry pass to decide, per stream, whether previous-attempt
-        /// work must be reconciled into the current attempt.
-        /// </summary>
-        public IReadOnlyList<HelixJobInfo> GetLatestIncarnationPerStream(IEnumerable<HelixJobInfo> jobs)
-        {
-            lock (_sync)
-            {
-                return
-                [
-                    ..GetLatestHelixJobAttempts(jobs)
-                        .GroupBy(GetSubmitterChainKeyLocked, StringComparer.OrdinalIgnoreCase)
-                        .Select(g => g
-                            .OrderBy(j => ParseStageAttempt(j.StageAttempt))
-                            .ThenBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
-                            .Last())
-                ];
-            }
-        }
-
-        /// <summary>
         /// Records work that could not be resubmitted (e.g. its Helix queue was removed) as
         /// failed, so it counts toward the monitor's exit code and appears in the final failure
         /// report instead of being silently dropped or waited on forever (§2.3.1 case 6).
@@ -474,10 +394,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             lock (_sync)
             {
-                string chainKey = GetSubmitterChainKeyLocked(job);
+                WorkStreamIdentity workStream = GetJobLineageLocked().GetIncarnation(job).WorkStream;
                 foreach (WorkItemSummary wi in workItems)
                 {
-                    var key = (chainKey, wi.Name);
+                    var key = (workStream, wi.Name);
                     _workItemOutcomes[key] = false;
                     _failedWorkItemConsoleInfo[key] = new FailedWorkItemConsoleInfo(
                         job.DisplayName,
@@ -488,65 +408,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
         }
 
-        /// <summary>
-        /// Parses a stage-attempt string (e.g. the <c>System.StageAttempt</c> property) into a
-        /// comparable integer. Unknown / unparseable values sort as attempt 1 (the first attempt).
-        /// </summary>
-        public static int ParseStageAttempt(string stageAttempt)
-            => int.TryParse(stageAttempt, out int attempt) ? attempt : 1;
+        private JobLineage GetJobLineageLocked() => new(_associatedJobs.Values);
 
-        /// <summary>
-        /// From an arbitrary set of Helix jobs return only the leaves of each lineage chain —
-        /// jobs that are not pointed at by any other job's <c>PreviousHelixJobName</c>.
-        /// </summary>
-        public static IReadOnlyList<HelixJobInfo> GetLatestHelixJobAttempts(IEnumerable<HelixJobInfo> jobs)
+        private void TrackFailedWorkItemConsoleInfoLocked(
+            HelixJobInfo helixJob,
+            WorkStreamIdentity workStream,
+            WorkItemSummary workItem)
         {
-            var supersededJobNames = new HashSet<string>(
-                jobs.Select(j => j.PreviousHelixJobName)
-                    .Where(previousJobName => !string.IsNullOrEmpty(previousJobName)),
-                StringComparer.OrdinalIgnoreCase);
-
-            return [.. jobs.Where(j => !supersededJobNames.Contains(j.JobName))];
-        }
-
-        /// <summary>
-        /// Orders Helix jobs from oldest incarnation to newest by following the
-        /// <c>PreviousHelixJobName</c> link backwards, breaking ties toward the lower stage
-        /// attempt. Used to ensure upload and outcome reconciliation process lineage in the
-        /// right order (older first, so newer incarnations supersede older ones) — including
-        /// unlinked rerun duplicates on different attempts, where the higher stage attempt must
-        /// reconcile last so it wins the outcome map (§5.7).
-        /// </summary>
-        public static IReadOnlyList<HelixJobInfo> OrderHelixJobsOldToNew(IEnumerable<HelixJobInfo> jobs)
-        {
-            var jobByName = jobs.ToDictionary(j => j.JobName, StringComparer.OrdinalIgnoreCase);
-            return
-            [
-                ..jobs
-                    .OrderBy(j => GetLineageDepth(j, jobByName))
-                    .ThenBy(j => ParseStageAttempt(j.StageAttempt))
-                    .ThenBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
-            ];
-        }
-
-        private static int GetLineageDepth(HelixJobInfo job, Dictionary<string, HelixJobInfo> jobByName)
-        {
-            int depth = 0;
-            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            while (!string.IsNullOrEmpty(job.PreviousHelixJobName)
-                && visited.Add(job.PreviousHelixJobName)
-                && jobByName.TryGetValue(job.PreviousHelixJobName, out job))
-            {
-                depth++;
-            }
-
-            return depth;
-        }
-
-        private void TrackFailedWorkItemConsoleInfoLocked(HelixJobInfo helixJob, string chainKey, WorkItemSummary workItem)
-        {
-            var key = (chainKey, workItem.Name);
+            var key = (workStream, workItem.Name);
             if (workItem.IsFailed)
             {
                 _failedWorkItemConsoleInfo[key] = new FailedWorkItemConsoleInfo(
@@ -571,17 +440,19 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         string State,
         string ConsoleOutput);
 
-    internal sealed class WorkItemOutcomeKeyComparer : IEqualityComparer<(string ChainKey, string WorkItemName)>
+    internal sealed class WorkItemOutcomeKeyComparer : IEqualityComparer<(WorkStreamIdentity WorkStream, string WorkItemName)>
     {
         public static readonly WorkItemOutcomeKeyComparer Instance = new();
 
-        public bool Equals((string ChainKey, string WorkItemName) x, (string ChainKey, string WorkItemName) y)
-            => StringComparer.OrdinalIgnoreCase.Equals(x.ChainKey, y.ChainKey)
+        public bool Equals(
+            (WorkStreamIdentity WorkStream, string WorkItemName) x,
+            (WorkStreamIdentity WorkStream, string WorkItemName) y)
+            => x.WorkStream.Equals(y.WorkStream)
                 && StringComparer.OrdinalIgnoreCase.Equals(x.WorkItemName, y.WorkItemName);
 
-        public int GetHashCode((string ChainKey, string WorkItemName) obj)
+        public int GetHashCode((WorkStreamIdentity WorkStream, string WorkItemName) obj)
             => HashCode.Combine(
-                obj.ChainKey is null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(obj.ChainKey),
+                obj.WorkStream.GetHashCode(),
                 obj.WorkItemName is null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(obj.WorkItemName));
     }
 }

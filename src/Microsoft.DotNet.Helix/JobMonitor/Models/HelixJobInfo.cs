@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
         /// taken from the "System.StageAttempt" property stamped onto the job by
         /// <c>SendHelixJob</c>. Used to scope monitoring to the current stage attempt so that a
         /// retried stage does not re-discover (and wait on) Helix work submitted by a previous
-        /// attempt. May be null on older jobs or submissions made outside a stage context.
+        /// attempt. May be null for submissions made outside a stage context.
         /// </summary>
         public string StageAttempt { get; }
 
