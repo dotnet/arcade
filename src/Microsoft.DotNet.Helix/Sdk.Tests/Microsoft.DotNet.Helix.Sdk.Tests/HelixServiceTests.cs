@@ -106,10 +106,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             blobClientFactory.FailDownloadsFor.Add("https://storage/failed.trx");
             var fileSystem = new MockFileSystem(directorySeparator: Path.DirectorySeparatorChar.ToString());
 
-            IReadOnlyList<WorkItemTestResults> results = await CreateService(api.Api.Object, blobClientFactory, fileSystem)
-                .DownloadTestResultsAsync("job:name", ["work:item", "no-results"], "work", CancellationToken.None);
-
-            WorkItemTestResults result = Assert.Single(results);
+            WorkItemTestResults result = await CreateService(api.Api.Object, blobClientFactory, fileSystem)
+                .DownloadTestResultsAsync("job:name", "work:item", "work", CancellationToken.None);
             Assert.Equal("job:name", result.JobName);
             Assert.Equal("work:item", result.WorkItemName);
             string jobDirectory = fileSystem.PathCombine("work", SanitizeForCurrentPlatform("job:name"));
@@ -143,7 +141,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 new HttpRequestException("Injected transient failure.", null, HttpStatusCode.ServiceUnavailable);
 
             Func<Task> action = () => CreateService(api.Api.Object, blobClientFactory, new MockFileSystem())
-                .DownloadTestResultsAsync("job", ["work-item"], "work", CancellationToken.None);
+                .DownloadTestResultsAsync("job", "work-item", "work", CancellationToken.None);
 
             await Assert.ThrowsAsync<IOException>(action);
             Assert.Equal(2, blobClientFactory.Downloads.Count);

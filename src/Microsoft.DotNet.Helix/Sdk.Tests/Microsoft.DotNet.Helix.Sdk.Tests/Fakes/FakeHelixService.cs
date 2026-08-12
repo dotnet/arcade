@@ -21,6 +21,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         private readonly HashSet<string> _downloadFailureJobs = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Queue<Exception>> _downloadFailures = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, IReadOnlyCollection<WorkItemSummary>> _customWorkItems = new(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, int> _listWorkItemsCallCounts =
+            new(StringComparer.OrdinalIgnoreCase);
         private int _getJobsCallCount;
 
         /// <summary>
@@ -68,6 +70,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         /// <summary>Number of times <see cref="GetJobsForBuildAsync"/> has been called.</summary>
         public int GetJobsCallCount => _getJobsCallCount;
 
+        public int GetListWorkItemsCallCount(string jobName)
+            => _listWorkItemsCallCounts.TryGetValue(jobName, out int count) ? count : 0;
+
         public ConcurrentBag<string> CanceledJobs { get; } = [];
 
         private HelixSnapshot CurrentSnapshot
@@ -92,8 +97,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             return Task.FromResult<IReadOnlyList<HelixJobInfo>>(_responses[index].Jobs);
         }
 
-        public Task<IReadOnlyList<WorkItemTestResults>> DownloadTestResultsAsync(
-            string jobName, IReadOnlyCollection<string> workItemNames, string workingDirectory, CancellationToken cancellationToken)
+        public Task<WorkItemTestResults> DownloadTestResultsAsync(
+            string jobName, string workItemName, string workingDirectory, CancellationToken cancellationToken)
         {
             if (_downloadFailureJobs.Contains(jobName))
             {
@@ -108,25 +113,21 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
 
             if (CurrentSnapshot.TestResultsByJob.TryGetValue(jobName, out List<WorkItemTestResults> explicitResults))
             {
-                return Task.FromResult<IReadOnlyList<WorkItemTestResults>>(explicitResults);
+                WorkItemTestResults result = explicitResults.FirstOrDefault(
+                    result => string.Equals(result.WorkItemName, workItemName, StringComparison.OrdinalIgnoreCase))
+                    ?? new WorkItemTestResults(jobName, workItemName, []);
+                return Task.FromResult(result);
             }
 
-            workItemNames = workItemNames
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .DefaultIfEmpty($"{jobName}-synthetic")
-                .ToList();
-
-            IReadOnlyList<WorkItemTestResults> generated = workItemNames
-                .Select(wi => new WorkItemTestResults(jobName, wi, []))
-                .ToList();
-
-            return Task.FromResult(generated);
+            return Task.FromResult(new WorkItemTestResults(jobName, workItemName, []));
         }
 
         public Task<IReadOnlyCollection<WorkItemSummary>> ListWorkItemsAsync(
             string jobName,
             CancellationToken _)
         {
+            _listWorkItemsCallCounts.AddOrUpdate(jobName, 1, static (_, count) => count + 1);
+
             if (_customWorkItems.TryGetValue(jobName, out IReadOnlyCollection<WorkItemSummary> customWorkItems))
             {
                 return Task.FromResult(customWorkItems);

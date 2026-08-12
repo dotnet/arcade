@@ -33,14 +33,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private readonly ILogger _logger;
         private readonly JobMonitorOptions _options;
-        private readonly IHelixService _helix;
         private readonly MonitorState _state;
 
-        public StatusReporter(ILogger logger, JobMonitorOptions options, IHelixService helix, MonitorState state)
+        public StatusReporter(ILogger logger, JobMonitorOptions options, MonitorState state)
         {
             _logger = logger;
             _options = options;
-            _helix = helix;
             _state = state;
         }
 
@@ -142,22 +140,21 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// and work items). Also emits per-failure console-link warnings for any failed
         /// work items observed in this poll that haven't been reported yet.
         /// </summary>
-        public async Task LogPollStatusAsync(
+        public void LogPollStatus(
             IReadOnlyList<HelixJobInfo> jobs,
+            IReadOnlyDictionary<string, IReadOnlyCollection<WorkItemSummary>> workItemsByJob,
             IReadOnlySet<string> completedJobNames,
-            CancellationToken cancellationToken)
+            UploadPipelineSnapshot uploads)
         {
             List<HelixJobInfo> orderedJobs =
             [
                 ..jobs.OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
             ];
 
-            var workItemsByJob = new Dictionary<string, IReadOnlyCollection<WorkItemSummary>>(StringComparer.OrdinalIgnoreCase);
             foreach (HelixJobInfo job in orderedJobs)
             {
-                IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(job.JobName, cancellationToken);
+                IReadOnlyCollection<WorkItemSummary> workItems = workItemsByJob[job.JobName];
                 LogFailedWorkItemConsoleLinks(job, workItems.Where(wi => wi.IsFailedAndTerminal));
-                workItemsByJob[job.JobName] = workItems;
             }
 
             JobWorkItemStatusCounts counts = ComputeCounts(orderedJobs, workItemsByJob, completedJobNames);
@@ -177,7 +174,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             if (_options.Verbose)
             {
-                LogVerboseTree(orderedJobs, workItemsByJob, completedJobNames);
+                _logger.LogDebug(
+                    "Upload pipeline: jobs {JobQueued} queued/{JobActive} active, work items "
+                    + "{WorkItemQueued} queued/{WorkItemActive} active, finalizers "
+                    + "{FinalizerQueued} queued/{FinalizerActive} active, {UploadedResults} results uploaded.",
+                    uploads.Jobs.Queued,
+                    uploads.Jobs.Active,
+                    uploads.WorkItems.Queued,
+                    uploads.WorkItems.Active,
+                    uploads.Finalizers.Queued,
+                    uploads.Finalizers.Active,
+                    uploads.UploadedResults);
             }
         }
 
@@ -294,86 +301,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private void LogError(string message)
             => _logger.LogError("{Prefix}{Message}", AzdoErrorPrefix, message);
-
-        private void LogVerboseTree(
-            IReadOnlyList<HelixJobInfo> jobs,
-            IReadOnlyDictionary<string, IReadOnlyCollection<WorkItemSummary>> workItemsByJob,
-            IReadOnlySet<string> completedJobNames)
-        {
-            if (jobs.Count == 0)
-            {
-                _logger.LogInformation("⏳ Helix job details:{nl}└─ no Helix jobs discovered yet", Environment.NewLine);
-                return;
-            }
-
-            var lines = new List<string>();
-            for (int jobIndex = 0; jobIndex < jobs.Count; jobIndex++)
-            {
-                HelixJobInfo job = jobs[jobIndex];
-                IReadOnlyCollection<WorkItemSummary> workItems = workItemsByJob[job.JobName];
-                AddVerboseJobLines(
-                    lines,
-                    job,
-                    workItems,
-                    GetJobStatus(job, workItems, completedJobNames),
-                    isLastJob: jobIndex == jobs.Count - 1);
-            }
-
-            _logger.LogInformation("⏳ Helix job details:{nl}{JobDetails}",
-                Environment.NewLine,
-                string.Join(Environment.NewLine, lines));
-        }
-
-        private static void AddVerboseJobLines(
-            List<string> lines,
-            HelixJobInfo job,
-            IReadOnlyCollection<WorkItemSummary> workItems,
-            string jobStatus,
-            bool isLastJob)
-        {
-            string jobConnector = isLastJob ? "└─" : "├─";
-            string childPrefix = isLastJob ? "   " : "│  ";
-            lines.Add($"{jobConnector} 🧪 Helix job {job.DisplayName} [{jobStatus}]");
-
-            List<WorkItemSummary> orderedWorkItems =
-            [
-                ..workItems.OrderBy(wi => wi.Name, StringComparer.OrdinalIgnoreCase)
-            ];
-
-            if (orderedWorkItems.Count == 0)
-            {
-                lines.Add($"{childPrefix}└─ no work items reported yet");
-                return;
-            }
-
-            for (int i = 0; i < orderedWorkItems.Count; i++)
-            {
-                WorkItemSummary workItem = orderedWorkItems[i];
-                string connector = i == orderedWorkItems.Count - 1 ? "└─" : "├─";
-                string console = workItem.IsFailedAndTerminal
-                    ? $" | Console: {MonitorState.GetConsoleOutputText(workItem.ConsoleOutputUri)}"
-                    : string.Empty;
-                lines.Add($"{childPrefix}{connector} {workItem.Name} ({workItem.FormattedState}){console}");
-            }
-        }
-
-        private string GetJobStatus(
-            HelixJobInfo job,
-            IReadOnlyCollection<WorkItemSummary> workItems,
-            IReadOnlySet<string> completedJobNames)
-        {
-            if (_state.IsHelixJobProcessed(job.JobName))
-            {
-                return "Processed";
-            }
-
-            if (completedJobNames.Contains(job.JobName))
-            {
-                return "Completed";
-            }
-
-            return workItems.Count > 0 ? "Running" : "Waiting";
-        }
 
         private JobWorkItemStatusCounts ComputeCounts(
             IReadOnlyList<HelixJobInfo> jobs,

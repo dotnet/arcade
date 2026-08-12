@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
+using Microsoft.DotNet.Helix.JobMonitor.Parallelism;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Helix.JobMonitor
@@ -33,7 +34,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private readonly MonitorState _state = new();
         private readonly StatusReporter _reporter;
-        private readonly TestResultUploadQueue _uploads;
+        private readonly TestResultUploadPipeline _uploads;
 
         /// <summary>
         /// Constructor for production use with real services.
@@ -74,8 +75,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 _options.RepositoryName,
                 _options.SourceBranch);
 
-            _reporter = new StatusReporter(_logger, _options, _helix, _state);
-            _uploads = new TestResultUploadQueue(_logger, _options, _azdo, _helix, _state);
+            _reporter = new StatusReporter(_logger, _options, _state);
+            _uploads = new TestResultUploadPipeline(_logger, _options, _azdo, _helix, _state);
         }
 
         public async Task<int> RunAsync(CancellationToken cancellationToken)
@@ -91,6 +92,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
             catch (OperationCanceledException)
             {
+                _uploads.Cancel();
                 // On cancellation (AzDO job timeout or build cancellation) the agent grants only a
                 // few seconds before force-killing the process, so cancelling the in-flight Helix
                 // jobs is the priority: do it immediately rather than waiting for the test-result
@@ -290,7 +292,25 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             // Helix job summaries can omit Finished for failed jobs even after all work
             // items have terminal exit codes, so fall back to per-work-item status.
-            IReadOnlyCollection<HelixJobInfo> completedJobs = await GetCompletedJobsAsync(stageJobs, cancellationToken);
+            IReadOnlyList<HelixJobInfo> jobsToRefresh =
+            [
+                ..stageJobs.Where(job =>
+                    !_state.IsWorkItemOutcomesRecorded(job.JobName)
+                    || !loopState.WorkItemsByJob.ContainsKey(job.JobName))
+            ];
+            IReadOnlyDictionary<string, IReadOnlyCollection<WorkItemSummary>> refreshedWorkItems =
+                await GetWorkItemsAsync(jobsToRefresh, cancellationToken);
+            foreach ((string jobName, IReadOnlyCollection<WorkItemSummary> workItems) in refreshedWorkItems)
+            {
+                loopState.WorkItemsByJob[jobName] = workItems;
+            }
+
+            IReadOnlyDictionary<string, IReadOnlyCollection<WorkItemSummary>> workItemsByJob =
+                stageJobs.ToDictionary(
+                    static job => job.JobName,
+                    job => loopState.WorkItemsByJob[job.JobName],
+                    StringComparer.OrdinalIgnoreCase);
+            IReadOnlyCollection<HelixJobInfo> completedJobs = GetCompletedJobs(stageJobs, workItemsByJob);
             var completedJobNames = new HashSet<string>(
                 completedJobs.Select(j => j.JobName),
                 StringComparer.OrdinalIgnoreCase);
@@ -298,7 +318,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             // First pass: upload + reconcile for any newly-completed jobs.
             foreach (HelixJobInfo job in completedJobs.Where(j => !_state.IsHelixJobProcessed(j.JobName)))
             {
-                await ReconcileCompletedJobAsync(job, queueUpload: true, cancellationToken);
+                ReconcileCompletedJob(job, workItemsByJob[job.JobName], queueUpload: true);
             }
 
             // Second pass: ensure outcomes for every completed job (any attempt) are reflected in
@@ -309,10 +329,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 MonitorState.GetLatestHelixJobAttempts(stageJobs)
                     .Where(j => completedJobNames.Contains(j.JobName))))
             {
-                await ReconcileCompletedJobAsync(job, queueUpload: false, cancellationToken);
+                ReconcileCompletedJob(job, workItemsByJob[job.JobName], queueUpload: false);
             }
-
-            _uploads.Prune();
 
             bool shouldLogStatus = _options.Verbose
                 || loopState.LastObservedJobCount != stageJobs.Count
@@ -321,7 +339,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             if (shouldLogStatus)
             {
-                await _reporter.LogPollStatusAsync(stageJobs, completedJobNames, cancellationToken);
+                _reporter.LogPollStatus(stageJobs, workItemsByJob, completedJobNames, _uploads.Snapshot);
                 loopState.LastObservedJobCount = stageJobs.Count;
                 loopState.LastObservedCompletedCount = completedJobNames.Count;
                 loopState.LastStatusLogAt = DateTime.UtcNow;
@@ -363,19 +381,16 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// queues a test-result upload. Idempotent: a second call without
         /// <paramref name="queueUpload"/> early-returns if the outcomes were already recorded.
         /// </summary>
-        private async Task ReconcileCompletedJobAsync(
+        private void ReconcileCompletedJob(
             HelixJobInfo helixJob,
-            bool queueUpload,
-            CancellationToken cancellationToken)
+            IReadOnlyCollection<WorkItemSummary> workItems,
+            bool queueUpload)
         {
             // Already reconciled earlier in this invocation — nothing more to do (idempotent).
             if (_state.IsWorkItemOutcomesRecorded(helixJob.JobName))
             {
                 return;
             }
-
-            IReadOnlyCollection<WorkItemSummary> workItems =
-                await _helix.ListWorkItemsAsync(helixJob.JobName, cancellationToken);
 
             // A previous monitor attempt for the same build already uploaded this job's results
             // (tracked via IsHelixJobProcessed, seeded on entry from the AzDO test-run tags). Its
@@ -395,10 +410,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             if (queueUpload && !alreadyUploadedByPriorAttempt)
             {
-                if (_state.TryQueueHelixJobUpload(helixJob.JobName))
-                {
-                    _uploads.Enqueue(helixJob, workItems, cancellationToken);
-                }
+                _uploads.TryEnqueue(helixJob, workItems);
             }
 
             if (!alreadyUploadedByPriorAttempt)
@@ -407,14 +419,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
         }
 
-        private async Task<IReadOnlyCollection<HelixJobInfo>> GetCompletedJobsAsync(
+        private IReadOnlyCollection<HelixJobInfo> GetCompletedJobs(
             IReadOnlyList<HelixJobInfo> jobs,
-            CancellationToken cancellationToken)
+            IReadOnlyDictionary<string, IReadOnlyCollection<WorkItemSummary>> workItemsByJob)
         {
             var completed = new List<HelixJobInfo>();
             foreach (HelixJobInfo job in jobs)
             {
-                if (job.IsCompleted || await AreAllWorkItemsTerminalAsync(job, cancellationToken))
+                if (job.IsCompleted || AreAllWorkItemsTerminal(job, workItemsByJob[job.JobName]))
                 {
                     completed.Add(job);
                 }
@@ -423,17 +435,29 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return MonitorState.OrderHelixJobsOldToNew(completed);
         }
 
-        private async Task<bool> AreAllWorkItemsTerminalAsync(HelixJobInfo job, CancellationToken cancellationToken)
+        private static bool AreAllWorkItemsTerminal(
+            HelixJobInfo job,
+            IReadOnlyCollection<WorkItemSummary> workItems)
         {
             if (job.InitialWorkItemCount is not > 0)
             {
                 return false;
             }
 
-            IReadOnlyCollection<WorkItemSummary> workItems = await _helix.ListWorkItemsAsync(job.JobName, cancellationToken);
             return workItems.Count >= job.InitialWorkItemCount.Value
                 && workItems.All(wi => wi.ExitCode.HasValue);
         }
+
+        private Task<IReadOnlyDictionary<string, IReadOnlyCollection<WorkItemSummary>>> GetWorkItemsAsync(
+            IReadOnlyList<HelixJobInfo> jobs,
+            CancellationToken cancellationToken)
+            => ParallelAsync.ToDictionaryAsync(
+                jobs,
+                parallelism: Math.Max(8, _options.TestResultUploadParallelism),
+                static job => job.JobName,
+                async (job, token) => await _helix.ListWorkItemsAsync(job.JobName, token),
+                StringComparer.OrdinalIgnoreCase,
+                cancellationToken);
 
         private async Task CancelInFlightHelixJobsAsync(CancellationToken cancellationToken)
         {
@@ -494,6 +518,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         public void Dispose()
         {
+            _uploads.Cancel();
             (_azdo as IDisposable)?.Dispose();
             (_helix as IDisposable)?.Dispose();
         }
@@ -516,6 +541,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             public int LastObservedJobCount { get; set; } = -1;
             public int LastObservedCompletedCount { get; set; } = -1;
             public DateTime LastStatusLogAt { get; set; } = DateTime.UtcNow;
+            public Dictionary<string, IReadOnlyCollection<WorkItemSummary>> WorkItemsByJob { get; } =
+                new(StringComparer.OrdinalIgnoreCase);
         }
     }
 }

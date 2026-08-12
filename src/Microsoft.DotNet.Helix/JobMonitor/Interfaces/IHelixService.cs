@@ -32,9 +32,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// Work items without recognizable test result files may be omitted from the result.
         /// Individual file download failures should not prevent other result files from being downloaded.
         /// </summary>
-        Task<IReadOnlyList<WorkItemTestResults>> DownloadTestResultsAsync(
+        Task<WorkItemTestResults> DownloadTestResultsAsync(
             string jobName,
-            IReadOnlyCollection<string> workItemNames,
+            string workItemName,
             string workingDirectory, CancellationToken cancellationToken);
 
         /// <summary>

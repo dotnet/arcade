@@ -52,14 +52,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly JobMonitorOptions _options;
         private readonly ILogger _logger;
         private readonly HttpClient _azdoClient;
-        private readonly SemaphoreSlim _uploadSemaphore;
-
+        private readonly AzureDevOpsRateLimitGate _rateLimitGate = new();
         public AzureDevOpsService(JobMonitorOptions options, ILogger logger)
         {
             _options = options;
             _logger = logger;
             _azdoClient = new HttpClient();
-            _uploadSemaphore = new SemaphoreSlim(options.TestResultUploadParallelism);
             InitializeClient();
         }
 
@@ -68,7 +66,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _options = options;
             _logger = logger;
             _azdoClient = azdoClient ?? throw new ArgumentNullException(nameof(azdoClient));
-            _uploadSemaphore = new SemaphoreSlim(options.TestResultUploadParallelism);
             InitializeClient();
         }
 
@@ -77,6 +74,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             string encodedToken = Convert.ToBase64String(Encoding.UTF8.GetBytes("unused:" + _options.SystemAccessToken));
             _azdoClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", encodedToken);
             _azdoClient.DefaultRequestHeaders.UserAgent.ParseAdd("dotnet-helix-job-monitor");
+            _azdoClient.Timeout = TimeSpan.FromMinutes(5);
         }
 
         public async Task<IReadOnlyList<AzureDevOpsTimelineRecord>> GetTimelineRecordsAsync(CancellationToken cancellationToken)
@@ -398,9 +396,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 cancellationToken: cancellationToken);
         }
 
-        public async Task<IReadOnlyDictionary<(string JobName, string WorkItemName), TestResultUploadSummary>> UploadTestResultsAsync(
+        public async Task<TestResultUploadSummary> UploadTestResultsAsync(
             int testRunId,
-            IReadOnlyList<WorkItemTestResults> results,
+            WorkItemTestResults results,
             CancellationToken cancellationToken)
         {
             var reportingParameters = new AzureDevOpsReportingParameters(
@@ -410,60 +408,25 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 _options.SystemAccessToken,
                 _options.UseFullyQualifiedTestName,
                 _options.TestResultAttachmentMode);
-            using var publisher = new AzureDevOpsResultPublisher(
+            var publisher = new AzureDevOpsResultPublisher(
                 reportingParameters,
-                _logger);
+                _logger,
+                _azdoClient,
+                _rateLimitGate);
 
-            async Task<TestResultUploadSummary> UploadWorkItemAsync(WorkItemTestResults workItem)
+            if (results.TestResultFiles.Count == 0)
             {
-                if (workItem.TestResultFiles.Count == 0)
-                {
-                    _logger.LogInformation("No test results to upload for work item {WorkItemId} in job {JobName}", workItem.WorkItemName, workItem.JobName);
-                    return new TestResultUploadSummary(true, 0);
-                }
-
-                DateTimeOffset waitStartedAt = DateTimeOffset.UtcNow;
-                _logger.LogDebug(
-                    "Work item '{WorkItemName}' in job '{JobName}' is waiting for a test-result upload slot. "
-                    + "{AvailableSlots} slot(s) are currently available.",
-                    workItem.WorkItemName,
-                    workItem.JobName,
-                    _uploadSemaphore.CurrentCount);
-                await _uploadSemaphore.WaitAsync(cancellationToken);
-
-                try
-                {
-                    DateTimeOffset uploadStartedAt = DateTimeOffset.UtcNow;
-                    _logger.LogDebug(
-                        "Work item '{WorkItemName}' in job '{JobName}' acquired a test-result upload slot after {WaitElapsed}. "
-                        + "Parsing and publishing {FileCount} file(s).",
-                        workItem.WorkItemName,
-                        workItem.JobName,
-                        uploadStartedAt - waitStartedAt,
-                        workItem.TestResultFiles.Count);
-                    TestResultUploadSummary summary = await publisher.UploadTestResultsWithSummaryAsync(
-                        workItem.TestResultFiles,
-                        new
-                        {
-                            HelixJobId = workItem.JobName,
-                            HelixWorkItemName = workItem.WorkItemName
-                        },
-                        cancellationToken);
-                    _logger.LogDebug(
-                        "Work item '{WorkItemName}' in job '{JobName}' finished parsing and publishing after {UploadElapsed}.",
-                        workItem.WorkItemName,
-                        workItem.JobName,
-                        DateTimeOffset.UtcNow - uploadStartedAt);
-                    return summary;
-                }
-                finally
-                {
-                    _uploadSemaphore.Release();
-                }
+                return new TestResultUploadSummary(true, 0);
             }
 
-            (WorkItemTestResults WorkItem, TestResultUploadSummary Summary)[] testSummaries = await Task.WhenAll(results.Select(async result => (result, await UploadWorkItemAsync(result))));
-            return testSummaries.ToDictionary(t => (t.WorkItem.JobName, t.WorkItem.WorkItemName), t => t.Summary);
+            return await publisher.UploadTestResultsWithSummaryAsync(
+                results.TestResultFiles,
+                new
+                {
+                    HelixJobId = results.JobName,
+                    HelixWorkItemName = results.WorkItemName
+                },
+                cancellationToken);
         }
 
         private async Task<JObject> SendAsync(
@@ -489,6 +452,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             async Task<string> SendOnceAsync()
             {
+                await _rateLimitGate.WaitAsync(cancellationToken);
                 using var request = new HttpRequestMessage(method, requestUri);
                 if (body != null)
                 {
@@ -602,18 +566,18 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             if (delayToApply > TimeSpan.Zero)
             {
+                _rateLimitGate.Defer(delayToApply);
                 _logger.LogDebug(
                     "Azure DevOps rate limit back-off. Delaying next request by {DelaySeconds:0.###}s (request: {RequestUri}).",
                     delayToApply.TotalSeconds,
                     requestUri);
-                await Task.Delay(delayToApply, cancellationToken);
+                await _rateLimitGate.WaitAsync(cancellationToken);
             }
         }
 
         public void Dispose()
         {
             _azdoClient.Dispose();
-            _uploadSemaphore.Dispose();
         }
     }
 }

@@ -283,8 +283,8 @@ behaviorally; method names are illustrative.
   current- or previous-attempt via `System.StageName` / `System.StageAttempt`
   for gating (§2.1).
 - **List work items for a job** — return all work-item summaries.
-- **Download test results** — given a job and a set of work-item names,
-  download recognized result files into a working directory. Individual
+- **Download test results** — given one job/work-item pair, download recognized
+  result files into a working directory. Individual
   per-file failures must not prevent the remaining files from being attempted.
   After the batch, transient failures cause the read-only download phase to be
   retried; permanent failures are logged and omitted.
@@ -364,8 +364,8 @@ Each iteration:
    (so completion/failure transitions are not missed).
 4. Compute the set of completed Helix jobs (§5.5).
 5. **First pass — upload**: for each completed Helix job not already
-   uploaded (per §2.2), upload its test results and remember it as
-   processed. This pass is the only one that triggers uploads.
+   uploaded (per §2.2), queue its completion-time work-item snapshot into the
+   bounded upload pipeline. This pass is the only one that triggers uploads.
 6. **Second pass — outcome reconciliation**: for every completed Helix
    job in scope, ensure its per-work-item outcomes are reflected in the
    running outcome map (§5.7), processing lineage from oldest to newest so
@@ -455,14 +455,19 @@ lines are plain logger output.
 
 ### 5.9 Test-result upload pipeline
 
-Uploads are asynchronous tasks tracked for normal completion. Their in-memory
-lifecycle distinguishes queued, in-progress, durably completed, and failed
-uploads; only a completed, tagged test run is considered durable.
+Uploads use a non-dropping lightweight job-expansion channel plus bounded
+work-item and finalization channels. Their in-memory lifecycle distinguishes
+queued, in-progress, durably completed, and failed uploads; only a completed,
+tagged test run is considered durable.
 
-- Each upload is queued asynchronously and tracked. Multiple uploads may
-  proceed concurrently.
-- Test results are downloaded before the AzDO test run is created. Transient
-  download failures are safe to retry and use a bounded retry budget.
+- Completed jobs are queued asynchronously and expanded into a globally
+  bounded work-item pipeline.
+- Test results are downloaded one work item at a time. Transient download
+  failures are safe to retry and use a bounded retry budget.
+- Work-item concurrency is global across all Helix jobs, so total parallelism
+  never multiplies by the number of completed jobs.
+- Test-run creation is single-flight per Helix job even when multiple work-item
+  workers arrive concurrently.
 - Test-run creation and completion/tagging are each attempted once. These
   lifecycle writes determine the durable upload boundary, so replaying an
   ambiguous response could create an extra run or incorrectly mark an
@@ -474,23 +479,24 @@ uploads; only a completed, tagged test run is considered durable.
   request but before the response reaches the client, so retrying may create
   duplicate results or attachments. The design accepts that risk to avoid
   losing an entire job's test results after a transient failure.
-- Permanent failures and exhausted retries are logged as warnings and stop the
-  upload task without affecting pass/fail.
+- Permanent failures and exhausted retries are logged as warnings and make the
+  job session ineligible for completion/tagging without affecting pass/fail.
 - The normal-termination path waits for queued uploads to drain before exiting.
 - The cancellation path does not wait for pending or in-flight uploads. If an
   upload has not completed and applied its Helix-job tag, it remains untagged;
   durable-state discovery causes a later invocation to upload it again.
 
-The upload sequence per job is: create (or reuse) a test run with the plain
-`{TestRunName}`, download results, upload them, complete the test run and tag
-it with the Helix job name (`helixjob<guid>`).
+The upload sequence per job is: download work-item results, lazily create one
+test run with the plain `{TestRunName}`, upload work items with bounded global
+parallelism, upload failure metadata, complete the run, and tag it with the
+Helix job name (`helixjob<guid>`).
 
 ### 5.10 Status logging
 
 When a status log is due, the runner emits a one-line summary of work
-counts (processed / completed / running / waiting jobs and work items). In
-verbose mode it additionally emits a tree-style breakdown per job and work
-item. The verbose tree is informational only.
+counts (processed / completed / running / waiting jobs and work items).
+Verbose mode adds bounded pipeline diagnostics (queued/active work and uploaded
+result totals) but never emits a per-work-item tree.
 
 A Helix job is classified for status purposes as `Processed` (already
 uploaded), `Completed` (terminal but not yet uploaded), `Running` (has at

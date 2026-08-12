@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
@@ -122,6 +123,16 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
+        public void GetRateLimitDelay_UsesLargestAzureDevOpsDelayHeader()
+        {
+            using var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Headers.RetryAfter = new RetryConditionHeaderValue(TimeSpan.FromSeconds(2));
+            response.Headers.Add("X-RateLimit-Delay", "3.5");
+
+            Assert.Equal(TimeSpan.FromSeconds(3.5), AzureDevOpsResultPublisher.GetRateLimitDelay(response));
+        }
+
+        [Fact]
         public async Task UploadTestResultsWithCountAsync_BatchesByTopLevelResultCount()
         {
             var handler = new RecordingResultHandler();
@@ -169,6 +180,55 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal(new[] { 950, 2 }, handler.RequestHierarchyNodeCounts.Single());
         }
 
+        [Fact]
+        public async Task UploadTestResultsWithCountAsync_RecursivelySplitsOversizedNestedHierarchies()
+        {
+            var handler = new RecordingResultHandler();
+            using var publisher = CreatePublisher(handler);
+            var nested = CreateDataDrivenResult("Nested", 950);
+            AggregatedResult[] results =
+            [
+                new AggregatedResult(
+                    AggregationType.DataDriven,
+                    "Outer",
+                    1,
+                    "Passed",
+                    [nested]),
+            ];
+
+            long uploadedCount = await publisher.UploadTestResultsWithCountAsync(results, new { });
+
+            Assert.Equal(2, uploadedCount);
+            Assert.Equal(new[] { 2 }, handler.RequestResultCounts);
+            Assert.Equal(new[] { 950, 4 }, handler.RequestHierarchyNodeCounts.Single());
+        }
+
+        [Fact]
+        public async Task UploadTestResultsWithCountAsync_DoesNotMaterializeAllConvertedResults()
+        {
+            var handler = new BlockingResultHandler();
+            using var publisher = CreatePublisher(handler);
+            int enumerated = 0;
+
+            IEnumerable<AggregatedResult> Results()
+            {
+                for (int i = 0; i < 2_000; i++)
+                {
+                    enumerated++;
+                    yield return new AggregatedResult(AggregationType.Single, $"Test{i}", 1, "Passed");
+                }
+            }
+
+            Task<long> upload = publisher.UploadTestResultsWithCountAsync(Results(), new { });
+            await handler.FirstRequestStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+            Assert.InRange(enumerated, 0, 1001);
+            handler.ReleaseFirstRequest.SetResult();
+
+            Assert.Equal(2_000, await upload);
+            Assert.Equal(2, handler.RequestResultCounts.Count);
+        }
+
         private static AzureDevOpsResultPublisher CreatePublisher(HttpMessageHandler handler)
             => new(
                 new AzureDevOpsReportingParameters(
@@ -189,7 +249,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                         .Select(i => new AggregatedResult(AggregationType.Single, $"{name}_{i}", 1, "Passed"))
                 ]);
 
-        private sealed class RecordingResultHandler : HttpMessageHandler
+        private class RecordingResultHandler : HttpMessageHandler
         {
             public List<int> RequestResultCounts { get; } = [];
             public List<int[]> RequestHierarchyNodeCounts { get; } = [];
@@ -224,6 +284,28 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 }
 
                 return 1 + subResults.EnumerateArray().Sum(CountHierarchyNodes);
+            }
+        }
+
+        private sealed class BlockingResultHandler : RecordingResultHandler
+        {
+            public TaskCompletionSource FirstRequestStarted { get; } =
+                new(TaskCreationOptions.RunContinuationsAsynchronously);
+            public TaskCompletionSource ReleaseFirstRequest { get; } =
+                new(TaskCreationOptions.RunContinuationsAsynchronously);
+            private int _requestCount;
+
+            protected override async Task<HttpResponseMessage> SendAsync(
+                HttpRequestMessage request,
+                CancellationToken cancellationToken)
+            {
+                if (Interlocked.Increment(ref _requestCount) == 1)
+                {
+                    FirstRequestStarted.SetResult();
+                    await ReleaseFirstRequest.Task.WaitAsync(cancellationToken);
+                }
+
+                return await base.SendAsync(request, cancellationToken);
             }
         }
 

@@ -3,16 +3,18 @@
 
 using System.Net;
 using System.Net.Http.Headers;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Net.Sockets;
 using Microsoft.Arcade.Common;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
+using Microsoft.DotNet.Helix.JobMonitor;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
-public sealed class AzureDevOpsResultPublisher : IDisposable
+internal sealed class AzureDevOpsResultPublisher : IDisposable
 {
     private const int DefaultAttemptCount = 10;
     // Azure DevOps rejects requests containing more than 1,000 top-level TestCaseResult objects.
@@ -29,59 +31,71 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         WriteIndented = false,
     };
 
-    private readonly AsyncLocal<string> _lastSendContent = new();
-    private string s_lastSendContent
-    {
-        get => _lastSendContent.Value ?? string.Empty;
-        set => _lastSendContent.Value = value;
-    }
-
     private readonly AzureDevOpsReportingParameters _azdoParameters;
     private readonly HttpClient _httpClient;
     private readonly ILogger _logger;
+    private readonly bool _ownsHttpClient;
+    private readonly AzureDevOpsRateLimitGate _rateLimitGate;
 
     public AzureDevOpsResultPublisher(
         AzureDevOpsReportingParameters azdoParameters,
         ILogger logger)
-        : this(azdoParameters, logger, CreateHttpClient(azdoParameters.AccessToken))
+        : this(
+            azdoParameters,
+            logger,
+            CreateHttpClient(azdoParameters.AccessToken),
+            new AzureDevOpsRateLimitGate(),
+            ownsHttpClient: true)
     {
     }
 
     internal AzureDevOpsResultPublisher(
         AzureDevOpsReportingParameters azdoParameters,
         ILogger logger,
-        HttpClient httpClient)
+        HttpClient httpClient,
+        AzureDevOpsRateLimitGate? rateLimitGate = null)
+        : this(
+            azdoParameters,
+            logger,
+            httpClient,
+            rateLimitGate ?? new AzureDevOpsRateLimitGate(),
+            ownsHttpClient: false)
+    {
+    }
+
+    private AzureDevOpsResultPublisher(
+        AzureDevOpsReportingParameters azdoParameters,
+        ILogger logger,
+        HttpClient httpClient,
+        AzureDevOpsRateLimitGate rateLimitGate,
+        bool ownsHttpClient)
     {
         _azdoParameters = azdoParameters;
         _httpClient = httpClient;
         _logger = logger;
+        _rateLimitGate = rateLimitGate;
+        _ownsHttpClient = ownsHttpClient;
     }
 
     public void Dispose()
     {
-        _httpClient.Dispose();
+        if (_ownsHttpClient)
+        {
+            _httpClient.Dispose();
+        }
     }
 
     public async Task<TestResultUploadSummary> UploadTestResultsWithSummaryAsync(List<string> testResultFiles, object resultMetadata, CancellationToken cancellationToken = default)
     {
         var testResultReader = new LocalTestResultsReader(_logger, _azdoParameters.TestResultAttachmentMode);
 
-        async Task<IReadOnlyList<TestResult>> ParseAsync(string file)
+        var parsedResults = new List<IReadOnlyList<TestResult>>(testResultFiles.Count);
+        foreach (string file in testResultFiles)
         {
-            DateTimeOffset startedAt = DateTimeOffset.UtcNow;
-            _logger.LogDebug("Parsing test result file '{FilePath}'.", file);
-            IReadOnlyList<TestResult> results = await testResultReader.ReadResultFileAsync(file, cancellationToken);
-            _logger.LogDebug(
-                "Parsed {ResultCount} test result(s) from '{FilePath}' in {Elapsed}.",
-                results.Count,
-                file,
-                DateTimeOffset.UtcNow - startedAt);
-            return results;
+            parsedResults.Add(await testResultReader.ReadResultFileAsync(file, cancellationToken));
         }
 
-        Task<IReadOnlyList<TestResult>>[] parseTasks = [.. testResultFiles.Select(ParseAsync)];
-        IReadOnlyList<TestResult>[] parsedResults = await Task.WhenAll(parseTasks);
-        if (parsedResults.Length == 0)
+        if (parsedResults.Count == 0)
         {
             _logger.LogWarning("No test result files were provided for upload");
             return new TestResultUploadSummary(true, 0);
@@ -114,9 +128,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         try
         {
             long publishedTestCount = 0;
-            IReadOnlyList<AggregatedResult> resultList = results as IReadOnlyList<AggregatedResult> ?? results.ToList();
-            var converted = ConvertResults(resultList, resultMetadata).ToList();
-            foreach (List<ConvertedResult> requestBatch in CreateResultRequestBatches(converted))
+            foreach (List<ConvertedResult> requestBatch in CreateResultRequestBatches(ConvertResults(results, resultMetadata)))
             {
                 IReadOnlyList<PublishedTestCase> publishedTests = await PublishResultsAsync(requestBatch, cancellationToken);
                 publishedTestCount += publishedTests.Count;
@@ -316,11 +328,10 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                 result);
         }
 
-        var converted = results.Select(ConvertResult).ToList();
-        foreach (ConvertedResult? result in converted)
+        foreach (AggregatedResult result in results)
         {
             foreach (ConvertedResult hierarchyPart in SplitOversizedResultHierarchy(
-                result,
+                ConvertResult(result),
                 MaximumNodesPerResultHierarchy))
             {
                 yield return hierarchyPart;
@@ -351,32 +362,77 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             yield break;
         }
 
-        IEnumerable<ChunkPair> zippedSubTests = (test.Converted.SubResults ?? [])
-            .Zip(test.Aggregated.SubResults, (converted, aggregated) => new ChunkPair(converted, aggregated));
+        if (maximumNodesPerHierarchy <= 1 || test.Converted.SubResults is not { Count: > 0 })
+        {
+            throw new InvalidOperationException(
+                "A test-result hierarchy is deeper than the Azure DevOps hierarchy limit.");
+        }
+
+        IEnumerable<ChunkPair> splitSubTests = (test.Converted.SubResults ?? [])
+            .Zip(test.Aggregated.SubResults, (converted, aggregated) => new ChunkPair(converted, aggregated))
+            .SelectMany(pair => SplitOversizedSubResultHierarchy(pair, maximumNodesPerHierarchy - 1));
 
         // Each emitted hierarchy includes the copied top-level result, leaving the remaining
         // node budget for its sub-results.
         foreach (List<ChunkPair> hierarchyPart in PartitionBySize(
-            zippedSubTests,
+            splitSubTests,
             maximumNodesPerHierarchy - 1,
             static pair => CountResultTreeNodes(pair.Converted)))
         {
             yield return new ConvertedResult(
                 test.Converted with { SubResults = [.. hierarchyPart.Select(static x => x.Converted)], Id = null },
-                new AggregatedResult(
-                    test.Aggregated.AggregationType,
-                    test.Aggregated.Name,
-                    test.Aggregated.DurationSeconds,
-                    test.Aggregated.Result,
-                    [.. hierarchyPart.Select(static x => x.Aggregated)],
-                    test.Aggregated.Attachments,
-                    test.Aggregated.FailureMessage,
-                    test.Aggregated.StackTrace,
-                    isFlaky: test.Aggregated.IsFlaky,
-                    attemptId: test.Aggregated.AttemptId,
-                    fullyQualifiedName: test.Aggregated.FullyQualifiedName));
+                CopyAggregatedResult(
+                    test.Aggregated,
+                    [.. hierarchyPart.Select(static x => x.Aggregated)]));
         }
     }
+
+    private static IEnumerable<ChunkPair> SplitOversizedSubResultHierarchy(
+        ChunkPair test,
+        int maximumNodesPerHierarchy)
+    {
+        if (CountResultTreeNodes(test.Converted) <= maximumNodesPerHierarchy)
+        {
+            yield return test;
+            yield break;
+        }
+
+        IEnumerable<ChunkPair> splitSubTests = (test.Converted.SubResults ?? [])
+            .Zip(test.Aggregated.SubResults, (converted, aggregated) => new ChunkPair(converted, aggregated))
+            .SelectMany(pair => SplitOversizedSubResultHierarchy(pair, maximumNodesPerHierarchy - 1));
+
+        foreach (List<ChunkPair> hierarchyPart in PartitionBySize(
+            splitSubTests,
+            maximumNodesPerHierarchy - 1,
+            static pair => CountResultTreeNodes(pair.Converted)))
+        {
+            yield return new ChunkPair(
+                test.Converted with
+                {
+                    SubResults = [.. hierarchyPart.Select(static x => x.Converted)],
+                    Id = null,
+                },
+                CopyAggregatedResult(
+                    test.Aggregated,
+                    [.. hierarchyPart.Select(static x => x.Aggregated)]));
+        }
+    }
+
+    private static AggregatedResult CopyAggregatedResult(
+        AggregatedResult result,
+        IReadOnlyList<AggregatedResult> subResults)
+        => new(
+            result.AggregationType,
+            result.Name,
+            result.DurationSeconds,
+            result.Result,
+            subResults,
+            result.Attachments,
+            result.FailureMessage,
+            result.StackTrace,
+            isFlaky: result.IsFlaky,
+            attemptId: result.AttemptId,
+            fullyQualifiedName: result.FullyQualifiedName);
 
     private static int CountResultTreeNodes(PublishedTestCase test)
     {
@@ -427,12 +483,8 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
 
     private static HttpClient CreateHttpClient(string? accessToken)
     {
-        var client = new HttpClient
-        {
-            Timeout = s_httpClientTimeout
-        };
+        var client = new HttpClient { Timeout = s_httpClientTimeout };
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
         if (!string.IsNullOrWhiteSpace(accessToken))
         {
             string basicToken = Convert.ToBase64String(Encoding.ASCII.GetBytes($":{accessToken}"));
@@ -449,11 +501,7 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         int attemptCount,
         CancellationToken cancellationToken)
     {
-        string? body = payload is null ? null : JsonSerializer.Serialize(payload, s_serializerOptions);
-        if (!string.IsNullOrEmpty(body))
-        {
-            s_lastSendContent = body;
-        }
+        byte[]? body = payload is null ? null : JsonSerializer.SerializeToUtf8Bytes(payload, s_serializerOptions);
 
         HttpResponseMessage? successfulResponse = null;
         Exception? lastException = null;
@@ -479,6 +527,8 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
         bool succeeded = await retryHandler.RunAsync(
             async attempt =>
             {
+                await _rateLimitGate.WaitAsync(cancellationToken);
+
                 Uri baseUri = _azdoParameters.CollectionUri.AbsoluteUri.EndsWith('/')
                     ? _azdoParameters.CollectionUri
                     : new Uri(_azdoParameters.CollectionUri.AbsoluteUri + '/', UriKind.Absolute);
@@ -486,7 +536,8 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                 using var request = new HttpRequestMessage(method, new Uri(baseUri, relativePath));
                 if (body is not null)
                 {
-                    request.Content = new StringContent(body, Encoding.UTF8, "application/json");
+                    request.Content = new ByteArrayContent(body);
+                    request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                 }
 
                 try
@@ -501,6 +552,11 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                     HttpResponseMessage response = await _httpClient.SendAsync(request, cancellationToken);
                     if (response.IsSuccessStatusCode)
                     {
+                        if (GetRateLimitDelay(response) is { } rateLimitDelay)
+                        {
+                            _rateLimitGate.Defer(rateLimitDelay);
+                        }
+
                         _logger.LogDebug(
                             "Azure DevOps {Method} request to '{RequestPath}' completed with HTTP {StatusCode} "
                             + "on attempt {Attempt} of {AttemptCount} after {Elapsed}.",
@@ -521,10 +577,14 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
                             || response.StatusCode == HttpStatusCode.TooManyRequests;
                         if (isTransientStatus)
                         {
-                            TimeSpan? retryAfter = GetRetryDelay(response);
+                            TimeSpan? retryAfter = GetRateLimitDelay(response);
                             if (response.StatusCode == HttpStatusCode.TooManyRequests && retryAfter is null)
                             {
                                 retryAfter = TimeSpan.FromSeconds(30);
+                            }
+                            if (retryAfter is { } delay)
+                            {
+                                _rateLimitGate.Defer(delay);
                             }
 
                             _logger.LogDebug(
@@ -583,24 +643,40 @@ public sealed class AzureDevOpsResultPublisher : IDisposable
             or SocketException
             or IOException;
 
-    private static TimeSpan? GetRetryDelay(HttpResponseMessage response)
+    internal static TimeSpan? GetRateLimitDelay(HttpResponseMessage response)
     {
+        TimeSpan delay = TimeSpan.Zero;
         RetryConditionHeaderValue? retryAfter = response.Headers.RetryAfter;
-        if (retryAfter?.Delta is { } delta && delta > TimeSpan.Zero)
+        if (retryAfter?.Delta is { } delta && delta > delay)
         {
-            return delta;
+            delay = delta;
         }
 
         if (retryAfter?.Date is { } date)
         {
-            TimeSpan delay = date - DateTimeOffset.UtcNow;
-            if (delay > TimeSpan.Zero)
+            TimeSpan datedDelay = date - DateTimeOffset.UtcNow;
+            if (datedDelay > delay)
             {
-                return delay;
+                delay = datedDelay;
             }
         }
 
-        return null;
+        if (response.Headers.TryGetValues("X-RateLimit-Delay", out IEnumerable<string>? delayValues)
+            && double.TryParse(
+                delayValues.FirstOrDefault(),
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out double delaySeconds)
+            && delaySeconds > 0)
+        {
+            TimeSpan headerDelay = TimeSpan.FromSeconds(delaySeconds);
+            if (headerDelay > delay)
+            {
+                delay = headerDelay;
+            }
+        }
+
+        return delay > TimeSpan.Zero ? delay : null;
     }
 
     private static async Task<IReadOnlyList<PublishedTestCaseResultReference>> ReadPublishedResultsAsync(

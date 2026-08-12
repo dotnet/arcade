@@ -320,8 +320,19 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                             "see Azure DevOps test run results");
                     }
                 }
+
             }
         }
+
+        public void ObserveTestResult(
+            string jobName,
+            string workItemName,
+            TestResultUploadSummary summary)
+            => ObserveTestResults(
+                new Dictionary<(string JobName, string WorkItemName), TestResultUploadSummary>
+                {
+                    [(jobName, workItemName)] = summary,
+                });
 
         /// <summary>
         /// Returns true if this is the first time a console-link warning is being emitted for

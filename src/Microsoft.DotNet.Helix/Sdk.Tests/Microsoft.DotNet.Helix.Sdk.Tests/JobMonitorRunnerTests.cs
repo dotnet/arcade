@@ -530,6 +530,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             exitCode.Should().Be(0);
             delayedBeforeUploadCompleted.Should().BeTrue();
             azdo.TimelineCallCount.Should().Be(2);
+            // One entry-retry scan and one first-poll snapshot; the second poll reuses the
+            // reconciled terminal snapshot instead of fetching it again.
+            helix.GetListWorkItemsCallCount("helix-linux").Should().Be(2);
             azdo.UploadedJobNames.Should().BeEquivalentTo(["helix-linux"]);
             azdo.CompletedTestRunIds.Should().ContainSingle();
             logger.Messages.Should().Contain(message =>
@@ -537,7 +540,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public async Task VerboseDrainReportsPendingUploadPhaseAndElapsedTime()
+        public async Task DrainReportsAggregatePipelineProgress()
         {
             var azdo = new FakeAzureDevOpsService();
             var helix = new FakeHelixService();
@@ -576,11 +579,82 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             exitCode.Should().Be(0);
             logger.Messages.Should().Contain(message =>
-                message.Contains("test result upload(s) remain pending", StringComparison.Ordinal)
-                && message.Contains("helix-linux", StringComparison.Ordinal)
-                && message.Contains("phase='publishing 1 work item(s) to Azure DevOps test run", StringComparison.Ordinal)
-                && message.Contains("phase elapsed=", StringComparison.Ordinal)
-                && message.Contains("total elapsed=", StringComparison.Ordinal));
+                message.Contains("Test result pipeline drained in", StringComparison.Ordinal)
+                && message.Contains("1 job(s), 1 work item(s), and 1 result(s)", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public async Task UploadPipeline_BoundsWorkItemParallelismAndCreatesOneRunPerJob()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var uploadRelease = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            string[] workItems = [.. Enumerable.Range(1, 20).Select(index => $"workitem-{index}")];
+
+            azdo.UploadBlocker = uploadRelease.Task;
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"));
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: workItems),
+                },
+                testResultsByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] =
+                    [
+                        ..workItems.Select(name =>
+                            new WorkItemTestResults("helix-linux", name, [$"{name}.trx"]))
+                    ],
+                });
+
+            JobMonitorOptions options = DefaultOptions();
+            options.TestResultUploadParallelism = 4;
+            var runner = new JobMonitorRunner(options, new RecordingLogger(), azdo, helix, NoDelay);
+
+            Task<int> run = runner.RunAsync(CancellationToken.None);
+            await WaitForAsync(() => azdo.MaximumConcurrentUploads == 4);
+            uploadRelease.SetResult();
+
+            (await run.WaitAsync(TimeSpan.FromSeconds(5))).Should().Be(0);
+            azdo.MaximumConcurrentUploads.Should().Be(4);
+            azdo.CreateTestRunCallCount.Should().Be(1);
+            azdo.CompleteTestRunCallCount.Should().Be(1);
+            azdo.UploadTestResultsCallCount.Should().Be(20);
+        }
+
+        [Fact]
+        public async Task UploadPipeline_DoesNotDropCompletedJobsWhenBacklogged()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            HelixJobInfo[] jobs =
+            [
+                ..Enumerable.Range(1, 300)
+                    .Select(index => HelixJob($"helix-{index}", "finished"))
+            ];
+            var passFailByJob = jobs.ToDictionary(
+                static job => job.JobName,
+                static _ => PassFail(),
+                StringComparer.OrdinalIgnoreCase);
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"));
+            helix.AddResponse(jobs, passFailByJob);
+
+            var runner = new JobMonitorRunner(
+                DefaultOptions(),
+                new RecordingLogger(),
+                azdo,
+                helix,
+                NoDelay);
+
+            (await runner.RunAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10))).Should().Be(0);
+            azdo.CreateTestRunCallCount.Should().Be(300);
+            azdo.CompleteTestRunCallCount.Should().Be(300);
         }
 
         [Fact]
@@ -626,7 +700,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             azdo.CompletedTestRunIds.Should().BeEmpty();
             azdo.UploadedJobNames.Should().BeEmpty();
             logger.Messages.Should().Contain(message =>
-                message.Contains("not safe to replay in this invocation", StringComparison.Ordinal));
+                message.Contains("remains untagged", StringComparison.Ordinal)
+                && message.Contains("later monitor invocation can replay it", StringComparison.Ordinal));
         }
 
         [Fact]
@@ -665,7 +740,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             delayCount.Should().Be(0);
             azdo.CompletedTestRunIds.Should().BeEmpty();
             logger.Messages.Should().Contain(message =>
-                message.Contains("not safe to replay in this invocation", StringComparison.Ordinal));
+                message.Contains("remains untagged", StringComparison.Ordinal)
+                && message.Contains("later monitor invocation can replay it", StringComparison.Ordinal));
         }
 
         [Fact]
@@ -696,8 +772,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             azdo.CompleteTestRunCallCount.Should().Be(0);
             azdo.CompletedTestRunIds.Should().BeEmpty();
             logger.Messages.Should().Contain(message =>
-                message.Contains("The failure is not retryable", StringComparison.Ordinal)
-                && message.Contains("later monitor invocation may retry the upload", StringComparison.Ordinal));
+                message.Contains("remains untagged", StringComparison.Ordinal)
+                && message.Contains("later monitor invocation can replay it", StringComparison.Ordinal));
         }
 
         [Fact]
@@ -1947,8 +2023,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     pollCount1++;
                     if (pollCount1 >= 2)
                     {
-                        Task completed = await Task.WhenAny(azdo1.UploadCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
-                        Assert.Same(azdo1.UploadCompleted.Task, completed);
+                        Task completed = await Task.WhenAny(azdo1.TestRunCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+                        Assert.Same(azdo1.TestRunCompleted.Task, completed);
                         cts.Cancel();
                     }
                 });
@@ -2016,8 +2092,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             var runner = new JobMonitorRunner(DefaultOptions(), logger, azdo, helix,
                 async (_, _) =>
                 {
-                    Task completed = await Task.WhenAny(azdo.UploadCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
-                    completed.Should().BeSameAs(azdo.UploadCompleted.Task);
+                    Task completed = await Task.WhenAny(azdo.TestRunCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+                    completed.Should().BeSameAs(azdo.TestRunCompleted.Task);
                     cts.Cancel();
                 });
 
@@ -2148,8 +2224,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                         // Wait until helix-good's results have actually been uploaded before
                         // cancelling, so the monitor has had a chance to record its terminal
                         // state.
-                        Task completed = await Task.WhenAny(azdo.UploadCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
-                        completed.Should().BeSameAs(azdo.UploadCompleted.Task);
+                        Task completed = await Task.WhenAny(azdo.TestRunCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+                        completed.Should().BeSameAs(azdo.TestRunCompleted.Task);
                         cts.Cancel();
                     }
                 });
@@ -2217,8 +2293,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     pollCount1++;
                     if (pollCount1 >= 2)
                     {
-                        Task completed = await Task.WhenAny(azdo1.UploadCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
-                        Assert.Same(azdo1.UploadCompleted.Task, completed);
+                        Task completed = await Task.WhenAny(azdo1.TestRunCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+                        Assert.Same(azdo1.TestRunCompleted.Task, completed);
                         cts.Cancel();
                     }
                 });
@@ -2926,8 +3002,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     // Wait for helix-a's test-result upload to finish before cancelling so the
                     // assertion below is deterministic. Otherwise the background upload task
                     // (bound to the runner's cancellation token) races against cts1.Cancel().
-                    Task completed = await Task.WhenAny(azdo1.UploadCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
-                    completed.Should().BeSameAs(azdo1.UploadCompleted.Task);
+                    Task completed = await Task.WhenAny(azdo1.TestRunCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+                    completed.Should().BeSameAs(azdo1.TestRunCompleted.Task);
                     cts1.Cancel();
                 });
 
@@ -3634,7 +3710,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public async Task LoopStatus_VerboseLogsFullHelixJobWorkItemList()
+        public async Task LoopStatus_VerboseLogsBoundedPipelineDiagnostics()
         {
             var azdo = new FakeAzureDevOpsService();
             var helix = new FakeHelixService();
@@ -3667,12 +3743,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             exitCode.Should().Be(1);
             logger.Messages.Should().Contain(message =>
-                message.Contains("Helix job details:", StringComparison.Ordinal)
-                && message.Contains("└─ 🧪 Helix job helix-linux [Running]", StringComparison.Ordinal)
-                && message.Contains("   ├─ wi-01 (Running)", StringComparison.Ordinal)
-                && message.Contains("   ├─ wi-10 (Running)", StringComparison.Ordinal)
-                && message.Contains("   ├─ wi-11 (Running)", StringComparison.Ordinal)
-                && message.Contains("   └─ wi-12 (Running)", StringComparison.Ordinal));
+                message.Contains("Upload pipeline:", StringComparison.Ordinal));
+            logger.Messages.Should().NotContain(message =>
+                message.Contains("wi-01", StringComparison.Ordinal)
+                || message.Contains("wi-12", StringComparison.Ordinal));
         }
 
         /// <summary>
@@ -3714,7 +3788,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             logger.Messages.Should().Contain(message =>
                 message.Contains("0 processed / 0 completed / 0 running / 2 waiting work items", StringComparison.Ordinal));
             logger.Messages.Should().Contain(message =>
-                message.Contains("└─ 🧪 Helix job helix-linux [Running]", StringComparison.Ordinal));
+                message.Contains("Upload pipeline:", StringComparison.Ordinal));
         }
 
         /// <summary>
@@ -3947,6 +4021,15 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         };
 
         private static readonly Func<TimeSpan, CancellationToken, Task> NoDelay = (_, _) => Task.CompletedTask;
+
+        private static async Task WaitForAsync(Func<bool> condition)
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            while (!condition())
+            {
+                await Task.Delay(10, timeout.Token);
+            }
+        }
 
         private static WorkItemSummary WaitingItem(string jobName, string workItemName)
             => new($"{jobName}/{workItemName}", jobName, workItemName, "Waiting");
