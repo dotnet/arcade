@@ -591,6 +591,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             logger.Messages.Should().Contain(message =>
                 message.Contains("Test result pipeline drained in", StringComparison.Ordinal)
                 && message.Contains("1 job(s), 1 work item(s), and 1 result(s)", StringComparison.Ordinal));
+            logger.Messages.Should().Contain(message =>
+                message.Contains("Performance metrics", StringComparison.Ordinal)
+                && message.Contains("Azure DevOps HTTP:", StringComparison.Ordinal)
+                && message.Contains("Pipeline aggregate worker time", StringComparison.Ordinal));
         }
 
         [Fact]

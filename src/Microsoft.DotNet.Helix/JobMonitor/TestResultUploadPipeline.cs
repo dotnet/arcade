@@ -21,6 +21,7 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
     private readonly IAzureDevOpsService _azdo;
     private readonly IHelixService _helix;
     private readonly MonitorState _state;
+    private readonly JobMonitorMetrics _metrics;
     private readonly ConcurrentDictionary<string, JobUploadSession> _sessions =
         new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<int, long> _remainingWorkItemsByPoll = [];
@@ -34,13 +35,15 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         JobMonitorOptions options,
         IAzureDevOpsService azdo,
         IHelixService helix,
-        MonitorState state)
+        MonitorState state,
+        JobMonitorMetrics metrics)
     {
         _logger = logger;
         _options = options;
         _azdo = azdo;
         _helix = helix;
         _state = state;
+        _metrics = metrics;
 
         int uploadParallelism = options.TestResultUploadParallelism;
         _jobs = new ActionQueue<JobUploadRequest>(
@@ -195,12 +198,25 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         JobUploadSession session = request.Session;
         try
         {
-            WorkItemTestResults downloaded = await ExecuteDownloadWithRetryAsync(
-                session.Job,
-                request.WorkItemName,
-                cancellationToken);
+            WorkItemTestResults downloaded;
+            long downloadStartedAt = JobMonitorMetrics.StartOperation();
+            try
+            {
+                downloaded = await ExecuteDownloadWithRetryAsync(
+                    session.Job,
+                    request.WorkItemName,
+                    cancellationToken);
+            }
+            finally
+            {
+                _metrics.RecordPipelineOperation(
+                    PipelineOperation.WorkItemDownload,
+                    downloadStartedAt);
+            }
+
             int testRunId = await session.GetOrCreateTestRunAsync(
-                () => _azdo.CreateTestRunAsync(session.Job.TestRunName, cancellationToken));
+                () => CreateTestRunAsync(session.Job.TestRunName, cancellationToken));
+
             TestResultUploadSummary summary =
                 await _azdo.UploadTestResultsAsync(testRunId, downloaded, cancellationToken);
 
@@ -252,12 +268,22 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
             try
             {
                 int testRunId = await session.GetOrCreateTestRunAsync(
-                    () => _azdo.CreateTestRunAsync(session.Job.TestRunName, cancellationToken));
-                await _azdo.CompleteTestRunAsync(
-                    testRunId,
-                    session.Job.JobName,
-                    session.FailedWorkItems,
-                    cancellationToken);
+                    () => CreateTestRunAsync(session.Job.TestRunName, cancellationToken));
+                long completeStartedAt = JobMonitorMetrics.StartOperation();
+                try
+                {
+                    await _azdo.CompleteTestRunAsync(
+                        testRunId,
+                        session.Job.JobName,
+                        session.FailedWorkItems,
+                        cancellationToken);
+                }
+                finally
+                {
+                    _metrics.RecordPipelineOperation(
+                        PipelineOperation.TestRunComplete,
+                        completeStartedAt);
+                }
 
                 _state.TryMarkHelixJobProcessed(session.Job.JobName);
                 _logger.LogInformation(
@@ -282,6 +308,21 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         finally
         {
             session.MarkFinalized();
+        }
+    }
+
+    private async Task<int> CreateTestRunAsync(
+        string testRunName,
+        CancellationToken cancellationToken)
+    {
+        long startedAt = JobMonitorMetrics.StartOperation();
+        try
+        {
+            return await _azdo.CreateTestRunAsync(testRunName, cancellationToken);
+        }
+        finally
+        {
+            _metrics.RecordPipelineOperation(PipelineOperation.TestRunCreate, startedAt);
         }
     }
 

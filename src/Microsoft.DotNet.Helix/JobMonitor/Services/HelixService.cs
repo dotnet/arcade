@@ -25,9 +25,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly IHelixApi _helixApi;
         private readonly IBlobClientFactory _blobClientFactory;
         private readonly IFileSystem _fileSystem;
+        private readonly JobMonitorMetrics _metrics;
 
-        public HelixService(IHelixApi helixApi, ILogger logger)
-            : this(helixApi, logger, new AzureBlobClientFactory(), new FileSystem())
+        public HelixService(
+            IHelixApi helixApi,
+            ILogger logger,
+            JobMonitorMetrics metrics = null)
+            : this(helixApi, logger, new AzureBlobClientFactory(), new FileSystem(), metrics)
         {
         }
 
@@ -35,12 +39,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             IHelixApi helixApi,
             ILogger logger,
             IBlobClientFactory blobClientFactory,
-            IFileSystem fileSystem)
+            IFileSystem fileSystem,
+            JobMonitorMetrics metrics = null)
         {
             _helixApi = helixApi ?? throw new ArgumentNullException(nameof(helixApi));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _blobClientFactory = blobClientFactory ?? throw new ArgumentNullException(nameof(blobClientFactory));
             _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
+            _metrics = metrics ?? new JobMonitorMetrics();
         }
 
         public async Task<IReadOnlyList<HelixJobInfo>> GetJobsForBuildAsync(
@@ -107,6 +113,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     IBlobClient blobClient = _blobClientFactory.CreateBlobClient(file.Link, resultsUri.ResultsUriRSAS);
                     await blobClient.DownloadToAsync(destinationFile, cancellationToken);
                     workItemFiles.Add(destinationFile);
+                    _metrics.RecordResultBlobDownload(failed: false);
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
@@ -114,6 +121,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
                 catch (Exception ex) when (TransientFailureDetector.IsTransient(ex))
                 {
+                    _metrics.RecordResultBlobDownload(failed: true);
                     transientFailures.Add(ex);
                     _logger.LogWarning(ex,
                         "Transient failure downloading '{FileName}' for '{JobName}/{WorkItemName}'. "
@@ -124,6 +132,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
                 catch (Exception ex)
                 {
+                    _metrics.RecordResultBlobDownload(failed: true);
                     _logger.LogWarning(ex, "Failed to download '{FileName}' for '{JobName}/{WorkItemName}'.", file.Name, jobName, workItemName);
                 }
             }
@@ -377,6 +386,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             Exception last = null;
             T result = default;
+            int attempt = 0;
             var retryHandler = new ExponentialRetry
             {
                 MaxAttempts = 5,
@@ -396,13 +406,16 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             bool succeeded = await retryHandler.RunAsync(
                 async _ =>
                 {
+                    int currentAttempt = attempt++;
                     try
                     {
                         result = await action();
+                        _metrics.RecordHelixRequest(isRetry: currentAttempt > 0, failed: false);
                         return RetryResult.Success;
                     }
                     catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
                     {
+                        _metrics.RecordHelixRequest(isRetry: currentAttempt > 0, failed: true);
                         last = ex;
                         return RetryResult.Retry();
                     }

@@ -19,6 +19,8 @@ The design is split by concern:
   aggregation, batching, attachments, and Azure DevOps limits.
 - [State and status](Components/StateAndStatus.md) describes thread-safe state,
   snapshots, progress, and bounded verbose logging.
+- [Performance metrics](Components/PerformanceMetrics.md) describes request
+  counts, retries, throughput, rate-limit waits, and pipeline stage timings.
 - [Shutdown](Components/Shutdown.md) describes normal drain, cancellation, and
   crash recovery.
 
@@ -37,4 +39,3 @@ and millions of test results.
 6. Normal drain should contain only the upload tail that could not overlap
    polling. Runtime validation is used to tune the default parallelism and
    verify that the tail remains a small fraction of the monitor duration.
-

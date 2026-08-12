@@ -52,19 +52,32 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly JobMonitorOptions _options;
         private readonly ILogger _logger;
         private readonly HttpClient _azdoClient;
-        private readonly AzureDevOpsRateLimitGate _rateLimitGate = new();
-        public AzureDevOpsService(JobMonitorOptions options, ILogger logger)
+        private readonly AzureDevOpsRateLimitGate _rateLimitGate;
+        private readonly JobMonitorMetrics _metrics;
+
+        public AzureDevOpsService(
+            JobMonitorOptions options,
+            ILogger logger,
+            JobMonitorMetrics metrics = null)
         {
             _options = options;
             _logger = logger;
+            _metrics = metrics ?? new JobMonitorMetrics();
+            _rateLimitGate = new AzureDevOpsRateLimitGate(_metrics);
             _azdoClient = new HttpClient();
             InitializeClient();
         }
 
-        internal AzureDevOpsService(JobMonitorOptions options, ILogger logger, HttpClient azdoClient)
+        internal AzureDevOpsService(
+            JobMonitorOptions options,
+            ILogger logger,
+            HttpClient azdoClient,
+            JobMonitorMetrics metrics = null)
         {
             _options = options;
             _logger = logger;
+            _metrics = metrics ?? new JobMonitorMetrics();
+            _rateLimitGate = new AzureDevOpsRateLimitGate(_metrics);
             _azdoClient = azdoClient ?? throw new ArgumentNullException(nameof(azdoClient));
             InitializeClient();
         }
@@ -412,7 +425,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 reportingParameters,
                 _logger,
                 _azdoClient,
-                _rateLimitGate);
+                _rateLimitGate,
+                _metrics);
 
             if (results.TestResultFiles.Count == 0)
             {
@@ -450,28 +464,59 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             bool retryTransientFailures = true,
             CancellationToken cancellationToken = default)
         {
+            string serializedBody = body?.ToString(Formatting.None);
+            int payloadBytes = serializedBody is null ? 0 : Encoding.UTF8.GetByteCount(serializedBody);
+            int attempt = 0;
+
             async Task<string> SendOnceAsync()
             {
                 await _rateLimitGate.WaitAsync(cancellationToken);
+                int currentAttempt = attempt++;
+                long requestStartedAt = JobMonitorMetrics.StartOperation();
+                bool failed = true;
+                bool metricsRecorded = false;
                 using var request = new HttpRequestMessage(method, requestUri);
-                if (body != null)
+                if (serializedBody != null)
                 {
-                    request.Content = new StringContent(body.ToString(Formatting.None), Encoding.UTF8, "application/json");
+                    request.Content = new StringContent(serializedBody, Encoding.UTF8, "application/json");
                 }
 
-                using HttpResponseMessage response = await _azdoClient.SendAsync(request, cancellationToken);
-                string content = response.Content != null ? await response.Content.ReadAsStringAsync(cancellationToken) : null;
-                if (!response.IsSuccessStatusCode)
+                try
                 {
+                    using HttpResponseMessage response = await _azdoClient.SendAsync(request, cancellationToken);
+                    string content = response.Content != null ? await response.Content.ReadAsStringAsync(cancellationToken) : null;
+                    failed = !response.IsSuccessStatusCode;
+                    _metrics.RecordAzureDevOpsRequest(
+                        AzureDevOpsRequestKind.Control,
+                        payloadBytes,
+                        isRetry: currentAttempt > 0,
+                        failed: failed,
+                        startedAt: requestStartedAt);
+                    metricsRecorded = true;
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        await HonorRateLimitAsync(response, requestUri, cancellationToken);
+                        throw new HttpRequestException(
+                            $"Request to {requestUri} failed with {(int)response.StatusCode} {response.ReasonPhrase}. {content}",
+                            null,
+                            response.StatusCode);
+                    }
+
                     await HonorRateLimitAsync(response, requestUri, cancellationToken);
-                    throw new HttpRequestException(
-                        $"Request to {requestUri} failed with {(int)response.StatusCode} {response.ReasonPhrase}. {content}",
-                        null,
-                        response.StatusCode);
+                    return content;
                 }
-
-                await HonorRateLimitAsync(response, requestUri, cancellationToken);
-                return content;
+                finally
+                {
+                    if (!metricsRecorded)
+                    {
+                        _metrics.RecordAzureDevOpsRequest(
+                            AzureDevOpsRequestKind.Control,
+                            payloadBytes,
+                            isRetry: currentAttempt > 0,
+                            failed: failed,
+                            startedAt: requestStartedAt);
+                    }
+                }
             }
 
             if (!retryTransientFailures)

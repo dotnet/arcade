@@ -36,29 +36,32 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
     private readonly ILogger _logger;
     private readonly bool _ownsHttpClient;
     private readonly AzureDevOpsRateLimitGate _rateLimitGate;
+    private readonly JobMonitorMetrics _metrics;
 
     public AzureDevOpsResultPublisher(
         AzureDevOpsReportingParameters azdoParameters,
         ILogger logger)
-        : this(
-            azdoParameters,
-            logger,
-            CreateHttpClient(azdoParameters.AccessToken),
-            new AzureDevOpsRateLimitGate(),
-            ownsHttpClient: true)
     {
+        _azdoParameters = azdoParameters;
+        _httpClient = CreateHttpClient(azdoParameters.AccessToken);
+        _logger = logger;
+        _metrics = new JobMonitorMetrics();
+        _rateLimitGate = new AzureDevOpsRateLimitGate(_metrics);
+        _ownsHttpClient = true;
     }
 
     internal AzureDevOpsResultPublisher(
         AzureDevOpsReportingParameters azdoParameters,
         ILogger logger,
         HttpClient httpClient,
-        AzureDevOpsRateLimitGate? rateLimitGate = null)
+        AzureDevOpsRateLimitGate? rateLimitGate = null,
+        JobMonitorMetrics? metrics = null)
         : this(
             azdoParameters,
             logger,
             httpClient,
             rateLimitGate ?? new AzureDevOpsRateLimitGate(),
+            metrics ?? new JobMonitorMetrics(),
             ownsHttpClient: false)
     {
     }
@@ -68,12 +71,14 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
         ILogger logger,
         HttpClient httpClient,
         AzureDevOpsRateLimitGate rateLimitGate,
+        JobMonitorMetrics metrics,
         bool ownsHttpClient)
     {
         _azdoParameters = azdoParameters;
         _httpClient = httpClient;
         _logger = logger;
         _rateLimitGate = rateLimitGate;
+        _metrics = metrics;
         _ownsHttpClient = ownsHttpClient;
     }
 
@@ -87,31 +92,57 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
 
     public async Task<TestResultUploadSummary> UploadTestResultsWithSummaryAsync(List<string> testResultFiles, object resultMetadata, CancellationToken cancellationToken = default)
     {
-        var testResultReader = new LocalTestResultsReader(_logger, _azdoParameters.TestResultAttachmentMode);
-
-        var parsedResults = new List<IReadOnlyList<TestResult>>(testResultFiles.Count);
-        foreach (string file in testResultFiles)
+        long parseStartedAt = JobMonitorMetrics.StartOperation();
+        bool parseRecorded = false;
+        try
         {
-            parsedResults.Add(await testResultReader.ReadResultFileAsync(file, cancellationToken));
-        }
+            var testResultReader = new LocalTestResultsReader(_logger, _azdoParameters.TestResultAttachmentMode);
 
-        if (parsedResults.Count == 0)
+            var parsedResults = new List<IReadOnlyList<TestResult>>(testResultFiles.Count);
+            foreach (string file in testResultFiles)
+            {
+                parsedResults.Add(await testResultReader.ReadResultFileAsync(file, cancellationToken));
+            }
+
+            if (parsedResults.Count == 0)
+            {
+                _logger.LogWarning("No test result files were provided for upload");
+                return new TestResultUploadSummary(true, 0);
+            }
+
+            IReadOnlyList<AggregatedResult> aggregatedResults = new ResultAggregator().Aggregate(parsedResults, _azdoParameters.UseFullyQualifiedTestName);
+            _metrics.RecordPipelineOperation(PipelineOperation.ResultParseAndAggregate, parseStartedAt);
+            parseRecorded = true;
+            if (aggregatedResults.Count == 0)
+            {
+                _logger.LogDebug("Test results were discovered but none could be aggregated");
+                return new TestResultUploadSummary(true, 0);
+            }
+
+            long publishStartedAt = JobMonitorMetrics.StartOperation();
+            long uploadedCount;
+            try
+            {
+                uploadedCount = await UploadTestResultsWithCountAsync(
+                    aggregatedResults,
+                    resultMetadata,
+                    cancellationToken);
+            }
+            finally
+            {
+                _metrics.RecordPipelineOperation(PipelineOperation.WorkItemPublish, publishStartedAt);
+            }
+            return new TestResultUploadSummary(
+                AllPassed: ComputeAllPassed(aggregatedResults),
+                UploadedCount: uploadedCount);
+        }
+        finally
         {
-            _logger.LogWarning("No test result files were provided for upload");
-            return new TestResultUploadSummary(true, 0);
+            if (!parseRecorded)
+            {
+                _metrics.RecordPipelineOperation(PipelineOperation.ResultParseAndAggregate, parseStartedAt);
+            }
         }
-
-        IReadOnlyList<AggregatedResult> aggregatedResults = new ResultAggregator().Aggregate(parsedResults, _azdoParameters.UseFullyQualifiedTestName);
-        if (aggregatedResults.Count == 0)
-        {
-            _logger.LogDebug("Test results were discovered but none could be aggregated");
-            return new TestResultUploadSummary(true, 0);
-        }
-
-        long uploadedCount = await UploadTestResultsWithCountAsync(aggregatedResults, resultMetadata, cancellationToken);
-        return new TestResultUploadSummary(
-            AllPassed: ComputeAllPassed(aggregatedResults),
-            UploadedCount: uploadedCount);
     }
 
     /// <summary>
@@ -157,6 +188,7 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
             $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results?api-version=7.1-preview.6",
             testCaseResults,
             DefaultAttemptCount,
+            AzureDevOpsRequestKind.ResultBatch,
             cancellationToken);
 
         IReadOnlyList<PublishedTestCaseResultReference> publishedResults = await ReadPublishedResultsAsync(response, cancellationToken);
@@ -240,6 +272,7 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
             path,
             request,
             DefaultAttemptCount,
+            AzureDevOpsRequestKind.Attachment,
             cancellationToken);
         _ = response;
     }
@@ -499,6 +532,7 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
         string relativePath,
         object? payload,
         int attemptCount,
+        AzureDevOpsRequestKind requestKind,
         CancellationToken cancellationToken)
     {
         byte[]? body = payload is null ? null : JsonSerializer.SerializeToUtf8Bytes(payload, s_serializerOptions);
@@ -528,6 +562,8 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
             async attempt =>
             {
                 await _rateLimitGate.WaitAsync(cancellationToken);
+                long requestStartedAt = JobMonitorMetrics.StartOperation();
+                bool failed = true;
 
                 Uri baseUri = _azdoParameters.CollectionUri.AbsoluteUri.EndsWith('/')
                     ? _azdoParameters.CollectionUri
@@ -542,7 +578,7 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
 
                 try
                 {
-                    DateTimeOffset requestStartedAt = DateTimeOffset.UtcNow;
+                    DateTimeOffset logStartedAt = DateTimeOffset.UtcNow;
                     _logger.LogDebug(
                         "Sending Azure DevOps {Method} request to '{RequestPath}', attempt {Attempt} of {AttemptCount}.",
                         method,
@@ -565,7 +601,8 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
                             (int)response.StatusCode,
                             attempt + 1,
                             attemptCount,
-                            DateTimeOffset.UtcNow - requestStartedAt);
+                            DateTimeOffset.UtcNow - logStartedAt);
+                        failed = false;
                         successfulResponse = response;
                         return RetryResult.Success;
                     }
@@ -595,7 +632,7 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
                                 (int)response.StatusCode,
                                 attempt + 1,
                                 attemptCount,
-                                DateTimeOffset.UtcNow - requestStartedAt);
+                                DateTimeOffset.UtcNow - logStartedAt);
                             lastException = new AzureDevOpsReportingError(
                                 $"Azure DevOps request failed with status code {(int)response.StatusCode}: {responseBody}");
                             return RetryResult.Retry(retryAfter);
@@ -626,6 +663,15 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
                         attempt + 1,
                         attemptCount);
                     return RetryResult.Retry();
+                }
+                finally
+                {
+                    _metrics.RecordAzureDevOpsRequest(
+                        requestKind,
+                        body?.Length ?? 0,
+                        isRetry: attempt > 0,
+                        failed: failed,
+                        startedAt: requestStartedAt);
                 }
             },
             cancellationToken);

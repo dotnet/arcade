@@ -5,7 +5,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor;
 
 internal sealed class AzureDevOpsRateLimitGate
 {
+    private readonly JobMonitorMetrics _metrics;
     private long _notBeforeUtcTicks;
+
+    public AzureDevOpsRateLimitGate(JobMonitorMetrics metrics = null)
+    {
+        _metrics = metrics;
+    }
 
     public void Defer(TimeSpan delay)
     {
@@ -14,6 +20,7 @@ internal sealed class AzureDevOpsRateLimitGate
             return;
         }
 
+        _metrics?.RecordRateLimitDeferral(delay);
         long candidate = DateTimeOffset.UtcNow.Add(delay).UtcTicks;
         long observed;
         while (candidate > (observed = Interlocked.Read(ref _notBeforeUtcTicks)))
@@ -27,16 +34,28 @@ internal sealed class AzureDevOpsRateLimitGate
 
     public async Task WaitAsync(CancellationToken cancellationToken)
     {
-        while (true)
+        long waitStartedAt = 0;
+        try
         {
-            long notBeforeTicks = Interlocked.Read(ref _notBeforeUtcTicks);
-            TimeSpan delay = new DateTimeOffset(notBeforeTicks, TimeSpan.Zero) - DateTimeOffset.UtcNow;
-            if (delay <= TimeSpan.Zero)
+            while (true)
             {
-                return;
-            }
+                long notBeforeTicks = Interlocked.Read(ref _notBeforeUtcTicks);
+                TimeSpan delay = new DateTimeOffset(notBeforeTicks, TimeSpan.Zero) - DateTimeOffset.UtcNow;
+                if (delay <= TimeSpan.Zero)
+                {
+                    return;
+                }
 
-            await Task.Delay(delay, cancellationToken);
+                waitStartedAt = waitStartedAt == 0 ? JobMonitorMetrics.StartOperation() : waitStartedAt;
+                await Task.Delay(delay, cancellationToken);
+            }
+        }
+        finally
+        {
+            if (waitStartedAt != 0)
+            {
+                _metrics?.RecordRateLimitWait(waitStartedAt);
+            }
         }
     }
 }

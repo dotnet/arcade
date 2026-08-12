@@ -153,7 +153,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         public async Task UploadTestResultsWithCountAsync_SplitsMoreThanOneThousandTopLevelResults()
         {
             var handler = new RecordingResultHandler();
-            using var publisher = CreatePublisher(handler);
+            var metrics = new JobMonitorMetrics();
+            using var publisher = CreatePublisher(handler, metrics);
             AggregatedResult[] results =
             [
                 .. Enumerable.Range(0, 1001)
@@ -164,6 +165,15 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.Equal(1001, uploadedCount);
             Assert.Equal(new[] { 1000, 1 }, handler.RequestResultCounts);
+            JobMonitorMetricsSnapshot snapshot = metrics.Snapshot();
+            Assert.Equal(2, snapshot.AzureDevOpsRequests);
+            Assert.Equal(2, snapshot.AzureDevOpsResultRequests);
+            Assert.Equal(0, snapshot.AzureDevOpsControlRequests);
+            Assert.Equal(0, snapshot.AzureDevOpsAttachmentRequests);
+            Assert.Equal(0, snapshot.AzureDevOpsRetries);
+            Assert.Equal(0, snapshot.AzureDevOpsFailedAttempts);
+            Assert.True(snapshot.AzureDevOpsPayloadBytes > 0);
+            Assert.True(snapshot.MaximumAzureDevOpsRequestTime > TimeSpan.Zero);
         }
 
         [Fact]
@@ -229,14 +239,40 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal(2, handler.RequestResultCounts.Count);
         }
 
-        private static AzureDevOpsResultPublisher CreatePublisher(HttpMessageHandler handler)
+        [Fact]
+        public async Task UploadTestResultsWithCountAsync_RecordsThrottledRetryWait()
+        {
+            var handler = new ThrottlingResultHandler();
+            var metrics = new JobMonitorMetrics();
+            using var publisher = CreatePublisher(handler, metrics);
+            AggregatedResult[] results =
+            [
+                new(AggregationType.Single, "Test", 1, "Passed")
+            ];
+
+            Assert.Equal(1, await publisher.UploadTestResultsWithCountAsync(results, new { }));
+
+            JobMonitorMetricsSnapshot snapshot = metrics.Snapshot();
+            Assert.Equal(2, snapshot.AzureDevOpsResultRequests);
+            Assert.Equal(1, snapshot.AzureDevOpsRetries);
+            Assert.Equal(1, snapshot.AzureDevOpsFailedAttempts);
+            Assert.Equal(1, snapshot.RateLimitDeferrals);
+            Assert.True(snapshot.RateLimitDeferredTime >= TimeSpan.FromMilliseconds(50));
+            Assert.True(snapshot.MaximumRateLimitDeferral >= TimeSpan.FromMilliseconds(50));
+        }
+
+        private static AzureDevOpsResultPublisher CreatePublisher(
+            HttpMessageHandler handler,
+            JobMonitorMetrics metrics = null)
             => new(
                 new AzureDevOpsReportingParameters(
                     new Uri("https://dev.azure.com/dnceng-public/"),
                     "public",
                     "123"),
                 NullLogger.Instance,
-                new HttpClient(handler));
+                new HttpClient(handler),
+                new AzureDevOpsRateLimitGate(metrics),
+                metrics);
 
         private static AggregatedResult CreateDataDrivenResult(string name, int subResultCount)
             => new(
@@ -306,6 +342,26 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 }
 
                 return await base.SendAsync(request, cancellationToken);
+            }
+        }
+
+        private sealed class ThrottlingResultHandler : RecordingResultHandler
+        {
+            private int _requestCount;
+
+            protected override Task<HttpResponseMessage> SendAsync(
+                HttpRequestMessage request,
+                CancellationToken cancellationToken)
+            {
+                if (Interlocked.Increment(ref _requestCount) == 1)
+                {
+                    var response = new HttpResponseMessage(HttpStatusCode.TooManyRequests);
+                    response.Headers.RetryAfter = new RetryConditionHeaderValue(
+                        TimeSpan.FromMilliseconds(50));
+                    return Task.FromResult(response);
+                }
+
+                return base.SendAsync(request, cancellationToken);
             }
         }
 

@@ -208,6 +208,87 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 DocumentationUri);
         }
 
+        public void LogPerformanceMetrics(
+            JobMonitorMetricsSnapshot metrics,
+            UploadPipelineSnapshot uploads,
+            bool isPartial = false)
+        {
+            double pipelineSeconds = Math.Max(metrics.PipelineElapsed.TotalSeconds, 0.001);
+            double resultThroughput = uploads.UploadedResults / pipelineSeconds;
+            double workItemThroughput = uploads.WorkItems.Completed / pipelineSeconds;
+            double payloadMiB = metrics.AzureDevOpsPayloadBytes / (1024d * 1024d);
+            string heading = isPartial
+                ? "⏱️ Partial performance metrics captured during cancellation"
+                : "⏱️ Performance metrics";
+            string throughputLabel = isPartial
+                ? "Completed before cancellation"
+                : "Upload throughput";
+            string throughputSummary = isPartial
+                ? $"{uploads.UploadedResults} test result(s); "
+                    + $"{uploads.WorkItems.Completed} work item(s); rates unavailable for a partial snapshot"
+                : $"{uploads.UploadedResults} test result(s), {resultThroughput:0.##} result(s)/s; "
+                    + $"{uploads.WorkItems.Completed} work item(s), {workItemThroughput:0.##} work item(s)/s";
+
+            _logger.LogInformation(
+                "{Heading} ({Elapsed} monitor elapsed, {PipelineElapsed} observed upload pipeline activity):{nl}"
+              + "   {ThroughputLabel}: {ThroughputSummary}{nl}"
+              + "   Azure DevOps HTTP: {AzdoRequests} request attempt(s) "
+              + "({ControlRequests} control, {ResultRequests} result batch, {AttachmentRequests} attachment), "
+              + "{AzdoRetries} retry attempt(s), {AzdoFailedAttempts} failed attempt(s), "
+              + "{PayloadMiB:0.##} MiB request payload; aggregate request time {AzdoRequestTime}, "
+              + "max {MaximumAzdoRequestTime}{nl}"
+              + "   Helix/storage: {HelixRequests} retry-wrapped remote request attempt(s), "
+              + "{HelixRetries} retry attempt(s), {HelixFailedAttempts} failed attempt(s); "
+              + "{BlobDownloads} result blob download attempt(s), {BlobFailures} failed{nl}"
+              + "   Rate limiting: {RateLimitDeferrals} server-directed deferral(s), "
+              + "{RateLimitDeferredTime} cumulative guidance, max {MaximumRateLimitDeferral}; "
+              + "{RateLimitWaits} shared-gate worker wait(s), aggregate {RateLimitWaitTime}, "
+              + "max {MaximumRateLimitWaitTime}{nl}"
+              + "   Pipeline aggregate worker time (max single operation): download {DownloadTime} ({MaxDownloadTime}), "
+              + "parse/aggregate {ParseTime} ({MaxParseTime}), publish {PublishTime} ({MaxPublishTime}), "
+              + "create run {CreateTime} ({MaxCreateTime}), complete run {CompleteTime} ({MaxCompleteTime}).",
+                heading,
+                metrics.Elapsed,
+                metrics.PipelineElapsed,
+                Environment.NewLine,
+                throughputLabel,
+                throughputSummary,
+                Environment.NewLine,
+                metrics.AzureDevOpsRequests,
+                metrics.AzureDevOpsControlRequests,
+                metrics.AzureDevOpsResultRequests,
+                metrics.AzureDevOpsAttachmentRequests,
+                metrics.AzureDevOpsRetries,
+                metrics.AzureDevOpsFailedAttempts,
+                payloadMiB,
+                metrics.AzureDevOpsRequestTime,
+                metrics.MaximumAzureDevOpsRequestTime,
+                Environment.NewLine,
+                metrics.HelixRequests,
+                metrics.HelixRetries,
+                metrics.HelixFailedAttempts,
+                metrics.ResultBlobDownloads,
+                metrics.ResultBlobDownloadFailures,
+                Environment.NewLine,
+                metrics.RateLimitDeferrals,
+                metrics.RateLimitDeferredTime,
+                metrics.MaximumRateLimitDeferral,
+                metrics.RateLimitWaits,
+                metrics.RateLimitWaitTime,
+                metrics.MaximumRateLimitWaitTime,
+                Environment.NewLine,
+                metrics.WorkItemDownloadTime,
+                metrics.MaximumWorkItemDownloadTime,
+                metrics.ParseTime,
+                metrics.MaximumParseTime,
+                metrics.WorkItemPublishTime,
+                metrics.MaximumWorkItemPublishTime,
+                metrics.TestRunCreateTime,
+                metrics.MaximumTestRunCreateTime,
+                metrics.TestRunCompleteTime,
+                metrics.MaximumTestRunCompleteTime);
+        }
+
         public void LogNonMonitorPipelineFailure()
         {
             // DO NOT CHANGE THIS LINE - it's matched by Build Analysis to ignore a failure

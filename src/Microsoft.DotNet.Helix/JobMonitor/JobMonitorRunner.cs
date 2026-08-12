@@ -34,6 +34,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly string _helixSource;
 
         private readonly MonitorState _state = new();
+        private readonly JobMonitorMetrics _metrics;
         private readonly StatusReporter _reporter;
         private readonly TestResultUploadPipeline _uploads;
         private PollStatusSnapshot _latestStatus;
@@ -42,14 +43,22 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// Constructor for production use with real services.
         /// </summary>
         public JobMonitorRunner(JobMonitorOptions options, ILogger logger)
-            : this(options,
-                  logger,
-                  new AzureDevOpsService(options, logger),
-                  new HelixService(string.IsNullOrEmpty(options.HelixAccessToken)
-                      ? ApiFactory.GetAnonymous(options.HelixBaseUri)
-                      : ApiFactory.GetAuthenticated(options.HelixBaseUri, options.HelixAccessToken),
-                  logger),
-                  delayFunc: null)
+            : this(options, logger, CreateProductionDependencies(options, logger))
+        {
+        }
+
+        private JobMonitorRunner(
+            JobMonitorOptions options,
+            ILogger logger,
+            ProductionDependencies dependencies)
+            : this(
+                options,
+                logger,
+                dependencies.AzureDevOps,
+                dependencies.Helix,
+                delayFunc: null,
+                statusDelayFunc: null,
+                metrics: dependencies.Metrics)
         {
         }
 
@@ -62,7 +71,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             IAzureDevOpsService azdo,
             IHelixService helix,
             Func<TimeSpan, CancellationToken, Task> delayFunc,
-            Func<TimeSpan, CancellationToken, Task> statusDelayFunc = null)
+            Func<TimeSpan, CancellationToken, Task> statusDelayFunc = null,
+            JobMonitorMetrics metrics = null)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -70,6 +80,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _helix = helix ?? throw new ArgumentNullException(nameof(helix));
             _delayFunc = delayFunc ?? Task.Delay;
             _statusDelayFunc = statusDelayFunc ?? Task.Delay;
+            _metrics = metrics ?? new JobMonitorMetrics();
             Directory.CreateDirectory(_options.WorkingDirectory);
 
             _helixSource = HelixJobSource.Compute(
@@ -80,7 +91,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 _options.SourceBranch);
 
             _reporter = new StatusReporter(_logger, _options, _state);
-            _uploads = new TestResultUploadPipeline(_logger, _options, _azdo, _helix, _state);
+            _uploads = new TestResultUploadPipeline(
+                _logger,
+                _options,
+                _azdo,
+                _helix,
+                _state,
+                _metrics);
         }
 
         public async Task<int> RunAsync(CancellationToken cancellationToken)
@@ -117,6 +134,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 // cancelled.
                 using var cancelCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
                 await CancelInFlightHelixJobsAsync(cancelCts.Token);
+                _reporter.LogPerformanceMetrics(
+                    _metrics.Snapshot(),
+                    _uploads.Snapshot,
+                    isPartial: true);
 
                 return 1;
             }
@@ -389,6 +410,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             await _uploads.DrainAsync(pollNumber, newlyTerminalWorkItems, cancellationToken);
+            _reporter.LogPerformanceMetrics(_metrics.Snapshot(), _uploads.Snapshot);
             _reporter.LogFinalFailedWorkItems();
             _reporter.LogFinalSummary(_state.AssociatedJobsCount);
 
@@ -548,6 +570,21 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 && !string.IsNullOrEmpty(job.StageAttempt)
                 && MonitorState.ParseStageAttempt(job.StageAttempt) < MonitorState.ParseStageAttempt(_options.StageAttempt);
 
+        private static ProductionDependencies CreateProductionDependencies(
+            JobMonitorOptions options,
+            ILogger logger)
+        {
+            var metrics = new JobMonitorMetrics();
+            var azureDevOps = new AzureDevOpsService(options, logger, metrics);
+            var helix = new HelixService(
+                string.IsNullOrEmpty(options.HelixAccessToken)
+                    ? ApiFactory.GetAnonymous(options.HelixBaseUri)
+                    : ApiFactory.GetAuthenticated(options.HelixBaseUri, options.HelixAccessToken),
+                logger,
+                metrics);
+            return new ProductionDependencies(azureDevOps, helix, metrics);
+        }
+
         public void Dispose()
         {
             _uploads.Cancel();
@@ -604,5 +641,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             IReadOnlyList<HelixJobInfo> Jobs,
             IReadOnlyDictionary<string, IReadOnlyCollection<WorkItemSummary>> WorkItemsByJob,
             IReadOnlySet<string> CompletedJobNames);
+
+        private sealed record ProductionDependencies(
+            IAzureDevOpsService AzureDevOps,
+            IHelixService Helix,
+            JobMonitorMetrics Metrics);
     }
 }

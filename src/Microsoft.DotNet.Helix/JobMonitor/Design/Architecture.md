@@ -60,6 +60,11 @@ work-item queue, and work-item workers may wait on Azure DevOps throttling.
 Completed-job acceptance remains non-blocking, so neither condition blocks the
 poller or status reporter.
 
+`JobMonitorMetrics` is shared by the runner, services, publisher, rate-limit
+gate, and upload pipeline. It records atomic request counts and operation
+timings without emitting per-request information logs. The final aggregate
+report is described in [Performance metrics](Components/PerformanceMetrics.md).
+
 ## Durability boundary
 
 The only durable "processed" marker is the Helix-job tag on a completed Azure
