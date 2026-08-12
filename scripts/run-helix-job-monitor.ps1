@@ -215,7 +215,7 @@ if ($PSBoundParameters.ContainsKey('StageAttempt')) {
     }
 }
 else {
-    $latestJob = $selectedContexts | Sort-Object JobAttempt -Descending | Select-Object -First 1
+    $latestJob = $selectedContexts | Sort-Object StageAttempt, JobAttempt -Descending | Select-Object -First 1
     $StageAttempt = $latestJob.StageAttempt
 }
 
