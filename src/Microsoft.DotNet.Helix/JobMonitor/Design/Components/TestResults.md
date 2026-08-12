@@ -14,6 +14,12 @@ refer to definitions by ID and may precede them in the file.
 Malformed files are warned and omitted. Caller cancellation is propagated.
 DTD processing is prohibited.
 
+Helix may append `.txt` to uploaded result artifacts, for example
+`testResults.xml.txt` or `results.trx.txt`. File recognition strips that single
+transport suffix before matching the supported xUnit, JUnit, and TRX names.
+Recognized files whose XML root is unsupported are warned rather than silently
+producing zero results.
+
 ## Aggregation
 
 Existing single, data-driven, and rerun semantics are retained, including

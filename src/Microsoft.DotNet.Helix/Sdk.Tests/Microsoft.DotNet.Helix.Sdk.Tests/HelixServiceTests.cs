@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 .Setup(w => w.ListFilesAsync("work:item", "job:name", false, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(ImmutableList.Create(
                     new UploadedFile("logs/console.txt", "https://storage/logs/console.txt"),
-                    new UploadedFile("nested/testResults.xml", "https://storage/nested/testResults.xml"),
+                    new UploadedFile("nested/testResults.xml.txt", "https://storage/nested/testResults.xml.txt"),
                     new UploadedFile("failed.trx", "https://storage/failed.trx")));
             api.WorkItem
                 .Setup(w => w.ListFilesAsync("no-results", "job:name", false, It.IsAny<CancellationToken>()))
@@ -112,13 +112,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal("work:item", result.WorkItemName);
             string jobDirectory = fileSystem.PathCombine("work", SanitizeForCurrentPlatform("job:name"));
             string workItemDirectory = fileSystem.PathCombine(jobDirectory, SanitizeForCurrentPlatform("work:item"));
-            string expectedResultFile = fileSystem.PathCombine(workItemDirectory, NormalizeForCurrentPlatform("nested/testResults.xml"));
+            string expectedResultFile = fileSystem.PathCombine(workItemDirectory, NormalizeForCurrentPlatform("nested/testResults.xml.txt"));
             Assert.Equal([expectedResultFile], result.TestResultFiles);
             Assert.Contains(jobDirectory, fileSystem.Directories);
             Assert.Contains(workItemDirectory, fileSystem.Directories);
             Assert.Contains(fileSystem.GetDirectoryName(expectedResultFile), fileSystem.Directories);
             Assert.Equal(
-                [new DownloadCall("https://storage/nested/testResults.xml", "?resultSas", expectedResultFile),
+                [new DownloadCall("https://storage/nested/testResults.xml.txt", "?resultSas", expectedResultFile),
                  new DownloadCall("https://storage/failed.trx", "?resultSas", fileSystem.PathCombine(workItemDirectory, "failed.trx"))],
                 blobClientFactory.Downloads);
         }

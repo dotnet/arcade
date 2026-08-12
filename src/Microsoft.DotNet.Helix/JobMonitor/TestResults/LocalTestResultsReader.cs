@@ -20,6 +20,11 @@ public sealed class LocalTestResultsReader(
     public static bool LooksLikeTestResultFile(string path)
     {
         string fileName = Path.GetFileName(path);
+        if (fileName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
+        {
+            fileName = fileName[..^4];
+        }
+
         return fileName.EndsWith(".trx", StringComparison.OrdinalIgnoreCase)
             || fileName.EndsWith("testResults.xml", StringComparison.OrdinalIgnoreCase)
             || fileName.EndsWith("test-results.xml", StringComparison.OrdinalIgnoreCase)
@@ -97,6 +102,13 @@ public sealed class LocalTestResultsReader(
                 {
                     yield return result;
                 }
+                break;
+
+            default:
+                _logger.LogWarning(
+                    "Test result file '{Path}' has unsupported root element '{RootElement}' and will be skipped.",
+                    filePath,
+                    rootName);
                 break;
         }
     }

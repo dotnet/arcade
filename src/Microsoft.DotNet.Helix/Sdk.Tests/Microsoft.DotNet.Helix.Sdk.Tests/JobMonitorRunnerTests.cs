@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -536,7 +537,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             azdo.UploadedJobNames.Should().BeEquivalentTo(["helix-linux"]);
             azdo.CompletedTestRunIds.Should().ContainSingle();
             logger.Messages.Should().Contain(message =>
-                message.Contains("2 test results for job 'helix-linux' processed.", StringComparison.Ordinal));
+                message.Contains(
+                    "Test result processing completed for job 'helix-linux': "
+                    + "1 work item(s), 2 recognized result file(s), and 2 test result(s) uploaded.",
+                    StringComparison.Ordinal));
         }
 
         [Fact]
@@ -660,6 +664,62 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             uploadRelease.SetResult();
             (await run.WaitAsync(TimeSpan.FromSeconds(5))).Should().Be(0);
+        }
+
+        [Fact]
+        public async Task StatusReportsEveryFiveMinutesWhileDrainIsBlocked()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+            var uploadRelease = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var statusTick = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            int statusDelayCount = 0;
+
+            azdo.UploadBlocker = uploadRelease.Task;
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"));
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["workitem-1"]),
+                });
+
+            var runner = new JobMonitorRunner(
+                DefaultOptions(),
+                logger,
+                azdo,
+                helix,
+                NoDelay,
+                async (delay, cancellationToken) =>
+                {
+                    delay.Should().Be(TimeSpan.FromMinutes(5));
+                    if (Interlocked.Increment(ref statusDelayCount) == 1)
+                    {
+                        await statusTick.Task.WaitAsync(cancellationToken);
+                    }
+                    else
+                    {
+                        await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                    }
+                });
+
+            Task<int> run = runner.RunAsync(CancellationToken.None);
+            await WaitForAsync(() => logger.Messages.Any(message =>
+                message.Contains("Starting final test result drain:", StringComparison.Ordinal)));
+            logger.Messages.Count(IsStatusMessage).Should().Be(1);
+
+            statusTick.SetResult();
+            await WaitForAsync(() => logger.Messages.Count(IsStatusMessage) == 2);
+            logger.Messages.Last(IsStatusMessage).Should().Contain("1 completed");
+
+            uploadRelease.SetResult();
+            (await run.WaitAsync(TimeSpan.FromSeconds(5))).Should().Be(0);
+
+            static bool IsStatusMessage(string message)
+                => message.Contains("ℹ️ Status:", StringComparison.Ordinal);
         }
 
         [Fact]
@@ -4270,7 +4330,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
         private sealed class RecordingLogger : ILogger
         {
-            public List<string> Messages { get; } = [];
+            public ConcurrentQueue<string> Messages { get; } = [];
 
             public IDisposable BeginScope<TState>(TState state) => NullScope.Instance;
 
@@ -4283,7 +4343,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 Exception exception,
                 Func<TState, Exception, string> formatter)
             {
-                Messages.Add(formatter(state, exception));
+                Messages.Enqueue(formatter(state, exception));
             }
 
             private sealed class NullScope : IDisposable

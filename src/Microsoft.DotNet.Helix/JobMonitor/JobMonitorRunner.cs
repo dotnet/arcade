@@ -30,11 +30,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly IAzureDevOpsService _azdo;
         private readonly IHelixService _helix;
         private readonly Func<TimeSpan, CancellationToken, Task> _delayFunc;
+        private readonly Func<TimeSpan, CancellationToken, Task> _statusDelayFunc;
         private readonly string _helixSource;
 
         private readonly MonitorState _state = new();
         private readonly StatusReporter _reporter;
         private readonly TestResultUploadPipeline _uploads;
+        private PollStatusSnapshot _latestStatus;
 
         /// <summary>
         /// Constructor for production use with real services.
@@ -59,13 +61,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             ILogger logger,
             IAzureDevOpsService azdo,
             IHelixService helix,
-            Func<TimeSpan, CancellationToken, Task> delayFunc)
+            Func<TimeSpan, CancellationToken, Task> delayFunc,
+            Func<TimeSpan, CancellationToken, Task> statusDelayFunc = null)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _azdo = azdo ?? throw new ArgumentNullException(nameof(azdo));
             _helix = helix ?? throw new ArgumentNullException(nameof(helix));
             _delayFunc = delayFunc ?? Task.Delay;
+            _statusDelayFunc = statusDelayFunc ?? Task.Delay;
             Directory.CreateDirectory(_options.WorkingDirectory);
 
             _helixSource = HelixJobSource.Compute(
@@ -85,6 +89,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             _state.AddProcessedHelixJobs(await _azdo.GetProcessedHelixJobNamesAsync(cancellationToken));
 
+            using var statusCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            Task statusTask = ReportStatusPeriodicallyAsync(statusCts.Token);
             try
             {
                 IReadOnlyList<HelixJobInfo> jobsForFirstPoll = await ExecuteRetryPassAsync(cancellationToken);
@@ -113,6 +119,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 await CancelInFlightHelixJobsAsync(cancelCts.Token);
 
                 return 1;
+            }
+            finally
+            {
+                statusCts.Cancel();
+                try
+                {
+                    await statusTask;
+                }
+                catch (OperationCanceledException) when (statusCts.IsCancellationRequested)
+                {
+                }
             }
         }
 
@@ -350,17 +367,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     discoveryPoll: pollNumber);
             }
 
-            bool shouldLogStatus = _options.Verbose
-                || loopState.LastObservedJobCount != stageJobs.Count
-                || loopState.LastObservedCompletedCount != completedJobs.Count
-                || (DateTime.UtcNow - loopState.LastStatusLogAt) >= TimeSpan.FromMinutes(5);
-
-            if (shouldLogStatus)
+            Volatile.Write(
+                ref _latestStatus,
+                new PollStatusSnapshot(stageJobs, workItemsByJob, completedJobNames));
+            if (!loopState.HasLoggedInitialStatus)
             {
-                _reporter.LogPollStatus(stageJobs, workItemsByJob, completedJobNames, _uploads.Snapshot);
-                loopState.LastObservedJobCount = stageJobs.Count;
-                loopState.LastObservedCompletedCount = completedJobNames.Count;
-                loopState.LastStatusLogAt = DateTime.UtcNow;
+                LogLatestStatus();
+                loopState.HasLoggedInitialStatus = true;
             }
 
             bool anyNonMonitorFailure = HelixJobMonitorUtilities.HasFailedNonMonitorJobs(
@@ -545,6 +558,30 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private Task Delay(CancellationToken cancellationToken)
             => _delayFunc(TimeSpan.FromSeconds(Math.Max(5, _options.PollingIntervalSeconds)), cancellationToken);
 
+        private async Task ReportStatusPeriodicallyAsync(CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                await _statusDelayFunc(TimeSpan.FromMinutes(5), cancellationToken);
+                LogLatestStatus();
+            }
+        }
+
+        private void LogLatestStatus()
+        {
+            PollStatusSnapshot snapshot = Volatile.Read(ref _latestStatus);
+            if (snapshot is null)
+            {
+                return;
+            }
+
+            _reporter.LogPollStatus(
+                snapshot.Jobs,
+                snapshot.WorkItemsByJob,
+                snapshot.CompletedJobNames,
+                _uploads.Snapshot);
+        }
+
         private void LogWarning(string message)
             => _logger.LogWarning("{Prefix}{Message}", AzdoWarningPrefix, message);
 
@@ -558,11 +595,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private sealed class PollLoopState
         {
             public int PollNumber { get; set; }
-            public int LastObservedJobCount { get; set; } = -1;
-            public int LastObservedCompletedCount { get; set; } = -1;
-            public DateTime LastStatusLogAt { get; set; } = DateTime.UtcNow;
+            public bool HasLoggedInitialStatus { get; set; }
             public Dictionary<string, IReadOnlyCollection<WorkItemSummary>> WorkItemsByJob { get; } =
                 new(StringComparer.OrdinalIgnoreCase);
         }
+
+        private sealed record PollStatusSnapshot(
+            IReadOnlyList<HelixJobInfo> Jobs,
+            IReadOnlyDictionary<string, IReadOnlyCollection<WorkItemSummary>> WorkItemsByJob,
+            IReadOnlySet<string> CompletedJobNames);
     }
 }

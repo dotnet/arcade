@@ -204,7 +204,10 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
             TestResultUploadSummary summary =
                 await _azdo.UploadTestResultsAsync(testRunId, downloaded, cancellationToken);
 
-            session.RecordSuccess(request.WorkItemName, summary);
+            session.RecordSuccess(
+                request.WorkItemName,
+                downloaded.TestResultFiles.Count,
+                summary);
             if (_options.FailWorkItemsWithFailedTests)
             {
                 _state.ObserveTestResult(session.Job.JobName, request.WorkItemName, summary);
@@ -258,9 +261,12 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
 
                 _state.TryMarkHelixJobProcessed(session.Job.JobName);
                 _logger.LogInformation(
-                    "{UploadedCount} test results for job '{JobName}' processed.",
-                    session.UploadedResultCount,
-                    session.Job.DisplayName);
+                    "Test result processing completed for job '{JobName}': {WorkItemCount} work item(s), "
+                    + "{ResultFileCount} recognized result file(s), and {UploadedCount} test result(s) uploaded.",
+                    session.Job.DisplayName,
+                    session.WorkItems.Count,
+                    session.ResultFileCount,
+                    session.UploadedResultCount);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -345,6 +351,7 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         private int _finishedWorkItems;
         private int _finalized;
         private int _failed;
+        private long _resultFileCount;
         private long _uploadedResultCount;
 
         public JobUploadSession(
@@ -368,6 +375,8 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         public bool HasFailed => Volatile.Read(ref _failed) != 0;
 
         public long UploadedResultCount => Interlocked.Read(ref _uploadedResultCount);
+
+        public long ResultFileCount => Interlocked.Read(ref _resultFileCount);
 
         public IReadOnlyCollection<string> FailedWorkItems
         {
@@ -400,8 +409,12 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
             }
         }
 
-        public void RecordSuccess(string workItemName, TestResultUploadSummary summary)
+        public void RecordSuccess(
+            string workItemName,
+            int resultFileCount,
+            TestResultUploadSummary summary)
         {
+            Interlocked.Add(ref _resultFileCount, resultFileCount);
             Interlocked.Add(ref _uploadedResultCount, summary.UploadedCount);
             if (!summary.AllPassed)
             {
