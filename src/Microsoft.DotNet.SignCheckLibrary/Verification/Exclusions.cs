@@ -48,14 +48,26 @@ namespace Microsoft.SignCheck.Verification
                 using (StreamReader fileReader = File.OpenText(path))
                 {
                     string line = fileReader.ReadLine();
+                    int lineNumber = 1;
 
                     while (line != null)
                     {
                         if (!String.IsNullOrEmpty(line))
                         {
-                            Add(new Exclusion(line));
+                            try
+                            {
+                                Add(new Exclusion(line));
+                            }
+                            catch (ArgumentException ex)
+                            {
+                                throw new ArgumentException(
+                                    $"Invalid exclusion entry in '{path}' at line {lineNumber}: '{line}'. {ex.Message}",
+                                    nameof(path),
+                                    ex);
+                            }
                         }
                         line = fileReader.ReadLine();
+                        lineNumber++;
                     }
                 }
             }
@@ -149,7 +161,8 @@ namespace Microsoft.SignCheck.Verification
 
         /// <summary>
         /// Returns true if any <see cref="Exclusion.FilePatterns"/> matches the value of
-        /// <paramref name="path"/>, <paramref name="containerPath"/> or <paramref name="virtualPath"/>.
+        /// <paramref name="path"/>, <paramref name="containerPath"/> or <paramref name="virtualPath"/>
+        /// and no <see cref="Exclusion.FilePatternExceptions"/> match.
         /// </summary>
         /// <param name="path">The value to match against <see cref="Exclusion.FilePatterns"/>.</param>
         /// <param name="containerPath">The value to match against <see cref="Exclusion.FilePatterns"/>.</param>
@@ -159,7 +172,13 @@ namespace Microsoft.SignCheck.Verification
         {
             var values = new[] { path, containerPath, virtualPath, Path.GetFileName(path), Path.GetFileName(containerPath), Path.GetFileName(virtualPath) };
 
-            if(!exclusion.TryGetIsFileExcluded(exclusionsClassification, values, out bool isExcluded))
+            if (exclusion.HasFilePatternExceptions)
+            {
+                return values.Any(v => IsMatch(exclusion.FilePatterns, v)) &&
+                    !values.Any(v => IsMatch(exclusion.FilePatternExceptions, v));
+            }
+
+            if (!exclusion.TryGetIsFileExcluded(exclusionsClassification, values, out bool isExcluded))
             {
                 isExcluded = values.Any(v => IsMatch(exclusion.FilePatterns, v));
                 exclusion.AddToFileCache(exclusionsClassification, values, isExcluded);
