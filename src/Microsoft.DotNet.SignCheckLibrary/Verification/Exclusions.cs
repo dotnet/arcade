@@ -174,13 +174,13 @@ namespace Microsoft.SignCheck.Verification
 
             if (exclusion.HasFilePatternExceptions)
             {
-                return values.Any(v => IsMatch(exclusion.FilePatterns, v)) &&
-                    !values.Any(v => IsMatch(exclusion.FilePatternExceptions, v));
+                return values.Any(v => IsMatch(exclusion.FilePatternsForMatching, v)) &&
+                    !values.Any(v => IsMatch(exclusion.FilePatternExceptionsForMatching, v));
             }
 
             if (!exclusion.TryGetIsFileExcluded(exclusionsClassification, values, out bool isExcluded))
             {
-                isExcluded = values.Any(v => IsMatch(exclusion.FilePatterns, v));
+                isExcluded = values.Any(v => IsMatch(exclusion.FilePatternsForMatching, v));
                 exclusion.AddToFileCache(exclusionsClassification, values, isExcluded);
             }
 

@@ -29,7 +29,7 @@ namespace Microsoft.SignCheck.Verification
         /// Creates a new <see cref="Exclusion"/>.
         /// </summary>
         /// <param name="exclusion">A string representation of a file exclusion. An exclusion contains a number of fields, separated by
-        /// a ';'. The entry is formated as FILE_PATTERNS;PARENT_FILES;COMMENT. Additional fields are ignored and fields may be left
+        /// a ';'. The entry is formatted as FILE_PATTERNS;PARENT_FILES;COMMENT. Additional fields are ignored and fields may be left
         /// empty, e.g. ";B.txt" indicates an exclusion with no file patterns and one parent file.
         ///
         /// The FILE_PATTERNS and PARENT_FILES fields may contain multiple values separated by a '|'. A file pattern prefixed
@@ -75,7 +75,7 @@ namespace Microsoft.SignCheck.Verification
         }
 
         /// <summary>
-        /// Returns an array of file patterns or null if there are no entries. Each file pattern is separated by '|'.
+        /// Returns an array of file patterns. Each file pattern is separated by '|'.
         /// </summary>
         public string[] FilePatterns
         {
@@ -96,6 +96,10 @@ namespace Microsoft.SignCheck.Verification
                 return _filePatternExceptions.ToArray();
             }
         }
+
+        internal string[] FilePatternsForMatching => _filePatterns;
+
+        internal string[] FilePatternExceptionsForMatching => _filePatternExceptions;
 
         /// <summary>
         /// Returns an array of parent files or null if there are no entries. Each parent file is separated by '|'.
@@ -119,7 +123,7 @@ namespace Microsoft.SignCheck.Verification
         {
             get
             {
-                return FilePatterns.Length != 0 && !FilePatterns.All(fp => String.IsNullOrEmpty(fp));
+                return _filePatterns.Length != 0 && !_filePatterns.All(fp => String.IsNullOrEmpty(fp));
             }
         }
 
@@ -127,7 +131,7 @@ namespace Microsoft.SignCheck.Verification
         {
             get
             {
-                return FilePatternExceptions.Length != 0;
+                return _filePatternExceptions.Length != 0;
             }
         }
 

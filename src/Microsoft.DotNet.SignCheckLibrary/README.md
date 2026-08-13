@@ -59,7 +59,7 @@ The parent field can scope both the positive patterns and their exceptions to a 
 
 #### Signing CLI Tool
 
-The CLI tool is maintained for legacy purposes and is only recommended for repositories that already use it. Refrane from using this; new repositories should use the Signing Task instead.
+The CLI tool is maintained for legacy purposes and is only recommended for repositories that already use it. Refrain from using this; new repositories should use the Signing Task instead.
 
 - **Invocation**:
   - `dnx Microsoft.DotNet.SignCheck`
