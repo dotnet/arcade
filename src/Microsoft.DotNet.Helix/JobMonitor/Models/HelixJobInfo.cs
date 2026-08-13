@@ -16,6 +16,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
     public sealed class HelixJobInfo
     {
         public const string PreviousHelixJobNamePropertyName = "PreviousHelixJobName";
+        public const string LogicalJobNamePropertyName = "jobName";
 
         /// <summary>
         /// Helix job property that records the Azure DevOps stage attempt during which the job
@@ -47,7 +48,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             string queueId = null,
             string previousHelixJobName = null,
             int? initialWorkItemCount = null,
-            string stageAttempt = null)
+            string stageAttempt = null,
+            string logicalJobName = null)
         {
             JobName = jobName ?? throw new ArgumentNullException(nameof(jobName));
             Status = status ?? throw new ArgumentNullException(nameof(status));
@@ -56,7 +58,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             StageAttempt = stageAttempt;
             QueueId = queueId;
             InitialWorkItemCount = initialWorkItemCount;
-            Properties = CreateProperties(testRunName, stageName, submitterJobName, submitterJobDisplayName, previousHelixJobName, stageAttempt);
+            Properties = CreateProperties(
+                testRunName,
+                stageName,
+                submitterJobName,
+                submitterJobDisplayName,
+                previousHelixJobName,
+                stageAttempt,
+                logicalJobName);
         }
 
         public string JobName { get; }
@@ -92,6 +101,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
         public string QueueId { get; }
 
         public string SubmitterJobName => GetStringProperty(Properties, "System.JobName");
+
+        /// <summary>
+        /// Stable logical name assigned by the Helix SDK submitter. A single Azure DevOps job
+        /// can submit multiple Helix jobs to the same queue, so this value distinguishes those
+        /// independent streams while remaining stable across stage reruns and resubmissions.
+        /// </summary>
+        public string LogicalJobName => GetStringProperty(Properties, LogicalJobNamePropertyName);
 
         /// <summary>
         /// Matrix-expanded Azure DevOps job display name (e.g. "Windows_NT Build_Release"),
@@ -200,7 +216,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             string submitterJobName,
             string submitterJobDisplayName,
             string previousHelixJobName,
-            string stageAttempt)
+            string stageAttempt,
+            string logicalJobName)
         {
             var properties = new JObject();
 
@@ -232,6 +249,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             if (!string.IsNullOrEmpty(previousHelixJobName))
             {
                 properties[PreviousHelixJobNamePropertyName] = previousHelixJobName;
+            }
+
+            if (!string.IsNullOrEmpty(logicalJobName))
+            {
+                properties[LogicalJobNamePropertyName] = logicalJobName;
             }
 
             return properties;

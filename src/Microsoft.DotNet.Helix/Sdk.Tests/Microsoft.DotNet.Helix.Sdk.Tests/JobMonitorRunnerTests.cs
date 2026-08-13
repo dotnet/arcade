@@ -1237,6 +1237,56 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             exitCode.Should().Be(1);
         }
 
+        /// <summary>
+        /// Regression: a single AzDO job can submit multiple independent Helix jobs to the same
+        /// queue. Their work-item names can overlap, so the submitter and queue alone are not a
+        /// unique stream identifier. The submitter-assigned logical Helix job name must preserve
+        /// one job's failure when a later sibling job reports the same work-item name as passed.
+        /// </summary>
+        [Fact]
+        public async Task OneSubmitter_SameQueue_DifferentLogicalJobs_FailureNotOverwrittenByPass()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("__default", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob(
+                        "helix-wasm-tests",
+                        "finished",
+                        submitterJobName: "__default",
+                        queueId: "azurelinux.3.amd64.open.rt",
+                        logicalJobName: "WasmTestOnChrome-MONO-ST"),
+                    HelixJob(
+                        "helix-wasm-build-tests",
+                        "finished",
+                        submitterJobName: "__default",
+                        queueId: "azurelinux.3.amd64.open.rt",
+                        logicalJobName: "WasmBuildTests"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-wasm-tests"] = PassFail(failed: ["System.Formats.Tar.Manual.Tests"]),
+                    ["helix-wasm-build-tests"] = PassFail(passed: ["System.Formats.Tar.Manual.Tests"]),
+                });
+
+            var runner = CreateRunner(azdo, helix, logger: logger);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(1);
+            logger.Messages.Should().Contain(message =>
+                message.Contains("Work items: 2 submitted / 1 resubmitted / 1 failed", StringComparison.Ordinal));
+            logger.Messages.Should().Contain(message =>
+                message.Contains("Failed work item information:", StringComparison.Ordinal)
+                && message.Contains("System.Formats.Tar.Manual.Tests", StringComparison.Ordinal));
+        }
+
         [Fact]
         public async Task StageRerun_UploadsNewHelixWorkItemsWithoutReuploadingPreviousWorkItems()
         {
@@ -1524,9 +1574,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             // Previous incarnation still running; fresh current incarnation of the SAME stream
             // (same submitter + queue), not linked by PreviousHelixJobName.
             HelixJobInfo previousRunning = HelixJob("helix-x-a1", "running", stageName: "Test",
-                submitterJobName: "Test_Linux", queueId: "q1", stageAttempt: "1");
+                submitterJobName: "Test_Linux", queueId: "q1", stageAttempt: "1", logicalJobName: "tests");
             HelixJobInfo currentDone = HelixJob("helix-x-a2", "finished", stageName: "Test",
-                submitterJobName: "Test_Linux", queueId: "q1", stageAttempt: "2");
+                submitterJobName: "Test_Linux", queueId: "q1", stageAttempt: "2", logicalJobName: "tests");
             helix.WithWorkItems("helix-x-a1",
                 [new WorkItemSummary("helix-x-a1/wi", "helix-x-a1", "wi", "Running")]);
 
@@ -1571,9 +1621,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             // sorts AFTER "aaa-new" (attempt 2, passed): a job-name-ordered reconciliation would
             // let the failed attempt-1 outcome overwrite the passing attempt-2 one.
             HelixJobInfo oldFailed = HelixJob("zzz-old", "finished", stageName: "Test",
-                submitterJobName: "Test_Linux", queueId: "q1", stageAttempt: "1");
+                submitterJobName: "Test_Linux", queueId: "q1", stageAttempt: "1", logicalJobName: "tests");
             HelixJobInfo newPassed = HelixJob("aaa-new", "finished", stageName: "Test",
-                submitterJobName: "Test_Linux", queueId: "q1", stageAttempt: "2");
+                submitterJobName: "Test_Linux", queueId: "q1", stageAttempt: "2", logicalJobName: "tests");
 
             helix.AddResponse(
                 jobs: [oldFailed, newPassed],

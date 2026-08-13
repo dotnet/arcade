@@ -334,7 +334,7 @@ or the runner will silently fail to see its own jobs.
 
 1. Take a Helix snapshot of the whole stage (all attempts).
 2. Reduce it to the latest incarnation of each logical work stream (§2.3.3):
-   the leaf of each lineage chain, keyed by submitter chain key, preferring the
+   the leaf of each lineage chain, keyed by logical stream key, preferring the
    higher stage attempt on ties.
 3. For each latest incarnation, apply §2.3.3:
    - Current-attempt incarnation — leave it; it is already being driven.
@@ -420,9 +420,10 @@ The chain key must be deterministic and uniqueness-preserving:
   preserved.
 - An original Helix job and its resubmission(s) on the same queue must
   produce the same key so the latest incarnation overwrites the older one.
-- Because the chain key is built from the AzDO `System.JobName` + queue — both
-  stable across stage attempts — a rerun-stage incarnation of the same job on
-  the same queue collapses onto the same key as its previous-attempt
+- Because the chain key is built from the AzDO `System.JobName`, queue, and
+  submitter-assigned Helix `jobName` — all stable across stage attempts — a
+  rerun-stage incarnation of the same logical job on the same queue collapses
+  onto the same key as its previous-attempt
   counterpart, even though the two Helix jobs are **not** linked by
   `PreviousHelixJobName` (only monitor resubmissions set that link). The map
   must therefore let the **later stage attempt win** when two incarnations share
@@ -432,6 +433,10 @@ The chain key must be deterministic and uniqueness-preserving:
 - If lineage cannot be resolved (the predecessor link points outside the
   jobs the runner has observed), the key falls back to a Helix-job-bound
   identifier so independent jobs don't collide.
+- Multiple independent Helix jobs submitted by the same AzDO job to the same
+  queue remain distinct because their submitter-assigned `jobName` values
+  differ. This prevents a passing work item in one logical job from erasing a
+  same-named failure in another.
 
 The same key drives a parallel map of "failed work item console info" used
 to build the final failure report. When a later incarnation of a work item

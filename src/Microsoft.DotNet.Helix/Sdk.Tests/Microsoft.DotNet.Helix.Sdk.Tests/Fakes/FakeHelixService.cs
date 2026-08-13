@@ -230,7 +230,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
                 originalSnapshotJob?.SubmitterJobDisplayName ?? originalJob.SubmitterJobDisplayName,
                 originalSnapshotJob?.QueueId ?? originalJob.QueueId,
                 originalJobName,
-                stageAttempt: resubmittedStageAttempt);
+                stageAttempt: resubmittedStageAttempt,
+                logicalJobName: originalSnapshotJob?.LogicalJobName ?? originalJob.LogicalJobName);
             ResubmittedJobInfos.Add(newJobInfo);
             return Task.FromResult(newJobInfo);
         }

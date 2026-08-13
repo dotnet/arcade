@@ -398,16 +398,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         }
 
         /// <summary>
-        /// Produces a key that rolls up work-item outcomes within a logical AzDO submitter
-        /// chain. When the job carries an AzDO <c>System.JobName</c>, the chain key is based
-        /// on that name combined with the Helix <c>QueueId</c> (so resubmissions of the same
-        /// AzDO job to the same queue share the same key while a single AzDO matrix leg that
-        /// fans out to multiple Helix queues — each producing its own Helix job under the
-        /// same <c>System.JobName</c> — stays distinct and cannot overwrite a sibling queue's
-        /// failure with a pass). When there is no submitter name (test scenarios, manual
-        /// Helix submissions), the chain is followed back through <c>PreviousHelixJobName</c>
-        /// links to the root and the root Helix job name is used instead, so that retries
-        /// still overwrite prior failures correctly.
+        /// Produces a key that rolls up work-item outcomes within a logical Helix work stream.
+        /// The AzDO submitter name, Helix queue, and submitter-assigned logical job name jointly
+        /// identify a stream across stage reruns and monitor resubmissions. The logical job name
+        /// is essential because one AzDO job can submit multiple independent Helix jobs to the
+        /// same queue. When stable submitter metadata is unavailable, lineage is followed back
+        /// through <c>PreviousHelixJobName</c> and the root Helix job name is used instead.
         /// </summary>
         public string GetSubmitterChainKey(HelixJobInfo job)
         {
@@ -419,11 +415,25 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private string GetSubmitterChainKeyLocked(HelixJobInfo job)
         {
-            if (!string.IsNullOrEmpty(job.SubmitterJobName))
+            HelixJobInfo root = GetLineageRootLocked(job);
+            string submitterJobName = job.SubmitterJobName ?? root.SubmitterJobName;
+            string queueId = job.QueueId ?? root.QueueId;
+            string logicalJobName = job.LogicalJobName
+                ?? root.LogicalJobName
+                ?? job.TestRunName
+                ?? root.TestRunName;
+
+            if (!string.IsNullOrEmpty(submitterJobName)
+                && !string.IsNullOrEmpty(logicalJobName))
             {
-                return FormatSubmitterChainKey(job.SubmitterJobName, job.QueueId);
+                return FormatSubmitterChainKey(submitterJobName, queueId, logicalJobName);
             }
 
+            return $"helix:{root.JobName}";
+        }
+
+        private HelixJobInfo GetLineageRootLocked(HelixJobInfo job)
+        {
             HelixJobInfo current = job;
             var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             while (current is not null
@@ -432,24 +442,20 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 if (!_associatedJobs.TryGetValue(current.PreviousHelixJobName, out HelixJobInfo previous))
                 {
-                    return $"helix:{current.PreviousHelixJobName}";
-                }
-
-                if (!string.IsNullOrEmpty(previous.SubmitterJobName))
-                {
-                    return FormatSubmitterChainKey(previous.SubmitterJobName, previous.QueueId);
+                    return new HelixJobInfo(current.PreviousHelixJobName, "finished");
                 }
 
                 current = previous;
             }
 
-            return $"helix:{(current?.JobName ?? job.JobName)}";
+            return current ?? job;
         }
 
-        private static string FormatSubmitterChainKey(string submitterJobName, string queueId)
-            => string.IsNullOrEmpty(queueId)
-                ? $"submitter:{submitterJobName}"
-                : $"submitter:{submitterJobName}|queue:{queueId}";
+        private static string FormatSubmitterChainKey(
+            string submitterJobName,
+            string queueId,
+            string logicalJobName)
+            => $"submitter:{submitterJobName}|queue:{queueId ?? string.Empty}|job:{logicalJobName}";
 
         /// <summary>
         /// From an arbitrary set of Helix jobs (possibly spanning multiple stage attempts),
