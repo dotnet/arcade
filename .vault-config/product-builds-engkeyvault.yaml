@@ -98,22 +98,3 @@ secrets:
           name: dn-bot-account-redmond
       name: dn-bot-dnceng-universal-packages
       organization: dnceng
-
-  #DotNet-Symbol-Server-Pats
-  microsoft-symbol-server-pat:
-    type: azure-devops-access-token
-    parameters:
-      domainAccountSecret:
-          location: helixkv
-          name: dn-bot-account-redmond
-      name: microsoft-symbol-server-pat
-      organization: dnceng
-
-  symweb-symbol-server-pat:
-    type: azure-devops-access-token
-    parameters:
-      domainAccountSecret:
-          location: helixkv
-          name: dn-bot-account-redmond
-      name: dn-symweb-symbol-server-pat
-      organization: dnceng
