@@ -105,9 +105,12 @@ try {
   Get-ValidatedArchiveEntryPath -ExtractionRoot $ExtractionRoot -EntryName 'nested\' | Out-Null
 
   if ([System.IO.Path]::DirectorySeparatorChar -eq '\') {
+    Assert-Rejected -Root $ExtractionRoot -EntryName 'safe.dll:stream'
+    Assert-Rejected -Root $ExtractionRoot -EntryName 'nested\safe:stream.dll'
     Get-ValidatedArchiveEntryPath -ExtractionRoot $ExtractionRoot -EntryName '..\ROOT\safe.dll' | Out-Null
   } else {
     Assert-Rejected -Root $ExtractionRoot -EntryName '..\ROOT\safe.dll'
+    Get-ValidatedArchiveEntryPath -ExtractionRoot $ExtractionRoot -EntryName 'safe.dll:stream' | Out-Null
   }
 
   $ValidInput = Join-Path $TestRoot 'valid-input'

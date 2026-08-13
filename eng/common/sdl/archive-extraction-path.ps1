@@ -12,6 +12,10 @@ function Get-ValidatedArchiveEntryPath {
 
   $DirectorySeparator = [System.IO.Path]::DirectorySeparatorChar
   $NormalizedEntryName = $EntryName.Replace('/', $DirectorySeparator).Replace('\', $DirectorySeparator)
+  if ($DirectorySeparator -eq '\' -and $NormalizedEntryName.Contains(':')) {
+    throw "Archive entry '$EntryName' uses an NTFS alternate data stream."
+  }
+
   if ([System.IO.Path]::IsPathRooted($NormalizedEntryName)) {
     throw "Archive entry '$EntryName' uses an absolute path."
   }

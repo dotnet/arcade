@@ -15,7 +15,7 @@ function ExtractArtifacts {
   }
   $ArchivePathHelper = Join-Path $PSScriptRoot 'archive-extraction-path.ps1'
   $Jobs = @()
-  Get-ChildItem "$InputPath\*.nupkg" |
+  Get-ChildItem -Path $InputPath -Filter '*.nupkg' -File |
     ForEach-Object {
       $Jobs += Start-Job -ScriptBlock $ExtractPackage -ArgumentList $_.FullName, $ExtractPath, $ArchivePathHelper
     }
