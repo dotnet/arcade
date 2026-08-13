@@ -15,7 +15,7 @@ is reused for:
 No second service call is made for status.
 
 The one-shot entry retry pass and stage-attempt semantics are specified in
-[the semantic document](../../JobMonitorRunner.Design.md). Outcome updates are
+[the semantic document](../SemanticBehavior.md). Outcome updates are
 applied oldest-to-newest so resubmissions and higher stage attempts supersede
 older failures without allowing identically named work from different
 submitter/queue/logical-job streams to collide.

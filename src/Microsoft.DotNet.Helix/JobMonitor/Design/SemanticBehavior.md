@@ -1,9 +1,10 @@
-# JobMonitorRunner — Technical Specification
+# Semantic behavior
 
-This document is a behavioral specification of the Helix job monitor runner.
-It describes *what* the runner must do, not *how* it currently does it.
+This document specifies the externally observable behavior and restart
+invariants of the Helix Job Monitor. It describes *what* the monitor must do,
+not *how* it currently does it.
 
-The current source lives at [JobMonitorRunner.cs](JobMonitorRunner.cs); use
+The current source lives at [JobMonitorRunner.cs](../JobMonitorRunner.cs); use
 it only as the reference implementation, not as the specification.
 
 ---
@@ -420,23 +421,25 @@ The chain key must be deterministic and uniqueness-preserving:
   preserved.
 - An original Helix job and its resubmission(s) on the same queue must
   produce the same key so the latest incarnation overwrites the older one.
-- Because the chain key is built from the AzDO `System.JobName`, queue, and
+- Because the chain key is built from the AzDO `System.PhaseName`, queue, and
   submitter-assigned Helix `jobName` — all stable across stage attempts — a
   rerun-stage incarnation of the same logical job on the same queue collapses
-  onto the same key as its previous-attempt
-  counterpart, even though the two Helix jobs are **not** linked by
+  onto the same key as its previous-attempt counterpart, even though the two
+  Helix jobs are **not** linked by
   `PreviousHelixJobName` (only monitor resubmissions set that link). The map
   must therefore let the **later stage attempt win** when two incarnations share
   a key: outcomes must be applied in order of (lineage depth, then stage
   attempt), not by Helix job-name sort, or a stale previous-attempt outcome
-  could nondeterministically overwrite the current one.
+  could nondeterministically overwrite the current one. `System.JobName` is
+  used only when `System.PhaseName` is unavailable because some pipelines stamp
+  every matrix job with `System.JobName=__default`.
 - If lineage cannot be resolved (the predecessor link points outside the
   jobs the runner has observed), the key falls back to a Helix-job-bound
   identifier so independent jobs don't collide.
-- Multiple independent Helix jobs submitted by the same AzDO job to the same
-  queue remain distinct because their submitter-assigned `jobName` values
-  differ. This prevents a passing work item in one logical job from erasing a
-  same-named failure in another.
+- Multiple independent AzDO phases and logical Helix jobs targeting the same
+  queue remain distinct because `System.PhaseName` and submitter-assigned
+  `jobName` are both part of the key. This prevents a passing work item in one
+  stream from erasing a same-named failure in another.
 
 The same key drives a parallel map of "failed work item console info" used
 to build the final failure report. When a later incarnation of a work item

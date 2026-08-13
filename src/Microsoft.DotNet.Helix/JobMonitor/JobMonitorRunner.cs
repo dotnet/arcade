@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 namespace Microsoft.DotNet.Helix.JobMonitor
 {
     /// <summary>
-    /// Orchestrates the per-invocation lifecycle described in <c>JobMonitorRunner.Design.md</c>:
+    /// Orchestrates the per-invocation lifecycle described in <c>Design/SemanticBehavior.md</c>:
     /// one-shot retry pass, poll loop (with upload + outcome reconciliation per iteration),
     /// final summary on completion, and timeout/cancel handling. All heavy lifting
     /// (status logging, uploads, state) lives in dedicated helpers.
@@ -125,7 +125,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 // treated as "processed" once their Azure DevOps test run reaches the Completed
                 // state (the final upload step), so a job whose upload did not finish here is
                 // re-uploaded in full by a subsequent monitor invocation. See
-                // JobMonitorRunner.Design.md ("Crash and timeout resilience").
+                // Design/SemanticBehavior.md ("Crash and timeout resilience").
                 _reporter.ReportTimeout();
 
                 // Proactively cancel any Helix jobs we know about that haven't finished yet so
@@ -161,7 +161,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// unfinished work (or a current attempt's completed-with-failures work), resubmits the
         /// not-yet-passed items into the current attempt. Returns the (stage snapshot ∪
         /// resubmitted jobs) so the first poll iteration sees the resubmissions immediately.
-        /// See JobMonitorRunner.Design.md §2.1 and §2.3.
+        /// See Design/SemanticBehavior.md §2.1 and §2.3.
         /// </summary>
         private async Task<IReadOnlyList<HelixJobInfo>> ExecuteRetryPassAsync(CancellationToken cancellationToken)
         {

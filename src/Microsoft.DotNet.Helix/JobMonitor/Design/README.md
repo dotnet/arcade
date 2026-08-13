@@ -7,7 +7,7 @@ upload latency.
 
 The design is split by concern:
 
-- [Semantic behavior](../JobMonitorRunner.Design.md) defines externally
+- [Semantic behavior](SemanticBehavior.md) defines externally
   observable behavior and restart invariants.
 - [Architecture](Architecture.md) describes process structure, ownership,
   backpressure, and shared parallelism utilities.

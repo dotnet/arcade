@@ -1287,6 +1287,58 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 && message.Contains("System.Formats.Tar.Manual.Tests", StringComparison.Ordinal));
         }
 
+        /// <summary>
+        /// Production regression: runtime stamps <c>System.JobName=__default</c> onto many
+        /// independent matrix jobs. Some of those jobs submit the same logical Helix scenario
+        /// to the same queue, so only <c>System.PhaseName</c> distinguishes their streams.
+        /// A pass from one phase must not erase a same-named failure from another phase.
+        /// </summary>
+        [Fact]
+        public async Task DefaultJobName_SameQueueAndLogicalJob_DifferentPhases_FailureNotOverwrittenByPass()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("__default", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob(
+                        "helix-wasm-eat",
+                        "finished",
+                        submitterJobName: "__default",
+                        submitterPhaseName: "build_browser_wasm_linux_Release_LibraryTests_EAT",
+                        queueId: "azurelinux.3.amd64.open.rt",
+                        logicalJobName: "WasmTestOnChrome-MONO-ST"),
+                    HelixJob(
+                        "helix-wasm-smoke",
+                        "finished",
+                        submitterJobName: "__default",
+                        submitterPhaseName: "build_browser_wasm_linux_Release_LibraryTests_Smoke",
+                        queueId: "azurelinux.3.amd64.open.rt",
+                        logicalJobName: "WasmTestOnChrome-MONO-ST"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-wasm-eat"] = PassFail(failed: ["System.Formats.Tar.Manual.Tests"]),
+                    ["helix-wasm-smoke"] = PassFail(passed: ["System.Formats.Tar.Manual.Tests"]),
+                });
+
+            var runner = CreateRunner(azdo, helix, logger: logger);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(1);
+            logger.Messages.Should().Contain(message =>
+                message.Contains("Work items: 2 submitted / 1 resubmitted / 1 failed", StringComparison.Ordinal));
+            logger.Messages.Should().Contain(message =>
+                message.Contains("Failed work item information:", StringComparison.Ordinal)
+                && message.Contains("System.Formats.Tar.Manual.Tests", StringComparison.Ordinal));
+        }
+
         [Fact]
         public async Task StageRerun_UploadsNewHelixWorkItemsWithoutReuploadingPreviousWorkItems()
         {

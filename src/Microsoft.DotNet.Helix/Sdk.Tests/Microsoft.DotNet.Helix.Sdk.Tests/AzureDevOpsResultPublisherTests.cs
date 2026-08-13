@@ -34,9 +34,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public void JobMonitorUploadParallelismDefaultsToEight()
+        public void JobMonitorUploadParallelismDefaultsToFortyEight()
         {
-            Assert.Equal(8, new JobMonitorOptions().TestResultUploadParallelism);
+            Assert.Equal(48, new JobMonitorOptions().TestResultUploadParallelism);
         }
 
         [Fact]

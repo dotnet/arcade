@@ -34,7 +34,10 @@ Work-item concurrency is global. A build with many jobs therefore cannot create
 an unbounded task graph or multiply the configured Azure DevOps pressure.
 Consumers can tune this global budget through the
 `testResultUploadParallelism` pipeline-template parameter, which forwards to
-the monitor's `--test-result-upload-parallelism` option.
+the monitor's `--test-result-upload-parallelism` option. The default is 48,
+selected from runtime validation with approximately 6,800 work items and
+3.1 million results: it kept final drain below 2% while reducing service
+throttling guidance compared with 64 workers.
 
 ## Finalization
 

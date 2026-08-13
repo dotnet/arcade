@@ -399,11 +399,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         /// <summary>
         /// Produces a key that rolls up work-item outcomes within a logical Helix work stream.
-        /// The AzDO submitter name, Helix queue, and submitter-assigned logical job name jointly
-        /// identify a stream across stage reruns and monitor resubmissions. The logical job name
-        /// is essential because one AzDO job can submit multiple independent Helix jobs to the
-        /// same queue. When stable submitter metadata is unavailable, lineage is followed back
-        /// through <c>PreviousHelixJobName</c> and the root Helix job name is used instead.
+        /// The AzDO phase name, Helix queue, and submitter-assigned logical job name jointly
+        /// identify a stream across stage reruns and monitor resubmissions. The phase name is
+        /// preferred because some pipelines stamp many independent jobs with
+        /// <c>System.JobName=__default</c>. When stable submitter metadata is unavailable,
+        /// lineage is followed back through <c>PreviousHelixJobName</c> and the root Helix job
+        /// name is used instead.
         /// </summary>
         public string GetSubmitterChainKey(HelixJobInfo job)
         {
@@ -416,17 +417,20 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private string GetSubmitterChainKeyLocked(HelixJobInfo job)
         {
             HelixJobInfo root = GetLineageRootLocked(job);
-            string submitterJobName = job.SubmitterJobName ?? root.SubmitterJobName;
+            string submitterName = job.SubmitterPhaseName
+                ?? root.SubmitterPhaseName
+                ?? job.SubmitterJobName
+                ?? root.SubmitterJobName;
             string queueId = job.QueueId ?? root.QueueId;
             string logicalJobName = job.LogicalJobName
                 ?? root.LogicalJobName
                 ?? job.TestRunName
                 ?? root.TestRunName;
 
-            if (!string.IsNullOrEmpty(submitterJobName)
+            if (!string.IsNullOrEmpty(submitterName)
                 && !string.IsNullOrEmpty(logicalJobName))
             {
-                return FormatSubmitterChainKey(submitterJobName, queueId, logicalJobName);
+                return FormatSubmitterChainKey(submitterName, queueId, logicalJobName);
             }
 
             return $"helix:{root.JobName}";
@@ -452,10 +456,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         }
 
         private static string FormatSubmitterChainKey(
-            string submitterJobName,
+            string submitterName,
             string queueId,
             string logicalJobName)
-            => $"submitter:{submitterJobName}|queue:{queueId ?? string.Empty}|job:{logicalJobName}";
+            => $"submitter:{submitterName}|queue:{queueId ?? string.Empty}|job:{logicalJobName}";
 
         /// <summary>
         /// From an arbitrary set of Helix jobs (possibly spanning multiple stage attempts),
