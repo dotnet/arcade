@@ -11,6 +11,7 @@
   
       - PackageBasePath         : Directory containing all files that need to be validated.
       - SignCheckExclusionsFile : Path to file containing exclusion list to be used by SignCheck.
+      - SignCheckRequiredSignedFile : Exact file names or paths that must be signed.
       - EnableJarSigningCheck   : Whether .jar files should be validated.
       - EnableStrongNameCheck   : Whether strong name check should be performed.
   -->
@@ -47,6 +48,7 @@
       FileStatus="UnsignedFiles"
       InputFiles="$(InputFiles)"
       ExclusionsFile="$(SignCheckExclusionsFile)"
+      RequiredSignedFiles="@(SignCheckRequiredSignedFile)"
       EnableJarSignatureVerification="$(EnableJarSigningCheck)"
       VerifyStrongName="$(EnableStrongNameCheck)"
       LogFile="$(SignCheckLog)"

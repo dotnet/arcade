@@ -3,6 +3,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.SignCheck.Verification;
 #if NET472
 using AppDomainIsolatedTask = Microsoft.Build.Utilities.AppDomainIsolatedTask;
 #else
@@ -74,6 +75,11 @@ namespace SignCheckTask
             get;
             set;
         }
+        public ITaskItem[] RequiredSignedFiles
+        {
+            get;
+            set;
+        }
         [Required]
         public string LogFile
         {
@@ -122,6 +128,22 @@ namespace SignCheckTask
 
         private bool ExecuteImpl()
         {
+            if (RequiredSignedFiles != null)
+            {
+                foreach (ITaskItem requiredSignedFile in RequiredSignedFiles)
+                {
+                    try
+                    {
+                        Exclusions.ValidateRequiredSignedFile(requiredSignedFile.ItemSpec);
+                    }
+                    catch (ArgumentException e)
+                    {
+                        Log.LogError(e.Message);
+                        return false;
+                    }
+                }
+            }
+
             Options options = new Options();
             options.EnableJarSignatureVerification = EnableJarSignatureVerification;
             options.EnableXmlSignatureVerification = EnableXmlSignatureVerification;
@@ -183,6 +205,14 @@ namespace SignCheckTask
             }
             
             var sc = new SignCheck(options);
+            if (RequiredSignedFiles != null)
+            {
+                foreach (ITaskItem requiredSignedFile in RequiredSignedFiles)
+                {
+                    sc.Exclusions.AddRequiredSignedFile(requiredSignedFile.ItemSpec);
+                }
+            }
+
             int result = sc.Run();
 
             // SignCheck signals signing issues (and internal failures) through a non-zero exit

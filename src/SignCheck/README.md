@@ -30,6 +30,10 @@ Arcade defaults to using the signing task via script invocation for signing vali
     Log errors to a separate file.  
   - **Results XML File**: `/p:SignCheckResultsXmlFile`
     Output signing results to the specified XML log file.  
+  - **Required Signed Files**: `@(SignCheckRequiredSignedFile)` items (`RequiredSignedFiles` on `SignCheckTask`)
+    Exact paths or file names that must be signed, even when they match a `DO-NOT-SIGN` exclusion. Matching is case-insensitive and checks direct, container, and virtual paths as well as file names. Wildcards are not supported.
+
+Exclusion entries use the format `FILE_PATTERNS;PARENT_FILES;COMMENT`. Existing `DO-NOT-SIGN`, `IGNORE-STRONG-NAME`, and `DO-NOT-UNPACK` comment tokens retain their legacy behavior; required-signed files must be supplied through the structured item input.
 
 #### Signing CLI Tool
 

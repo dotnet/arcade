@@ -18,6 +18,7 @@ namespace Microsoft.SignCheck.Verification
         private Dictionary<string, Regex> _regexCache = new Dictionary<string, Regex>();
         private static readonly char[] _wildCards = new char[] { '*', '?' };
         private List<Exclusion> _exclusions = new List<Exclusion>();
+        private HashSet<string> _requiredSignedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         private const string DoNotSign = "DO-NOT-SIGN";
         private const string General = "GENERAL";
@@ -72,6 +73,28 @@ namespace Microsoft.SignCheck.Verification
         public void Clear()
         {
             _exclusions.Clear();
+            _requiredSignedFiles.Clear();
+        }
+
+        public static void ValidateRequiredSignedFile(string file)
+        {
+            if (String.IsNullOrWhiteSpace(file))
+            {
+                throw new ArgumentException("A required signed file must be specified.", nameof(file));
+            }
+
+            if (file.IndexOfAny(_wildCards) >= 0)
+            {
+                throw new ArgumentException(
+                    $"Required signed file '{file}' must be an exact path or file name; wildcards are not supported.",
+                    nameof(file));
+            }
+        }
+
+        public void AddRequiredSignedFile(string file)
+        {
+            ValidateRequiredSignedFile(file);
+            _requiredSignedFiles.Add(NormalizePath(file));
         }
 
         public bool Contains(Exclusion exclusion)
@@ -114,6 +137,11 @@ namespace Microsoft.SignCheck.Verification
         /// <returns></returns>
         public bool IsExcluded(string path, string parent, string virtualPath, string containerPath)
         {
+            if (IsRequiredSignedFile(path, virtualPath, containerPath))
+            {
+                return false;
+            }
+
             IEnumerable<Exclusion> exclusions = _exclusions.Where(e => !e.Comment.Contains(IgnoreStrongName) && !e.Comment.Contains(DoNotUnpack));
             return IsExcluded(path, parent, virtualPath, containerPath, General, exclusions);
         }
@@ -125,10 +153,40 @@ namespace Microsoft.SignCheck.Verification
         /// <returns></returns>
         public bool IsDoNotSign(string path, string parent, string virtualPath, string containerPath)
         {
+            if (IsRequiredSignedFile(path, virtualPath, containerPath))
+            {
+                return false;
+            }
+
             // Get all the exclusions with DO-NOT-SIGN markers and check only against those
             IEnumerable<Exclusion> doNotSignExclusions = _exclusions.Where(e => e.Comment.Contains(DoNotSign)).ToArray();
 
             return (doNotSignExclusions.Count() > 0) && (IsExcluded(path, parent, virtualPath, containerPath, DoNotSign, doNotSignExclusions));
+        }
+
+        private bool IsRequiredSignedFile(string path, string virtualPath, string containerPath)
+        {
+            return GetPathMatchValues(path, containerPath, virtualPath).Any(_requiredSignedFiles.Contains);
+        }
+
+        private static IEnumerable<string> GetPathMatchValues(params string[] paths)
+        {
+            foreach (string path in paths)
+            {
+                if (String.IsNullOrEmpty(path))
+                {
+                    continue;
+                }
+
+                string normalizedPath = NormalizePath(path);
+                yield return normalizedPath;
+                yield return Path.GetFileName(normalizedPath);
+            }
+        }
+
+        private static string NormalizePath(string path)
+        {
+            return path.Replace('\\', '/');
         }
 
         public bool IsIgnoreStrongName(string path, string parent, string virtualPath, string containerPath)
