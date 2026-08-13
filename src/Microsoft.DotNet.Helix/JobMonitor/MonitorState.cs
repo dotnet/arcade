@@ -399,7 +399,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         /// <summary>
         /// Produces a key that rolls up work-item outcomes within a logical Helix work stream.
-        /// The AzDO phase name, Helix queue, and submitter-assigned logical job name jointly
+        /// The stage, AzDO phase name, Helix queue, and submitter-assigned logical job name jointly
         /// identify a stream across stage reruns and monitor resubmissions. The phase name is
         /// preferred because some pipelines stamp many independent jobs with
         /// <c>System.JobName=__default</c>. When stable submitter metadata is unavailable,
@@ -426,11 +426,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 ?? root.LogicalJobName
                 ?? job.TestRunName
                 ?? root.TestRunName;
+            string stageName = job.StageName ?? root.StageName;
 
             if (!string.IsNullOrEmpty(submitterName)
                 && !string.IsNullOrEmpty(logicalJobName))
             {
-                return FormatSubmitterChainKey(submitterName, queueId, logicalJobName);
+                return FormatSubmitterChainKey(stageName, submitterName, queueId, logicalJobName);
             }
 
             return $"helix:{root.JobName}";
@@ -456,10 +457,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         }
 
         private static string FormatSubmitterChainKey(
+            string stageName,
             string submitterName,
             string queueId,
             string logicalJobName)
-            => $"submitter:{submitterName}|queue:{queueId ?? string.Empty}|job:{logicalJobName}";
+            => $"stage:{stageName ?? string.Empty}|submitter:{submitterName}|queue:{queueId ?? string.Empty}|job:{logicalJobName}";
 
         /// <summary>
         /// From an arbitrary set of Helix jobs (possibly spanning multiple stage attempts),
@@ -467,8 +469,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// submitter chain key (§5.7). Within a stream, resubmission lineage is collapsed to the
         /// leaf, and unlinked rerun duplicates (same submitter + queue on different stage
         /// attempts, not connected by <c>PreviousHelixJobName</c>) are broken toward the highest
-        /// stage attempt. Used by the retry pass to decide, per stream, whether previous-attempt
-        /// work must be reconciled into the current attempt.
+        /// stage and submitter job attempts, then explicit lineage depth. Used by the retry pass
+        /// to decide whether previous-attempt work remains authoritative.
         /// </summary>
         public IReadOnlyList<HelixJobInfo> GetLatestIncarnationPerStream(IEnumerable<HelixJobInfo> jobs)
         {
@@ -480,6 +482,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         .GroupBy(GetSubmitterChainKeyLocked, StringComparer.OrdinalIgnoreCase)
                         .Select(g => g
                             .OrderBy(j => ParseStageAttempt(j.StageAttempt))
+                            .ThenBy(j => ParseJobAttempt(j.JobAttempt))
+                            .ThenBy(j => GetLineageDepth(j, _associatedJobs))
                             .ThenBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
                             .Last())
                 ];
@@ -516,6 +520,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public static int ParseStageAttempt(string stageAttempt)
             => int.TryParse(stageAttempt, out int attempt) ? attempt : 1;
 
+        public static int ParseJobAttempt(string jobAttempt)
+            => int.TryParse(jobAttempt, out int attempt) ? attempt : 1;
+
         /// <summary>
         /// From an arbitrary set of Helix jobs return only the leaves of each lineage chain —
         /// jobs that are not pointed at by any other job's <c>PreviousHelixJobName</c>.
@@ -535,8 +542,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// <c>PreviousHelixJobName</c> link backwards, breaking ties toward the lower stage
         /// attempt. Used to ensure upload and outcome reconciliation process lineage in the
         /// right order (older first, so newer incarnations supersede older ones) — including
-        /// unlinked rerun duplicates on different attempts, where the higher stage attempt must
-        /// reconcile last so it wins the outcome map (§5.7).
+        /// unlinked rerun duplicates on different attempts, where the higher stage/job
+        /// incarnation must reconcile last so it wins the outcome map (§5.7).
         /// </summary>
         public static IReadOnlyList<HelixJobInfo> OrderHelixJobsOldToNew(IEnumerable<HelixJobInfo> jobs)
         {
@@ -546,6 +553,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 ..jobs
                     .OrderBy(j => GetLineageDepth(j, jobByName))
                     .ThenBy(j => ParseStageAttempt(j.StageAttempt))
+                    .ThenBy(j => ParseJobAttempt(j.JobAttempt))
                     .ThenBy(j => j.JobName, StringComparer.OrdinalIgnoreCase)
             ];
         }

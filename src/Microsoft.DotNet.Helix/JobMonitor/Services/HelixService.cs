@@ -193,6 +193,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             HelixJobInfo originalJob,
             IReadOnlyCollection<WorkItemSummary> failedWorkItems,
             string targetStageAttempt,
+            string monitorJobAttempt,
             CancellationToken cancellationToken)
         {
             string originalJobName = originalJob.JobName;
@@ -313,6 +314,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 resubmittedProperties = resubmittedProperties.SetItem(HelixJobInfo.StageAttemptPropertyName, resubmittedStageAttempt);
             }
+            if (!string.IsNullOrEmpty(monitorJobAttempt))
+            {
+                resubmittedProperties = resubmittedProperties.SetItem(
+                    HelixJobInfo.ResubmittedByJobAttemptPropertyName,
+                    monitorJobAttempt);
+            }
 
             // 5. Build the new job creation request, copying over Source / Properties / Creator
             //    so the resubmitted job remains discoverable (BuildId, System.StageName, TestRunName, etc.).
@@ -339,6 +346,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             string submitterJobDisplayName = GetStringPropertyFromProperties(details.Properties, "System.JobDisplayName");
             string logicalJobName = GetStringPropertyFromProperties(details.Properties, HelixJobInfo.LogicalJobNamePropertyName);
             string submitterPhaseName = GetStringPropertyFromProperties(details.Properties, "System.PhaseName");
+            string submitterJobAttempt = GetStringPropertyFromProperties(details.Properties, HelixJobInfo.JobAttemptPropertyName);
 
             var newJobInfo = new HelixJobInfo(
                 newJob.Name,
@@ -350,6 +358,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 details.QueueId,
                 originalJobName,
                 stageAttempt: resubmittedStageAttempt,
+                jobAttempt: submitterJobAttempt,
                 logicalJobName: logicalJobName,
                 submitterPhaseName: submitterPhaseName);
 

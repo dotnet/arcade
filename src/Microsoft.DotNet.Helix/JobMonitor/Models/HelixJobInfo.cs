@@ -25,6 +25,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
         /// same property when resubmitting (see Design/SemanticBehavior.md §2.3).
         /// </summary>
         public const string StageAttemptPropertyName = "System.StageAttempt";
+        public const string JobAttemptPropertyName = "System.JobAttempt";
+        public const string ResubmittedByJobAttemptPropertyName = "JobMonitor.JobAttempt";
 
         public HelixJobInfo(JobSummary helixJob)
         {
@@ -33,6 +35,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             TestRunName = GetTestRunNameFromJob(helixJob);
             StageName = GetStringPropertyFromJob(helixJob, "System.StageName");
             StageAttempt = GetStringPropertyFromJob(helixJob, StageAttemptPropertyName);
+            JobAttempt = GetStringPropertyFromJob(helixJob, JobAttemptPropertyName);
             QueueId = helixJob.QueueId;
             InitialWorkItemCount = helixJob.InitialWorkItemCount;
             Properties = helixJob.Properties;
@@ -49,6 +52,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             string previousHelixJobName = null,
             int? initialWorkItemCount = null,
             string stageAttempt = null,
+            string jobAttempt = null,
             string logicalJobName = null,
             string submitterPhaseName = null)
         {
@@ -57,6 +61,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             TestRunName = testRunName;
             StageName = stageName;
             StageAttempt = stageAttempt;
+            JobAttempt = jobAttempt;
             QueueId = queueId;
             InitialWorkItemCount = initialWorkItemCount;
             Properties = CreateProperties(
@@ -66,6 +71,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
                 submitterJobDisplayName,
                 previousHelixJobName,
                 stageAttempt,
+                jobAttempt,
                 logicalJobName,
                 submitterPhaseName);
         }
@@ -95,6 +101,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
         /// attempt. May be null on older jobs or submissions made outside a stage context.
         /// </summary>
         public string StageAttempt { get; }
+
+        /// <summary>
+        /// Attempt of the Azure DevOps submitter job that created this logical Helix work.
+        /// Monitor-created resubmissions preserve this value so it can be compared with the
+        /// current timeline record for the submitter.
+        /// </summary>
+        public string JobAttempt { get; }
 
         /// <summary>
         /// Helix target queue this job ran on (e.g. "Ubuntu.2204.Amd64.Open"). Comes from the
@@ -226,6 +239,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             string submitterJobDisplayName,
             string previousHelixJobName,
             string stageAttempt,
+            string jobAttempt,
             string logicalJobName,
             string submitterPhaseName)
         {
@@ -244,6 +258,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor.Models
             if (!string.IsNullOrEmpty(stageAttempt))
             {
                 properties[StageAttemptPropertyName] = stageAttempt;
+            }
+            if (!string.IsNullOrEmpty(jobAttempt))
+            {
+                properties[JobAttemptPropertyName] = jobAttempt;
             }
 
             if (!string.IsNullOrEmpty(submitterJobName))

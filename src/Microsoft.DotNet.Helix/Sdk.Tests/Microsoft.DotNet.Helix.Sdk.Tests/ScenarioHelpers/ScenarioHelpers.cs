@@ -10,8 +10,23 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.ScenarioHelpers
     {
         public const string DefaultMonitorName = "Helix Job Monitor";
 
-        public static AzureDevOpsTimelineRecord StageRecord(string name, string id, string state, string result = null)
-            => new() { Type = "Stage", ReferenceName = name, Id = id, State = state, Result = result };
+        public static AzureDevOpsTimelineRecord StageRecord(
+            string name,
+            string id,
+            string state,
+            string result = null,
+            int attempt = 1,
+            PreviousAttemptReference[] previousAttempts = null)
+            => new()
+            {
+                Type = "Stage",
+                ReferenceName = name,
+                Id = id,
+                State = state,
+                Result = result,
+                Attempt = attempt,
+                PreviousAttempts = previousAttempts,
+            };
 
         public static AzureDevOpsTimelineRecord PipelineJob(
             string name, string state, string result = null, int attempt = 1,
@@ -55,6 +70,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.ScenarioHelpers
             string previousHelixJobName = null,
             int? initialWorkItemCount = null,
             string stageAttempt = null,
+            string jobAttempt = null,
             string logicalJobName = null,
             string submitterPhaseName = null)
             => new(
@@ -67,6 +83,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.ScenarioHelpers
                 previousHelixJobName: previousHelixJobName,
                 initialWorkItemCount: initialWorkItemCount,
                 stageAttempt: stageAttempt,
+                jobAttempt: jobAttempt,
                 logicalJobName: logicalJobName,
                 submitterPhaseName: submitterPhaseName);
 

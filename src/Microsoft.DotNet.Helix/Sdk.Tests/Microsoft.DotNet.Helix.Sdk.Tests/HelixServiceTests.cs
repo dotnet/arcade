@@ -174,7 +174,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 });
 
             HelixJobInfo result = await CreateService(api.Api.Object)
-                .ResubmitWorkItemsAsync(new HelixJobInfo("original-job", "finished"), [WorkItem("missing")], targetStageAttempt: null, CancellationToken.None);
+                .ResubmitWorkItemsAsync(new HelixJobInfo("original-job", "finished"), [WorkItem("missing")], targetStageAttempt: null, monitorJobAttempt: null, CancellationToken.None);
 
             Assert.Null(result);
             api.Storage.Verify(s => s.NewAsync(It.IsAny<ContainerCreationRequest>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -193,7 +193,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             };
 
             HelixJobInfo result = await CreateService(api.Api.Object, blobClientFactory)
-                .ResubmitWorkItemsAsync(new HelixJobInfo("original-job", "finished"), [WorkItem("work-a")], targetStageAttempt: null, CancellationToken.None);
+                .ResubmitWorkItemsAsync(new HelixJobInfo("original-job", "finished"), [WorkItem("work-a")], targetStageAttempt: null, monitorJobAttempt: null, CancellationToken.None);
 
             Assert.Null(result);
             api.Storage.Verify(s => s.NewAsync(It.IsAny<ContainerCreationRequest>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -245,13 +245,20 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             };
 
             HelixJobInfo result = await CreateService(api.Api.Object, blobClientFactory)
-                .ResubmitWorkItemsAsync(new HelixJobInfo("original-job", "finished"), [WorkItem("WORK-A"), WorkItem("work-b")], targetStageAttempt: null, CancellationToken.None);
+                .ResubmitWorkItemsAsync(
+                    new HelixJobInfo("original-job", "finished"),
+                    [WorkItem("WORK-A"), WorkItem("work-b")],
+                    targetStageAttempt: "2",
+                    monitorJobAttempt: "2",
+                    CancellationToken.None);
 
             Assert.Equal("new-job", result.JobName);
             Assert.Equal("running", result.Status);
             Assert.Equal("custom run", result.TestRunName);
             Assert.Equal("test stage", result.StageName);
             Assert.Equal("original-job", result.PreviousHelixJobName);
+            Assert.Equal("2", result.StageAttempt);
+            Assert.Equal("1", result.JobAttempt);
 
             Assert.Equal("https://storage/job-list.json", blobClientFactory.DownloadedTextUri);
             UploadCall upload = Assert.Single(blobClientFactory.Uploads);
@@ -274,6 +281,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Equal("123", capturedRequest.Properties["BuildId"]);
             Assert.Equal("custom run", capturedRequest.Properties["TestRunName"]);
             Assert.Equal("test stage", capturedRequest.Properties["System.StageName"]);
+            Assert.Equal("2", capturedRequest.Properties[HelixJobInfo.StageAttemptPropertyName]);
+            Assert.Equal("1", capturedRequest.Properties[HelixJobInfo.JobAttemptPropertyName]);
+            Assert.Equal("2", capturedRequest.Properties[HelixJobInfo.ResubmittedByJobAttemptPropertyName]);
             Assert.Equal("original-job", capturedRequest.Properties[HelixJobInfo.PreviousHelixJobNamePropertyName]);
             Assert.Equal("""{"nested":true}""", capturedRequest.Properties["ObjectProperty"]);
 
@@ -320,6 +330,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 ["BuildId"] = "123",
                 ["TestRunName"] = "custom run",
                 ["System.StageName"] = "test stage",
+                [HelixJobInfo.StageAttemptPropertyName] = "1",
+                [HelixJobInfo.JobAttemptPropertyName] = "1",
             };
 
             api.Job
@@ -364,7 +376,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             };
 
             await CreateService(api.Api.Object, blobClientFactory)
-                .ResubmitWorkItemsAsync(new HelixJobInfo("original-job", "finished"), [WorkItem("work-a")], targetStageAttempt: null, CancellationToken.None);
+                .ResubmitWorkItemsAsync(new HelixJobInfo("original-job", "finished"), [WorkItem("work-a")], targetStageAttempt: null, monitorJobAttempt: null, CancellationToken.None);
 
             Assert.NotNull(capturedRequest);
             return capturedRequest;
@@ -406,6 +418,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     ["BuildId"] = "123",
                     ["TestRunName"] = "custom run",
                     ["System.StageName"] = "test stage",
+                    [HelixJobInfo.StageAttemptPropertyName] = "1",
+                    [HelixJobInfo.JobAttemptPropertyName] = "1",
                     ["ObjectProperty"] = new JObject
                     {
                         ["nested"] = true,

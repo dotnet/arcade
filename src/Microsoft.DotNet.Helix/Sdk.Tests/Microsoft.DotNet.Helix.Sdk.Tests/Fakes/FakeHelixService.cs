@@ -163,9 +163,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
 
         /// <summary>
         /// Tracks resubmission calls for test assertions.
-        /// Each entry is (originalJobName, failedWorkItemNames, newJobName, targetStageAttempt).
+        /// Each entry is (originalJobName, failedWorkItemNames, newJobName, targetStageAttempt,
+        /// monitorJobAttempt).
         /// </summary>
-        public List<(string OriginalJob, IReadOnlyCollection<string> FailedItems, string NewJob, string TargetStageAttempt)> Resubmissions { get; } = [];
+        public List<(string OriginalJob, IReadOnlyCollection<string> FailedItems, string NewJob, string TargetStageAttempt, string MonitorJobAttempt)> Resubmissions { get; } = [];
 
         /// <summary>The <see cref="HelixJobInfo"/> objects returned from successful resubmissions.</summary>
         public List<HelixJobInfo> ResubmittedJobInfos { get; } = [];
@@ -195,6 +196,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             HelixJobInfo originalJob,
             IReadOnlyCollection<WorkItemSummary> failedWorkItems,
             string targetStageAttempt,
+            string monitorJobAttempt,
             CancellationToken cancellationToken)
         {
             string originalJobName = originalJob.JobName;
@@ -210,7 +212,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             IReadOnlyCollection<string> failedItemNames = [..failedWorkItems.Select(wi => wi.Name)];
             if (_nullResubmissions.Contains(originalJobName))
             {
-                Resubmissions.Add((originalJobName, failedItemNames, null, targetStageAttempt));
+                Resubmissions.Add((originalJobName, failedItemNames, null, targetStageAttempt, monitorJobAttempt));
                 return Task.FromResult<HelixJobInfo>(null);
             }
 
@@ -220,7 +222,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
                 ? targetStageAttempt
                 : (originalSnapshotJob?.StageAttempt ?? originalJob.StageAttempt);
 
-            Resubmissions.Add((originalJobName, failedItemNames, newJobName, targetStageAttempt));
+            Resubmissions.Add((originalJobName, failedItemNames, newJobName, targetStageAttempt, monitorJobAttempt));
             var newJobInfo = new HelixJobInfo(
                 newJobName,
                 "running",
@@ -231,6 +233,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
                 originalSnapshotJob?.QueueId ?? originalJob.QueueId,
                 originalJobName,
                 stageAttempt: resubmittedStageAttempt,
+                jobAttempt: originalSnapshotJob?.JobAttempt ?? originalJob.JobAttempt,
                 logicalJobName: originalSnapshotJob?.LogicalJobName ?? originalJob.LogicalJobName,
                 submitterPhaseName: originalSnapshotJob?.SubmitterPhaseName ?? originalJob.SubmitterPhaseName);
             ResubmittedJobInfos.Add(newJobInfo);

@@ -110,8 +110,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             Task statusTask = ReportStatusPeriodicallyAsync(statusCts.Token);
             try
             {
-                IReadOnlyList<HelixJobInfo> jobsForFirstPoll = await ExecuteRetryPassAsync(cancellationToken);
-                return await RunPollLoopAsync(jobsForFirstPoll, cancellationToken);
+                IReadOnlyList<AzureDevOpsTimelineRecord> timelineForFirstPoll =
+                    HelixJobMonitorUtilities.FilterRecordsToStage(
+                        await _azdo.GetTimelineRecordsAsync(cancellationToken),
+                        _options.StageName);
+                IReadOnlyList<HelixJobInfo> jobsForFirstPoll =
+                    await ExecuteRetryPassAsync(timelineForFirstPoll, cancellationToken);
+                return await RunPollLoopAsync(jobsForFirstPoll, timelineForFirstPoll, cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -158,12 +163,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// One-shot retry pass executed on entry. Reconciles the whole stage's Helix work
         /// (all attempts) into the current stage attempt: for each logical work stream it takes
         /// the latest incarnation and, when that incarnation is a previous attempt's failed or
-        /// unfinished work (or a current attempt's completed-with-failures work), resubmits the
-        /// not-yet-passed items into the current attempt. Returns the (stage snapshot ∪
+        /// unfinished work whose submitter did not rerun, resubmits the not-yet-passed items into
+        /// the current attempt. Returns the (stage snapshot ∪
         /// resubmitted jobs) so the first poll iteration sees the resubmissions immediately.
         /// See Design/SemanticBehavior.md §2.1 and §2.3.
         /// </summary>
-        private async Task<IReadOnlyList<HelixJobInfo>> ExecuteRetryPassAsync(CancellationToken cancellationToken)
+        private async Task<IReadOnlyList<HelixJobInfo>> ExecuteRetryPassAsync(
+            IReadOnlyList<AzureDevOpsTimelineRecord> timelineRecords,
+            CancellationToken cancellationToken)
         {
             _reporter.LogRetryPassStart();
 
@@ -179,6 +186,16 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             // Seed the cross-poll cache so submitter-chain-key lineage (PreviousHelixJobName
             // walks) resolves while grouping streams below.
             _state.ObserveJobs(stageJobs);
+            _state.SetTimelineRecords(timelineRecords);
+
+            // The initial monitor invocation observes and reports failures; it does not create
+            // additional Helix work. Retry reconciliation is only meaningful after AzDO has
+            // retried the monitor job.
+            if (MonitorState.ParseJobAttempt(_options.JobAttempt) <= 1)
+            {
+                _reporter.LogRetryPassFoundNothing();
+                return stageJobs;
+            }
 
             // Surfacing work items that passed by exit code but whose AzDO test results contain
             // failures: a prior monitor invocation may have uploaded failed tests for a job
@@ -198,10 +215,24 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 bool previousAttempt = IsPreviousAttempt(latest);
 
-                // A current-attempt incarnation that is still in flight is gated on, not
-                // resubmitted (this also covers the fast-rerun case where a fresh current-attempt
-                // incarnation exists while a previous one is still running — §2.3.1 case 4).
-                if (!previousAttempt && !latest.IsCompleted)
+                // Work created in this stage attempt belongs to the current execution, whether
+                // it is running or has already failed. It is observed, not retried again on entry.
+                if (!previousAttempt)
+                {
+                    continue;
+                }
+
+                bool hasSubmitterAttempt = TryGetCurrentSubmitterAttempt(
+                    latest,
+                    timelineRecords,
+                    out int currentSubmitterAttempt,
+                    out string submitterIdentity);
+                int helixSubmitterAttempt = MonitorState.ParseJobAttempt(latest.JobAttempt);
+
+                // The submitter itself reran. Its old Helix work is superseded even when the new
+                // Helix job has not become visible yet; resubmitting here would duplicate a full
+                // stage rerun or a selected failed-job retry.
+                if (hasSubmitterAttempt && currentSubmitterAttempt > helixSubmitterAttempt)
                 {
                     continue;
                 }
@@ -229,6 +260,25 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     continue;
                 }
 
+                if (!hasSubmitterAttempt
+                    || string.IsNullOrEmpty(latest.JobAttempt)
+                    || currentSubmitterAttempt < helixSubmitterAttempt)
+                {
+                    IReadOnlyCollection<WorkItemSummary> ambiguousWork =
+                    [
+                        ..exitCodeFailures
+                            .Concat(testOnlyFailures)
+                            .DistinctBy(wi => wi.Name, StringComparer.OrdinalIgnoreCase)
+                    ];
+                    _state.RecordAbandonedWork(latest, ambiguousWork);
+                    LogWarning(
+                        $"Cannot safely reconcile {ambiguousWork.Count} failed/unfinished work item(s) from "
+                        + $"{latest.DisplayName}: submitter '{submitterIdentity ?? "<unknown>"}' could not be "
+                        + $"matched to compatible System.JobAttempt metadata in the current timeline. "
+                        + "The work was not resubmitted to avoid duplicating a rerun.");
+                    continue;
+                }
+
                 _reporter.LogRetryPassResubmission(latest, exitCodeFailures, testOnlyFailures);
 
                 // exitCodeFailures and testOnlyFailures are disjoint by construction (one
@@ -242,7 +292,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 ];
 
                 HelixJobInfo resubmitted = await _helix.ResubmitWorkItemsAsync(
-                    latest, failedWorkItems, _options.StageAttempt, cancellationToken);
+                    latest, failedWorkItems, _options.StageAttempt, _options.JobAttempt, cancellationToken);
                 if (resubmitted is null)
                 {
                     // Previous-attempt work that can never run again (e.g. its queue was removed)
@@ -261,7 +311,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
 
                 resubmittedJobs.Add(resubmitted);
-                _state.RecordResubmission(latest.SubmitterJobName, failedWorkItems.Count);
+                _state.RecordResubmission(
+                    latest.SubmitterPhaseName ?? latest.SubmitterJobName,
+                    failedWorkItems.Count);
             }
 
             if (resubmittedJobs.Count == 0)
@@ -272,7 +324,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return [.. stageJobs, .. resubmittedJobs];
         }
 
-        private async Task<int> RunPollLoopAsync(IReadOnlyList<HelixJobInfo> jobsForFirstPoll, CancellationToken cancellationToken)
+        private async Task<int> RunPollLoopAsync(
+            IReadOnlyList<HelixJobInfo> jobsForFirstPoll,
+            IReadOnlyList<AzureDevOpsTimelineRecord> timelineForFirstPoll,
+            CancellationToken cancellationToken)
         {
             var loopState = new PollLoopState();
 
@@ -280,8 +335,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                int? exitCode = await PollOnceAsync(jobsForFirstPoll, loopState, cancellationToken);
+                int? exitCode = await PollOnceAsync(
+                    jobsForFirstPoll,
+                    timelineForFirstPoll,
+                    loopState,
+                    cancellationToken);
                 jobsForFirstPoll = null; // first-poll seed is consumed
+                timelineForFirstPoll = null;
 
                 if (exitCode.HasValue)
                 {
@@ -298,6 +358,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// </summary>
         private async Task<int?> PollOnceAsync(
             IReadOnlyList<HelixJobInfo> jobsForFirstPoll,
+            IReadOnlyList<AzureDevOpsTimelineRecord> timelineForFirstPoll,
             PollLoopState loopState,
             CancellationToken cancellationToken)
         {
@@ -305,7 +366,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             // Fetch fresh snapshots, scoped to the monitor's stage.
             IReadOnlyList<AzureDevOpsTimelineRecord> timelineRecords =
-                HelixJobMonitorUtilities.FilterRecordsToStage(
+                timelineForFirstPoll
+                ?? HelixJobMonitorUtilities.FilterRecordsToStage(
                     await _azdo.GetTimelineRecordsAsync(cancellationToken),
                     _options.StageName);
 
@@ -569,6 +631,43 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             => !string.IsNullOrEmpty(_options.StageAttempt)
                 && !string.IsNullOrEmpty(job.StageAttempt)
                 && MonitorState.ParseStageAttempt(job.StageAttempt) < MonitorState.ParseStageAttempt(_options.StageAttempt);
+
+        private static bool TryGetCurrentSubmitterAttempt(
+            HelixJobInfo job,
+            IReadOnlyList<AzureDevOpsTimelineRecord> timelineRecords,
+            out int attempt,
+            out string submitterIdentity)
+        {
+            submitterIdentity = job.SubmitterPhaseName ?? job.SubmitterJobName;
+            attempt = 0;
+            if (string.IsNullOrEmpty(submitterIdentity))
+            {
+                return false;
+            }
+
+            string identity = submitterIdentity;
+            int[] matchingAttempts =
+            [
+                ..timelineRecords
+                    .Where(record =>
+                        (string.Equals(record.Type, "Job", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(record.Type, "Phase", StringComparison.OrdinalIgnoreCase))
+                        && string.Equals(
+                            record.ReferenceName,
+                            identity,
+                            StringComparison.OrdinalIgnoreCase))
+                    .Select(record => record.Attempt)
+                    .Distinct()
+            ];
+
+            if (matchingAttempts.Length == 0)
+            {
+                return false;
+            }
+
+            attempt = matchingAttempts.Max();
+            return true;
+        }
 
         private static ProductionDependencies CreateProductionDependencies(
             JobMonitorOptions options,

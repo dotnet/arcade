@@ -71,11 +71,12 @@ Retry and outcome reconciliation operate on logical Helix job streams rather
 than AzDO jobs. An AzDO job can submit multiple Helix jobs to the same queue,
 so AzDO job identity plus queue does not uniquely identify a stream.
 
-`MonitorState` combines the AzDO phase identity, queue, and submitter-assigned
-logical Helix `jobName` (falling back to `TestRunName`). Resubmissions preserve
-these properties and add `PreviousHelixJobName`, so a resubmission chains to
-its original job while sibling submissions from the same AzDO job and queue
-remain independent.
+`MonitorState` combines the stage identity, AzDO phase identity, queue, and
+submitter-assigned logical Helix `jobName` (falling back to `TestRunName`).
+Attempts are incarnation metadata rather than key components. Retry compares
+the preserved submitter `System.JobAttempt` with the current timeline record;
+resubmissions stamp the current stage attempt, preserve the submitter attempt,
+and add `PreviousHelixJobName`.
 
 ## Durability boundary
 

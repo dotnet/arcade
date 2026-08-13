@@ -58,14 +58,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// possible (e.g. the original queue no longer exists).
         /// The new job must preserve BuildId and StageName properties so it is discoverable by
         /// GetJobsForBuildAsync, and must be stamped with <paramref name="targetStageAttempt"/>
-        /// (the resubmitting monitor's own stage attempt) rather than the original job's attempt,
-        /// so the monitor gates on its own resubmission. When <paramref name="targetStageAttempt"/>
-        /// is null/empty the original job's attempt is preserved (build + stage back-compat).
+        /// (the resubmitting monitor's own stage attempt) so the monitor gates on its own
+        /// resubmission. It preserves the original submitter's System.JobAttempt and records
+        /// <paramref name="monitorJobAttempt"/> separately for diagnostics.
         /// </summary>
         Task<HelixJobInfo> ResubmitWorkItemsAsync(
             HelixJobInfo originalJob,
             IReadOnlyCollection<WorkItemSummary> failedWorkItems,
             string targetStageAttempt,
+            string monitorJobAttempt,
             CancellationToken cancellationToken);
     }
 }
