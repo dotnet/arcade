@@ -65,6 +65,18 @@ gate, and upload pipeline. It records atomic request counts and operation
 timings without emitting per-request information logs. The final aggregate
 report is described in [Performance metrics](Components/PerformanceMetrics.md).
 
+## Logical stream identity
+
+Retry and outcome reconciliation operate on logical Helix job streams rather
+than AzDO jobs. An AzDO job can submit multiple Helix jobs to the same queue,
+so AzDO job identity plus queue does not uniquely identify a stream.
+
+`MonitorState` combines the AzDO phase identity, queue, and submitter-assigned
+logical Helix `jobName` (falling back to `TestRunName`). Resubmissions preserve
+these properties and add `PreviousHelixJobName`, so a resubmission chains to
+its original job while sibling submissions from the same AzDO job and queue
+remain independent.
+
 ## Durability boundary
 
 The only durable "processed" marker is the Helix-job tag on a completed Azure

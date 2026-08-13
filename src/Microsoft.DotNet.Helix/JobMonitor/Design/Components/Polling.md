@@ -19,3 +19,9 @@ The one-shot entry retry pass and stage-attempt semantics are specified in
 applied oldest-to-newest so resubmissions and higher stage attempts supersede
 older failures without allowing identically named work from different
 submitter/queue/logical-job streams to collide.
+
+The logical stream key is not merely the AzDO job name plus queue. One AzDO job
+may submit multiple Helix jobs to the same queue, so the key also includes the
+submitter-assigned Helix `jobName` (or `TestRunName` when `jobName` is absent).
+That discriminator is preserved by resubmission, allowing retries to collapse
+only actual incarnations of the same logical Helix job.

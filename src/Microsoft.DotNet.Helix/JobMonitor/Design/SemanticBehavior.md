@@ -105,9 +105,11 @@ be the source of truth for cross-invocation correctness.
 
 Retry is the mechanism that reconciles previous-attempt work into the current
 attempt (§2.1). It operates on *logical work streams*, not on attempts: a work
-stream is identified by the submitter chain key (§5.7) — the AzDO `System.JobName`
-plus the Helix queue — which is stable across both stage attempts and monitor
-resubmissions.
+stream is identified by the submitter chain key (§5.7). The key combines the
+stable AzDO phase identity, Helix queue, and logical Helix job identity; the
+AzDO job name and queue alone are not unique because one AzDO job may submit
+multiple independent Helix jobs to the same queue. The combined identity is
+stable across both stage attempts and monitor resubmissions.
 
 1. Retry runs exactly once per invocation, on entry, before polling begins.
 2. The set of work to resubmit is decided from a single Helix snapshot taken on
@@ -186,6 +188,13 @@ addresses each:
    never run again would loop forever under any "just wait" or "just resubmit and
    wait" scheme. → Resubmission-not-possible is treated as an actionable hard
    failure so the invocation fails fast instead of hanging (§2.3.3).
+7. **One AzDO job submits multiple Helix jobs to the same queue.** Grouping only
+   by AzDO job name and queue incorrectly merges independent streams. A failure
+   in one job can be overwritten by a same-named passing work item in another,
+   and retry can select only one of the jobs. → The stream key also includes the
+   submitter-assigned logical Helix `jobName` (falling back to `TestRunName`).
+   Resubmissions preserve that property, so incarnations of one logical job
+   still chain while sibling Helix jobs remain independent.
 
 ### 2.4 Upload invariants
 
@@ -419,10 +428,19 @@ The chain key must be deterministic and uniqueness-preserving:
 - A single AzDO matrix leg that fans out to multiple Helix queues must
   produce distinct keys (one per queue) so per-queue failures are
   preserved.
+- A single AzDO job that submits multiple independent Helix jobs to the same
+  queue must produce distinct keys (one per logical Helix job). The AzDO
+  phase/job name and queue are therefore necessary but not sufficient.
 - An original Helix job and its resubmission(s) on the same queue must
   produce the same key so the latest incarnation overwrites the older one.
-- Because the chain key is built from the AzDO `System.PhaseName`, queue, and
-  submitter-assigned Helix `jobName` — all stable across stage attempts — a
+- The preferred key components are:
+  1. `System.PhaseName`, falling back to `System.JobName`;
+  2. the Helix queue;
+  3. the submitter-assigned Helix `jobName`, falling back to `TestRunName`.
+  If no stable logical-job discriminator is available, the key is bound to the
+  root Helix job in the `PreviousHelixJobName` lineage rather than risk merging
+  unrelated jobs.
+- Because these key components are stable across stage attempts, a
   rerun-stage incarnation of the same logical job on the same queue collapses
   onto the same key as its previous-attempt counterpart, even though the two
   Helix jobs are **not** linked by
@@ -433,13 +451,14 @@ The chain key must be deterministic and uniqueness-preserving:
   could nondeterministically overwrite the current one. `System.JobName` is
   used only when `System.PhaseName` is unavailable because some pipelines stamp
   every matrix job with `System.JobName=__default`.
-- If lineage cannot be resolved (the predecessor link points outside the
-  jobs the runner has observed), the key falls back to a Helix-job-bound
-  identifier so independent jobs don't collide.
-- Multiple independent AzDO phases and logical Helix jobs targeting the same
-  queue remain distinct because `System.PhaseName` and submitter-assigned
-  `jobName` are both part of the key. This prevents a passing work item in one
-  stream from erasing a same-named failure in another.
+- If lineage cannot be resolved (the predecessor link points outside the jobs
+  the runner has observed), the root predecessor name provides the
+  Helix-job-bound fallback.
+- The submitter must assign different `jobName` values (or, when absent,
+  different `TestRunName` values) to independent Helix jobs submitted by the
+  same AzDO phase to the same queue. Without a stable distinguishing property,
+  no monitor can reliably correlate an unlinked stage-rerun job with its prior
+  incarnation while also distinguishing it from a sibling submission.
 
 The same key drives a parallel map of "failed work item console info" used
 to build the final failure report. When a later incarnation of a work item
