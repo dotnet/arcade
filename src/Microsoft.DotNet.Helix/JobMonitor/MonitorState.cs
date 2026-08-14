@@ -52,6 +52,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         // jobs that were observed in an earlier poll.
         private readonly HashSet<string> _workItemOutcomeJobs = new(StringComparer.OrdinalIgnoreCase);
 
+        // Previous-attempt jobs whose submitter has a newer timeline attempt. These remain
+        // uploadable history but must not contribute to current status or pass/fail.
+        private readonly HashSet<string> _supersededJobNames = new(StringComparer.OrdinalIgnoreCase);
+
         // Latest known console-link information for every failed work item, keyed the same
         // way as _workItemOutcomes. Cleared per key when a later incarnation passes.
         private readonly Dictionary<(string ChainKey, string WorkItemName), FailedWorkItemConsoleInfo> _failedWorkItemConsoleInfo
@@ -236,6 +240,34 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             lock (_sync)
             {
                 return _workItemOutcomeJobs.Contains(jobName);
+            }
+        }
+
+        /// <summary>
+        /// Marks a superseded job's outcomes as intentionally ignored. This prevents repeated
+        /// work-item refreshes without inserting stale outcomes into the current result map.
+        /// </summary>
+        public void MarkWorkItemOutcomesIgnored(string jobName)
+        {
+            lock (_sync)
+            {
+                _workItemOutcomeJobs.Add(jobName);
+            }
+        }
+
+        public void MarkSupersededBySubmitterRerun(string jobName)
+        {
+            lock (_sync)
+            {
+                _supersededJobNames.Add(jobName);
+            }
+        }
+
+        public bool IsSupersededBySubmitterRerun(string jobName)
+        {
+            lock (_sync)
+            {
+                return _supersededJobNames.Contains(jobName);
             }
         }
 

@@ -124,7 +124,10 @@ stable across both stage attempts and monitor resubmissions.
      already failed. It belongs to the execution currently being monitored.
    - The current timeline shows the matching submitter at a **higher job
      attempt** than *L* — leave *L*. The submitter reran and superseded it; wait
-     for the newer submitter execution rather than duplicating it.
+     for the newer submitter execution rather than duplicating it. Until the
+     replacement Helix job becomes visible, *L* is also excluded from current
+     status and pass/fail reconciliation so stale failures do not leak through
+     the visibility gap.
    - The current timeline submitter attempt **equals** *L*'s
      `System.JobAttempt` — the submitter did not rerun. Failed or unfinished
      work in *L* may be resubmitted into the current stage attempt.
@@ -525,9 +528,9 @@ name is frequently `__default`, which is why phase identity is preferred.
 | --- | --- | --- | --- | --- |
 | Initial execution; H1 fails | S1/M1 | J1 | H1 S1/J1 failed | Report the failure; attempt 1 never creates replay work. |
 | Selective retry of only the monitor | S2/M2 | J1 completed | H1 S1/J1 failed | `J1 == J1`; replay H1 as R2. |
-| Selective retry also selected the submitter, before H2 is visible | S2/M2 | J2 pending/running | Only H1 S1/J1 | `J2 > J1`; suppress H1 using timeline state, without waiting for H2 visibility. |
+| Selective retry also selected the submitter, before H2 is visible | S2/M2 | J2 pending/running | Only H1 S1/J1 | `J2 > J1`; suppress H1 replay, status, and outcome using timeline state, without waiting for H2 visibility. |
 | Selective retry after H2 is visible | S2/M2 | J2 | H1 S1/J1 and H2 S2/J2 | H2 supersedes H1; observe H2. |
-| Full-stage rerun immediately after timeline creation | S2/M2 | J2 pending | Only H1 S1/J1 | Suppress H1 because the submitter is part of the rerun. |
+| Full-stage rerun immediately after timeline creation | S2/M2 | J2 pending | Only H1 S1/J1 | Suppress H1 replay, status, and outcome because the submitter is part of the rerun. |
 | Full-stage rerun after H2 submission | S2/M2 | J2 running/completed | H1 S1/J1 and H2 S2/J2 | H2 is authoritative; do not create a monitor replay. |
 | Submitter reruns but intentionally submits no new Helix work | S2/M2 | J2 completed | Only H1 S1/J1 | Suppress H1; the newer submitter execution is authoritative. |
 | Submitter did not rerun and H1 passed | S2/M2 | J1 | H1 S1/J1 passed | Upload/count H1; no replay. |

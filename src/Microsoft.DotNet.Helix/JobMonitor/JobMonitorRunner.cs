@@ -232,8 +232,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 // The submitter itself reran. Its old Helix work is superseded even when the new
                 // Helix job has not become visible yet; resubmitting here would duplicate a full
                 // stage rerun or a selected failed-job retry.
-                if (hasSubmitterAttempt && currentSubmitterAttempt > helixSubmitterAttempt)
+                if (IsSupersededBySubmitterRerun(
+                    latest,
+                    hasSubmitterAttempt,
+                    currentSubmitterAttempt,
+                    helixSubmitterAttempt))
                 {
+                    _state.MarkSupersededBySubmitterRerun(latest.JobName);
                     continue;
                 }
 
@@ -392,6 +397,18 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _state.SetTimelineRecords(timelineRecords);
             _state.ObserveJobs(stageJobs);
 
+            // A rerun submitter supersedes its previous Helix stream before the replacement
+            // Helix job is necessarily visible. Keep those stale incarnations available for
+            // durable upload, but exclude them from current status and pass/fail reconciliation.
+            IReadOnlyList<HelixJobInfo> authoritativeJobs =
+            [
+                .._state.GetLatestIncarnationPerStream(stageJobs)
+                    .Where(job => !_state.IsSupersededBySubmitterRerun(job.JobName))
+            ];
+            var authoritativeJobNames = new HashSet<string>(
+                authoritativeJobs.Select(static job => job.JobName),
+                StringComparer.OrdinalIgnoreCase);
+
             // Helix job summaries can omit Finished for failed jobs even after all work
             // items have terminal exit codes, so fall back to per-work-item status.
             IReadOnlyList<HelixJobInfo> jobsToRefresh =
@@ -432,6 +449,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     job,
                     workItemsByJob[job.JobName],
                     queueUpload: true,
+                    recordOutcomes: authoritativeJobNames.Contains(job.JobName),
                     discoveryPoll: pollNumber);
             }
 
@@ -440,19 +458,23 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             // so newer incarnations — including higher-attempt rerun duplicates — supersede older
             // ones). Idempotent — already-reconciled jobs early-return.
             foreach (HelixJobInfo job in MonitorState.OrderHelixJobsOldToNew(
-                MonitorState.GetLatestHelixJobAttempts(stageJobs)
+                MonitorState.GetLatestHelixJobAttempts(authoritativeJobs)
                     .Where(j => completedJobNames.Contains(j.JobName))))
             {
                 ReconcileCompletedJob(
                     job,
                     workItemsByJob[job.JobName],
                     queueUpload: false,
+                    recordOutcomes: true,
                     discoveryPoll: pollNumber);
             }
 
+            var authoritativeCompletedJobNames = new HashSet<string>(
+                authoritativeJobNames.Where(completedJobNames.Contains),
+                StringComparer.OrdinalIgnoreCase);
             Volatile.Write(
                 ref _latestStatus,
-                new PollStatusSnapshot(stageJobs, workItemsByJob, completedJobNames));
+                new PollStatusSnapshot(authoritativeJobs, workItemsByJob, authoritativeCompletedJobNames));
             if (!loopState.HasLoggedInitialStatus)
             {
                 LogLatestStatus();
@@ -500,6 +522,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             HelixJobInfo helixJob,
             IReadOnlyCollection<WorkItemSummary> workItems,
             bool queueUpload,
+            bool recordOutcomes,
             int discoveryPoll)
         {
             // Already reconciled earlier in this invocation — nothing more to do (idempotent).
@@ -516,20 +539,27 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             // completion / console-link logs are suppressed for such jobs.
             bool alreadyUploadedByPriorAttempt = _state.IsHelixJobProcessed(helixJob.JobName);
 
-            if (!alreadyUploadedByPriorAttempt)
+            if (!alreadyUploadedByPriorAttempt && recordOutcomes)
             {
                 _reporter.LogJobProcessingStart(helixJob);
                 _reporter.LogFailedWorkItemConsoleLinks(helixJob, workItems.Where(wi => wi.IsFailed));
             }
 
-            _state.TryRecordWorkItemOutcomes(helixJob, workItems);
+            if (recordOutcomes)
+            {
+                _state.TryRecordWorkItemOutcomes(helixJob, workItems);
+            }
+            else
+            {
+                _state.MarkWorkItemOutcomesIgnored(helixJob.JobName);
+            }
 
             if (queueUpload && !alreadyUploadedByPriorAttempt)
             {
                 _uploads.TryEnqueue(helixJob, workItems, discoveryPoll);
             }
 
-            if (!alreadyUploadedByPriorAttempt)
+            if (!alreadyUploadedByPriorAttempt && recordOutcomes)
             {
                 _reporter.LogJobCompleted(helixJob, workItems);
             }
@@ -681,6 +711,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             attempt = matchingRecords[0].Attempt;
             return true;
         }
+
+        private static bool IsSupersededBySubmitterRerun(
+            HelixJobInfo job,
+            bool hasSubmitterAttempt,
+            int currentSubmitterAttempt,
+            int helixSubmitterAttempt)
+            => hasSubmitterAttempt
+                && !string.IsNullOrEmpty(job.JobAttempt)
+                && currentSubmitterAttempt > helixSubmitterAttempt;
 
         private static ProductionDependencies CreateProductionDependencies(
             JobMonitorOptions options,

@@ -1660,6 +1660,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         {
             var azdo = new FakeAzureDevOpsService();
             var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
 
             azdo.AddTimelineResponse(
                 StageRecord("Test", "stage-test", "inProgress", attempt: 2,
@@ -1706,13 +1707,16 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             JobMonitorOptions options = DefaultOptions();
             options.StageAttempt = "2";
             options.JobAttempt = "2";
-            var runner = new JobMonitorRunner(options, NullLogger.Instance, azdo, helix, NoDelay);
+            var runner = new JobMonitorRunner(options, logger, azdo, helix, NoDelay);
 
             int exitCode = await runner.RunAsync(CancellationToken.None);
 
             exitCode.Should().Be(0);
             helix.Resubmissions.Should().BeEmpty();
             azdo.UploadedJobNames.Should().Contain("helix-x-a2");
+            logger.Messages.Should().NotContain(message =>
+                message.Contains("helix-x-a1", StringComparison.Ordinal)
+                && message.Contains("failed", StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
@@ -1859,7 +1863,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             int exitCode = await new JobMonitorRunner(
                 options, NullLogger.Instance, azdo, helix, NoDelay).RunAsync(CancellationToken.None);
 
-            exitCode.Should().Be(1);
+            exitCode.Should().Be(0);
             helix.Resubmissions.Should().BeEmpty();
         }
 
