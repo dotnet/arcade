@@ -277,6 +277,7 @@ inputs are:
 | AzDO collection URI + project | Construct the test-results URL used in failure reports. |
 | Stage name | Stage scope (see §2.1). |
 | Stage attempt | Per-attempt scope (see §2.1). Defaults to `SYSTEM_STAGEATTEMPT`; when unknown the monitor tracks jobs from every attempt of the stage. |
+| Job attempt | Attempt of the monitor's own AzDO job. Retry reconciliation runs only after attempt 1. Defaults to `SYSTEM_JOBATTEMPT`. |
 | Polling interval | Delay between poll iterations; a minimum floor applies. |
 | Maximum wait | Reported in the timeout message; the timeout itself is enforced by the caller through cancellation. |
 | Job monitor name | Identifier of the monitor's own AzDO timeline record; used to exclude it from pass/fail. |
@@ -477,6 +478,89 @@ The chain key must be deterministic and uniqueness-preserving:
 The same key drives a parallel map of "failed work item console info" used
 to build the final failure report. When a later incarnation of a work item
 passes, its entry in that map is cleared.
+
+#### 5.7.1 Stream and attempt examples
+
+The following examples use one logical stream:
+
+```text
+StreamKey K1 =
+(
+  StageName: Build,
+  PhaseName: build_windows_x64_Checked_NativeAOT,
+  QueueId: windows.10.amd64.open.rt,
+  LogicalJobName: runtime-tests
+)
+
+Original Helix job H1:
+  System.StageAttempt = 1
+  System.JobAttempt = 1
+
+Monitor replay R2:
+  System.StageAttempt = 2
+  System.JobAttempt = 1
+  JobMonitor.JobAttempt = 2
+  PreviousHelixJobName = H1
+
+Fresh submitter rerun H2:
+  System.StageAttempt = 2
+  System.JobAttempt = 2
+  PreviousHelixJobName is absent
+```
+
+`System.JobAttempt` on a Helix job always identifies the AzDO job that
+originally submitted that logical work. It is compared with the current
+timeline attempt of that same submitter. It is **not** compared with the
+monitor's own job attempt. `JobMonitor.JobAttempt` records which monitor
+invocation created a replay and is diagnostic metadata only.
+
+`System.PhaseName` maps to the `refName` of the AzDO **Phase** timeline
+record. When phase identity is unavailable, `System.JobName` maps to the
+`refName` of the nested **Job** record. In matrix pipelines that nested job
+name is frequently `__default`, which is why phase identity is preferred.
+
+#### 5.7.2 Retry and rerun permutation matrix
+
+| Scenario and observation time | Monitor | Current submitter timeline | Visible Helix work | Required behavior |
+| --- | --- | --- | --- | --- |
+| Initial execution; H1 fails | S1/M1 | J1 | H1 S1/J1 failed | Report the failure; attempt 1 never creates replay work. |
+| Selective retry of only the monitor | S2/M2 | J1 completed | H1 S1/J1 failed | `J1 == J1`; replay H1 as R2. |
+| Selective retry also selected the submitter, before H2 is visible | S2/M2 | J2 pending/running | Only H1 S1/J1 | `J2 > J1`; suppress H1 using timeline state, without waiting for H2 visibility. |
+| Selective retry after H2 is visible | S2/M2 | J2 | H1 S1/J1 and H2 S2/J2 | H2 supersedes H1; observe H2. |
+| Full-stage rerun immediately after timeline creation | S2/M2 | J2 pending | Only H1 S1/J1 | Suppress H1 because the submitter is part of the rerun. |
+| Full-stage rerun after H2 submission | S2/M2 | J2 running/completed | H1 S1/J1 and H2 S2/J2 | H2 is authoritative; do not create a monitor replay. |
+| Submitter reruns but intentionally submits no new Helix work | S2/M2 | J2 completed | Only H1 S1/J1 | Suppress H1; the newer submitter execution is authoritative. |
+| Submitter did not rerun and H1 passed | S2/M2 | J1 | H1 S1/J1 passed | Upload/count H1; no replay. |
+| Submitter did not rerun and H1 is failed or unfinished | S2/M2 | J1 | H1 S1/J1 failed/waiting | Replay the failed or unfinished items as R2. |
+| R2 fails and the monitor is retried again | S3/M3 | J1 | H1 S1/J1 and R2 S2/J1 failed | R2 is the latest lineage leaf and still matches J1; replay its remaining failures as R3. |
+| R2 remains unfinished when the monitor is retried | S3/M3 | J1 | R2 S2/J1 running/waiting | Treat the previous-stage leaf as abandoned and replay its unfinished items as R3. |
+| R2 passed before the next monitor invocation | S3/M3 | J1 | R2 S2/J1 passed | Latest incarnation passed; no further replay. |
+| Current-stage H2 is running when the monitor starts | S2/M2 | J2 | H2 S2/J2 running | Observe and gate on H2; never replay current-stage work on entry. |
+| H2 fails after the monitor has started | S2/M2 | J2 | H2 changes running to failed | Report failure. Retry is entry-only; do not create replay work mid-invocation. |
+| Monitor is retried after H2 failed | S3/M3 | J2 | H2 S2/J2 failed | `J2 == J2`; replay H2 into S3. |
+| Submitter identity or attempt is missing | S2/M2 | Unknown | H1 S1/J1 failed | Fail safely; do not speculate and risk duplicate work. |
+| Timeline attempt is lower than Helix metadata | S2/M2 | J1 | H1 claims S1/J2 | Treat metadata as inconsistent; do not replay. |
+| Fresh H2 is visible but is not lineage-linked to H1 | S2/M2 | J2 | H1 S1/J1 and H2 S2/J2 | Collapse by `StreamKey`; the higher stage/job incarnation wins. |
+| Monitor replay R2 is linked to H1 | S2/M2 | J1 | H1 and R2 with `Previous=H1` | Collapse explicit lineage to the leaf R2. |
+
+The central retry decision is therefore:
+
+```text
+current submitter attempt > Helix System.JobAttempt
+    => the submitter reran; suppress monitor replay
+
+current submitter attempt == Helix System.JobAttempt
+    => the submitter did not rerun; failed/unfinished work may be replayed
+```
+
+#### 5.7.3 Identity-isolation matrix
+
+| Helix submissions | Example stream keys | Required behavior |
+| --- | --- | --- |
+| One AzDO job submits two logical jobs to the same queue | `(Build, phaseA, queue1, runtime-tests)` and `(Build, phaseA, queue1, nativeaot-smoke)` | Separate streams because logical job names differ. |
+| One AzDO job submits to two queues | `(Build, phaseA, queue1, tests)` and `(Build, phaseA, queue2, tests)` | Separate streams because queues differ. |
+| Two AzDO phases use the same queue and logical name | `(Build, phaseA, queue1, tests)` and `(Build, phaseB, queue1, tests)` | Separate streams because phase identities differ. |
+| Two stages use identical phase, queue, and logical names | `(Build, phaseA, queue1, tests)` and `(Test, phaseA, queue1, tests)` | Separate streams because stage identities differ. |
 
 ### 5.8 Failure reporting
 

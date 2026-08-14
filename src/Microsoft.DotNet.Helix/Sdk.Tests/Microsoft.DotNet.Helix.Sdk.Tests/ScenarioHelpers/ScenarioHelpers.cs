@@ -43,6 +43,22 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.ScenarioHelpers
                 Id = id ?? name,
             };
 
+        public static AzureDevOpsTimelineRecord PipelinePhase(
+            string referenceName, string name, string state, string result = null, int attempt = 1,
+            PreviousAttemptReference[] previousAttempts = null, string parentId = null, string id = null)
+            => new()
+            {
+                Type = "Phase",
+                ReferenceName = referenceName,
+                Name = name,
+                State = state,
+                Result = result,
+                Attempt = attempt,
+                PreviousAttempts = previousAttempts,
+                ParentId = parentId,
+                Id = id ?? referenceName,
+            };
+
         public static AzureDevOpsTimelineRecord MonitorJob(
             string name = DefaultMonitorName, int attempt = 1,
             PreviousAttemptReference[] previousAttempts = null, string parentId = null)

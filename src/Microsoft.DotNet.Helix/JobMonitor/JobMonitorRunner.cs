@@ -638,7 +638,21 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             out int attempt,
             out string submitterIdentity)
         {
-            submitterIdentity = job.SubmitterPhaseName ?? job.SubmitterJobName;
+            // SendHelixJob stamps System.PhaseName from the AzDO phase refName. The nested
+            // job record frequently has refName "__default", so only use it when phase
+            // identity was not available on the Helix job.
+            string timelineRecordType;
+            if (!string.IsNullOrEmpty(job.SubmitterPhaseName))
+            {
+                submitterIdentity = job.SubmitterPhaseName;
+                timelineRecordType = "Phase";
+            }
+            else
+            {
+                submitterIdentity = job.SubmitterJobName;
+                timelineRecordType = "Job";
+            }
+
             attempt = 0;
             if (string.IsNullOrEmpty(submitterIdentity))
             {
@@ -646,26 +660,25 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             string identity = submitterIdentity;
-            int[] matchingAttempts =
+            AzureDevOpsTimelineRecord[] matchingRecords =
             [
                 ..timelineRecords
                     .Where(record =>
-                        (string.Equals(record.Type, "Job", StringComparison.OrdinalIgnoreCase)
-                            || string.Equals(record.Type, "Phase", StringComparison.OrdinalIgnoreCase))
+                        string.Equals(record.Type, timelineRecordType, StringComparison.OrdinalIgnoreCase)
                         && string.Equals(
                             record.ReferenceName,
                             identity,
                             StringComparison.OrdinalIgnoreCase))
-                    .Select(record => record.Attempt)
-                    .Distinct()
             ];
 
-            if (matchingAttempts.Length == 0)
+            // A phase refName is normally unique. Job fallback can be "__default" for many
+            // matrix legs; treating any one of those as the submitter could duplicate work.
+            if (matchingRecords.Length != 1)
             {
                 return false;
             }
 
-            attempt = matchingAttempts.Max();
+            attempt = matchingRecords[0].Attempt;
             return true;
         }
 

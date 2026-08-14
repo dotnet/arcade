@@ -1665,22 +1665,28 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 StageRecord("Test", "stage-test", "inProgress", attempt: 2,
                     previousAttempts: [PreviousAttempt(1)]),
                 MonitorJob(attempt: 2, previousAttempts: [PreviousAttempt(1)], parentId: "stage-test"),
-                PipelineJob("Test_Linux", "inProgress", attempt: 2,
-                    previousAttempts: [PreviousAttempt(1)], parentId: "stage-test"));
+                PipelinePhase("Test_Linux", "Test Linux", "inProgress", attempt: 2,
+                    previousAttempts: [PreviousAttempt(1)], parentId: "stage-test"),
+                PipelineJob("__default", "inProgress", attempt: 2,
+                    previousAttempts: [PreviousAttempt(1)], parentId: "Test_Linux"));
             azdo.AddTimelineResponse(
                 StageRecord("Test", "stage-test", "inProgress", attempt: 2,
                     previousAttempts: [PreviousAttempt(1)]),
                 MonitorJob(attempt: 2, previousAttempts: [PreviousAttempt(1)], parentId: "stage-test"),
-                PipelineJob("Test_Linux", "completed", "succeeded", attempt: 2,
-                    previousAttempts: [PreviousAttempt(1)], parentId: "stage-test"));
+                PipelinePhase("Test_Linux", "Test Linux", "completed", "succeeded", attempt: 2,
+                    previousAttempts: [PreviousAttempt(1)], parentId: "stage-test"),
+                PipelineJob("__default", "completed", "succeeded", attempt: 2,
+                    previousAttempts: [PreviousAttempt(1)], parentId: "Test_Linux"));
 
             // Previous incarnation still running; fresh current incarnation of the SAME stream
             // (same submitter + queue), not linked by PreviousHelixJobName.
             HelixJobInfo previousRunning = HelixJob("helix-x-a1", "finished", stageName: "Test",
-                submitterJobName: "Test_Linux", queueId: "q1", stageAttempt: "1",
+                submitterJobName: "__default", submitterPhaseName: "Test_Linux",
+                queueId: "q1", stageAttempt: "1",
                 jobAttempt: "1", logicalJobName: "tests");
             HelixJobInfo currentDone = HelixJob("helix-x-a2", "finished", stageName: "Test",
-                submitterJobName: "Test_Linux", queueId: "q1", stageAttempt: "2",
+                submitterJobName: "__default", submitterPhaseName: "Test_Linux",
+                queueId: "q1", stageAttempt: "2",
                 jobAttempt: "2", logicalJobName: "tests");
 
             helix.AddResponse(
@@ -1931,6 +1937,110 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             helix.Resubmissions.Should().BeEmpty();
             logger.Messages.Should().Contain(message =>
                 message.Contains("could not be matched to compatible System.JobAttempt metadata", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public async Task AttemptScoped_TimelineAttemptOlderThanHelixMetadata_DoesNotSpeculativelyResubmit()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+
+            azdo.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "inProgress", attempt: 3,
+                    previousAttempts: [PreviousAttempt(1), PreviousAttempt(2)]),
+                MonitorJob(attempt: 3, previousAttempts: [PreviousAttempt(1), PreviousAttempt(2)],
+                    parentId: "stage-test"),
+                PipelineJob("A", "completed", "succeeded", attempt: 1, parentId: "stage-test"));
+            helix.AddResponse(
+                jobs: [HelixJob("ha2", "finished", stageName: "Test",
+                    submitterJobName: "A", queueId: "q", stageAttempt: "2",
+                    jobAttempt: "2", logicalJobName: "tests")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["ha2"] = PassFail(failed: ["a"]),
+                });
+
+            JobMonitorOptions options = DefaultOptions();
+            options.StageAttempt = "3";
+            options.JobAttempt = "3";
+
+            int exitCode = await new JobMonitorRunner(
+                options, logger, azdo, helix, NoDelay).RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(1);
+            helix.Resubmissions.Should().BeEmpty();
+            logger.Messages.Should().Contain(message =>
+                message.Contains("could not be matched to compatible System.JobAttempt metadata", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public async Task AttemptScoped_AmbiguousDefaultJobIdentity_DoesNotSpeculativelyResubmit()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+            var logger = new RecordingLogger();
+
+            azdo.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "inProgress", attempt: 2,
+                    previousAttempts: [PreviousAttempt(1)]),
+                MonitorJob(attempt: 2, previousAttempts: [PreviousAttempt(1)], parentId: "stage-test"),
+                PipelineJob("__default", "completed", "succeeded", attempt: 1,
+                    parentId: "phase-a", id: "job-a"),
+                PipelineJob("__default", "completed", "succeeded", attempt: 1,
+                    parentId: "phase-b", id: "job-b"));
+            helix.AddResponse(
+                jobs: [HelixJob("ha1", "finished", stageName: "Test",
+                    submitterJobName: "__default", queueId: "q", stageAttempt: "1",
+                    jobAttempt: "1", logicalJobName: "tests")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["ha1"] = PassFail(failed: ["a"]),
+                });
+
+            JobMonitorOptions options = DefaultOptions();
+            options.StageAttempt = "2";
+            options.JobAttempt = "2";
+
+            int exitCode = await new JobMonitorRunner(
+                options, logger, azdo, helix, NoDelay).RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(1);
+            helix.Resubmissions.Should().BeEmpty();
+            logger.Messages.Should().Contain(message =>
+                message.Contains("could not be matched to compatible System.JobAttempt metadata", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public async Task AttemptScoped_CurrentStageFailure_IsObservedButNotReplayedOnEntry()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                StageRecord("Test", "stage-test", "inProgress", attempt: 2,
+                    previousAttempts: [PreviousAttempt(1)]),
+                MonitorJob(attempt: 2, previousAttempts: [PreviousAttempt(1)], parentId: "stage-test"),
+                PipelineJob("A", "completed", "succeeded", attempt: 2,
+                    previousAttempts: [PreviousAttempt(1)], parentId: "stage-test"));
+            helix.AddResponse(
+                jobs: [HelixJob("ha2", "finished", stageName: "Test",
+                    submitterJobName: "A", queueId: "q", stageAttempt: "2",
+                    jobAttempt: "2", logicalJobName: "tests")],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["ha2"] = PassFail(failed: ["a"]),
+                });
+
+            JobMonitorOptions options = DefaultOptions();
+            options.StageAttempt = "2";
+            options.JobAttempt = "2";
+
+            int exitCode = await new JobMonitorRunner(
+                options, NullLogger.Instance, azdo, helix, NoDelay).RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(1);
+            helix.Resubmissions.Should().BeEmpty();
         }
 
         [Fact]
@@ -2543,7 +2653,21 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                         Attempt = 2,
                         PreviousAttempts = [PreviousAttempt(1, recordId: "previous-monitor-job")],
                     },
-                    PipelineJob("Linux Build_Debug", "completed", "succeeded", parentId: "stage-test"));
+                    PipelinePhase(
+                        "Linux Build_Debug",
+                        "Linux Build_Debug",
+                        "completed",
+                        "succeeded",
+                        attempt: 1,
+                        parentId: "stage-test",
+                        id: "linux-phase"),
+                    PipelineJob(
+                        "__default",
+                        "completed",
+                        "succeeded",
+                        attempt: 1,
+                        parentId: "linux-phase",
+                        id: "linux-job"));
             }
         }
 
