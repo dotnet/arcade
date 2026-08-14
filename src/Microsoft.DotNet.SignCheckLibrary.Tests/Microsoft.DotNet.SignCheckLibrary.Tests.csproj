@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.SignCheckLibrary\Microsoft.DotNet.SignCheckLibrary.csproj" />
+    <ProjectReference Include="..\SignCheck\Microsoft.SignCheck\Microsoft.DotNet.SignCheckLibrary.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.XUnitExtensions\src\Microsoft.DotNet.XUnitExtensions.csproj" />
   </ItemGroup>
 
