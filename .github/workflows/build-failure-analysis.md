@@ -106,6 +106,12 @@ timeout-minutes: 30
 # and the agent's bash allowlist contains no interpreters, package managers or
 # build tools — the tree is read and edited as text only.
 #
+# The PR-head checkout is intentionally shallow (`actions/checkout`'s default
+# depth of 1): gh-aw bundles only the commits the agent creates on top of it, so
+# no history is needed. Step 6b's loop guard therefore reads the PR's commit
+# list through the GitHub tools rather than `git log`, which cannot see the
+# branch's history here.
+#
 # It does, however, put PR-controlled `.github/`, `.agents/` and `AGENTS.md`
 # content in the workspace, and the agent reads its playbook from there. gh-aw's
 # own base-branch restore (`restore_base_github_folders.sh`) is gated on its
@@ -120,6 +126,11 @@ checkout:
   - ref: ${{ github.event.repository.default_branch }}
     path: .gh-aw-base-config
     fetch-depth: 1
+    # Cone mode (the `actions/checkout` default) materializes every top-level
+    # file in addition to the listed directories, which is how the base
+    # branch's `AGENTS.md`/`CLAUDE.md`/`GEMINI.md`/`.mcp.json` arrive. The
+    # restore step below does not rely on that: it consults the base tree
+    # directly, so a sparse-checkout change cannot turn "restore" into "delete".
     sparse-checkout: |
       .github
       .agents
@@ -145,11 +156,20 @@ pre-agent-steps:
           echo "Base branch has no ${FOLDER}; removed the PR's copy"
         fi
       done
+      BASE_ROOT_FILES=$(git -C "${BASE}" ls-tree --name-only HEAD)
       for FILE in AGENTS.md CLAUDE.md GEMINI.md .mcp.json; do
         rm -f "${FILE}"
         if [ -f "${BASE}/${FILE}" ]; then
           cp "${BASE}/${FILE}" "${FILE}"
           echo "Restored ${FILE} from ${BASE_BRANCH}"
+        elif printf '%s\n' "${BASE_ROOT_FILES}" | grep -qx -- "${FILE}"; then
+          # On the base branch but not materialized by the sparse checkout.
+          git -C "${BASE}" show "HEAD:${FILE}" > "${FILE}"
+          echo "Restored ${FILE} from ${BASE_BRANCH} (via git show)"
+        else
+          # Genuinely absent on the base branch, so the PR added it: removing
+          # it is the intended outcome.
+          echo "Base branch has no ${FILE}; removed the PR's copy"
         fi
       done
       rm -rf "${BASE}"
@@ -650,6 +670,15 @@ tools:
   # Needed to author the fix commit for `push-to-pull-request-branch`: the agent
   # edits the failing file in the checked-out PR tree and commits it locally,
   # and gh-aw packages those commits as the patch.
+  #
+  # NOTE: enabling `push-to-pull-request-branch` makes the **compiler** widen the
+  # generated shell allowlist on its own with `git branch/checkout/merge/rm/
+  # switch` — see the `--allow-tool` list in the compiled lock. Those come from
+  # gh-aw, not from the list below, and cannot be removed from here. What matters
+  # is that `git push` is not among them: the agent can never write to the
+  # remote. The push happens in the `safe_outputs` job, from a bundle of the
+  # agent's local commits, filtered by `allowed-files`. The analyst playbook
+  # (Step 6b) forbids the agent from using the injected branch/history commands.
   edit:
   bash:
     - "cat"
@@ -661,9 +690,8 @@ tools:
     - "uniq"
     - "ls"
     - "find"
-    # Just enough git to stage and commit the fix — deliberately no `push`,
-    # `reset`, `checkout`, `rebase` or `merge`: the push itself is performed by
-    # the safe-outputs job, and history rewriting is never wanted here.
+    # Just enough git to inspect, stage and commit the fix. `push`, `reset` and
+    # `rebase` are absent here and are not injected by the compiler either.
     - "git status:*"
     - "git diff:*"
     - "git log:*"
