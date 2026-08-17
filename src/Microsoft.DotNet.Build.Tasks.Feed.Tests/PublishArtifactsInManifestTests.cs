@@ -260,6 +260,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             var publishingTask = task.WhichPublishingTask(manifestFullPath);
             var logField = typeof(AssetPublisherFactory).GetField("_log", BindingFlags.NonPublic | BindingFlags.Instance);
+            logField.Should().NotBeNull();
             var factoryLog = logField.GetValue(publishingTask.AssetPublisherFactory);
 
             factoryLog.Should().BeSameAs(publishingTask.Log);
