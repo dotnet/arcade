@@ -59,7 +59,16 @@ on:
 # fetch-binlog job is skipped, its output is empty, and this cascades into a
 # skipped agent — no AI calls on anything but a real `arcade-pr` failure whose
 # PR targets an in-scope base branch.
-if: needs.fetch-binlog.outputs.binlog-found == 'true'
+#
+# `push-blocked` is the loop guard for the push escape hatch (fetch job, step
+# 3c): when the branch tip is already an automated `[build-failure-analysis]`
+# fix and the build still fails, the previous attempt did not converge and the
+# pull request belongs to a human. Enforcing it here rather than inside the
+# agent is deliberate — this condition skips the activation and agent jobs, and
+# gh-aw's `safe_outputs` job is itself conditioned on the agent not being
+# skipped, so there is no code path left that could push. Nothing the model
+# does (or that a prompt injection makes it do) can re-enable it.
+if: needs.fetch-binlog.outputs.binlog-found == 'true' && needs.fetch-binlog.outputs.push-blocked != 'true'
 
 # Least-privilege for the workflow/agent jobs. The agent runs read-only; it
 # does NOT post directly. All PR writes (summary comment + inline review
@@ -151,7 +160,6 @@ pre-agent-steps:
     shell: bash
     env:
       BASE_BRANCH: ${{ github.event.repository.default_branch }}
-      PUSH_BLOCKED: ${{ needs.fetch-binlog.outputs.push-blocked }}
     run: |
       set -euo pipefail
       BASE=".gh-aw-base-config"
@@ -206,27 +214,6 @@ pre-agent-steps:
       # source file it fixes, and gh-aw builds its patch from commits, never from
       # the dirty worktree. Fail loudly if that assumption ever breaks.
       git -c core.fileMode=false status --porcelain -- .github .agents AGENTS.md | head -n 20 || true
-
-      # Deterministic loop guard. The fetch job (step 3c) already established
-      # whether this branch carries a `[build-failure-analysis]` commit, i.e.
-      # whether a previous run's automated fix failed to make the build pass.
-      # In that case a human has to take over, so refuse commits outright rather
-      # than trusting the agent to honour Step 6b: gh-aw assembles the patch
-      # from the agent's commits, so a repository that cannot produce a commit
-      # cannot produce a push. `git config` is not in the agent's tool
-      # allowlist, so it cannot undo this.
-      if [ "${PUSH_BLOCKED}" = "true" ]; then
-        HOOKS_DIR="${RUNNER_TEMP}/gh-aw-refuse-commits"
-        mkdir -p "${HOOKS_DIR}"
-        {
-          echo '#!/usr/bin/env bash'
-          echo 'echo "This pull request already carries a [build-failure-analysis] fix commit and the build still failed, so the automated fix is not converging. Commits are refused for this run; report the analysis in a comment and leave the fix to a human." >&2'
-          echo 'exit 1'
-        } > "${HOOKS_DIR}/pre-commit"
-        chmod +x "${HOOKS_DIR}/pre-commit"
-        git config --local core.hooksPath "${HOOKS_DIR}"
-        echo "::warning::A [build-failure-analysis] commit is already on this branch; the push escape hatch is disabled for this run."
-      fi
 
 network:
   allowed:
@@ -400,19 +387,45 @@ jobs:
           fi
           echo "Agent checkout ref: '${CHECKOUT_REF}' (head repo '${HEAD_REPO}')"
 
-          # --- 3c. Deterministic loop guard for the push escape hatch ---
+          # --- 3c. Trusted loop guard for the push escape hatch ---
           # The analyst is told not to push a second fix (Step 6b), but an
-          # instruction is not enforcement. When a fix commit is already on the
-          # branch and the build still fails, the automated fix is not
-          # converging and a human has to take over, so the agent job installs a
-          # git hook that refuses to create any commit at all (see
-          # `pre-agent-steps`) — no commit means gh-aw has nothing to bundle and
-          # the push cannot happen, whatever the model decides to do.
-          PUSH_BLOCKED=false
-          if gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}/commits" --paginate \
-               --jq '.[].commit.message' 2>/dev/null | grep -qF '[build-failure-analysis]'; then
-            PUSH_BLOCKED=true
-            echo "PR #${PR_NUMBER} already carries a [build-failure-analysis] commit: the previous automated fix did not make the build pass, so the push escape hatch is disabled for this run and a human needs to take over."
+          # instruction is not enforcement, and neither is anything installed
+          # inside the agent's sandbox. So the decision is made here, in trusted
+          # workflow code, and is applied by the job-level `if:` further up:
+          # when this output is `true` the activation and agent jobs never run,
+          # and `safe_outputs` is skipped with them, so no push is even
+          # reachable.
+          #
+          # The condition is "the branch tip is itself an automated fix": the
+          # previous attempt is the newest thing on the branch and the build
+          # still fails, so it did not converge and a human has to take over.
+          # Scoping it to the tip rather than to the whole history means the
+          # workflow resumes the moment anyone pushes anything else, instead of
+          # abandoning the pull request forever after one attempt.
+          #
+          # The `[build-failure-analysis]` marker is not written by the model:
+          # the workflow sets `commit-title-suffix`, so gh-aw's push handler
+          # appends it to the commit title while applying the patch. A guard
+          # that depended on the agent remembering to write its own marker
+          # would not be a guard.
+          #
+          # Fails closed: an unreadable commit blocks the escape hatch.
+          PUSH_BLOCKED=true
+          PR_TIP_SHA=$(printf '%s' "${PR_JSON}" | jq -r '.head.sha // empty')
+          if [ "${HEAD_REPO}" != "${GH_AW_REPO}" ]; then
+            # gh-aw refuses pushes to fork branches, so the loop guard is moot
+            # here and must not suppress the (comment-only) analysis.
+            PUSH_BLOCKED=false
+          elif [ -z "${PR_TIP_SHA}" ]; then
+            echo "::warning::Could not resolve the head commit of PR #${PR_NUMBER}; skipping this run rather than risking a repeated automated fix."
+          elif TIP_SUBJECT=$(gh api "repos/${GH_AW_REPO}/commits/${PR_TIP_SHA}" --jq '.commit.message | split("\n")[0]'); then
+            if printf '%s' "${TIP_SUBJECT}" | grep -qF '[build-failure-analysis]'; then
+              echo "::warning::PR #${PR_NUMBER}'s tip commit is an automated [build-failure-analysis] fix and the build still fails, so the automated fix is not converging; skipping this run and leaving the pull request to a human. Any further commit on the branch re-enables the analysis."
+            else
+              PUSH_BLOCKED=false
+            fi
+          else
+            echo "::warning::Could not read commit ${PR_TIP_SHA} of PR #${PR_NUMBER}; skipping this run rather than risking a repeated automated fix."
           fi
 
           # --- 4. Validate the build for EVERY trigger (not just dispatch):
@@ -657,7 +670,8 @@ jobs:
             echo "pr-head-sha=${HEAD_SHA}"
             echo "pr-merge-sha=${BUILD_MERGE_SHA}"
             echo "pr-checkout-ref=${CHECKOUT_REF}"
-            echo "push-blocked=${PUSH_BLOCKED}"            echo "ado-build-id=${BUILD_ID}"
+            echo "push-blocked=${PUSH_BLOCKED}"
+            echo "ado-build-id=${BUILD_ID}"
             echo "ado-build-url=${ADO_BUILD_UI}?buildId=${BUILD_ID}"
           } >> "$GITHUB_OUTPUT"
 
@@ -798,16 +812,21 @@ safe-outputs:
   #     therefore out of reach, and `protected-files` stays at its default
   #     `blocked` policy on top of that.
   #   * `max: 1` bounds a single run; the fail → push → rebuild → fail loop is
-  #     bounded deterministically instead of by model compliance. The fetch job
-  #     (step 3c) checks whether the branch already carries a
-  #     `[build-failure-analysis]` commit, and if it does, the `pre-agent-steps`
-  #     step below points `core.hooksPath` at a `pre-commit` hook that refuses
-  #     every commit. gh-aw builds the patch from the agent's commits, so with
-  #     no commit there is nothing to push no matter what the model decides.
-  #     The agent's own marker check ("Step 6b") is the polite layer on top.
+  #     bounded by trusted code rather than by model compliance. `commit-title-
+  #     suffix` makes gh-aw's push handler stamp `[build-failure-analysis]` onto
+  #     the commit title as it applies the patch — the marker is written by the
+  #     handler, never by the model — and the fetch job (step 3c) refuses to
+  #     activate the workflow at all when the branch tip already carries it.
+  #     Because the activation and agent jobs are skipped, gh-aw's own
+  #     `safe_outputs` job (conditioned on the agent not being skipped) is
+  #     skipped too, so no push code path remains. The agent playbook explains
+  #     the rule, but nothing depends on the agent honouring it.
   #     This matters because our push is made with GITHUB_TOKEN — which does not
   #     re-trigger GitHub Actions — but Azure DevOps' GitHub app *does* rebuild,
   #     so a new run can follow every push.
+  #     The guard is scoped to the branch *tip*, not to the whole history, so a
+  #     pull request is not abandoned forever after one automated attempt: any
+  #     later commit by anyone restores full analysis.
   #     Note the optional `GH_AW_CI_TRIGGER_TOKEN` magic secret (gh-aw wires it
   #     into the generated lock unconditionally) is deliberately NOT configured:
   #     it exists only to push an extra empty commit so *Actions* CI re-triggers.
@@ -823,6 +842,7 @@ safe-outputs:
     target: "*"
     allowed-files:
       - "src/**"
+    commit-title-suffix: " [build-failure-analysis]"
     if-no-changes: "ignore"
     ignore-missing-branch-failure: true
     fallback-as-pull-request: false
