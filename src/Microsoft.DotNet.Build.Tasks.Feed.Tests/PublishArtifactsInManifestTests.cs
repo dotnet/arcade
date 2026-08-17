@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -84,6 +85,37 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 TargetChannelConfig targetChannel)
             {
                 return await base.ValidateTargetChannelAsync(build, targetChannel);
+            }
+        }
+
+        private class TestablePublishArtifactsInManifest : PublishArtifactsInManifest
+        {
+            private readonly PublishArtifactsInManifestBase[] _publishingTasks;
+            private int _publishingTaskIndex;
+
+            public TestablePublishArtifactsInManifest(params PublishArtifactsInManifestBase[] publishingTasks)
+            {
+                _publishingTasks = publishingTasks;
+            }
+
+            public override PublishArtifactsInManifestBase WhichPublishingTask(string manifestFullPath)
+            {
+                return _publishingTasks[_publishingTaskIndex++];
+            }
+        }
+
+        private class DelegatePublishingTask : PublishArtifactsInManifestBase
+        {
+            private readonly Func<Task<bool>> _executeAsync;
+
+            public DelegatePublishingTask(Func<Task<bool>> executeAsync)
+            {
+                _executeAsync = executeAsync;
+            }
+
+            public override Task<bool> ExecuteAsync()
+            {
+                return _executeAsync();
             }
         }
 
@@ -185,6 +217,80 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             var which = task.WhichPublishingTask(manifestFullPath);
             which.Should().BeOfType<PublishArtifactsInManifestV4>();
+        }
+
+        [Theory]
+        [InlineData("SampleV3.xml")]
+        [InlineData("SampleV4.xml")]
+        public void ConstructPublishingTaskUsesInnerLoggerForAssetPublisherFactory(string manifestName)
+        {
+            var manifestFullPath = TestInputs.GetFullPath(Path.Combine("Manifests", manifestName));
+
+            var buildEngine = new MockBuildEngine();
+            var task = new PublishArtifactsInManifest()
+            {
+                BuildEngine = buildEngine,
+                TargetChannels = GeneralTestingChannelId,
+                AzdoApiToken = "test-token"
+            };
+
+            var collection = new ServiceCollection()
+                .AddSingleton<IFileSystem, FileSystem>()
+                .AddSingleton<IBuildModelFactory, BuildModelFactory>()
+                .AddSingleton<ITargetChannelValidator, ProductionChannelValidator>()
+                .AddSingleton<IProductionChannelValidatorBuildInfoService>(provider =>
+                {
+                    var httpClient = provider.GetRequiredService<HttpClient>();
+                    var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+                    var logger = loggerFactory.CreateLogger<AzureDevOpsService>();
+                    return new AzureDevOpsService(httpClient, logger, "test-token");
+                })
+                .AddSingleton<IBranchClassificationService>(provider =>
+                {
+                    var httpClient = provider.GetRequiredService<HttpClient>();
+                    var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+                    var logger = loggerFactory.CreateLogger<BranchClassificationService>();
+                    return new BranchClassificationService(httpClient, logger, "test-token");
+                })
+                .AddSingleton<HttpClient>()
+                .AddLogging();
+            task.ConfigureServices(collection);
+            using var provider = collection.BuildServiceProvider();
+            task.InvokeExecute(provider);
+
+            var publishingTask = task.WhichPublishingTask(manifestFullPath);
+            var logField = typeof(AssetPublisherFactory).GetField("_log", BindingFlags.NonPublic | BindingFlags.Instance);
+            var factoryLog = logField.GetValue(publishingTask.AssetPublisherFactory);
+
+            factoryLog.Should().BeSameAs(publishingTask.Log);
+            factoryLog.Should().NotBeSameAs(task.Log);
+        }
+
+        [Fact]
+        public async Task ExecuteAsyncReturnsFalseAndDoesNotPromoteWhenOuterLoggerHasErrors()
+        {
+            var buildEngine = new MockBuildEngine();
+            TestablePublishArtifactsInManifest task = null;
+            var publishingTask = new DelegatePublishingTask(() =>
+            {
+                task.Log.LogError("Asset 'asset.zip' already exists with different contents at 'https://example.test/asset.zip'");
+                return Task.FromResult(true);
+            });
+
+            task = new TestablePublishArtifactsInManifest(publishingTask)
+            {
+                BuildEngine = buildEngine,
+                AssetManifestPaths = new[] { new MsBuildUtils.TaskItem("manifest.xml") },
+                BARBuildId = 123,
+                MaestroApiEndpoint = "https://maestro.example.test",
+                TargetChannels = GeneralTestingChannelId
+            };
+
+            bool result = await task.ExecuteAsync();
+
+            result.Should().BeFalse();
+            buildEngine.BuildErrorEvents.Should().ContainSingle(error =>
+                error.Message.Contains("already exists with different contents"));
         }
 
         [Theory]
