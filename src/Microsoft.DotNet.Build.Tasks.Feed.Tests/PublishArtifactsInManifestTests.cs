@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -100,6 +99,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             public override PublishArtifactsInManifestBase WhichPublishingTask(string manifestFullPath)
             {
+                if (_publishingTaskIndex >= _publishingTasks.Length)
+                {
+                    throw new InvalidOperationException($"No publishing task was configured for manifest '{manifestFullPath}'.");
+                }
+
                 return _publishingTasks[_publishingTaskIndex++];
             }
         }
@@ -259,12 +263,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             task.InvokeExecute(provider);
 
             var publishingTask = task.WhichPublishingTask(manifestFullPath);
-            var logField = typeof(AssetPublisherFactory).GetField("_log", BindingFlags.NonPublic | BindingFlags.Instance);
-            logField.Should().NotBeNull();
-            var factoryLog = logField.GetValue(publishingTask.AssetPublisherFactory);
-
-            factoryLog.Should().BeSameAs(publishingTask.Log);
-            factoryLog.Should().NotBeSameAs(task.Log);
+            publishingTask.AssetPublisherFactory.Log.Should().BeSameAs(publishingTask.Log);
+            publishingTask.AssetPublisherFactory.Log.Should().NotBeSameAs(task.Log);
         }
 
         [Fact]
