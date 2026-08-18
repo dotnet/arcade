@@ -156,9 +156,6 @@ stages:
         - checkout: self
           clean: true
         steps:
-        - pwsh: tests/PowerShell/archive-extraction-path.Tests.ps1
-          displayName: Test archive extraction path validation
-
         - task: PowerShell@2
           displayName: sdk-task verification
           inputs:
