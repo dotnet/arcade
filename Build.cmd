@@ -1,2 +1,2 @@
 @echo off
-powershell -ExecutionPolicy ByPass -NoProfile -File "%~dp0eng\common\Build.ps1" -restore -build %*
+powershell -ExecutionPolicy ByPass -NoProfile -File "%~dp0eng\common\build.ps1" -restore -build %*
