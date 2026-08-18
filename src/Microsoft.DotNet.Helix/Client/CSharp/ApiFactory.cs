@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Helix.Client
         /// Obtains an API client using an Entra credential for authenticated access to internal queues.
         /// The client requests the production Helix API scope and refreshes tokens based on their expiry.
         /// </summary>
-        public static IHelixApi GetAuthenticated(TokenCredential credential)
+        public static IHelixApi GetAuthenticatedWithEntra(TokenCredential credential)
         {
             return new HelixApi(new HelixApiOptions(credential));
         }
@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Helix.Client
         /// Obtains an API client using an Entra credential for authenticated access to the provided Helix instance.
         /// Production and staging scopes are selected from the base URI.
         /// </summary>
-        public static IHelixApi GetAuthenticated(string baseUri, TokenCredential credential)
+        public static IHelixApi GetAuthenticatedWithEntra(string baseUri, TokenCredential credential)
         {
             return new HelixApi(new HelixApiOptions(new Uri(baseUri), credential));
         }
@@ -68,7 +68,10 @@ namespace Microsoft.DotNet.Helix.Client
         /// <summary>
         /// Obtains an API client using an Entra credential and explicit scope for a custom Helix instance.
         /// </summary>
-        public static IHelixApi GetAuthenticated(string baseUri, TokenCredential credential, string scope)
+        public static IHelixApi GetAuthenticatedWithEntra(
+            string baseUri,
+            TokenCredential credential,
+            string scope)
         {
             return new HelixApi(new HelixApiOptions(new Uri(baseUri), credential, new[] { scope }));
         }

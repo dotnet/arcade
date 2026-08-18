@@ -29,6 +29,14 @@ namespace Microsoft.DotNet.Helix.Client
         {
             BaseUri = baseUri ?? throw new ArgumentNullException(nameof(baseUri));
             Credentials = credentials ?? throw new ArgumentNullException(nameof(credentials));
+            if (credentials is HelixApiTokenCredential)
+            {
+                throw new ArgumentException(
+                    "Explicit scopes are only supported for Entra credentials. " +
+                    "Use the PAT-specific HelixApiOptions constructor instead.",
+                    nameof(credentials));
+            }
+
             string[] tokenScopes = scopes?.ToArray() ?? throw new ArgumentNullException(nameof(scopes));
             if (tokenScopes.Length == 0 || tokenScopes.Any(string.IsNullOrWhiteSpace))
             {

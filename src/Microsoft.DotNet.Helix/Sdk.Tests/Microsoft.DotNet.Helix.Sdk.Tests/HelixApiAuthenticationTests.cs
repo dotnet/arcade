@@ -82,6 +82,28 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     new[] { "" }));
         }
 
+        [Fact]
+        public void ExplicitScopeRejectsPatCredential()
+        {
+            var exception = Assert.Throws<ArgumentException>(() =>
+                new HelixApiOptions(
+                    new Uri("https://localhost:5001/"),
+                    new HelixApiTokenCredential("legacy-token"),
+                    new[] { "api://custom-helix/.default" }));
+
+            Assert.Contains("PAT-specific", exception.Message);
+        }
+
+        [Fact]
+        public void EntraFactoryUsesDistinctApiNameAndProductionScope()
+        {
+            var api = Assert.IsType<HelixApi>(
+                ApiFactory.GetAuthenticatedWithEntra(new TestTokenCredential()));
+
+            Assert.Equal(HelixApiAuthenticationMode.EntraId, api.Options.AuthenticationMode);
+            Assert.Equal(new[] { HelixApiOptions.ProductionScope }, api.Options.TokenScopes);
+        }
+
         private sealed class TestTokenCredential : TokenCredential
         {
             public override AccessToken GetToken(
