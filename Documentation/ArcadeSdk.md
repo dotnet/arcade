@@ -119,6 +119,24 @@ Since the default scripts pass along additional arguments, you could restore, bu
 
 You should feel free to create more repo specific scripts as appropriate to meet common dev scenarios for your repo.
 
+#### Passing arguments on Windows
+
+The `.cmd` wrappers invoke PowerShell with `-File`, so everything after the script path reaches the
+target script as a literal argument. Arguments are not re-parsed as PowerShell source, which means
+`;` and spaces are safe:
+
+```
+build.cmd -projects "src\A\A.csproj;src\B\B.csproj" /p:Foo=Bar
+build.cmd -projects "C:\my dir\A.csproj"
+```
+
+Two consequences of arguments arriving as literal strings:
+
+- Boolean parameters (`-warnAsError`, `-nodeReuse`, `-msbuildMultiThreaded`) accept `$true`, `true`,
+  `1`, `$false`, `false` and `0`. Anything else is an error rather than a silently flipped value.
+- Switch parameters cannot be negated. `-ci:$false` does not work through a `.cmd` wrapper; omit the
+  switch instead, or call `eng\common\build.ps1` directly.
+
 ### /eng/common/*
 
 The Arcade SDK requires bootstrapper scripts to be present in the repo.
@@ -136,6 +154,9 @@ By default, Arcade builds solutions in the root of the repo.  Overriding the def
 - Provide the project list on the command-line. This will override any list of projects set in `eng/Build.props`.
 
   Example: `build.cmd -projects MyProject.proj`
+
+  A semi-colon delimited list works too, quoted so that `cmd` passes it as one argument:
+  `build.cmd -projects "src\A\A.csproj;src\B\B.csproj"`
 
   See [source code](https://github.com/dotnet/arcade/blob/440b2dae3a206b28f6aba727b7818873358fcc0a/eng/common/build.ps1#L53)
 
