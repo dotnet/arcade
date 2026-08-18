@@ -89,7 +89,9 @@ The dnceng service connection, App client ID, Key Vault, and key name are centra
 the Arcade template. They can be overridden for separately provisioned infrastructure. A pipeline
 can temporarily set `UseGitHubAppAuthentication: false` to select the PAT path instead.
 
-For a pipeline outside `dnceng/internal`, explicitly select its project-scoped connection:
+For a pipeline outside `dnceng/internal`, keep using the wrapper appropriate for that pipeline
+(`templates/job` or `templates-official/job`) and explicitly select its project-scoped connection.
+This example uses the official wrapper:
 
 ```yaml
 - template: /eng/common/templates-official/job/onelocbuild.yml
