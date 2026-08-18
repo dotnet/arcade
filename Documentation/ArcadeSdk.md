@@ -137,6 +137,14 @@ Two consequences of arguments arriving as literal strings:
 - Switch parameters cannot be negated. `-ci:$false` does not work through a `.cmd` wrapper; omit the
   switch instead, or call `eng\common\build.ps1` directly.
 
+If your repo has its own `eng/build.ps1` and you switch your own `.cmd` wrappers to `-File`, remove
+the `[bool]` type constraint from any parameter that can be passed on the command line. A `[bool]`
+parameter cannot bind a string, and under `-File` every argument is a string, so `-warnAsError $false`
+fails with `Cannot convert value "System.String" to type "System.Boolean"`. No value works, `0`
+included. The parameter block binds before `eng/common/tools.ps1` is dot-sourced, so this cannot be
+fixed inside `tools.ps1`. Drop the constraint at the parameter, and let `tools.ps1` normalize the
+value afterwards, the way `eng/common/build.ps1` does.
+
 ### /eng/common/*
 
 The Arcade SDK requires bootstrapper scripts to be present in the repo.
