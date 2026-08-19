@@ -373,7 +373,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             await SendAsync(new HttpMethod("PATCH"),
                 $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}?api-version=7.1",
                 body,
-                retryTransientFailures: false,
+                retryTransientFailures: true,
                 cancellationToken: cancellationToken);
         }
 

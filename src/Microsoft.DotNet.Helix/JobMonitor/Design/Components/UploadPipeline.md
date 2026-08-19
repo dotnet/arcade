@@ -46,6 +46,10 @@ failed, the session remains untagged. Otherwise finalization uploads the
 failed-work-item attachment, marks the run completed, applies the Helix-job
 tag, and only then marks the job durably processed.
 
-Create and complete are not replayed after ambiguous failures. Result and
-attachment publication use bounded transient retries because losing an entire
-job's results is worse than the accepted duplicate risk.
+Test-run creation and attachment publication are not replayed after ambiguous
+failures because they are non-idempotent POST operations. The final completion
+PATCH is idempotent and uses bounded transient retries; repeating it applies
+the same completed state and Helix-job tag to the same run without creating
+duplicate results. Result publication also uses bounded transient retries
+because losing an entire job's results is worse than the accepted duplicate
+risk.

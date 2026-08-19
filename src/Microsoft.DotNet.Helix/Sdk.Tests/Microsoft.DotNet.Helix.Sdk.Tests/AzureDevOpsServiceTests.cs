@@ -87,20 +87,34 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public async Task CompleteTestRunAsync_DoesNotRetryAmbiguousWrite()
+        public async Task CompleteTestRunAsync_RetriesTransientFailure()
         {
+            int attempt = 0;
             var handler = new RecordingHttpMessageHandler(_ =>
-                new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+                Interlocked.Increment(ref attempt) == 1
+                    ? new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+                    : new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent("{}")
+                    });
             using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
 
-            Func<Task> action = () => service.CompleteTestRunAsync(
+            await service.CompleteTestRunAsync(
                 123,
                 HelixJobGuid,
                 [],
                 CancellationToken.None);
 
-            await action.Should().ThrowAsync<HttpRequestException>();
-            handler.Requests.Should().ContainSingle();
+            handler.Requests.Should().HaveCount(2);
+                handler.Bodies.Should().HaveCount(2);
+                foreach (string body in handler.Bodies)
+                {
+                    JObject parsed = JObject.Parse(body);
+                    parsed.Value<string>("state").Should().Be("Completed");
+                    var tags = parsed["tags"].Should().BeOfType<JArray>().Subject;
+                    tags.Should().ContainSingle();
+                    tags[0].Value<string>("name").Should().Be(HelixJobTag);
+                }
         }
 
         [Fact]
