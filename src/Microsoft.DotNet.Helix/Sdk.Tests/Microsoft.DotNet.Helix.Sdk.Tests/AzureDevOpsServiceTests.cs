@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -115,6 +116,41 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     tags.Should().ContainSingle();
                     tags[0].Value<string>("name").Should().Be(HelixJobTag);
                 }
+        }
+
+        [Fact]
+        public async Task RateLimitDelay_AppliesToNextRequest_NotCompletedRequest()
+        {
+                int requestCount = 0;
+                var handler = new RecordingHttpMessageHandler(_ =>
+                {
+                    var response = new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent(
+                            Interlocked.Increment(ref requestCount) == 1
+                                ? "{}"
+                                : @"{""records"":[]}")
+                    };
+
+                    if (requestCount == 1)
+                    {
+                        response.Headers.TryAddWithoutValidation("X-RateLimit-Delay", "1");
+                    }
+
+                    return response;
+                });
+                using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
+
+                var stopwatch = Stopwatch.StartNew();
+                await service.CompleteTestRunAsync(123, HelixJobGuid, [], CancellationToken.None);
+                TimeSpan completionElapsed = stopwatch.Elapsed;
+
+                await service.GetTimelineRecordsAsync(CancellationToken.None);
+                TimeSpan nextRequestElapsed = stopwatch.Elapsed - completionElapsed;
+
+                completionElapsed.Should().BeLessThan(TimeSpan.FromMilliseconds(500));
+                nextRequestElapsed.Should().BeGreaterThan(TimeSpan.FromMilliseconds(750));
+                handler.Requests.Should().HaveCount(2);
         }
 
         [Fact]

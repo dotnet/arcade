@@ -41,4 +41,6 @@ sets the memory floor; handling that case would require spill-to-disk grouping.
   request and its retries.
 - Azure DevOps rate-limit guidance is applied through a service-wide gate so
   concurrent workers slow down together instead of stampeding a throttled
-  endpoint independently.
+  endpoint independently. A response advances the gate for future requests;
+  the request that already received the response returns immediately rather
+  than redundantly adding the advertised delay to its own completion time.

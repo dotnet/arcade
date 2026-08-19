@@ -493,16 +493,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         failed: failed,
                         startedAt: requestStartedAt);
                     metricsRecorded = true;
+                    ObserveRateLimit(response, requestUri);
                     if (!response.IsSuccessStatusCode)
                     {
-                        await HonorRateLimitAsync(response, requestUri, cancellationToken);
                         throw new HttpRequestException(
                             $"Request to {requestUri} failed with {(int)response.StatusCode} {response.ReasonPhrase}. {content}",
                             null,
                             response.StatusCode);
                     }
 
-                    await HonorRateLimitAsync(response, requestUri, cancellationToken);
                     return content;
                 }
                 finally
@@ -567,10 +566,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         // Honors Azure DevOps rate limiting guidance:
         // https://learn.microsoft.com/azure/devops/integrate/concepts/rate-limits#api-client-experience
-        // If the response carries a Retry-After header (RFC 6585) we wait the specified amount of
-        // time before allowing the next request to be issued. We also log when the service reports
-        // a non-zero X-RateLimit-Delay so callers have visibility into throttling behavior.
-        private async Task HonorRateLimitAsync(HttpResponseMessage response, string requestUri, CancellationToken cancellationToken)
+        // If the response carries a Retry-After header (RFC 6585), advance the shared gate so the
+        // next request waits before being issued. The request that received the response is already
+        // complete and must not wait as well; doing so adds the advertised delay to finalization
+        // even when no further request exists.
+        private void ObserveRateLimit(HttpResponseMessage response, string requestUri)
         {
             TimeSpan? retryAfter = null;
             RetryConditionHeaderValue retryAfterHeader = response.Headers.RetryAfter;
@@ -616,7 +616,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     "Azure DevOps rate limit back-off. Delaying next request by {DelaySeconds:0.###}s (request: {RequestUri}).",
                     delayToApply.TotalSeconds,
                     requestUri);
-                await _rateLimitGate.WaitAsync(cancellationToken);
             }
         }
 
