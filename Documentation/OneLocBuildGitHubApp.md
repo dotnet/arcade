@@ -118,7 +118,7 @@ the pipeline must be authorized to use the connection.
 |:-:|:-:|-|
 | `UseGitHubAppAuthentication` | `true` | Activates the App path for GitHub repos in `dnceng/internal` and `DevDiv/DevDiv`, or in another project that explicitly opts in. Set to `false` to select the PAT path. |
 | `UseGitHubAppAuthenticationInOtherProjects` | `false` | Explicitly activates the App path outside `dnceng/internal` and `DevDiv/DevDiv`. Requires separately provisioned infrastructure. |
-| `GitHubAppServiceConnection` | `'dnceng-oneloc-githubapp'` | The Azure DevOps **WIF service connection** used by `dnceng/internal` and explicit opt-ins. When this parameter is left at its default, Arcade selects `devdiv-oneloc-githubapp` automatically in `DevDiv/DevDiv`; an explicit override is preserved. |
+| `GitHubAppServiceConnection` | `'dnceng-oneloc-githubapp'` | The Azure DevOps **WIF service connection** used by `dnceng/internal` and explicit opt-ins. When the value remains the `dnceng-oneloc-githubapp` default, Arcade selects `devdiv-oneloc-githubapp` automatically in `DevDiv/DevDiv`; overrides to a different value are preserved. |
 | `GitHubAppClientId` | `'Iv23lijBU8x3gc9lDOc9'` | The GitHub App's **Client ID** (used as the JWT `iss` claim). |
 | `GitHubAppKeyVaultName` | `'EngKeyVault'` | The Key Vault holding the App's RSA signing key. |
 | `GitHubAppKeyName` | `'oneloc-localization-app-key'` | The name of the RSA key inside that Key Vault (the App's private key). |
