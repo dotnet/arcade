@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
@@ -104,6 +105,10 @@ namespace Microsoft.DotNet.SignCheckLibrary.Tests
             {
                 writer.Write(0x4643534Du);                                          // signature 'MSCF'
                 writer.Write(0u);                                                   // reserved1
+                // cbCabinet is the size of the cabinet proper, which excludes the signature that
+                // signtool appends after it, so in a signed cabinet it is equal to the signature
+                // offset and not to the size of the file. Both sample files agree: cbCabinet is
+                // 2843935 and 2844171, and each one matches the offset in the reserved area.
                 writer.Write((uint)signatureOffset);                                // cbCabinet
                 writer.Write(0u);                                                   // reserved2
                 writer.Write((uint)ReserveFieldsOffset);                            // coffFiles
@@ -120,20 +125,21 @@ namespace Microsoft.DotNet.SignCheckLibrary.Tests
                 writer.Write((byte)0);                                              // cbCFFolder
                 writer.Write((byte)0);                                              // cbCFData
 
+                // Cabinet fields are little-endian regardless of the machine we run on.
                 byte[] reserve = new byte[reserveSize];
                 if (reserveSize >= 4)
                 {
-                    BitConverter.GetBytes(0x00100000u).CopyTo(reserve, 0);
+                    BinaryPrimitives.WriteUInt32LittleEndian(reserve.AsSpan(0), 0x00100000u);
                 }
 
                 if (reserveSize >= 8)
                 {
-                    BitConverter.GetBytes((uint)signatureOffset).CopyTo(reserve, 4);
+                    BinaryPrimitives.WriteUInt32LittleEndian(reserve.AsSpan(4), (uint)signatureOffset);
                 }
 
                 if (reserveSize >= 12)
                 {
-                    BitConverter.GetBytes((uint)signature.Length).CopyTo(reserve, 8);
+                    BinaryPrimitives.WriteUInt32LittleEndian(reserve.AsSpan(8), (uint)signature.Length);
                 }
 
                 writer.Write(reserve);
