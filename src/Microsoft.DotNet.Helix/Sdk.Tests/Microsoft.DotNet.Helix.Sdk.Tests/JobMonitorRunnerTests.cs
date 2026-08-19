@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AwesomeAssertions;
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
@@ -768,6 +769,90 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             azdo.CreateTestRunCallCount.Should().Be(1);
             azdo.CompleteTestRunCallCount.Should().Be(1);
             azdo.UploadTestResultsCallCount.Should().Be(20);
+        }
+
+        [Fact]
+        public async Task UploadPipeline_UploadsTerminalWorkItemsBeforeJobCompletesAndPreservesTestFailures()
+        {
+            var azdo = new FakeAzureDevOpsService()
+                .WithFailedUpload("helix-linux", "workitem-1");
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "inProgress"));
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Test Linux", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "running", initialWorkItemCount: 2)],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["workitem-1"]),
+                });
+            helix.AddResponse(
+                jobs: [HelixJob("helix-linux", "finished", initialWorkItemCount: 2)],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-linux"] = PassFail(passed: ["workitem-1", "workitem-2"]),
+                });
+
+            int delayCount = 0;
+            var runner = new JobMonitorRunner(
+                DefaultOptions(),
+                NullLogger.Instance,
+                azdo,
+                helix,
+                async (_, _) =>
+                {
+                    delayCount++;
+                    await azdo.UploadCompleted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                    azdo.UploadTestResultsCallCount.Should().Be(1);
+                    azdo.CompleteTestRunCallCount.Should().Be(0);
+                });
+
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(1);
+            delayCount.Should().Be(1);
+            azdo.CreateTestRunCallCount.Should().Be(1);
+            azdo.UploadTestResultsCallCount.Should().Be(2);
+            azdo.CompleteTestRunCallCount.Should().Be(1);
+        }
+
+        [Fact]
+        public void IncrementalTestFailure_DoesNotStickAcrossPassingIncarnation()
+        {
+            var state = new MonitorState();
+            HelixJobInfo original = HelixJob(
+                "helix-original",
+                "finished",
+                submitterPhaseName: "Test_Linux",
+                queueId: "q",
+                logicalJobName: "tests");
+            HelixJobInfo retry = HelixJob(
+                "helix-retry",
+                "finished",
+                submitterPhaseName: "Test_Linux",
+                queueId: "q",
+                previousHelixJobName: "helix-original",
+                logicalJobName: "tests");
+            state.ObserveJobs([original, retry]);
+
+            state.ObserveTestResult(
+                original.JobName,
+                "workitem",
+                new TestResultUploadSummary(AllPassed: false, UploadedCount: 1));
+            state.TryRecordWorkItemOutcomes(
+                original,
+                [new WorkItemSummary("original/workitem", original.JobName, "workitem", "Finished") { ExitCode = 1 }]);
+            state.TryRecordWorkItemOutcomes(
+                retry,
+                [new WorkItemSummary("retry/workitem", retry.JobName, "workitem", "Finished") { ExitCode = 0 }]);
+
+            state.HasFailedWorkItem.Should().BeFalse();
+            state.SnapshotFailedWorkItemConsoleInfo().Should().BeEmpty();
         }
 
         [Fact]

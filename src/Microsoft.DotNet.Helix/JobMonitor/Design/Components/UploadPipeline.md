@@ -21,6 +21,11 @@ work items proceeds directly to finalization.
 
 ## Work-item processing
 
+Terminal work items are admitted as soon as polling observes their immutable
+exit code, even if the containing Helix job is still running. This lets large
+jobs overlap result publication with their remaining execution instead of
+making every completed work item part of the final drain.
+
 Each worker:
 
 1. downloads recognized result files for one work item, retrying only
@@ -41,8 +46,9 @@ throttling guidance compared with 64 workers.
 
 ## Finalization
 
-The last work item queues its session for finalization. If any work item
-failed, the session remains untagged. Otherwise finalization uploads the
+Once the Helix job is complete, the last outstanding work item queues its
+session for finalization. If any work item failed, the session remains
+untagged. Otherwise finalization uploads the
 failed-work-item attachment, marks the run completed, applies the Helix-job
 tag, and only then marks the job durably processed.
 

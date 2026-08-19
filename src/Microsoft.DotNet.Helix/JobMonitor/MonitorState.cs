@@ -46,6 +46,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         // (HelixJobChainKey, WorkItemName). See GetHelixJobChainKey for the keying rationale.
         private readonly Dictionary<(string ChainKey, string WorkItemName), bool> _workItemOutcomes
             = new(WorkItemOutcomeKeyComparer.Instance);
+        private readonly HashSet<(string ChainKey, string WorkItemName)> _failedTestWorkItems
+            = new(WorkItemOutcomeKeyComparer.Instance);
 
         // Helix job names whose per-work-item outcomes have already been reconciled into
         // _workItemOutcomes. Prevents the second reconciliation pass from re-processing
@@ -292,8 +294,21 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     // Within the same Helix job lineage, the latest result overwrites the prior
                     // one for the same work item name. Independent original Helix jobs have
                     // different roots, even when they share an AzDO submitter and queue.
-                    _workItemOutcomes[(chainKey, wi.Name)] = !wi.IsFailed;
-                    TrackFailedWorkItemConsoleInfoLocked(helixJob, chainKey, wi);
+                    var key = (chainKey, wi.Name);
+                    bool passed = !wi.IsFailed && !_failedTestWorkItems.Contains(key);
+                    // This marker only bridges the race where incremental test-result upload
+                    // finishes before the Helix outcome is reconciled. A later incarnation in
+                    // the same logical stream must be able to replace the failure with a pass.
+                    _failedTestWorkItems.Remove(key);
+                    _workItemOutcomes[key] = passed;
+                    if (wi.IsFailed)
+                    {
+                        TrackFailedWorkItemConsoleInfoLocked(helixJob, chainKey, wi);
+                    }
+                    else if (passed)
+                    {
+                        _failedWorkItemConsoleInfo.Remove(key);
+                    }
                 }
 
                 return true;
@@ -338,6 +353,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                     string chainKey = GetHelixJobChainKeyLocked(job);
                     var key = (chainKey, entry.Key.WorkItemName);
+                    _failedTestWorkItems.Add(key);
                     _workItemOutcomes[key] = false;
 
                     // Ensure the final failure report includes test-only failures too.

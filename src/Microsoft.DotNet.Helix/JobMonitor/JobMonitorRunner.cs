@@ -442,13 +442,26 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             var completedJobNames = new HashSet<string>(
                 completedJobs.Select(j => j.JobName),
                 StringComparer.OrdinalIgnoreCase);
-            // First pass: upload + reconcile for any newly-completed jobs.
+
+            // Upload terminal work items as soon as they are visible, even while their Helix job
+            // is still running. Large jobs can finish hundreds of work items long before their
+            // final job transition; deferring those uploads creates an avoidable final drain.
+            foreach (HelixJobInfo job in stageJobs.Where(job => !_state.IsHelixJobProcessed(job.JobName)))
+            {
+                _uploads.TryEnqueue(
+                    job,
+                    workItemsByJob[job.JobName],
+                    completedJobNames.Contains(job.JobName),
+                    pollNumber);
+            }
+
+            // First pass: reconcile outcomes for any newly-completed jobs.
             foreach (HelixJobInfo job in completedJobs.Where(j => !_state.IsHelixJobProcessed(j.JobName)))
             {
                 ReconcileCompletedJob(
                     job,
                     workItemsByJob[job.JobName],
-                    queueUpload: true,
+                    queueUpload: false,
                     recordOutcomes: authoritativeJobNames.Contains(job.JobName),
                     discoveryPoll: pollNumber);
             }
@@ -555,7 +568,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             if (queueUpload && !alreadyUploadedByPriorAttempt)
             {
-                _uploads.TryEnqueue(helixJob, workItems, discoveryPoll);
+                _uploads.TryEnqueue(
+                    helixJob,
+                    workItems,
+                    isJobComplete: true,
+                    discoveryPoll: discoveryPoll);
             }
 
             if (!alreadyUploadedByPriorAttempt && recordOutcomes)
