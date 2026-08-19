@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         // All Helix jobs the monitor has observed for this build, keyed by Helix job name.
         // Overwritten per poll so the cached entry reflects the latest Helix-side state
         // (in particular the Finished timestamp transitioning from null to a value). Also used
-        // by GetSubmitterChainKey to walk back through PreviousHelixJobName links across polls.
+        // by GetHelixJobChainKey to walk back through PreviousHelixJobName links across polls.
         private readonly Dictionary<string, HelixJobInfo> _associatedJobs = new(StringComparer.OrdinalIgnoreCase);
 
         // Upload lifecycle for each Helix job observed by this invocation. Jobs discovered from
@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private readonly Dictionary<string, TestResultUploadState> _testResultUploadStates = new(StringComparer.OrdinalIgnoreCase);
 
         // Tracks the latest outcome for each logical work item, keyed by
-        // (SubmitterChainKey, WorkItemName). See GetSubmitterChainKey for the keying rationale.
+        // (HelixJobChainKey, WorkItemName). See GetHelixJobChainKey for the keying rationale.
         private readonly Dictionary<(string ChainKey, string WorkItemName), bool> _workItemOutcomes
             = new(WorkItemOutcomeKeyComparer.Instance);
 
@@ -286,14 +286,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     return false;
                 }
 
-                string chainKey = GetSubmitterChainKeyLocked(helixJob);
+                string chainKey = GetHelixJobChainKeyLocked(helixJob);
                 foreach (WorkItemSummary wi in workItems)
                 {
-                    // Within the same AzDO submitter chain (i.e. resubmissions of the same
-                    // logical AzDO job), the latest result overwrites the prior one for the
-                    // same work item name. Across different submitter chains the key differs,
-                    // so identically-named work items in different AzDO jobs are tracked
-                    // independently.
+                    // Within the same Helix job lineage, the latest result overwrites the prior
+                    // one for the same work item name. Independent original Helix jobs have
+                    // different roots, even when they share an AzDO submitter and queue.
                     _workItemOutcomes[(chainKey, wi.Name)] = !wi.IsFailed;
                     TrackFailedWorkItemConsoleInfoLocked(helixJob, chainKey, wi);
                 }
@@ -338,7 +336,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         continue;
                     }
 
-                    string chainKey = GetSubmitterChainKeyLocked(job);
+                    string chainKey = GetHelixJobChainKeyLocked(job);
                     var key = (chainKey, entry.Key.WorkItemName);
                     _workItemOutcomes[key] = false;
 
@@ -438,15 +436,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         /// lineage is followed back through <c>PreviousHelixJobName</c> and the root Helix job
         /// name is used instead.
         /// </summary>
-        public string GetSubmitterChainKey(HelixJobInfo job)
+        public string GetHelixJobChainKey(HelixJobInfo job)
         {
             lock (_sync)
             {
-                return GetSubmitterChainKeyLocked(job);
+                return GetHelixJobChainKeyLocked(job);
             }
         }
 
-        private string GetSubmitterChainKeyLocked(HelixJobInfo job)
+        private string GetHelixJobChainKeyLocked(HelixJobInfo job)
         {
             HelixJobInfo root = GetLineageRootLocked(job);
             string submitterName = job.SubmitterPhaseName
@@ -511,7 +509,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 return
                 [
                     ..GetLatestHelixJobAttempts(jobs)
-                        .GroupBy(GetSubmitterChainKeyLocked, StringComparer.OrdinalIgnoreCase)
+                        .GroupBy(GetHelixJobChainKeyLocked, StringComparer.OrdinalIgnoreCase)
                         .Select(g => g
                             .OrderBy(j => ParseStageAttempt(j.StageAttempt))
                             .ThenBy(j => ParseJobAttempt(j.JobAttempt))
@@ -531,7 +529,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             lock (_sync)
             {
-                string chainKey = GetSubmitterChainKeyLocked(job);
+                string chainKey = GetHelixJobChainKeyLocked(job);
                 foreach (WorkItemSummary wi in workItems)
                 {
                     var key = (chainKey, wi.Name);

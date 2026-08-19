@@ -183,8 +183,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     .Where(IsStageInScope)
             ];
 
-            // Seed the cross-poll cache so submitter-chain-key lineage (PreviousHelixJobName
-            // walks) resolves while grouping streams below.
+            // Seed the cross-poll cache so PreviousHelixJobName walks resolve to the root Helix
+            // job while grouping streams below.
             _state.ObserveJobs(stageJobs);
             _state.SetTimelineRecords(timelineRecords);
 
@@ -387,8 +387,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             // Current-attempt work (including this invocation's resubmissions, which are stamped
             // with the current attempt). Completion is gated on exactly this set: previous-attempt
-            // work has either been superseded by a current incarnation, resubmitted into the
-            // current attempt, or is already terminal — it must never block termination (§2.1).
+            // work has either been resubmitted into the current attempt or is already terminal —
+            // it must never block termination (§2.1).
             IReadOnlyList<HelixJobInfo> currentAttemptJobs =
             [
                 ..stageJobs.Where(IsStageAttemptInScope)
@@ -454,9 +454,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             }
 
             // Second pass: ensure outcomes for every completed job (any attempt) are reflected in
-            // the running outcome map (oldest-incarnation first, then lower stage attempt first,
-            // so newer incarnations — including higher-attempt rerun duplicates — supersede older
-            // ones). Idempotent — already-reconciled jobs early-return.
+            // the running outcome map (oldest incarnation first, so linked resubmissions
+            // supersede their predecessors). Idempotent — already-reconciled jobs early-return.
             foreach (HelixJobInfo job in MonitorState.OrderHelixJobsOldToNew(
                 MonitorState.GetLatestHelixJobAttempts(authoritativeJobs)
                     .Where(j => completedJobNames.Contains(j.JobName))))

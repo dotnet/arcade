@@ -1342,6 +1342,98 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
+        public async Task OneSubmitter_SendsMultipleJobsToSameQueue_FailureNotOverwrittenByPass()
+        {
+            var azdo = new FakeAzureDevOpsService();
+            var helix = new FakeHelixService();
+
+            azdo.AddTimelineResponse(
+                MonitorJob(),
+                PipelineJob("Linux_Build_Debug", "completed", "succeeded"));
+
+            helix.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-failed", "finished", submitterJobName: "Linux_Build_Debug",
+                        queueId: "ubuntu.2204.amd64.open", logicalJobName: "failed-job"),
+                    HelixJob("helix-passed", "finished", submitterJobName: "Linux_Build_Debug",
+                        queueId: "ubuntu.2204.amd64.open", logicalJobName: "passed-job"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-failed"] = PassFail(failed: ["Microsoft.DotNet.Helix.Sdk.Tests.dll"]),
+                    ["helix-passed"] = PassFail(passed: ["Microsoft.DotNet.Helix.Sdk.Tests.dll"]),
+                });
+
+            var runner = CreateRunner(azdo, helix);
+            int exitCode = await runner.RunAsync(CancellationToken.None);
+
+            exitCode.Should().Be(1);
+
+            var azdoAttempt2 = new FakeAzureDevOpsService()
+                .WithPreviouslyProcessedJob("helix-failed")
+                .WithPreviouslyProcessedJob("helix-passed");
+            var helixAttempt2 = new FakeHelixService();
+
+            azdoAttempt2.AddTimelineResponse(
+                MonitorJob(attempt: 2, previousAttempts: [PreviousAttempt(1)]),
+                PipelineJob("Linux_Build_Debug", "completed", "succeeded"));
+            azdoAttempt2.AddTimelineResponse(
+                MonitorJob(attempt: 2, previousAttempts: [PreviousAttempt(1)]),
+                PipelineJob("Linux_Build_Debug", "completed", "succeeded"));
+
+            helixAttempt2.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-failed", "finished", submitterJobName: "Linux_Build_Debug",
+                        queueId: "ubuntu.2204.amd64.open", stageAttempt: "1",
+                        jobAttempt: "1", logicalJobName: "failed-job"),
+                    HelixJob("helix-passed", "finished", submitterJobName: "Linux_Build_Debug",
+                        queueId: "ubuntu.2204.amd64.open", stageAttempt: "1",
+                        jobAttempt: "1", logicalJobName: "passed-job"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-failed"] = PassFail(failed: ["Microsoft.DotNet.Helix.Sdk.Tests.dll"]),
+                    ["helix-passed"] = PassFail(passed: ["Microsoft.DotNet.Helix.Sdk.Tests.dll"]),
+                });
+            helixAttempt2.ConfigureResubmission("helix-failed", "helix-failed-resub");
+            helixAttempt2.AddResponse(
+                jobs:
+                [
+                    HelixJob("helix-failed", "finished", submitterJobName: "Linux_Build_Debug",
+                        queueId: "ubuntu.2204.amd64.open", stageAttempt: "1",
+                        jobAttempt: "1", logicalJobName: "failed-job"),
+                    HelixJob("helix-passed", "finished", submitterJobName: "Linux_Build_Debug",
+                        queueId: "ubuntu.2204.amd64.open", stageAttempt: "1",
+                        jobAttempt: "1", logicalJobName: "passed-job"),
+                    HelixJob("helix-failed-resub", "finished", submitterJobName: "Linux_Build_Debug",
+                        queueId: "ubuntu.2204.amd64.open", previousHelixJobName: "helix-failed",
+                        stageAttempt: "2", jobAttempt: "1", logicalJobName: "failed-job"),
+                ],
+                passFailByJob: new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["helix-failed-resub"] = PassFail(passed: ["Microsoft.DotNet.Helix.Sdk.Tests.dll"]),
+                });
+
+            JobMonitorOptions attempt2Options = DefaultOptions();
+            attempt2Options.StageAttempt = "2";
+            attempt2Options.JobAttempt = "2";
+            var attempt2Runner = new JobMonitorRunner(
+                attempt2Options,
+                NullLogger.Instance,
+                azdoAttempt2,
+                helixAttempt2,
+                NoDelay);
+
+            int attempt2ExitCode = await attempt2Runner.RunAsync(CancellationToken.None);
+
+            attempt2ExitCode.Should().Be(0);
+            helixAttempt2.Resubmissions.Should().ContainSingle();
+            helixAttempt2.Resubmissions[0].OriginalJob.Should().Be("helix-failed");
+        }
+
+        [Fact]
         public async Task StageRerun_UploadsNewHelixWorkItemsWithoutReuploadingPreviousWorkItems()
         {
             var azdo = new FakeAzureDevOpsService();
@@ -1656,7 +1748,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         /// replay of H1, wait for H2, and then gate on H2.
         /// </summary>
         [Fact]
-        public async Task AttemptScoped_FastRerun_CurrentIncarnationExists_DoesNotResubmitPrevious()
+        public async Task AttemptScoped_LinkedCurrentIncarnationExists_DoesNotResubmitPrevious()
         {
             var azdo = new FakeAzureDevOpsService();
             var helix = new FakeHelixService();
@@ -1738,9 +1830,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 PipelineJob("Test_Linux", "completed", "succeeded", attempt: 2,
                     previousAttempts: [PreviousAttempt(1)], parentId: "stage-test"));
 
-            // Same stream (submitter + queue), not lineage-linked. "zzz-old" (attempt 1, failed)
-            // sorts AFTER "aaa-new" (attempt 2, passed): a job-name-ordered reconciliation would
-            // let the failed attempt-1 outcome overwrite the passing attempt-2 one.
+            // Same stream (submitter + queue + logical job), not lineage-linked. "zzz-old"
+            // (attempt 1, failed) sorts after "aaa-new" (attempt 2, passed): a job-name-ordered
+            // reconciliation would let the stale failure overwrite the current pass.
             HelixJobInfo oldFailed = HelixJob("zzz-old", "finished", stageName: "Test",
                 submitterJobName: "Test_Linux", queueId: "q1", stageAttempt: "1",
                 jobAttempt: "1", logicalJobName: "tests");
@@ -1763,7 +1855,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             int exitCode = await runner.RunAsync(CancellationToken.None);
 
-            // Attempt-2 pass supersedes attempt-1 failure for the shared stream → exit 0.
             exitCode.Should().Be(0);
             helix.Resubmissions.Should().BeEmpty();
         }
@@ -2056,7 +2147,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             HelixJobInfo test = HelixJob("test-job", "finished", stageName: "Test",
                 submitterPhaseName: "Tests", queueId: "q", logicalJobName: "tests");
 
-            state.GetSubmitterChainKey(build).Should().NotBe(state.GetSubmitterChainKey(test));
+            state.GetHelixJobChainKey(build).Should().NotBe(state.GetHelixJobChainKey(test));
         }
 
         /// <summary>
