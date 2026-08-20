@@ -21,6 +21,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 {
     internal sealed class HelixService : IHelixService
     {
+        private const int MaximumJobsPerBuildQuery = 1_000;
+
         private readonly ILogger _logger;
         private readonly IHelixApi _helixApi;
         private readonly IBlobClientFactory _blobClientFactory;
@@ -71,8 +73,15 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 async () => await _helixApi.Job.ListAsync(
                     source: source,
                     properties: properties,
-                    count: 100_000),
+                    count: MaximumJobsPerBuildQuery),
                 cancellationToken);
+
+            if (jobs.Count >= MaximumJobsPerBuildQuery)
+            {
+                throw new InvalidOperationException(
+                    $"Helix returned {jobs.Count} jobs for build '{buildId}', reaching the query limit of " +
+                    $"{MaximumJobsPerBuildQuery}. Refusing to monitor a potentially truncated result set.");
+            }
 
             // Keep the local check as a defensive contract boundary in case Helix returns a
             // malformed or unexpectedly broad response.

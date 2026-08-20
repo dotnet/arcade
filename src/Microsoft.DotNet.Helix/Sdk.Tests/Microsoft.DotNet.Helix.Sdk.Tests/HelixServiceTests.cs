@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     Assert.Equal("BuildId", property.Key);
                     Assert.Equal("123", property.Value);
                 });
-            Assert.Equal(100_000, capturedCount);
+            Assert.Equal(1_000, capturedCount);
             Assert.Equal(2, jobs.Count);
             Assert.Equal("running-job", jobs[0].JobName);
             Assert.Equal("running", jobs[0].Status);
@@ -101,6 +101,30 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             await Assert.ThrowsAsync<ArgumentException>(() =>
                 service.GetJobsForBuildAsync(source: "ci/public/dotnet/runtime/refs/heads/main", buildId: "", CancellationToken.None));
+        }
+
+        [Fact]
+        public async Task GetJobsForBuildAsync_RejectsPotentiallyTruncatedResponse()
+        {
+            var api = CreateApi();
+            api.Job
+                .Setup(j => j.ListAsync(null, 1_000, null, null, It.IsAny<IImmutableDictionary<string, string>>(), It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(ImmutableList.CreateRange(
+                    Enumerable.Range(0, 1_000)
+                        .Select(index => Job(
+                            $"job-{index}",
+                            finished: null,
+                            new JObject { ["BuildId"] = "123" }))));
+
+            HelixService service = CreateService(api.Api.Object);
+
+            InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                service.GetJobsForBuildAsync(
+                    source: "ci/public/dotnet/runtime/refs/heads/main",
+                    buildId: "123",
+                    CancellationToken.None));
+
+            Assert.Contains("potentially truncated result set", exception.Message);
         }
 
         [Fact]

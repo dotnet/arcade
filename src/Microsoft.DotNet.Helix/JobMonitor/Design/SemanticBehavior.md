@@ -19,7 +19,8 @@ Azure DevOps pipeline stage. Its job is to:
 - Resubmit failed Helix work items once per invocation.
 - Upload Helix work-item test results to Azure DevOps.
 - Return an exit code that reflects whether the monitored pipeline jobs and
-  the latest completed Helix work items all succeeded.
+  the latest completed Helix work items and their processed test results all
+  succeeded.
 
 ## 2. Operating model
 
@@ -585,43 +586,24 @@ Warnings use AzDO `task.logissue type=warning` formatting; the final
 aggregated error uses `task.logissue type=error`. Informational status
 lines are plain logger output.
 
-### 5.9 Test-result upload pipeline
+### 5.9 Test-result durability
 
-Uploads use a non-dropping lightweight job-expansion channel plus bounded
-work-item and finalization channels. Their in-memory lifecycle distinguishes
-queued, in-progress, durably completed, and failed uploads; only a completed,
-tagged test run is considered durable.
+- Terminal work items may publish results before their containing Helix job
+  completes.
+- A Helix job is durably processed only after all admitted results are
+  published and its Azure DevOps test run is completed and tagged with the
+  Helix job name.
+- A monitor that stops before that durable boundary leaves the job eligible
+  for replay by a later invocation.
+- Failed processed test results contribute to the monitor exit code even when
+  the Helix work-item exit code is successful.
+- Result publication may retry transient failures and therefore accepts the
+  documented duplicate-result risk rather than losing an entire result set.
 
-- Completed jobs are queued asynchronously and expanded into a globally
-  bounded work-item pipeline.
-- Test results are downloaded one work item at a time. Transient download
-  failures are safe to retry and use a bounded retry budget.
-- Work-item concurrency is global across all Helix jobs, so total parallelism
-  never multiplies by the number of completed jobs.
-- Test-run creation is single-flight per Helix job even when multiple work-item
-  workers arrive concurrently.
-- Test-run creation and completion/tagging are each attempted once. These
-  lifecycle writes determine the durable upload boundary, so replaying an
-  ambiguous response could create an extra run or incorrectly mark an
-  incompletely uploaded run as processed.
-- Publishing test results and their attachments uses bounded retries for
-  throttling, server errors, and transient transport failures. These Azure
-  DevOps POST APIs do not expose an idempotency key or document deduplication.
-  A timeout or connection failure can occur after the service commits the
-  request but before the response reaches the client, so retrying may create
-  duplicate results or attachments. The design accepts that risk to avoid
-  losing an entire job's test results after a transient failure.
-- Permanent failures and exhausted retries are logged as warnings and make the
-  job session ineligible for completion/tagging without affecting pass/fail.
-- The normal-termination path waits for queued uploads to drain before exiting.
-- The cancellation path does not wait for pending or in-flight uploads. If an
-  upload has not completed and applied its Helix-job tag, it remains untagged;
-  durable-state discovery causes a later invocation to upload it again.
-
-The upload sequence per job is: download work-item results, lazily create one
-test run with the plain `{TestRunName}`, upload work items with bounded global
-parallelism, upload failure metadata, complete the run, and tag it with the
-Helix job name (`helixjob<guid>`).
+Channel structure, concurrency, retry budgets, and the concrete upload
+sequence are implementation details documented in
+[Upload pipeline](Components/UploadPipeline.md) and
+[Test-result processing](Components/TestResults.md).
 
 ### 5.10 Status logging
 

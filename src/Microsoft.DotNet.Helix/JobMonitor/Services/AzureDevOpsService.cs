@@ -5,8 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,6 +23,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 {
     internal sealed class AzureDevOpsService : IAzureDevOpsService, IDisposable
     {
+        private const int ControlRequestAttemptCount = 5;
+        private const int ResultRequestAttemptCount = 10;
+        private static readonly TimeSpan s_maximumRetryDelay = TimeSpan.FromSeconds(30);
+        private static readonly System.Text.Json.JsonSerializerOptions s_serializerOptions =
+            new(System.Text.Json.JsonSerializerDefaults.Web);
+
         // A test run tag is applied to every completed test run so we can recover the Helix job
         // name on a subsequent monitor attempt. The Helix job name (a GUID) is encoded as
         // "{HelixJobTagPrefix}{guidWithoutDashes}" because Azure DevOps only accepts alphanumeric
@@ -86,6 +94,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             string encodedToken = Convert.ToBase64String(Encoding.UTF8.GetBytes("unused:" + _options.SystemAccessToken));
             _azdoClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", encodedToken);
+            _azdoClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             _azdoClient.DefaultRequestHeaders.UserAgent.ParseAdd("dotnet-helix-job-monitor");
             _azdoClient.Timeout = TimeSpan.FromMinutes(5);
         }
@@ -414,24 +423,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             WorkItemTestResults results,
             CancellationToken cancellationToken)
         {
-            var reportingParameters = new AzureDevOpsReportingParameters(
-                new Uri(_options.CollectionUri, UriKind.Absolute),
-                _options.TeamProject,
-                testRunId.ToString(CultureInfo.InvariantCulture),
-                _options.SystemAccessToken,
-                _options.UseFullyQualifiedTestName,
-                _options.TestResultAttachmentMode);
-            var publisher = new AzureDevOpsResultPublisher(
-                reportingParameters,
-                _logger,
-                _azdoClient,
-                _rateLimitGate,
-                _metrics);
-
             if (results.TestResultFiles.Count == 0)
             {
                 return new TestResultUploadSummary(true, 0);
             }
+
+            var publisher = new AzureDevOpsResultPublisher(
+                _options.TestResultAttachmentMode,
+                _options.UseFullyQualifiedTestName,
+                _logger,
+                CreateResultTransport(testRunId),
+                _metrics);
 
             return await publisher.UploadTestResultsWithSummaryAsync(
                 results.TestResultFiles,
@@ -442,6 +444,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 },
                 cancellationToken);
         }
+
+        internal IAzureDevOpsResultTransport CreateResultTransport(int testRunId)
+            => new AzureDevOpsResultTransport(this, testRunId);
 
         private async Task<JObject> SendAsync(
             HttpMethod method,
@@ -454,27 +459,39 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return string.IsNullOrWhiteSpace(content) ? [] : JObject.Parse(content);
         }
 
-        // Sends a request and returns the raw response body as a string. Used for endpoints
-        // (such as test-run attachment downloads) that do not return JSON, where SendAsync's
-        // JObject parsing would fail or discard the payload.
-        private async Task<string> SendForStringAsync(
+        private Task<string> SendForStringAsync(
             HttpMethod method,
             string requestUri,
             JToken body = null,
             bool retryTransientFailures = true,
             CancellationToken cancellationToken = default)
-        {
-            string serializedBody = body?.ToString(Formatting.None);
-            int payloadBytes = serializedBody is null ? 0 : Encoding.UTF8.GetByteCount(serializedBody);
-            int attempt = 0;
+            => SendForStringAsync(
+                method,
+                requestUri,
+                body?.ToString(Formatting.None),
+                AzureDevOpsRequestKind.Control,
+                retryTransientFailures,
+                ControlRequestAttemptCount,
+                cancellationToken);
 
-            async Task<string> SendOnceAsync()
+        // All Azure DevOps calls flow through this method so request validation, throttling,
+        // retries, and metrics remain consistent across control, result, and attachment traffic.
+        private async Task<string> SendForStringAsync(
+            HttpMethod method,
+            string requestUri,
+            string serializedBody,
+            AzureDevOpsRequestKind requestKind,
+            bool retryTransientFailures,
+            int attemptCount,
+            CancellationToken cancellationToken)
+        {
+            int payloadBytes = serializedBody is null ? 0 : Encoding.UTF8.GetByteCount(serializedBody);
+
+            async Task<string> SendOnceAsync(int attempt)
             {
                 await _rateLimitGate.WaitAsync(cancellationToken);
-                int currentAttempt = attempt++;
                 long requestStartedAt = JobMonitorMetrics.StartOperation();
                 bool failed = true;
-                bool metricsRecorded = false;
                 using var request = new HttpRequestMessage(method, requestUri);
                 if (serializedBody != null)
                 {
@@ -485,53 +502,53 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 {
                     using HttpResponseMessage response = await _azdoClient.SendAsync(request, cancellationToken);
                     string content = response.Content != null ? await response.Content.ReadAsStringAsync(cancellationToken) : null;
-                    failed = !response.IsSuccessStatusCode;
-                    _metrics.RecordAzureDevOpsRequest(
-                        AzureDevOpsRequestKind.Control,
-                        payloadBytes,
-                        isRetry: currentAttempt > 0,
-                        failed: failed,
-                        startedAt: requestStartedAt);
-                    metricsRecorded = true;
-                    ObserveRateLimit(response, requestUri);
-                    if (!response.IsSuccessStatusCode)
+                    TimeSpan? rateLimitDelay = GetRateLimitDelay(response);
+                    if (response.StatusCode == HttpStatusCode.TooManyRequests && rateLimitDelay is null)
                     {
-                        throw new HttpRequestException(
-                            $"Request to {requestUri} failed with {(int)response.StatusCode} {response.ReasonPhrase}. {content}",
-                            null,
-                            response.StatusCode);
+                        rateLimitDelay = TimeSpan.FromSeconds(30);
                     }
 
+                    if (rateLimitDelay is { } delay)
+                    {
+                        // The current request has completed. Extend only the shared deadline for
+                        // requests that have not yet started.
+                        _rateLimitGate.ExtendDeadline(delay);
+                    }
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        ThrowForFailure(response, content, requestUri, requestKind, rateLimitDelay);
+                    }
+
+                    failed = false;
                     return content;
                 }
                 finally
                 {
-                    if (!metricsRecorded)
-                    {
-                        _metrics.RecordAzureDevOpsRequest(
-                            AzureDevOpsRequestKind.Control,
-                            payloadBytes,
-                            isRetry: currentAttempt > 0,
-                            failed: failed,
-                            startedAt: requestStartedAt);
-                    }
+                    _metrics.RecordAzureDevOpsRequest(
+                        requestKind,
+                        payloadBytes,
+                        isRetry: attempt > 0,
+                        failed: failed,
+                        startedAt: requestStartedAt);
                 }
             }
 
             if (!retryTransientFailures)
             {
-                return await SendOnceAsync();
+                return await SendOnceAsync(0);
             }
 
             string result = null;
             Exception lastException = null;
             var retryHandler = new ExponentialRetry
             {
-                MaxAttempts = 5,
-                DelayBase = 2,
+                MaxAttempts = attemptCount,
+                DelayBase = requestKind == AzureDevOpsRequestKind.Control ? 2 : 3,
                 DelayConstant = 0,
                 MinRandomFactor = 1,
                 MaxRandomFactor = 1,
+                MaximumDelay = s_maximumRetryDelay,
                 RetryDelayCallback = (failedAttempt, delay) =>
                     _logger.LogDebug(
                         "Azure DevOps {Method} request to '{RequestUri}' failed on attempt {Attempt} of {AttemptCount}. "
@@ -539,22 +556,22 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         method,
                         requestUri,
                         failedAttempt,
-                        5,
+                        attemptCount,
                         delay),
             };
 
             bool succeeded = await retryHandler.RunAsync(
-                async _ =>
+                async attempt =>
                 {
                     try
                     {
-                        result = await SendOnceAsync();
+                        result = await SendOnceAsync(attempt);
                         return RetryResult.Success;
                     }
-                    catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+                    catch (Exception ex) when (IsTransientException(ex, cancellationToken))
                     {
                         lastException = ex;
-                        return RetryResult.Retry();
+                        return RetryResult.Retry((ex as TransientAzureDevOpsRequestException)?.RetryAfter);
                     }
                 },
                 cancellationToken);
@@ -564,59 +581,128 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 : throw lastException ?? new InvalidOperationException("Retry failed without completing the Azure DevOps request.");
         }
 
-        // Honors Azure DevOps rate limiting guidance:
-        // https://learn.microsoft.com/azure/devops/integrate/concepts/rate-limits#api-client-experience
-        // If the response carries a Retry-After header (RFC 6585), advance the shared gate so the
-        // next request waits before being issued. The request that received the response is already
-        // complete and must not wait as well; doing so adds the advertised delay to finalization
-        // even when no further request exists.
-        private void ObserveRateLimit(HttpResponseMessage response, string requestUri)
+        internal static bool IsTransientException(Exception exception, CancellationToken cancellationToken)
+            => !cancellationToken.IsCancellationRequested
+                && exception is OperationCanceledException { InnerException: TimeoutException }
+                    or HttpRequestException
+                or TimeoutException
+                or SocketException
+                or IOException;
+
+        internal static TimeSpan? GetRateLimitDelay(HttpResponseMessage response)
         {
-            TimeSpan? retryAfter = null;
+            TimeSpan delay = TimeSpan.Zero;
             RetryConditionHeaderValue retryAfterHeader = response.Headers.RetryAfter;
-            if (retryAfterHeader != null)
+            if (retryAfterHeader?.Delta is { } delta && delta > delay)
             {
-                if (retryAfterHeader.Delta.HasValue)
-                {
-                    retryAfter = retryAfterHeader.Delta.Value;
-                }
-                else if (retryAfterHeader.Date.HasValue)
-                {
-                    TimeSpan delta = retryAfterHeader.Date.Value - DateTimeOffset.UtcNow;
-                    if (delta > TimeSpan.Zero)
-                    {
-                        retryAfter = delta;
-                    }
-                }
+                delay = delta;
             }
 
-            TimeSpan delayToApply = TimeSpan.Zero;
+            if (retryAfterHeader?.Date is { } date)
+            {
+                TimeSpan datedDelay = TimeSpan.FromTicks(date.UtcTicks - DateTimeOffset.UtcNow.UtcTicks);
+                if (datedDelay > delay)
+                {
+                    delay = datedDelay;
+                }
+            }
 
             if (response.Headers.TryGetValues("X-RateLimit-Delay", out IEnumerable<string> delayValues) &&
                 double.TryParse(delayValues.FirstOrDefault(), NumberStyles.Float, CultureInfo.InvariantCulture, out double delaySeconds) &&
                 delaySeconds > 0)
             {
                 TimeSpan rateLimitDelay = TimeSpan.FromSeconds(delaySeconds);
-                delayToApply = rateLimitDelay;
-                _logger.LogDebug(
-                    "Azure DevOps reported X-RateLimit-Delay of {DelaySeconds:0.###}s on request to {RequestUri}.",
-                    delaySeconds,
-                    requestUri);
+                if (rateLimitDelay > delay)
+                {
+                    delay = rateLimitDelay;
+                }
             }
 
-            if (retryAfter.HasValue && retryAfter.Value > TimeSpan.Zero)
+            return delay > TimeSpan.Zero ? delay : null;
+        }
+
+        private static void ThrowForFailure(
+            HttpResponseMessage response,
+            string responseBody,
+            string requestUri,
+            AzureDevOpsRequestKind requestKind,
+            TimeSpan? rateLimitDelay)
+        {
+            responseBody ??= string.Empty;
+            if (responseBody.Contains("It may have been deleted", StringComparison.OrdinalIgnoreCase)
+                || responseBody.Contains("not authorized to access this resource", StringComparison.OrdinalIgnoreCase)
+                || responseBody.Contains("cannot be added or updated for a test run which is in Completed state", StringComparison.OrdinalIgnoreCase)
+                || response.StatusCode == HttpStatusCode.Forbidden
+                || response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                delayToApply = delayToApply > retryAfter.Value ? delayToApply : retryAfter.Value;
+                throw new TerminalError(responseBody);
             }
 
-            if (delayToApply > TimeSpan.Zero)
+            string message = $"Request to {requestUri} failed with {(int)response.StatusCode} {response.ReasonPhrase}. {responseBody}";
+            if ((int)response.StatusCode >= 500 || response.StatusCode == HttpStatusCode.TooManyRequests)
             {
-                _rateLimitGate.Defer(delayToApply);
-                _logger.LogDebug(
-                    "Azure DevOps rate limit back-off. Delaying next request by {DelaySeconds:0.###}s (request: {RequestUri}).",
-                    delayToApply.TotalSeconds,
-                    requestUri);
+                throw new TransientAzureDevOpsRequestException(
+                    message,
+                    response.StatusCode,
+                    rateLimitDelay ?? (response.StatusCode == HttpStatusCode.TooManyRequests ? TimeSpan.FromSeconds(30) : null));
             }
+
+            if (requestKind == AzureDevOpsRequestKind.Control)
+            {
+                throw new HttpRequestException(message, null, response.StatusCode);
+            }
+
+            throw new AzureDevOpsReportingError(message);
+        }
+
+        private sealed class AzureDevOpsResultTransport(
+            AzureDevOpsService service,
+            int testRunId) : IAzureDevOpsResultTransport
+        {
+            public Task<string> PublishResultsAsync(object results, CancellationToken cancellationToken)
+                => service.SendForStringAsync(
+                    HttpMethod.Post,
+                    $"{service._options.CollectionUri}{service._options.TeamProject}/_apis/test/runs/{testRunId}/results?api-version=7.1-preview.6",
+                    System.Text.Json.JsonSerializer.Serialize(results, s_serializerOptions),
+                    AzureDevOpsRequestKind.ResultBatch,
+                    retryTransientFailures: true,
+                    ResultRequestAttemptCount,
+                    cancellationToken);
+
+            public Task UploadAttachmentAsync(
+                long testResultId,
+                long? testSubResultId,
+                string fileName,
+                string stream,
+                CancellationToken cancellationToken)
+            {
+                string query = testSubResultId is long subResultId
+                    ? $"?testSubResultId={subResultId}&api-version=7.1-preview.1"
+                    : "?api-version=7.1-preview.1";
+                var body = new JObject
+                {
+                    ["fileName"] = fileName,
+                    ["stream"] = stream,
+                };
+
+                return service.SendForStringAsync(
+                    HttpMethod.Post,
+                    $"{service._options.CollectionUri}{service._options.TeamProject}/_apis/test/runs/{testRunId}/results/{testResultId}/attachments{query}",
+                    body.ToString(Formatting.None),
+                    AzureDevOpsRequestKind.Attachment,
+                    retryTransientFailures: true,
+                    ResultRequestAttemptCount,
+                    cancellationToken);
+            }
+        }
+
+        private sealed class TransientAzureDevOpsRequestException(
+            string message,
+            HttpStatusCode statusCode,
+            TimeSpan? retryAfter)
+            : HttpRequestException(message, null, statusCode)
+        {
+            public TimeSpan? RetryAfter { get; } = retryAfter;
         }
 
         public void Dispose()

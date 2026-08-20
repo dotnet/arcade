@@ -15,6 +15,8 @@ internal static class ParallelAsync
         where TKey : notnull
     {
         TSource[] items = [.. source];
+        // Each worker owns one unique array slot. The dictionary is constructed only after
+        // Parallel.ForEachAsync completes, so neither collection is mutated concurrently.
         var values = new TValue[items.Length];
 
         await Parallel.ForEachAsync(

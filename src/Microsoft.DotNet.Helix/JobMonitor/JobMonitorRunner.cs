@@ -118,7 +118,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     await ExecuteRetryPassAsync(timelineForFirstPoll, cancellationToken);
                 return await RunPollLoopAsync(jobsForFirstPoll, timelineForFirstPoll, cancellationToken);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 _uploads.Cancel();
                 // On cancellation (AzDO job timeout or build cancellation) the agent grants only a

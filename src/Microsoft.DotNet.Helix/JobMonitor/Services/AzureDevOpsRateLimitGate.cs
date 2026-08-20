@@ -13,7 +13,11 @@ internal sealed class AzureDevOpsRateLimitGate
         _metrics = metrics;
     }
 
-    public void Defer(TimeSpan delay)
+    /// <summary>
+    /// Extends the shared request deadline. A shared deadline coordinates all concurrent upload
+    /// workers; independent delays would allow other workers to continue issuing throttled calls.
+    /// </summary>
+    public void ExtendDeadline(TimeSpan delay)
     {
         if (delay <= TimeSpan.Zero)
         {
@@ -32,15 +36,18 @@ internal sealed class AzureDevOpsRateLimitGate
         }
     }
 
+    /// <summary>Waits until the current shared request deadline has passed.</summary>
     public async Task WaitAsync(CancellationToken cancellationToken)
     {
         long waitStartedAt = 0;
         try
         {
+            // Re-read after every delay because another worker may extend the deadline while this
+            // worker is waiting.
             while (true)
             {
                 long notBeforeTicks = Interlocked.Read(ref _notBeforeUtcTicks);
-                TimeSpan delay = new DateTimeOffset(notBeforeTicks, TimeSpan.Zero) - DateTimeOffset.UtcNow;
+                TimeSpan delay = TimeSpan.FromTicks(notBeforeTicks - DateTimeOffset.UtcNow.UtcTicks);
                 if (delay <= TimeSpan.Zero)
                 {
                     return;

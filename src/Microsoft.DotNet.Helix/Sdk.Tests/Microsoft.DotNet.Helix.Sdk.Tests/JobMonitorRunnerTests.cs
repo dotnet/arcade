@@ -23,6 +23,28 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
     [Collection("NonParallel")]
     public class JobMonitorRunnerTests
     {
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        public void MissingAttemptMetadata_DefaultsToFirstAttempt(string value)
+        {
+            MonitorState.ParseStageAttempt(value).Should().Be(1);
+            MonitorState.ParseJobAttempt(value).Should().Be(1);
+        }
+
+        [Theory]
+        [InlineData("invalid")]
+        [InlineData("0")]
+        [InlineData("-1")]
+        public void MalformedAttemptMetadata_IsRejected(string value)
+        {
+            Action parseStageAttempt = () => MonitorState.ParseStageAttempt(value);
+            Action parseJobAttempt = () => MonitorState.ParseJobAttempt(value);
+
+            parseStageAttempt.Should().Throw<InvalidOperationException>();
+            parseJobAttempt.Should().Throw<InvalidOperationException>();
+        }
+
         /// <summary>
         /// Single pipeline job goes from queued → in progress → completed (succeeded).
         /// No Helix jobs are ever submitted.
@@ -4652,6 +4674,19 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 message.Contains("##vso[task.logissue type=error]Failed work item information:", StringComparison.Ordinal));
             logger.Messages.Should().NotContain(message =>
                 message.Contains("Helix job: helix-linux", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public async Task NonCallerOperationCanceledException_Propagates()
+        {
+            var azdo = new FakeAzureDevOpsService()
+                .FailNextTimeline(new OperationCanceledException("Injected service timeout."));
+            var runner = CreateRunner(azdo, new FakeHelixService());
+
+            Func<Task> action = () => runner.RunAsync(CancellationToken.None);
+
+            await action.Should().ThrowAsync<OperationCanceledException>()
+                .WithMessage("Injected service timeout.");
         }
 
         [Fact]

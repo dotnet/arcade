@@ -25,6 +25,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         private readonly Queue<Exception> _createFailures = [];
         private readonly Queue<Exception> _uploadFailures = [];
         private readonly Queue<Exception> _completeFailures = [];
+        private readonly Queue<Exception> _timelineFailures = [];
         private readonly HashSet<(string JobName, string WorkItemName)> _recordedFailedTests
             = new(FailedTestWorkItemComparer.Instance);
         private readonly HashSet<(string JobName, string WorkItemName)> _uploadFailedTests
@@ -80,6 +81,16 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
             {
                 _previouslyProcessedJobs.Add(jobName);
             }
+            return this;
+        }
+
+        public FakeAzureDevOpsService FailNextTimeline(Exception exception)
+        {
+            lock (_sync)
+            {
+                _timelineFailures.Enqueue(exception);
+            }
+
             return this;
         }
 
@@ -146,6 +157,14 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes
         // IAzureDevOpsService implementation
         public Task<IReadOnlyList<AzureDevOpsTimelineRecord>> GetTimelineRecordsAsync(CancellationToken cancellationToken)
         {
+            lock (_sync)
+            {
+                if (_timelineFailures.TryDequeue(out Exception failure))
+                {
+                    return Task.FromException<IReadOnlyList<AzureDevOpsTimelineRecord>>(failure);
+                }
+            }
+
             if (_timelineResponses.Count == 0)
             {
                 _timelineCallCount++;

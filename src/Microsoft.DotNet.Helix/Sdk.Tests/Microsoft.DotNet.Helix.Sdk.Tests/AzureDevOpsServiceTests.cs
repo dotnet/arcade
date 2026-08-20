@@ -10,6 +10,8 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using AwesomeAssertions;
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Microsoft.DotNet.Helix.JobMonitor;
 using Microsoft.DotNet.Helix.Sdk.Tests.Fakes;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -121,36 +123,114 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         [Fact]
         public async Task RateLimitDelay_AppliesToNextRequest_NotCompletedRequest()
         {
-                int requestCount = 0;
-                var handler = new RecordingHttpMessageHandler(_ =>
+            int requestCount = 0;
+            var handler = new RecordingHttpMessageHandler(_ =>
+            {
+                var response = new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    var response = new HttpResponseMessage(HttpStatusCode.OK)
-                    {
-                        Content = new StringContent(
-                            Interlocked.Increment(ref requestCount) == 1
-                                ? "{}"
-                                : @"{""records"":[]}")
-                    };
+                    Content = new StringContent(
+                        Interlocked.Increment(ref requestCount) == 1
+                            ? "{}"
+                            : @"{""records"":[]}")
+                };
 
-                    if (requestCount == 1)
-                    {
-                        response.Headers.TryAddWithoutValidation("X-RateLimit-Delay", "1");
-                    }
+                if (requestCount == 1)
+                {
+                    response.Headers.TryAddWithoutValidation("X-RateLimit-Delay", "1");
+                }
 
-                    return response;
+                return response;
+            });
+            using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
+
+            var stopwatch = Stopwatch.StartNew();
+            await service.CompleteTestRunAsync(123, HelixJobGuid, [], CancellationToken.None);
+            TimeSpan completionElapsed = stopwatch.Elapsed;
+
+            await service.GetTimelineRecordsAsync(CancellationToken.None);
+            TimeSpan nextRequestElapsed = stopwatch.Elapsed - completionElapsed;
+
+            completionElapsed.Should().BeLessThan(TimeSpan.FromMilliseconds(500));
+            // If completion had awaited its own guidance, the shared deadline would have expired
+            // and the next request would not observe nearly the full delay.
+            nextRequestElapsed.Should().BeGreaterThan(TimeSpan.FromMilliseconds(750));
+            handler.Requests.Should().HaveCount(2);
+        }
+
+        [Fact]
+        public async Task ResultTransport_RetriesWritesAndRecordsExplicitRequestKinds()
+        {
+            int resultAttempts = 0;
+            int attachmentAttempts = 0;
+            var handler = new RecordingHttpMessageHandler(request =>
+            {
+                bool isAttachment = request.RequestUri.AbsolutePath.EndsWith("/attachments", StringComparison.OrdinalIgnoreCase);
+                int attempt = isAttachment
+                    ? Interlocked.Increment(ref attachmentAttempts)
+                    : Interlocked.Increment(ref resultAttempts);
+
+                if (attempt == 1)
+                {
+                    var throttled = new HttpResponseMessage(HttpStatusCode.TooManyRequests);
+                    throttled.Headers.RetryAfter = new System.Net.Http.Headers.RetryConditionHeaderValue(
+                        TimeSpan.FromMilliseconds(25));
+                    return throttled;
+                }
+
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(isAttachment ? "{}" : @"{""value"":[{""id"":1}]}")
+                };
+            });
+            var metrics = new JobMonitorMetrics();
+            using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler), metrics);
+            IAzureDevOpsResultTransport transport = service.CreateResultTransport(123);
+
+            await transport.PublishResultsAsync(new[] { new { outcome = "Passed" } }, CancellationToken.None);
+            await transport.UploadAttachmentAsync(1, null, "log.txt", "YQ==", CancellationToken.None);
+
+            JobMonitorMetricsSnapshot snapshot = metrics.Snapshot();
+            snapshot.AzureDevOpsResultRequests.Should().Be(2);
+            snapshot.AzureDevOpsAttachmentRequests.Should().Be(2);
+            snapshot.AzureDevOpsControlRequests.Should().Be(0);
+            snapshot.AzureDevOpsRetries.Should().Be(2);
+            snapshot.AzureDevOpsFailedAttempts.Should().Be(2);
+        }
+
+        [Fact]
+        public async Task ResultTransport_TerminalCompletedRunResponseDoesNotRetry()
+        {
+            var handler = new RecordingHttpMessageHandler(_ =>
+                new HttpResponseMessage(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent("cannot be added or updated for a test run which is in Completed state")
                 });
-                using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
+            using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
 
-                var stopwatch = Stopwatch.StartNew();
-                await service.CompleteTestRunAsync(123, HelixJobGuid, [], CancellationToken.None);
-                TimeSpan completionElapsed = stopwatch.Elapsed;
+            Func<Task> action = () => service.CreateResultTransport(123)
+                .PublishResultsAsync(new[] { new { outcome = "Passed" } }, CancellationToken.None);
 
-                await service.GetTimelineRecordsAsync(CancellationToken.None);
-                TimeSpan nextRequestElapsed = stopwatch.Elapsed - completionElapsed;
+            await action.Should().ThrowAsync<TerminalError>();
+            handler.Requests.Should().ContainSingle();
+        }
 
-                completionElapsed.Should().BeLessThan(TimeSpan.FromMilliseconds(500));
-                nextRequestElapsed.Should().BeGreaterThan(TimeSpan.FromMilliseconds(750));
-                handler.Requests.Should().HaveCount(2);
+        [Fact]
+        public void AzureDevOpsTransportClassifiesTimeoutsAndRateLimitHeaders()
+        {
+            AzureDevOpsService.IsTransientException(
+                new OperationCanceledException("timeout", new TimeoutException()),
+                CancellationToken.None).Should().BeTrue();
+
+            using var cancellation = new CancellationTokenSource();
+            cancellation.Cancel();
+            AzureDevOpsService.IsTransientException(
+                new OperationCanceledException("timeout", new TimeoutException()),
+                cancellation.Token).Should().BeFalse();
+
+            using var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Headers.RetryAfter = new System.Net.Http.Headers.RetryConditionHeaderValue(TimeSpan.FromSeconds(2));
+            response.Headers.Add("X-RateLimit-Delay", "3.5");
+            AzureDevOpsService.GetRateLimitDelay(response).Should().Be(TimeSpan.FromSeconds(3.5));
         }
 
         [Fact]
@@ -189,6 +269,24 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             patchRequest.Method.Should().Be(new HttpMethod("PATCH"));
             patchRequest.RequestUri.ToString().Should().Be("https://dev.azure.com/dnceng-public/public/_apis/test/runs/123?api-version=7.1");
+        }
+
+        [Fact]
+        public async Task CompleteTestRunAsync_DoesNotRetryAmbiguousFailedWorkItemsAttachmentWrite()
+        {
+            var handler = new RecordingHttpMessageHandler(_ =>
+                new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+            using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
+
+            Func<Task> action = () => service.CompleteTestRunAsync(
+                123,
+                HelixJobGuid,
+                ["wi-1"],
+                CancellationToken.None);
+
+            await action.Should().ThrowAsync<HttpRequestException>();
+            handler.Requests.Should().ContainSingle()
+                .Which.RequestUri.AbsolutePath.Should().EndWith("/attachments");
         }
 
         [Fact]

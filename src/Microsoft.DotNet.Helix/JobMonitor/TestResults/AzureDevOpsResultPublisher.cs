@@ -1,22 +1,16 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System.Net;
-using System.Net.Http.Headers;
-using System.Globalization;
 using System.Text;
 using System.Text.Json;
-using System.Net.Sockets;
-using Microsoft.Arcade.Common;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Microsoft.DotNet.Helix.JobMonitor;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
-internal sealed class AzureDevOpsResultPublisher : IDisposable
+internal sealed class AzureDevOpsResultPublisher
 {
-    private const int DefaultAttemptCount = 10;
     // Azure DevOps rejects requests containing more than 1,000 top-level TestCaseResult objects.
     // Nested sub-results do not count toward this limit.
     private const int MaximumResultsPerRequest = 1000;
@@ -24,70 +18,25 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
     // Preserve the legacy bound on the recursive size of one result hierarchy independently
     // from the top-level per-request limit.
     private const int MaximumNodesPerResultHierarchy = 950;
-    private static readonly TimeSpan s_maximumRetryDelay = TimeSpan.FromSeconds(30);
-    private static readonly TimeSpan s_httpClientTimeout = TimeSpan.FromMinutes(5);
-    private static readonly JsonSerializerOptions s_serializerOptions = new(JsonSerializerDefaults.Web)
-    {
-        WriteIndented = false,
-    };
 
-    private readonly AzureDevOpsReportingParameters _azdoParameters;
-    private readonly HttpClient _httpClient;
+    private readonly TestResultAttachmentMode _attachmentMode;
+    private readonly bool _useFullyQualifiedTestName;
     private readonly ILogger _logger;
-    private readonly bool _ownsHttpClient;
-    private readonly AzureDevOpsRateLimitGate _rateLimitGate;
     private readonly JobMonitorMetrics _metrics;
-
-    public AzureDevOpsResultPublisher(
-        AzureDevOpsReportingParameters azdoParameters,
-        ILogger logger)
-    {
-        _azdoParameters = azdoParameters;
-        _httpClient = CreateHttpClient(azdoParameters.AccessToken);
-        _logger = logger;
-        _metrics = new JobMonitorMetrics();
-        _rateLimitGate = new AzureDevOpsRateLimitGate(_metrics);
-        _ownsHttpClient = true;
-    }
+    private readonly IAzureDevOpsResultTransport _transport;
 
     internal AzureDevOpsResultPublisher(
-        AzureDevOpsReportingParameters azdoParameters,
+        TestResultAttachmentMode attachmentMode,
+        bool useFullyQualifiedTestName,
         ILogger logger,
-        HttpClient httpClient,
-        AzureDevOpsRateLimitGate? rateLimitGate = null,
+        IAzureDevOpsResultTransport transport,
         JobMonitorMetrics? metrics = null)
-        : this(
-            azdoParameters,
-            logger,
-            httpClient,
-            rateLimitGate ?? new AzureDevOpsRateLimitGate(),
-            metrics ?? new JobMonitorMetrics(),
-            ownsHttpClient: false)
     {
-    }
-
-    private AzureDevOpsResultPublisher(
-        AzureDevOpsReportingParameters azdoParameters,
-        ILogger logger,
-        HttpClient httpClient,
-        AzureDevOpsRateLimitGate rateLimitGate,
-        JobMonitorMetrics metrics,
-        bool ownsHttpClient)
-    {
-        _azdoParameters = azdoParameters;
-        _httpClient = httpClient;
+        _attachmentMode = attachmentMode;
+        _useFullyQualifiedTestName = useFullyQualifiedTestName;
         _logger = logger;
-        _rateLimitGate = rateLimitGate;
-        _metrics = metrics;
-        _ownsHttpClient = ownsHttpClient;
-    }
-
-    public void Dispose()
-    {
-        if (_ownsHttpClient)
-        {
-            _httpClient.Dispose();
-        }
+        _transport = transport;
+        _metrics = metrics ?? new JobMonitorMetrics();
     }
 
     public async Task<TestResultUploadSummary> UploadTestResultsWithSummaryAsync(List<string> testResultFiles, object resultMetadata, CancellationToken cancellationToken = default)
@@ -96,7 +45,7 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
         bool parseRecorded = false;
         try
         {
-            var testResultReader = new LocalTestResultsReader(_logger, _azdoParameters.TestResultAttachmentMode);
+            var testResultReader = new LocalTestResultsReader(_logger, _attachmentMode);
 
             var parsedResults = new List<IReadOnlyList<TestResult>>(testResultFiles.Count);
             foreach (string file in testResultFiles)
@@ -110,7 +59,7 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
                 return new TestResultUploadSummary(true, 0);
             }
 
-            IReadOnlyList<AggregatedResult> aggregatedResults = new ResultAggregator().Aggregate(parsedResults, _azdoParameters.UseFullyQualifiedTestName);
+            IReadOnlyList<AggregatedResult> aggregatedResults = new ResultAggregator().Aggregate(parsedResults, _useFullyQualifiedTestName);
             _metrics.RecordPipelineOperation(PipelineOperation.ResultParseAndAggregate, parseStartedAt);
             parseRecorded = true;
             if (aggregatedResults.Count == 0)
@@ -183,15 +132,8 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
         var testCaseResults = converted.Select(static c => c.Converted).ToList();
         var originalList = converted.Select(static c => c.Aggregated).ToList();
 
-        using HttpResponseMessage response = await SendWithRetryAsync(
-            HttpMethod.Post,
-            $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results?api-version=7.1-preview.6",
-            testCaseResults,
-            DefaultAttemptCount,
-            AzureDevOpsRequestKind.ResultBatch,
-            cancellationToken);
-
-        IReadOnlyList<PublishedTestCaseResultReference> publishedResults = await ReadPublishedResultsAsync(response, cancellationToken);
+        string response = await _transport.PublishResultsAsync(testCaseResults, cancellationToken);
+        IReadOnlyList<PublishedTestCaseResultReference> publishedResults = ReadPublishedResults(response);
         if (publishedResults.Count == 0)
         {
             _logger.LogWarning("The test run appears to have been closed, aborting test result uploads.");
@@ -259,22 +201,12 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
         long? subResultId,
         CancellationToken cancellationToken)
     {
-        var request = new TestRunAttachmentRequest(
+        await _transport.UploadAttachmentAsync(
+            testId,
+            subResultId,
             attachment.Name,
-            Convert.ToBase64String(Encoding.UTF8.GetBytes(attachment.Text)));
-
-        string path = subResultId is long subId
-            ? $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results/{testId}/attachments?testSubResultId={subId}&api-version=7.1-preview.1"
-            : $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results/{testId}/attachments?api-version=7.1-preview.1";
-
-        using HttpResponseMessage response = await SendWithRetryAsync(
-            HttpMethod.Post,
-            path,
-            request,
-            DefaultAttemptCount,
-            AzureDevOpsRequestKind.Attachment,
+            Convert.ToBase64String(Encoding.UTF8.GetBytes(attachment.Text)),
             cancellationToken);
-        _ = response;
     }
 
     private IEnumerable<ConvertedResult> ConvertResults(IEnumerable<AggregatedResult> results, object resultMetadata)
@@ -291,7 +223,7 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
         }
 
         string comment = JsonSerializer.Serialize(resultMetadata) ?? string.Empty;
-        bool useFullyQualifiedName = _azdoParameters.UseFullyQualifiedTestName;
+        bool useFullyQualifiedName = _useFullyQualifiedTestName;
 
         string DisplayNameFor(AggregatedResult result)
             => useFullyQualifiedName
@@ -514,222 +446,8 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
         }
     }
 
-    private static HttpClient CreateHttpClient(string? accessToken)
+    private static IReadOnlyList<PublishedTestCaseResultReference> ReadPublishedResults(string content)
     {
-        var client = new HttpClient { Timeout = s_httpClientTimeout };
-        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        if (!string.IsNullOrWhiteSpace(accessToken))
-        {
-            string basicToken = Convert.ToBase64String(Encoding.ASCII.GetBytes($":{accessToken}"));
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", basicToken);
-        }
-
-        return client;
-    }
-
-    private async Task<HttpResponseMessage> SendWithRetryAsync(
-        HttpMethod method,
-        string relativePath,
-        object? payload,
-        int attemptCount,
-        AzureDevOpsRequestKind requestKind,
-        CancellationToken cancellationToken)
-    {
-        byte[]? body = payload is null ? null : JsonSerializer.SerializeToUtf8Bytes(payload, s_serializerOptions);
-
-        HttpResponseMessage? successfulResponse = null;
-        Exception? lastException = null;
-        var retryHandler = new ExponentialRetry
-        {
-            MaxAttempts = attemptCount,
-            DelayBase = 3,
-            DelayConstant = 0,
-            MinRandomFactor = 1,
-            MaxRandomFactor = 1,
-            MaximumDelay = s_maximumRetryDelay,
-            RetryDelayCallback = (failedAttempt, delay) =>
-                _logger.LogDebug(
-                    "Azure DevOps {Method} request to '{RequestPath}' failed on attempt {Attempt} of {AttemptCount}. "
-                    + "Waiting {RetryDelay} before the next attempt.",
-                    method,
-                    relativePath,
-                    failedAttempt,
-                    attemptCount,
-                    delay),
-        };
-
-        bool succeeded = await retryHandler.RunAsync(
-            async attempt =>
-            {
-                await _rateLimitGate.WaitAsync(cancellationToken);
-                long requestStartedAt = JobMonitorMetrics.StartOperation();
-                bool failed = true;
-
-                Uri baseUri = _azdoParameters.CollectionUri.AbsoluteUri.EndsWith('/')
-                    ? _azdoParameters.CollectionUri
-                    : new Uri(_azdoParameters.CollectionUri.AbsoluteUri + '/', UriKind.Absolute);
-
-                using var request = new HttpRequestMessage(method, new Uri(baseUri, relativePath));
-                if (body is not null)
-                {
-                    request.Content = new ByteArrayContent(body);
-                    request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                }
-
-                try
-                {
-                    DateTimeOffset logStartedAt = DateTimeOffset.UtcNow;
-                    _logger.LogDebug(
-                        "Sending Azure DevOps {Method} request to '{RequestPath}', attempt {Attempt} of {AttemptCount}.",
-                        method,
-                        relativePath,
-                        attempt + 1,
-                        attemptCount);
-                    HttpResponseMessage response = await _httpClient.SendAsync(request, cancellationToken);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        if (GetRateLimitDelay(response) is { } rateLimitDelay)
-                        {
-                            _rateLimitGate.Defer(rateLimitDelay);
-                        }
-
-                        _logger.LogDebug(
-                            "Azure DevOps {Method} request to '{RequestPath}' completed with HTTP {StatusCode} "
-                            + "on attempt {Attempt} of {AttemptCount} after {Elapsed}.",
-                            method,
-                            relativePath,
-                            (int)response.StatusCode,
-                            attempt + 1,
-                            attemptCount,
-                            DateTimeOffset.UtcNow - logStartedAt);
-                        failed = false;
-                        successfulResponse = response;
-                        return RetryResult.Success;
-                    }
-
-                    using (response)
-                    {
-                        string responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
-                        bool isTransientStatus = (int)response.StatusCode >= 500
-                            || response.StatusCode == HttpStatusCode.TooManyRequests;
-                        if (isTransientStatus)
-                        {
-                            TimeSpan? retryAfter = GetRateLimitDelay(response);
-                            if (response.StatusCode == HttpStatusCode.TooManyRequests && retryAfter is null)
-                            {
-                                retryAfter = TimeSpan.FromSeconds(30);
-                            }
-                            if (retryAfter is { } delay)
-                            {
-                                _rateLimitGate.Defer(delay);
-                            }
-
-                            _logger.LogDebug(
-                                "Azure DevOps {Method} request to '{RequestPath}' returned HTTP {StatusCode} "
-                                + "on attempt {Attempt} of {AttemptCount} after {Elapsed}. Retrying.",
-                                method,
-                                relativePath,
-                                (int)response.StatusCode,
-                                attempt + 1,
-                                attemptCount,
-                                DateTimeOffset.UtcNow - logStartedAt);
-                            lastException = new AzureDevOpsReportingError(
-                                $"Azure DevOps request failed with status code {(int)response.StatusCode}: {responseBody}");
-                            return RetryResult.Retry(retryAfter);
-                        }
-
-                        if (responseBody.Contains("It may have been deleted", StringComparison.OrdinalIgnoreCase)
-                            || responseBody.Contains("not authorized to access this resource", StringComparison.OrdinalIgnoreCase)
-                            || responseBody.Contains("cannot be added or updated for a test run which is in Completed state", StringComparison.OrdinalIgnoreCase)
-                            || response.StatusCode == HttpStatusCode.Forbidden
-                            || response.StatusCode == HttpStatusCode.Unauthorized)
-                        {
-                            throw new TerminalError(responseBody);
-                        }
-
-                        throw new AzureDevOpsReportingError(
-                            $"Azure DevOps request failed with status code {(int)response.StatusCode}: {responseBody}");
-                    }
-                }
-                catch (Exception ex) when (IsTransientException(ex, cancellationToken))
-                {
-                    lastException = ex;
-                    _logger.LogDebug(
-                        ex,
-                        "Transient Azure DevOps {Method} request failure for '{RequestPath}' on attempt "
-                        + "{Attempt} of {AttemptCount}. Retrying.",
-                        method,
-                        relativePath,
-                        attempt + 1,
-                        attemptCount);
-                    return RetryResult.Retry();
-                }
-                finally
-                {
-                    _metrics.RecordAzureDevOpsRequest(
-                        requestKind,
-                        body?.Length ?? 0,
-                        isRetry: attempt > 0,
-                        failed: failed,
-                        startedAt: requestStartedAt);
-                }
-            },
-            cancellationToken);
-
-        return succeeded && successfulResponse is not null
-            ? successfulResponse
-            : throw lastException ?? new InvalidOperationException("Azure DevOps retry loop exited unexpectedly.");
-    }
-
-    internal static bool IsTransientException(Exception exception, CancellationToken cancellationToken)
-        => !cancellationToken.IsCancellationRequested
-            && exception is OperationCanceledException { InnerException: TimeoutException }
-                or HttpRequestException
-            or TimeoutException
-            or SocketException
-            or IOException;
-
-    internal static TimeSpan? GetRateLimitDelay(HttpResponseMessage response)
-    {
-        TimeSpan delay = TimeSpan.Zero;
-        RetryConditionHeaderValue? retryAfter = response.Headers.RetryAfter;
-        if (retryAfter?.Delta is { } delta && delta > delay)
-        {
-            delay = delta;
-        }
-
-        if (retryAfter?.Date is { } date)
-        {
-            TimeSpan datedDelay = date - DateTimeOffset.UtcNow;
-            if (datedDelay > delay)
-            {
-                delay = datedDelay;
-            }
-        }
-
-        if (response.Headers.TryGetValues("X-RateLimit-Delay", out IEnumerable<string>? delayValues)
-            && double.TryParse(
-                delayValues.FirstOrDefault(),
-                NumberStyles.Float,
-                CultureInfo.InvariantCulture,
-                out double delaySeconds)
-            && delaySeconds > 0)
-        {
-            TimeSpan headerDelay = TimeSpan.FromSeconds(delaySeconds);
-            if (headerDelay > delay)
-            {
-                delay = headerDelay;
-            }
-        }
-
-        return delay > TimeSpan.Zero ? delay : null;
-    }
-
-    private static async Task<IReadOnlyList<PublishedTestCaseResultReference>> ReadPublishedResultsAsync(
-        HttpResponseMessage response,
-        CancellationToken cancellationToken)
-    {
-        string content = await response.Content.ReadAsStringAsync(cancellationToken);
         if (string.IsNullOrWhiteSpace(content))
         {
             return [];
@@ -779,8 +497,6 @@ internal sealed class AzureDevOpsResultPublisher : IDisposable
     private sealed record ConvertedResult(PublishedTestCase Converted, AggregatedResult Aggregated);
 
     private sealed record ChunkPair(PublishedSubResult Converted, AggregatedResult Aggregated);
-
-    private sealed record TestRunAttachmentRequest(string FileName, string Stream);
 
     private sealed record CustomField(string FieldName, object Value);
 

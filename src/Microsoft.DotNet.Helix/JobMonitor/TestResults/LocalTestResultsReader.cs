@@ -144,6 +144,7 @@ public sealed class LocalTestResultsReader(
             }
 
             using XmlReader subtree = reader.ReadSubtree();
+            await subtree.ReadAsync();
             yield return convert(XElement.Load(subtree, LoadOptions.PreserveWhitespace));
         }
     }
@@ -163,6 +164,7 @@ public sealed class LocalTestResultsReader(
             }
 
             using XmlReader subtree = reader.ReadSubtree();
+            await subtree.ReadAsync();
             XElement unitTest = XElement.Load(subtree);
             string? id = GetAttribute(unitTest, "id");
             XElement? method = unitTest.Descendants().FirstOrDefault(static x => x.Name.LocalName == "TestMethod");

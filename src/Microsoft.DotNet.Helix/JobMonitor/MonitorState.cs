@@ -561,13 +561,30 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         /// <summary>
         /// Parses a stage-attempt string (e.g. the <c>System.StageAttempt</c> property) into a
-        /// comparable integer. Unknown / unparseable values sort as attempt 1 (the first attempt).
+        /// comparable integer. Missing values are legacy metadata and sort as attempt 1. A
+        /// present malformed value violates the Helix submitter contract and is rejected.
         /// </summary>
         public static int ParseStageAttempt(string stageAttempt)
-            => int.TryParse(stageAttempt, out int attempt) ? attempt : 1;
+            => ParseAttempt(stageAttempt, nameof(stageAttempt));
 
         public static int ParseJobAttempt(string jobAttempt)
-            => int.TryParse(jobAttempt, out int attempt) ? attempt : 1;
+            => ParseAttempt(jobAttempt, nameof(jobAttempt));
+
+        private static int ParseAttempt(string value, string parameterName)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return 1;
+            }
+
+            if (int.TryParse(value, out int attempt) && attempt > 0)
+            {
+                return attempt;
+            }
+
+            throw new InvalidOperationException(
+                $"Attempt metadata '{parameterName}' must be a positive integer, but was '{value}'.");
+        }
 
         /// <summary>
         /// From an arbitrary set of Helix jobs return only the leaves of each lineage chain —
