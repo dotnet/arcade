@@ -297,7 +297,11 @@ behaviorally; method names are illustrative.
 - **List jobs for a build** — given the source filter and build ID, return
   all Helix jobs that the submitter recorded for the build. The source
   filter must be derivable from build metadata in lockstep with the
-  submitter (see §5.1). The returned set spans every attempt of the build; the
+  submitter (see §5.1). Discovery sends both the source and
+  `Properties[BuildId]` filters to Helix. Filtering `BuildId` only after
+  retrieving the source's jobs is prohibited: non-PR sources such as
+  `refs/heads/main` are long-lived and can contain thousands of historical
+  jobs. The returned set spans every attempt of the build; the
   runner keeps the whole stage's jobs (all attempts) so the retry pass can
   reconcile previous-attempt work (§2.3), and classifies each job as
   current- or previous-stage-attempt via `System.StageName` /

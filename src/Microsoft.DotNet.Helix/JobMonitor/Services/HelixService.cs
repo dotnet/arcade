@@ -59,10 +59,23 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 throw new ArgumentException("A non-empty Helix source filter must be provided.", nameof(source));
             }
 
+            if (string.IsNullOrWhiteSpace(buildId))
+            {
+                throw new ArgumentException("A non-empty build ID filter must be provided.", nameof(buildId));
+            }
+
+            IImmutableDictionary<string, string> properties =
+                ImmutableDictionary<string, string>.Empty.Add("BuildId", buildId);
+
             IImmutableList<JobSummary> jobs = await RetryAsync(
-                async () => await _helixApi.Job.ListAsync(source: source, count: 100_000),
+                async () => await _helixApi.Job.ListAsync(
+                    source: source,
+                    properties: properties,
+                    count: 100_000),
                 cancellationToken);
 
+            // Keep the local check as a defensive contract boundary in case Helix returns a
+            // malformed or unexpectedly broad response.
             return
             [
                 ..jobs

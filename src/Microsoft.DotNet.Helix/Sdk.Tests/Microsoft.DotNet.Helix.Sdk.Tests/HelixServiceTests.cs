@@ -26,16 +26,18 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
     public class HelixServiceTests
     {
         [Fact]
-        public async Task GetJobsForBuildAsync_PassesSourceThroughAndFiltersByBuildId()
+        public async Task GetJobsForBuildAsync_PassesSourceAndBuildIdFilters()
         {
             var api = CreateApi();
             string capturedSource = null;
+            IImmutableDictionary<string, string> capturedProperties = null;
             int? capturedCount = null;
             api.Job
                 .Setup(j => j.ListAsync(null, It.IsAny<int?>(), null, null, It.IsAny<IImmutableDictionary<string, string>>(), It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
-                .Callback<string, int?, string, string, IImmutableDictionary<string, string>, string, string, CancellationToken>((_, count, _, _, _, source, _, _) =>
+                .Callback<string, int?, string, string, IImmutableDictionary<string, string>, string, string, CancellationToken>((_, count, _, _, properties, source, _, _) =>
                 {
                     capturedCount = count;
+                    capturedProperties = properties;
                     capturedSource = source;
                 })
                 .ReturnsAsync(ImmutableList.Create(
@@ -64,6 +66,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 CancellationToken.None);
 
             Assert.Equal("pr/public/dotnet/runtime/refs/pull/42/merge", capturedSource);
+            Assert.Collection(
+                capturedProperties,
+                property =>
+                {
+                    Assert.Equal("BuildId", property.Key);
+                    Assert.Equal("123", property.Value);
+                });
             Assert.Equal(100_000, capturedCount);
             Assert.Equal(2, jobs.Count);
             Assert.Equal("running-job", jobs[0].JobName);
@@ -83,6 +92,15 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             await Assert.ThrowsAsync<ArgumentException>(() =>
                 service.GetJobsForBuildAsync(source: "", buildId: "123", CancellationToken.None));
+        }
+
+        [Fact]
+        public async Task GetJobsForBuildAsync_RequiresNonEmptyBuildId()
+        {
+            HelixService service = CreateService(CreateApi().Api.Object);
+
+            await Assert.ThrowsAsync<ArgumentException>(() =>
+                service.GetJobsForBuildAsync(source: "ci/public/dotnet/runtime/refs/heads/main", buildId: "", CancellationToken.None));
         }
 
         [Fact]
