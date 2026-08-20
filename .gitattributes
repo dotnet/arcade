@@ -44,6 +44,11 @@
 *.vsixmanifest		text
 
 ###############################################################################
+# Preserve the signed content's line endings for Authenticode verification
+###############################################################################
+src/Microsoft.DotNet.SignCheckLibrary.Tests/Resources/SignedJavaScript.js text eol=crlf
+
+###############################################################################
 # Set file behavior to:
 #   treat as binary
 ###############################################################################
