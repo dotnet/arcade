@@ -34,7 +34,6 @@ namespace Microsoft.DotNet.Helix.Client
         IMachine Machine { get; }
         IScaleSets ScaleSets { get; }
         IStorage Storage { get; }
-        ITelemetry Telemetry { get; }
         IWorkItem WorkItem { get; }
     }
 
@@ -100,7 +99,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         private static HttpPipeline CreatePipeline(HelixApiOptions options)
         {
-            return HttpPipelineBuilder.Build(options, Array.Empty<HttpPipelinePolicy>(), Array.Empty<HttpPipelinePolicy>(), new HttpPipelineTransportOptions() { IsClientRedirectEnabled = true }, new HelixApiResponseClassifier());
+            return HttpPipelineBuilder.Build(options, Array.Empty<HttpPipelinePolicy>(), Array.Empty<HttpPipelinePolicy>(), new HelixApiResponseClassifier());
         }
 
         public HttpPipeline Pipeline
@@ -127,8 +126,6 @@ namespace Microsoft.DotNet.Helix.Client
 
         public IStorage Storage { get; }
 
-        public ITelemetry Telemetry { get; }
-
         public IWorkItem WorkItem { get; }
 
 
@@ -148,7 +145,6 @@ namespace Microsoft.DotNet.Helix.Client
             Machine = new Machine(this);
             ScaleSets = new ScaleSets(this);
             Storage = new Storage(this);
-            Telemetry = new Telemetry(this);
             WorkItem = new WorkItem(this);
             SerializerSettings = new JsonSerializerSettings
             {
@@ -334,7 +330,7 @@ namespace Microsoft.DotNet.Helix.Client
         }
 
 #if NET
-        [Obsolete]
+        [Obsolete("Formatter-based serialization is obsolete and should not be used.")]
 #endif
         protected RestApiException(SerializationInfo info, StreamingContext context)
             : base(info, context)
@@ -346,7 +342,7 @@ namespace Microsoft.DotNet.Helix.Client
         }
 
 #if NET
-        [Obsolete]
+        [Obsolete("Formatter-based serialization is obsolete and should not be used.")]
 #endif
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
@@ -376,7 +372,7 @@ namespace Microsoft.DotNet.Helix.Client
         }
 
 #if NET
-        [Obsolete]
+        [Obsolete("Formatter-based serialization is obsolete and should not be used.")]
 #endif
         protected RestApiException(SerializationInfo info, StreamingContext context)
             : base(info, context)
@@ -385,7 +381,7 @@ namespace Microsoft.DotNet.Helix.Client
         }
 
 #if NET
-        [Obsolete]
+        [Obsolete("Formatter-based serialization is obsolete and should not be used.")]
 #endif
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
@@ -438,7 +434,6 @@ namespace Microsoft.DotNet.Helix.Client
           return builder.ToString();
         }
     }
-
 
     public class ResponseStream : Stream
     {
