@@ -21,6 +21,7 @@
 *.config    		text
 *.csproj    		text
 *.groovy			text
+*.js        		text
 *.json      		text
 *.lss       		text
 *.md        		text
