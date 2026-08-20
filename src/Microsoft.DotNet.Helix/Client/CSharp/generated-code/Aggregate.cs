@@ -195,7 +195,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
             if (properties != default(IImmutableDictionary<string, string>))
             {
-                _url.AppendQuery("Properties", Client.Serialize(properties));
+                _url.AppendQuery("Properties", properties);
             }
             if (!string.IsNullOrEmpty(workitem))
             {
