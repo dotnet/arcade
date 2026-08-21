@@ -71,7 +71,7 @@ function GetConfiguration {
         throw "Invalid JSON in configuration file '$urlToConfigurationFile'. $($_.Exception.Message)"
     }
 
-    if ($null -eq $mergeFlowConfig -or
+    if ($mergeFlowConfig -isnot [System.Collections.IDictionary] -or
         !$mergeFlowConfig.ContainsKey('merge-flow-configurations') -or
         $mergeFlowConfig['merge-flow-configurations'] -isnot [System.Collections.IDictionary]) {
         throw "Configuration file '$urlToConfigurationFile' must contain a 'merge-flow-configurations' object."
@@ -96,11 +96,12 @@ function GetConfiguration {
 $configuration = GetConfiguration
 
 if ($configuration -ne $null) {
-    if ($configuration.ContainsKey('MergeToBranch') -and
-        ![string]::IsNullOrWhiteSpace([string]$configuration['MergeToBranch'])) {
-        $MergeToBranch = $configuration['MergeToBranch']
+    $configuredMergeToBranch = $configuration['MergeToBranch']
+    if ($configuredMergeToBranch -is [string] -and
+        ![string]::IsNullOrWhiteSpace($configuredMergeToBranch)) {
+        $MergeToBranch = $configuredMergeToBranch
     } else {
-        throw "Configuration for branch '$MergeFromBranch' must contain a non-empty 'MergeToBranch' value."
+        throw "Configuration for branch '$MergeFromBranch' must contain a non-empty string 'MergeToBranch' value."
     }
 
     $ExtraSwitches = "";
