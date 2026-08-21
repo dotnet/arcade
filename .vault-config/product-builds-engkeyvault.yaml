@@ -39,12 +39,6 @@ secrets:
       gitHubBotAccountSecret: BotAccount-dotnet-maestro-bot
       gitHubBotAccountName: dotnet-maestro-bot
 
-  BotAccount-dotnet-bot-repo-PAT:
-    type: github-access-token
-    parameters:
-      gitHubBotAccountSecret: BotAccount-dotnet-bot
-      gitHubBotAccountName: dotnet-bot
-
   akams-client-id:
     type: text
     parameters:
