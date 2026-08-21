@@ -5,6 +5,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor;
 
 internal sealed class AzureDevOpsRateLimitGate
 {
+    private readonly object _sync = new();
     private readonly JobMonitorMetrics _metrics;
     private long _notBeforeUtcTicks;
 
@@ -26,13 +27,9 @@ internal sealed class AzureDevOpsRateLimitGate
 
         _metrics?.RecordRateLimitDeferral(delay);
         long candidate = DateTimeOffset.UtcNow.Add(delay).UtcTicks;
-        long observed;
-        while (candidate > (observed = Interlocked.Read(ref _notBeforeUtcTicks)))
+        lock (_sync)
         {
-            if (Interlocked.CompareExchange(ref _notBeforeUtcTicks, candidate, observed) == observed)
-            {
-                break;
-            }
+            _notBeforeUtcTicks = Math.Max(_notBeforeUtcTicks, candidate);
         }
     }
 
@@ -46,7 +43,12 @@ internal sealed class AzureDevOpsRateLimitGate
             // worker is waiting.
             while (true)
             {
-                long notBeforeTicks = Interlocked.Read(ref _notBeforeUtcTicks);
+                long notBeforeTicks;
+                lock (_sync)
+                {
+                    notBeforeTicks = _notBeforeUtcTicks;
+                }
+
                 TimeSpan delay = TimeSpan.FromTicks(notBeforeTicks - DateTimeOffset.UtcNow.UtcTicks);
                 if (delay <= TimeSpan.Zero)
                 {
