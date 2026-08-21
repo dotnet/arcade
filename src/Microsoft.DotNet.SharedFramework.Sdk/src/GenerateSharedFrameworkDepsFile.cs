@@ -3,7 +3,6 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.DotNet.Build.Tasks;
 using Microsoft.Extensions.DependencyModel;
 using NuGet.RuntimeModel;
 using System;
@@ -13,8 +12,12 @@ using System.Linq;
 
 namespace Microsoft.DotNet.SharedFramework.Sdk
 {
-    public class GenerateSharedFrameworkDepsFile : BuildTask
+    [MSBuildMultiThreadableTask]
+    public class GenerateSharedFrameworkDepsFile : Microsoft.Build.Utilities.Task, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         [Required]
         public string TargetFrameworkMoniker { get; set; }
 
@@ -60,8 +63,8 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                 }
                 string filePath = file.ItemSpec;
                 string fileName = Path.GetFileName(filePath);
-                string fileVersion = FileUtilities.GetFileVersion(filePath)?.ToString() ?? string.Empty;
-                Version assemblyVersion = FileUtilities.GetAssemblyName(filePath)?.Version;
+                string fileVersion = FileUtilities.GetFileVersion(TaskEnvironment.GetAbsolutePath(filePath))?.ToString() ?? string.Empty;
+                Version assemblyVersion = FileUtilities.GetAssemblyName(TaskEnvironment.GetAbsolutePath(filePath))?.Version;
                 string cultureMaybe = file.GetMetadata("Culture");
                 if (!string.IsNullOrEmpty(cultureMaybe))
                 {
@@ -115,16 +118,16 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
             var depsFilePath = Path.Combine(IntermediateOutputPath, depsFileName);
             try
             {
-                using var depsStream = File.Create(depsFilePath);
+                using var depsStream = File.Create(TaskEnvironment.GetAbsolutePath(depsFilePath));
                 new DependencyContextWriter().Write(context, depsStream);
                 GeneratedDepsFile = new TaskItem(depsFilePath);
             }
             catch (Exception ex)
             {
                 // If there is a problem, ensure we don't write a partially complete version to disk.
-                if (File.Exists(depsFilePath))
+                if (File.Exists(TaskEnvironment.GetAbsolutePath(depsFilePath)))
                 {
-                    File.Delete(depsFilePath);
+                    File.Delete(TaskEnvironment.GetAbsolutePath(depsFilePath));
                 }
                 Log.LogErrorFromException(ex, false);
                 return false;

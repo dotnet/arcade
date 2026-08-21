@@ -16,7 +16,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
     /// <summary>
     /// Examines all dependencies 
     /// </summary>
-    public class SplitDependenciesBySupport : BuildTask
+    [MSBuildMultiThreadableTask]
+    public class SplitDependenciesBySupport : Microsoft.Build.Utilities.Task
     {
         [Required]
         public ITaskItem[] OriginalDependencies { get; set; }

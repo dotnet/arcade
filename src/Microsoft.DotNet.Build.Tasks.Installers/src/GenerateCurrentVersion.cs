@@ -8,7 +8,8 @@ using System.Text.RegularExpressions;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {
-    public sealed class GenerateCurrentVersion : BuildTask
+    [MSBuildMultiThreadableTask]
+    public sealed class GenerateCurrentVersion : Microsoft.Build.Utilities.Task
     {
         /// <summary>
         /// The passed in date that will be used to generate a version. (yyyy-MM-dd format)

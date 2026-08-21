@@ -15,17 +15,17 @@ namespace Microsoft.DotNet.GenFacades
         private readonly IReadOnlyDictionary<string, string> _seedTypePreferences;
         private readonly IEnumerable<string> _referenceTypes;
         private readonly IReadOnlyDictionary<string, IList<string>> _seedTypes;
-        private readonly string _outputSourcePath;
+        private readonly Microsoft.Build.Framework.AbsolutePath _outputSourcePath;
         private readonly HashSet<string> _ignoreMissingTypesList = new HashSet<string>();
-        private readonly ILog _logger;
+        private readonly TaskLoggingHelper _logger;
 
         public SourceGenerator(
             IEnumerable<string> referenceTypes,
             IReadOnlyDictionary<string, IList<string>> seedTypes,
             IReadOnlyDictionary<string, string> seedTypePreferences,
-            string outputSourcePath,
+            Microsoft.Build.Framework.AbsolutePath outputSourcePath,
             string[] ignoreMissingTypesList,
-            ILog logger
+            TaskLoggingHelper logger
             )
         {
             _referenceTypes = referenceTypes;
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.GenFacades
         }
 
         public bool GenerateSource(
-            IEnumerable<string> compileFiles,
+            IEnumerable<Microsoft.Build.Framework.AbsolutePath> compileFiles,
             IEnumerable<string> constants,
             string langVersion,
             bool ignoreMissingTypes)
