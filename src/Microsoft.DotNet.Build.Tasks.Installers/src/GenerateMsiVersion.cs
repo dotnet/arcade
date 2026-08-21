@@ -25,7 +25,8 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
     //   CLI patch  -> 4 bits
     //   BuildNumber major -> 14 bits
     //   BuildNumber minor -> 4 bits
-    public class GenerateMsiVersion : BuildTask
+    [MSBuildMultiThreadableTask]
+    public class GenerateMsiVersion : Microsoft.Build.Utilities.Task
     {
         [Required]
         public string Major { get; set; }

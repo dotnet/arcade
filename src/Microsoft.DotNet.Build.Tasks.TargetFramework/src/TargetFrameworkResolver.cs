@@ -5,6 +5,7 @@ using NuGet.Client;
 using NuGet.ContentModel;
 using NuGet.Frameworks;
 using NuGet.RuntimeModel;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,9 +17,10 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
     /// </summary>
     internal class TargetFrameworkResolver
     {
-        private static readonly Dictionary<string, TargetFrameworkResolver> s_targetFrameworkResolverCache = new();
+        private static readonly ConcurrentDictionary<string, TargetFrameworkResolver> s_targetFrameworkResolverCache = new();
         private readonly ManagedCodeConventions _conventions;
         private readonly PatternSet _configStringPattern;
+        private readonly object _gate = new();
 
         private TargetFrameworkResolver(string runtimeGraph)
         {
@@ -40,27 +42,30 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
 
         public static TargetFrameworkResolver CreateOrGet(string runtimeGraph)
         {
-            if (!s_targetFrameworkResolverCache.TryGetValue(runtimeGraph, out TargetFrameworkResolver? targetFrameworkResolver))
-            {
-                targetFrameworkResolver = new TargetFrameworkResolver(runtimeGraph);
-                s_targetFrameworkResolverCache.Add(runtimeGraph, targetFrameworkResolver);
-            }
-
-            return targetFrameworkResolver!;
+            return s_targetFrameworkResolverCache.GetOrAdd(runtimeGraph, static graph => new TargetFrameworkResolver(graph));
         }
 
         public string? GetNearest(IEnumerable<string> frameworks, NuGetFramework framework)
         {
-            NuGetFramework frameworkWithoutPlatform = NuGetFramework.Parse(framework.DotNetFrameworkName);
+            // A single resolver instance is shared by every task that asks for the same runtime
+            // graph, and in MSBuild's multi-threaded mode those tasks run concurrently on the same
+            // node. NuGet's ManagedCodeConventions and PatternSet populate internal, non-concurrent
+            // caches while matching, so concurrent calls corrupt them. The work below is cheap
+            // compared to building the conventions (which parses the runtime graph), so serialize
+            // it rather than giving every thread its own resolver.
+            lock (_gate)
+            {
+                NuGetFramework frameworkWithoutPlatform = NuGetFramework.Parse(framework.DotNetFrameworkName);
 
-            ContentItemCollection contentCollection = new();
-            contentCollection.Load(frameworks.Select(f => f + '/').ToArray());
+                ContentItemCollection contentCollection = new();
+                contentCollection.Load(frameworks.Select(f => f + '/').ToArray());
 
-            // The platform is expected to be passed-in lower-case but the SDK normalizes "windows" to "Windows" which is why it is lowered again.
-            SelectionCriteria criteria = _conventions.Criteria.ForFrameworkAndRuntime(frameworkWithoutPlatform, framework.Platform.ToLowerInvariant());
-            string? bestTargetFrameworkString = contentCollection.FindBestItemGroup(criteria, _configStringPattern)?.Items[0].Path;
+                // The platform is expected to be passed-in lower-case but the SDK normalizes "windows" to "Windows" which is why it is lowered again.
+                SelectionCriteria criteria = _conventions.Criteria.ForFrameworkAndRuntime(frameworkWithoutPlatform, framework.Platform.ToLowerInvariant());
+                string? bestTargetFrameworkString = contentCollection.FindBestItemGroup(criteria, _configStringPattern)?.Items[0].Path;
 
-            return bestTargetFrameworkString?.Remove(bestTargetFrameworkString.Length - 1);
+                return bestTargetFrameworkString?.Remove(bestTargetFrameworkString.Length - 1);
+            }
         }
     }
 }

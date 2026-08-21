@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
-using BuildTask = Microsoft.Build.Utilities.Task;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,8 +11,16 @@ using System.Runtime.InteropServices;
 
 namespace Microsoft.DotNet.SignTool
 {
-    public class SignToolTask : BuildTask
+    // TODO: https://github.com/dotnet/arcade/issues/17378 - this task is not yet annotated with
+    // [MSBuildMultiThreadableTask] because signing reads and writes files through a deep helper
+    // chain (BatchSignUtil, ZipData, Configuration, VerifySignatures) that still resolves paths
+    // against the process-wide current directory. Until those helpers take AbsolutePath, MSBuild
+    // keeps routing this task through the out-of-proc TaskHost in multi-threaded mode.
+    public class SignToolTask : Microsoft.Build.Utilities.Task, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         /// <summary>
         /// Perform validation but do not actually send signing request to the server.
         /// </summary>
@@ -163,7 +170,11 @@ namespace Microsoft.DotNet.SignTool
         // This property can be removed if https://github.com/dotnet/arcade/issues/6747 is implemented
         internal BatchSignInput ParsedSigningInput { get; private set; }
 
+        // MSBuildTask0005 is suppressed while this task is still routed through the TaskHost.
+        // See the TODO on the class declaration and https://github.com/dotnet/arcade/issues/17378.
+        #pragma warning disable MSBuildTask0005
         public override bool Execute()
+        #pragma warning restore MSBuildTask0005
         {
             try
             {
@@ -193,7 +204,7 @@ namespace Microsoft.DotNet.SignTool
 
             if (!DryRun)
             {
-                if (!File.Exists(DotNetPath))
+                if (string.IsNullOrEmpty(DotNetPath) || !File.Exists(TaskEnvironment.GetAbsolutePath(DotNetPath)))
                 {
                     Log.LogError($"DotNet was not found at this path: '{DotNetPath}'.");
                     return;
@@ -209,11 +220,11 @@ namespace Microsoft.DotNet.SignTool
                     Log.LogError($"PkgToolPath ('{PkgToolPath}') does not exist & is required for unpacking, repacking, and notarizing .pkg files and .app bundles on MacOS.");
                 }
             }
-            if(!string.IsNullOrEmpty(Wix3ToolsPath) && !Directory.Exists(Wix3ToolsPath))
+            if(!string.IsNullOrEmpty(Wix3ToolsPath) && !Directory.Exists(TaskEnvironment.GetAbsolutePath(Wix3ToolsPath)))
             {
                 Log.LogError($"Wix3ToolsPath ('{Wix3ToolsPath}') does not exist.");
             }
-            if(!string.IsNullOrEmpty(WixToolsPath) && !Directory.Exists(WixToolsPath))
+            if(!string.IsNullOrEmpty(WixToolsPath) && !Directory.Exists(TaskEnvironment.GetAbsolutePath(WixToolsPath)))
             {
                 Log.LogError($"WixToolsPath ('{WixToolsPath}') does not exist.");
             }
@@ -374,7 +385,7 @@ namespace Microsoft.DotNet.SignTool
                     continue;
                 }
 
-                var directoryParts = Path.GetFullPath(Path.GetDirectoryName(itemToSign.ItemSpec)).Split(separators);
+                var directoryParts = TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(itemToSign.ItemSpec)).Value.Split(separators);
                 if (result == null)
                 {
                     result = directoryParts;

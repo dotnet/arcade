@@ -11,7 +11,8 @@ using NuGet.Versioning;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
-    public class CheckRequiredDotNetVersion : Microsoft.Build.Utilities.Task
+    [MSBuildMultiThreadableTask]
+    public class CheckRequiredDotNetVersion : Microsoft.Build.Utilities.Task, IMultiThreadableTask
     {
         private static readonly string s_cacheKey = "CheckRequiredDotNetVersion-6ED0A075-A4B3-46B1-97D4-448558D515D3";
 
@@ -26,6 +27,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 Success = success;
             }
         }
+
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
         [Required]
         public string RepositoryRoot { get; set; }
@@ -45,7 +49,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             DateTime lastWrite;
             try
             {
-                lastWrite = File.GetLastWriteTimeUtc(globalJsonPath);
+                lastWrite = File.GetLastWriteTimeUtc(TaskEnvironment.GetAbsolutePath(globalJsonPath));
             }
             catch (Exception e)
             {
@@ -70,7 +74,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 string globalJson;
                 try
                 {
-                    globalJson = File.ReadAllText(globalJsonPath);
+                    globalJson = File.ReadAllText(TaskEnvironment.GetAbsolutePath(globalJsonPath));
                 }
                 catch (Exception e)
                 {

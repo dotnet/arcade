@@ -9,7 +9,8 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetPackageVersion : BuildTask
+    [MSBuildMultiThreadableTask]
+    public class GetPackageVersion : Microsoft.Build.Utilities.Task
     {
         [Required]
         public ITaskItem[] Files
