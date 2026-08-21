@@ -65,9 +65,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 throw new ArgumentException("A non-empty build ID filter must be provided.", nameof(buildId));
             }
-
-            IImmutableDictionary<string, string> properties =
-                ImmutableDictionary<string, string>.Empty.Add("BuildId", buildId);
+            
+            var filterProperties = new Dictionary<string, string>()
+            {
+                ["BuildId"] = buildId,
+            }.ToImmutableDictionary();
 
             IImmutableList<JobSummary> jobs = await RetryAsync(
                 async () => await _helixApi.Job.ListAsync(
@@ -83,16 +85,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     $"{MaximumJobsPerBuildQuery}. Refusing to monitor a potentially truncated result set.");
             }
 
-            // Keep the local check as a defensive contract boundary in case Helix returns a
-            // malformed or unexpectedly broad response.
-            return
-            [
-                ..jobs
-                    .Where(j => j.Properties is JObject properties
-                        && properties.TryGetValue("BuildId", out JToken id)
-                        && buildId == id.Value<string>())
-                    .Select(j => new HelixJobInfo(j))
-             ];
+            return [..jobs.Select(j => new HelixJobInfo(j))];
         }
 
         public async Task<WorkItemTestResults> DownloadTestResultsAsync(
