@@ -54,8 +54,11 @@ namespace XliffTasks.Model
             }
         }
 
-        public override void RewriteRelativePathsToAbsolute(string sourceFullPath)
+        public override void RewriteRelativePathsForOutputPath(string sourceFullPath, string outputFullPath)
         {
+            string sourceDir = Path.GetDirectoryName(sourceFullPath);
+            string outputDir = Path.GetDirectoryName(outputFullPath);
+
             foreach (XElement node in Document.Descendants("data"))
             {
                 if (node.Attribute("type")?.Value == "System.Resources.ResXFileRef, System.Windows.Forms")
@@ -64,8 +67,8 @@ namespace XliffTasks.Model
                     string[] splitRelativePathAndSerializedType = valueNodeOfFileRef.Value.Split(';');
                     string resourceRelativePath = splitRelativePathAndSerializedType[0].Replace('\\', Path.DirectorySeparatorChar);
 
-                    string absolutePath = Path.Combine(Path.GetDirectoryName(sourceFullPath), resourceRelativePath);
-                    splitRelativePathAndSerializedType[0] = absolutePath;
+                    string absoluteResourcePath = Path.GetFullPath(Path.Combine(sourceDir, resourceRelativePath));
+                    splitRelativePathAndSerializedType[0] = MakeRelativePath(outputDir, absoluteResourcePath);
 
                     valueNodeOfFileRef.Value = string.Join(";", splitRelativePathAndSerializedType);
                 }

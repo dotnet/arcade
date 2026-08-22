@@ -74,8 +74,11 @@ namespace XliffTasks.Model
             return conflictingIds;
         }
 
-        public override void RewriteRelativePathsToAbsolute(string sourceFullPath)
+        public override void RewriteRelativePathsForOutputPath(string sourceFullPath, string outputFullPath)
         {
+            string sourceDir = Path.GetDirectoryName(sourceFullPath);
+            string outputDir = Path.GetDirectoryName(outputFullPath);
+
             foreach (XElement imageTag in Document.Descendants(Document.Root.Name.Namespace + "Bitmap"))
             {
                 XAttribute hrefAttribute = imageTag.Attribute("href");
@@ -84,9 +87,8 @@ namespace XliffTasks.Model
                 {
                     string resourceRelativePath = hrefAttribute.Value.Replace('\\', Path.DirectorySeparatorChar);
 
-                    string absolutePath = Path.Combine(Path.GetDirectoryName(sourceFullPath), resourceRelativePath);
-
-                    imageTag.Attribute("href").Value = absolutePath;
+                    string absoluteResourcePath = Path.GetFullPath(Path.Combine(sourceDir, resourceRelativePath));
+                    imageTag.Attribute("href").Value = MakeRelativePath(outputDir, absoluteResourcePath);
                 }
             }
         }
