@@ -5,7 +5,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
@@ -113,11 +115,126 @@ namespace Microsoft.DotNet.Helix.Sdk
                     Log.LogWarningFromException(ex);
                 }
 
+                // Fetch console output and work item details for failed items so we can surface
+                // actual error messages instead of the generic "work item failed" text.
+                try
+                {
+                    var details = await HelixApi.WorkItem.DetailsAsync(wi, jobName, cancellationToken).ConfigureAwait(false);
+                    if (details.ExitCode.HasValue)
+                    {
+                        metadata["ExitCode"] = details.ExitCode.Value.ToString();
+                    }
+                    if (details.Errors != null && details.Errors.Count > 0)
+                    {
+                        metadata["HelixErrors"] = JsonConvert.SerializeObject(details.Errors.Select(e => e.Message));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.LogMessage(MessageImportance.Low, $"Failed to get work item details for {wi}: {ex.Message}");
+                }
+
+                try
+                {
+                    using (var consoleStream = await HelixApi.WorkItem.ConsoleLogAsync(wi, jobName, cancellationToken).ConfigureAwait(false))
+                    using (var reader = new StreamReader(consoleStream, Encoding.UTF8))
+                    {
+                        string fullConsole = await reader.ReadToEndAsync().ConfigureAwait(false);
+                        if (!string.IsNullOrEmpty(fullConsole))
+                        {
+                            // Extract the tail of the console output (last ~100 lines) to capture errors near the crash
+                            string[] lines = fullConsole.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                            int startIndex = Math.Max(0, lines.Length - 100);
+                            string tail = string.Join(Environment.NewLine, lines, startIndex, lines.Length - startIndex);
+
+                            // Also try to extract specific test failure messages from the console output
+                            string errorExcerpt = ExtractTestFailureMessages(fullConsole, tail);
+                            metadata["ConsoleErrorText"] = errorExcerpt;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.LogMessage(MessageImportance.Low, $"Failed to fetch console output for {wi}: {ex.Message}");
+                }
+
                 workItems.Add(CreateTaskItem($"{jobName}/{wi}", metadata));
                 await Task.Delay(DelayBetweenHelixApiCallsInMs, cancellationToken);
             }
 
             return workItems;
+        }
+
+        /// <summary>
+        /// Extracts actionable test failure messages from console output.
+        /// Looks for common patterns from dotnet test / xUnit / MSTest failure output.
+        /// Falls back to the tail of the console if no specific patterns are found.
+        /// </summary>
+        private static string ExtractTestFailureMessages(string fullConsole, string tail)
+        {
+            var sb = new StringBuilder();
+
+            // Look for "Failed" test result lines from dotnet test console output
+            // Pattern: "  Failed TestClassName.MethodName [duration]"
+            string[] allLines = fullConsole.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+            bool inFailureBlock = false;
+            int failureLineCount = 0;
+            const int maxFailureLines = 30; // Cap per failure block to avoid giant output
+            int totalFailuresFound = 0;
+            const int maxTotalFailures = 5; // Only show first N failures
+
+            foreach (string line in allLines)
+            {
+                string trimmed = line.TrimStart();
+
+                // Detect start of a failure block
+                if (trimmed.StartsWith("Failed ", StringComparison.OrdinalIgnoreCase) ||
+                    trimmed.StartsWith("Error Message:", StringComparison.OrdinalIgnoreCase) ||
+                    trimmed.StartsWith("Assert.", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!inFailureBlock)
+                    {
+                        totalFailuresFound++;
+                        if (totalFailuresFound > maxTotalFailures)
+                        {
+                            sb.AppendLine($"... and more failures (showing first {maxTotalFailures})");
+                            break;
+                        }
+                        inFailureBlock = true;
+                        failureLineCount = 0;
+                        if (sb.Length > 0)
+                            sb.AppendLine();
+                    }
+                }
+
+                if (inFailureBlock)
+                {
+                    sb.AppendLine(line);
+                    failureLineCount++;
+
+                    // End the block after enough context or on a blank-ish line after error content
+                    if (failureLineCount >= maxFailureLines ||
+                        (failureLineCount > 3 && string.IsNullOrWhiteSpace(trimmed)))
+                    {
+                        inFailureBlock = false;
+                    }
+                }
+            }
+
+            // If we found structured failure messages, return them
+            if (sb.Length > 0)
+            {
+                return sb.ToString().TrimEnd();
+            }
+
+            // Otherwise, return the tail of the console output as-is
+            // Truncate to ~4000 chars to fit in AzDO errorMessage field
+            if (tail.Length > 4000)
+            {
+                tail = "..." + tail.Substring(tail.Length - 4000);
+            }
+            return tail;
         }
     }
 }
