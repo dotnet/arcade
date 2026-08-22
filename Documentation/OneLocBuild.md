@@ -9,6 +9,14 @@ repo. Xliff-Tasks will continue to be used in addition to OneLocBuild.
 To make OneLocBuild easier to use, we have integrated the task into Arcade. This integration is a job template
 ([here](/eng/common/templates/job/onelocbuild.yml)) that is described in this document.
 
+To see your repo's current loc configuration, please refer to https://aka.ms/locstats.
+
+For GitHub repositories built in `dnceng/internal`, the template uses a short-lived GitHub App
+installation token for localization check-in by default. The target repository must be selected in
+the `dotnet OneLoc Localization` App installation, and the pipeline must be authorized for the
+`dnceng-oneloc-githubapp` service connection. The App requires Contents and Pull requests read/write
+permissions. Set `UseGitHubAppAuthentication: false` only as a temporary opt-out to the PAT path.
+
 ## Onboarding to OneLocBuild Using Arcade
 
 Onboarding to OneLocBuild is a simple process:
@@ -167,6 +175,11 @@ The parameters that can be passed to the template are as follows:
 | `LanguageSet` | `VS_Main_Languages` | This defines the `LanguageSet` of the LocProject.json as described in the [OneLocBuild task documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). |
 | `LclSource` | `LclFilesInRepo` | This passes the `LclSource` input to the OneLocBuild task as described in [its documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). For most repos, this should be set to `LclFilesfromPackage`. |
 | `LclPackageId` | `''` | When `LclSource` is set to `LclFilesfromPackage`, this passes in the package ID as described in the [OneLocBuild task documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=scenario-2%3A-lcl-files-from-a-package). |
+| `UseGitHubAppAuthentication` | `true` | Use GitHub App authentication for the check-in PR when running in `dnceng/internal`. Set to `false` to select the PAT path. |
+| `GitHubAppServiceConnection` | `'dnceng-oneloc-githubapp'` | The WIF service connection used to sign the App JWT. |
+| `GitHubAppClientId` | `'Iv23lijBU8x3gc9lDOc9'` | The GitHub App client ID. |
+| `GitHubAppKeyVaultName` | `'EngKeyVault'` | Key Vault containing the App RSA signing key. |
+| `GitHubAppKeyName` | `'oneloc-localization-app-key'` | The App RSA signing key name. |
 | `condition` | `''` | Allows for conditionalizing the template's steps on build-time variables. |
 
 It is recommended that you set `LclSource` and `LclPackageId` as shown in the example above.
