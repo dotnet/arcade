@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading;
@@ -39,9 +41,137 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 NullLogger.Instance);
 
             FieldInfo field = typeof(AzureDevOpsResultPublisher).GetField("_httpClient", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(field);
+
             var client = Assert.IsType<HttpClient>(field.GetValue(publisher));
 
             Assert.Equal(TimeSpan.FromMinutes(5), client.Timeout);
+        }
+
+        [Fact]
+        public void FullyQualifiedNames_DataDrivenRowsUseShortChildDisplayNames()
+        {
+            const string fullyQualifiedName =
+                "Microsoft.DotNet.Cli.New.IntegrationTests.CommonTemplatesTests.FeaturesSupport";
+            const string dataRowName = "FeaturesSupport(\"classlib\",True,\"netstandard2.0\")";
+
+            using var publisher = new AzureDevOpsResultPublisher(
+                new AzureDevOpsReportingParameters(
+                    new Uri("https://dev.azure.com/dnceng-public/"),
+                    "public",
+                    "123",
+                    "token",
+                    UseFullyQualifiedTestName: true),
+                NullLogger.Instance);
+
+            var dataRow = new AggregatedResult(
+                AggregationType.Single,
+                dataRowName,
+                0.1,
+                "Passed",
+                fullyQualifiedName: fullyQualifiedName);
+            var test = new AggregatedResult(
+                AggregationType.DataDriven,
+                fullyQualifiedName,
+                0.1,
+                "Passed",
+                [dataRow],
+                fullyQualifiedName: fullyQualifiedName);
+
+            object publishedTest = ConvertSingleResult(publisher, test);
+
+            Assert.Equal(
+                fullyQualifiedName,
+                GetRequiredPropertyValue(publishedTest, "TestCaseTitle"));
+
+            object dataRowResult = GetSingleSubResult(publishedTest);
+
+            Assert.Equal(
+                dataRowName,
+                GetRequiredPropertyValue(dataRowResult, "DisplayName"));
+        }
+
+        [Fact]
+        public void FullyQualifiedNames_DataDrivenRerunRowsOnlyShortenDirectChildren()
+        {
+            const string fullyQualifiedName = "Ns.MyTests.FeaturesSupport";
+            const string dataRowName = "FeaturesSupport(\"classlib\")";
+
+            using var publisher = new AzureDevOpsResultPublisher(
+                new AzureDevOpsReportingParameters(
+                    new Uri("https://dev.azure.com/dnceng-public/"),
+                    "public",
+                    "123",
+                    "token",
+                    UseFullyQualifiedTestName: true),
+                NullLogger.Instance);
+
+            var attempt = new AggregatedResult(
+                AggregationType.Single,
+                $"Attempt #1 - {dataRowName}",
+                0.1,
+                "Passed",
+                attemptId: 1,
+                fullyQualifiedName: fullyQualifiedName);
+            var rerunRow = new AggregatedResult(
+                AggregationType.Rerun,
+                dataRowName,
+                0.1,
+                "Passed",
+                [attempt],
+                fullyQualifiedName: fullyQualifiedName);
+            var test = new AggregatedResult(
+                AggregationType.DataDriven,
+                fullyQualifiedName,
+                0.1,
+                "Passed",
+                [rerunRow],
+                fullyQualifiedName: fullyQualifiedName);
+
+            object publishedTest = ConvertSingleResult(publisher, test);
+            object publishedRow = GetSingleSubResult(publishedTest);
+            object publishedAttempt = GetSingleSubResult(publishedRow);
+
+            Assert.Equal(
+                dataRowName,
+                GetRequiredPropertyValue(publishedRow, "DisplayName"));
+            Assert.Equal(
+                $"{fullyQualifiedName} (Attempt #1 - {dataRowName})",
+                GetRequiredPropertyValue(publishedAttempt, "DisplayName"));
+        }
+
+        private static object ConvertSingleResult(
+            AzureDevOpsResultPublisher publisher,
+            AggregatedResult test)
+        {
+            MethodInfo convertResults = typeof(AzureDevOpsResultPublisher).GetMethod(
+                "ConvertResults",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(convertResults);
+
+            var convertedResults = Assert.IsAssignableFrom<IEnumerable>(
+                convertResults.Invoke(publisher, new object[] { new[] { test }, new object() }));
+            object convertedResult = Assert.Single(convertedResults.Cast<object>());
+
+            return GetRequiredPropertyValue(convertedResult, "Converted");
+        }
+
+        private static object GetSingleSubResult(object publishedResult)
+        {
+            var subResults = Assert.IsAssignableFrom<IEnumerable>(
+                GetRequiredPropertyValue(publishedResult, "SubResults"));
+
+            return Assert.Single(subResults.Cast<object>());
+        }
+
+        private static object GetRequiredPropertyValue(object instance, string propertyName)
+        {
+            PropertyInfo property = instance.GetType().GetProperty(propertyName);
+            Assert.NotNull(property);
+
+            object value = property.GetValue(instance);
+            Assert.NotNull(value);
+            return value;
         }
 
         [Theory]
@@ -109,6 +239,5 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 new OperationCanceledException(),
                 CancellationToken.None));
         }
-
     }
 }
