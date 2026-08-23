@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -13,8 +12,12 @@ using System.Xml.Linq;
 
 namespace Microsoft.DotNet.SharedFramework.Sdk
 {
-    public class CreateFrameworkListFile : BuildTask
+    [MSBuildMultiThreadableTask]
+    public class CreateFrameworkListFile : Microsoft.Build.Utilities.Task, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         /// <summary>
         /// Files to extract basic information from and include in the list.
         /// </summary>
@@ -83,8 +86,8 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                     Item = item,
                     Filename = Path.GetFileName(item.ItemSpec),
                     TargetPath = item.GetMetadata("TargetPath"),
-                    AssemblyName = FileUtilities.GetAssemblyName(item.ItemSpec),
-                    FileVersion = FileUtilities.GetFileVersion(item.ItemSpec),
+                    AssemblyName = FileUtilities.GetAssemblyName(TaskEnvironment.GetAbsolutePath(item.ItemSpec)),
+                    FileVersion = FileUtilities.GetFileVersion(TaskEnvironment.GetAbsolutePath(item.ItemSpec)),
                     IsNative = item.GetMetadata("IsNative") == "true",
                     IsSymbolFile = item.GetMetadata("IsSymbolFile") == "true",
                     IsPgoData = item.GetMetadata("IsPgoData") == "true",
@@ -257,8 +260,8 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                 Log.LogError($"Classification matches no files: {unused}");
             }
 
-            Directory.CreateDirectory(Path.GetDirectoryName(TargetFile));
-            File.WriteAllText(TargetFile, frameworkManifest.ToString());
+            Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(TargetFile)));
+            File.WriteAllText(TaskEnvironment.GetAbsolutePath(TargetFile), frameworkManifest.ToString());
 
             return !Log.HasLoggedErrors;
         }

@@ -10,7 +10,8 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetMinimumNETStandard : BuildTask
+    [MSBuildMultiThreadableTask]
+    public class GetMinimumNETStandard : Microsoft.Build.Utilities.Task
     {
         [Required]
         public ITaskItem[] Frameworks

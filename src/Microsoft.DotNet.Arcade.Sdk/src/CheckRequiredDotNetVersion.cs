@@ -11,21 +11,29 @@ using NuGet.Versioning;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
-    public class CheckRequiredDotNetVersion : Microsoft.Build.Utilities.Task
+    [MSBuildMultiThreadableTask]
+    public class CheckRequiredDotNetVersion : Microsoft.Build.Utilities.Task, IMultiThreadableTask
     {
         private static readonly string s_cacheKey = "CheckRequiredDotNetVersion-6ED0A075-A4B3-46B1-97D4-448558D515D3";
 
         private sealed class CacheEntry
         {
+            public readonly string GlobalJsonPath;
+            public readonly string SdkVersion;
             public readonly DateTime LastWrite;
             public readonly bool Success;
 
-            public CacheEntry(DateTime lastWrite, bool success)
+            public CacheEntry(string globalJsonPath, string sdkVersion, DateTime lastWrite, bool success)
             {
+                GlobalJsonPath = globalJsonPath;
+                SdkVersion = sdkVersion;
                 LastWrite = lastWrite;
                 Success = success;
             }
         }
+
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
         [Required]
         public string RepositoryRoot { get; set; }
@@ -41,7 +49,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 return false;
             }
 
-            var globalJsonPath = Path.Combine(RepositoryRoot, "global.json");
+            var globalJsonPath = TaskEnvironment.GetAbsolutePath(Path.Combine(RepositoryRoot, "global.json"));
             DateTime lastWrite;
             try
             {
@@ -53,8 +61,14 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 return false;
             }
 
+            // The cache is registered per build, not per project, so the repository and the SDK
+            // version being validated have to be part of the entry. Otherwise a different repository
+            // or a different required version could reuse this result.
             var cachedResult = (CacheEntry)BuildEngine4.GetRegisteredTaskObject(s_cacheKey, RegisteredTaskObjectLifetime.Build);
-            if (cachedResult != null && lastWrite == cachedResult.LastWrite)
+            if (cachedResult != null &&
+                string.Equals(globalJsonPath.Value, cachedResult.GlobalJsonPath, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(SdkVersion, cachedResult.SdkVersion, StringComparison.Ordinal) &&
+                lastWrite == cachedResult.LastWrite)
             {
                 // Error has already been reported if the current SDK version is not sufficient.
                 if (!cachedResult.Success)
@@ -103,7 +117,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
 
             bool success = execute();
-            BuildEngine4.RegisterTaskObject(s_cacheKey, new CacheEntry(lastWrite, success), RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
+            BuildEngine4.RegisterTaskObject(s_cacheKey, new CacheEntry(globalJsonPath.Value, SdkVersion, lastWrite, success), RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
             return success;
         }
     }

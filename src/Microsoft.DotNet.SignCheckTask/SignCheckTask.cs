@@ -8,12 +8,18 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.SignCheck;
 using Microsoft.SignCheck.Logging;
-using BuildTask = Microsoft.Build.Utilities.Task;
 
 namespace SignCheckTask
 {
-    public class SignCheckTask : BuildTask
+    // TODO: Not opted into multithreading. SignCheckRunner builds a SignatureVerificationManager whose
+    // static _fileVerifiers dictionary is populated by every constructor via AddFileVerifier, so
+    // concurrent or repeated instances race and can throw on duplicate keys. The TaskEnvironment below
+    // is still used for path resolution. Tracked by https://github.com/dotnet/arcade/issues/17378.
+    public class SignCheckTask : Microsoft.Build.Utilities.Task, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         public bool EnableJarSignatureVerification { get; set; }
 
         public bool EnableXmlSignatureVerification { get; set; }
@@ -74,7 +80,7 @@ namespace SignCheckTask
             List<string> inputFiles = new List<string>();
             if (InputFiles != null)
             {
-                ArtifactFolder = ArtifactFolder ?? Environment.CurrentDirectory;
+                ArtifactFolder = ArtifactFolder ?? TaskEnvironment.ProjectDirectory;
                 SearchOption fileSearchOptions = Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
 
                 foreach (var checkFile in InputFiles.Select(s => s.ItemSpec).ToArray())
@@ -85,7 +91,7 @@ namespace SignCheckTask
                     }
                     else
                     {
-                        var matchedFiles = Directory.GetFiles(ArtifactFolder, checkFile, fileSearchOptions);
+                        var matchedFiles = Directory.GetFiles(TaskEnvironment.GetAbsolutePath(ArtifactFolder), checkFile, fileSearchOptions);
 
                         if (matchedFiles.Length == 1)
                         {

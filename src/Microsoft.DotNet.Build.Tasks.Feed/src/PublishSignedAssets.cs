@@ -15,9 +15,16 @@ using NuGet.Packaging.Core;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.src
 {
-    public class PublishSignedAssets : PublishArtifactsInManifestBase
+    // TODO: Not opted into multithreading. PublishArtifactsInManifestBase resolves Azure credentials
+    // by reading AZURESUBSCRIPTION_*, SYSTEM_ACCESSTOKEN and workload-identity variables straight
+    // from the process environment. The TaskEnvironment below is still used for path resolution.
+    // Tracked by https://github.com/dotnet/arcade/issues/17378.
+    public class PublishSignedAssets : PublishArtifactsInManifestBase, IMultiThreadableTask
     {
         private static readonly string AzureDevOpsScope = "499b84ac-1321-427f-aa17-267ca6975798/.default";
+
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
         /// <summary>
         /// Required token to publishe packages to the feeds
@@ -82,9 +89,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
 
             TargetFeedConfig targetFeedConfig = new TargetFeedConfig(TargetFeedContentType.Package, feedUrl, FeedType.AzDoNugetFeed, AzureDevOpsPersonalAccessToken);
             HashSet<PackageIdentity> packagesToPublish = new HashSet<PackageIdentity>(
-                Directory.GetFiles(packagesFolder).Select(packagePath =>
+                Directory.GetFiles(TaskEnvironment.GetAbsolutePath(packagesFolder)).Select(packagePath =>
                 {
-                    using (BinaryReader reader = new BinaryReader(File.Open(packagePath, FileMode.Open)))
+                    using (BinaryReader reader = new BinaryReader(File.Open(TaskEnvironment.GetAbsolutePath(packagePath), FileMode.Open)))
                     {
                         PackageArchiveReader packageReader = new PackageArchiveReader(reader.BaseStream);
                         return packageReader.NuspecReader.GetIdentity();
@@ -96,7 +103,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
                 {
                     string localPackagePath = Path.Combine(packagesFolder, $"{package.Id}.{package.Version}.nupkg");
 
-                    if (!File.Exists(localPackagePath))
+                    if (!File.Exists(TaskEnvironment.GetAbsolutePath(localPackagePath)))
                     {
                         Log.LogError($"Could not locate '{package.Id}.{package.Version}' at '{localPackagePath}'");
                         return;

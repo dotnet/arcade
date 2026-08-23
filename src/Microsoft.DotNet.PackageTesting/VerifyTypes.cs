@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Tasks;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,8 +14,12 @@ namespace Microsoft.DotNet.PackageTesting
     /// <summary>
     /// Verifies no type overlap in a set of DLLs
     /// </summary>
-    public class VerifyTypes : BuildTask
+    [MSBuildMultiThreadableTask]
+    public class VerifyTypes : Microsoft.Build.Utilities.Task, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         /// <summary>
         /// Sources to scan.  Items can be directories or files.
         /// </summary>
@@ -95,7 +98,7 @@ namespace Microsoft.DotNet.PackageTesting
 
         private void AddSourceFile(string file)
         {
-            var assemblyInfo = AssemblyInfo.GetAssemblyInfo(file);
+            var assemblyInfo = AssemblyInfo.GetAssemblyInfo(TaskEnvironment.GetAbsolutePath(file));
 
             if (assemblyInfo != null)
             {
@@ -145,7 +148,7 @@ namespace Microsoft.DotNet.PackageTesting
             public string Name { get; }
             public string[] Types { get; }
 
-            public static AssemblyInfo GetAssemblyInfo(string path)
+            public static AssemblyInfo GetAssemblyInfo(Microsoft.Build.Framework.AbsolutePath path)
             {
                 try
                 {

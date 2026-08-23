@@ -24,8 +24,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     ///     The intended use of this task is to push artifacts described in
     ///     a build manifest to package feeds.
     /// </summary>
-    public class PublishArtifactsInManifest : MSBuildTaskBase
+    /// <remarks>
+    /// TODO: Not opted into multithreading. This task delegates to PublishArtifactsInManifestV3/V4,
+    /// whose shared base resolves Azure credentials from the process environment. The TaskEnvironment
+    /// below is still used for path resolution.
+    /// Tracked by https://github.com/dotnet/arcade/issues/17378.
+    /// </remarks>
+    public class PublishArtifactsInManifest : MSBuildTaskBase, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         /// <summary>
         /// Comma separated list of Maestro++ Channel IDs to which the build should
         /// be assigned to once the assets are published.
@@ -389,7 +398,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 SkipSafetyChecks = this.SkipSafetyChecks,
                 AkaMSClientId = this.AkaMSClientId,
                 AkaMSClientCertificate = !string.IsNullOrEmpty(AkaMSClientCertificate) ?
-                    X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(File.ReadAllText(AkaMSClientCertificate)), password: null) : null,
+                    X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(File.ReadAllText(TaskEnvironment.GetAbsolutePath(AkaMSClientCertificate))), password: null) : null,
                 AkaMSCreatedBy = this.AkaMSCreatedBy,
                 AkaMSGroupOwner = this.AkaMSGroupOwner,
                 AkaMsOwners = this.AkaMsOwners,
@@ -435,7 +444,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 SkipSafetyChecks = this.SkipSafetyChecks,
                 AkaMSClientId = this.AkaMSClientId,
                 AkaMSClientCertificate = !string.IsNullOrEmpty(AkaMSClientCertificate) ?
-                    X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(File.ReadAllText(AkaMSClientCertificate)), password: null) : null,
+                    X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(File.ReadAllText(TaskEnvironment.GetAbsolutePath(AkaMSClientCertificate))), password: null) : null,
                 AkaMSCreatedBy = this.AkaMSCreatedBy,
                 AkaMSGroupOwner = this.AkaMSGroupOwner,
                 AkaMsOwners = this.AkaMsOwners,

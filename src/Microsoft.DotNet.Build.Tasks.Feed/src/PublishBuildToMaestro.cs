@@ -32,8 +32,15 @@ using DarcVersionDetailsParser = Microsoft.DotNet.DarcLib.Helpers.VersionDetails
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    public class PublishBuildToMaestro : MSBuildTaskBase, ICancelableTask
+    // TODO: Not opted into multithreading. The Azure DevOps values are still resolved through
+    // _getEnvProxy, whose implementation calls Environment.GetEnvironmentVariable directly (for
+    // example GetAzDevAccount and GetAzDevBuildId). The TaskEnvironment below is still used for
+    // path resolution. Tracked by https://github.com/dotnet/arcade/issues/17378.
+    public class PublishBuildToMaestro : MSBuildTaskBase, ICancelableTask, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         public string ManifestsPath { get; set; }
 
         public string BuildAssetRegistryToken { get; set; }
@@ -113,7 +120,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 Log.LogMessage(MessageImportance.High, "Starting build metadata push to the Build Asset Registry...");
 
-                if (!Directory.Exists(ManifestsPath) && !IsAssetlessBuild)
+                if ((string.IsNullOrEmpty(ManifestsPath) || !Directory.Exists(TaskEnvironment.GetAbsolutePath(ManifestsPath))) && !IsAssetlessBuild)
                 {
                     Log.LogError($"Required folder '{ManifestsPath}' does not exist.");
                 }
@@ -187,10 +194,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     Log.LogMessage(MessageImportance.High,
                         $"Metadata has been pushed. Build id in the Build Asset Registry is '{recordedBuild.Id}'");
-                    Console.WriteLine($"##vso[build.addbuildtag]BAR ID - {recordedBuild.Id}");
+                    Log.LogMessage(MessageImportance.High, $"##vso[build.addbuildtag]BAR ID - {recordedBuild.Id}");
 
                     // Only 'create' the AzDO (VSO) variables if running in an AzDO build
-                    if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_BUILDID")))
+                    if (!string.IsNullOrEmpty(TaskEnvironment.GetEnvironmentVariable("BUILD_BUILDID")))
                     {
                         IEnumerable<DefaultChannel> defaultChannels =
                             await GetBuildDefaultChannelsAsync(client, recordedBuild);
@@ -201,9 +208,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Log.LogMessage(MessageImportance.High,
                             $"Determined build will be added to the following channels: {defaultChannelsStr}");
 
-                        Console.WriteLine($"##vso[task.setvariable variable=BARBuildId]{recordedBuild.Id}");
-                        Console.WriteLine($"##vso[task.setvariable variable=DefaultChannels]{defaultChannelsStr}");
-                        Console.WriteLine($"##vso[task.setvariable variable=IsStableBuild]{IsStableBuild}");
+                        Log.LogMessage(MessageImportance.High, $"##vso[task.setvariable variable=BARBuildId]{recordedBuild.Id}");
+                        Log.LogMessage(MessageImportance.High, $"##vso[task.setvariable variable=DefaultChannels]{defaultChannelsStr}");
+                        Log.LogMessage(MessageImportance.High, $"##vso[task.setvariable variable=IsStableBuild]{IsStableBuild}");
                     }
                 }
             }
@@ -398,7 +405,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestsFolderPath,
             CancellationToken cancellationToken)
         {
-            return Directory.GetFiles(manifestsFolderPath, SearchPattern, SearchOption.AllDirectories)
+            return Directory.GetFiles(TaskEnvironment.GetAbsolutePath(manifestsFolderPath), SearchPattern, SearchOption.AllDirectories)
                 .Select(manifest => _buildModelFactory.ManifestFileToModel(manifest))
                 .ToList();
         }
@@ -577,7 +584,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string repoIdentity = string.Empty;
                 string gitHubHost = "github.com";
 
-                if (Environment.GetEnvironmentVariable("GITHUB_TOKEN") is string envGitHubToken)
+                if (TaskEnvironment.GetEnvironmentVariable("GITHUB_TOKEN") is string envGitHubToken)
                 {
                     client.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", envGitHubToken);
