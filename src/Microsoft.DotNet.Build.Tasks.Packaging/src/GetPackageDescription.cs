@@ -64,7 +64,19 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 return false;
             }
 
-            Dictionary<string, string> descriptionTable = s_descriptionCache.GetOrAdd(descriptionPath, LoadDescriptions);
+            if (!s_descriptionCache.TryGetValue(descriptionPath, out Dictionary<string, string> descriptionTable))
+            {
+                descriptionTable = LoadDescriptions(descriptionPath);
+
+                // Only successful loads are cached. LoadDescriptions returns null after logging an
+                // IOException or UnauthorizedAccessException, and caching that would memoize a
+                // transient failure for every later invocation on this node. A concurrent race just
+                // parses the document twice, which is harmless.
+                if (descriptionTable != null)
+                {
+                    s_descriptionCache.TryAdd(descriptionPath, descriptionTable);
+                }
+            }
 
             string description = null;
 

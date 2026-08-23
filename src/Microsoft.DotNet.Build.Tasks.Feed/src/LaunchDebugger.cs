@@ -7,7 +7,10 @@ using Microsoft.Build.Framework;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    [MSBuildMultiThreadableTask]
+    // Not opted into multithreading, and deliberately never will be: Debugger.Launch attaches a
+    // debugger to the whole process. In a shared multithreaded node that would affect every project
+    // building on that node, and concurrent invocations would race to attach. Keeping this
+    // diagnostic task in the out-of-proc TaskHost confines the attach to a single sidecar.
     public class LaunchDebugger : Microsoft.Build.Utilities.Task
     {
         public override bool Execute()

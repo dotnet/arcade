@@ -45,7 +45,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     ///     - FutureArtifactName and FutureArtifactPublishBasePath are not set.
     ///     - Publishing version should be v3.
     /// </summary>
-    [MSBuildMultiThreadableTask]
+    // TODO: https://github.com/dotnet/arcade/issues/17378 - not yet annotated with
+    // [MSBuildMultiThreadableTask]. The six *LocalStorageDir inputs and AssetManifestPath are
+    // written through IFileSystem without being resolved, and the artifact item paths they are
+    // combined with would need the same treatment, so a partial migration here would silently
+    // publish to the wrong locations rather than fail. MSBuild keeps routing this task through the
+    // out-of-proc TaskHost until the storage paths and artifact items are resolved together.
     public class PushToBuildStorage : MSBuildTaskBase
     {
         [Required]

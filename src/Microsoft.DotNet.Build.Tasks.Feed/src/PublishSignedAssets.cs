@@ -19,6 +19,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
     // by reading AZURESUBSCRIPTION_*, SYSTEM_ACCESSTOKEN and workload-identity variables straight
     // from the process environment. The TaskEnvironment below is still used for path resolution.
     // Tracked by https://github.com/dotnet/arcade/issues/17378.
+    //
+    // Implementing IMultiThreadableTask without the attribute is deliberate. Routing is decided by
+    // the attribute alone (TaskRouter.NeedsTaskHostInMultiThreadedMode); it cannot key off the
+    // interface, because ToolTask implements it and that would opt in every ToolTask-derived task in
+    // the ecosystem. The interface only causes TaskEnvironment to be injected. Do not remove it to
+    // "make this safe" - that would revert the path resolution below to the process current
+    // directory while leaving the task exactly as unsafe as it is now.
     public class PublishSignedAssets : PublishArtifactsInManifestBase, IMultiThreadableTask
     {
         private static readonly string AzureDevOpsScope = "499b84ac-1321-427f-aa17-267ca6975798/.default";

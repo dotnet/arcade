@@ -8,8 +8,11 @@ using Microsoft.Build.Utilities;
 namespace Microsoft.DotNet.Arcade.Sdk
 {
     [MSBuildMultiThreadableTask]
-    public class GetAssemblyFullName : Microsoft.Build.Utilities.Task
+    public class GetAssemblyFullName : Microsoft.Build.Utilities.Task, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         [Required]
         public ITaskItem[] Items { get; set; }
 
@@ -28,7 +31,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             foreach (var item in Items)
             {
                 var assemblyPath = string.IsNullOrEmpty(PathMetadata) ? item.ItemSpec : item.GetMetadata(PathMetadata);
-                item.SetMetadata(FullNameMetadata, AssemblyName.GetAssemblyName(assemblyPath).FullName);
+                item.SetMetadata(FullNameMetadata, AssemblyName.GetAssemblyName(TaskEnvironment.GetAbsolutePath(assemblyPath)).FullName);
             }
 
             return true;
