@@ -82,6 +82,9 @@ jobs:
     - ${{ if eq(parameters.is1ESPipeline, '') }}:
       - 'Illegal entry point, is1ESPipeline is not defined. Repository yaml should not directly reference templates in core-templates folder.': error
 
+    - ${{ if and(eq(parameters.UseGitHubAppAuthenticationInOtherProjects, true), ne(variables['System.TeamProject'], 'internal'), ne(variables['System.TeamProject'], 'DevDiv'), eq(parameters.GitHubAppServiceConnection, 'dnceng-oneloc-githubapp')) }}:
+      - 'GitHubAppServiceConnection must be overridden when UseGitHubAppAuthenticationInOtherProjects is enabled outside dnceng/internal and DevDiv/DevDiv.': error
+
     - ${{ if ne(parameters.SkipLocProjectJsonGeneration, 'true') }}:
       - task: Powershell@2
         inputs:
