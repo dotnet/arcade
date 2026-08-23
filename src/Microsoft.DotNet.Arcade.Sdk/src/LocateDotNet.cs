@@ -56,6 +56,11 @@ namespace Microsoft.DotNet.Arcade.Sdk
             // The cache is registered per build, not per project, so the repository identity has to
             // be part of the entry. Otherwise a second repository with a coincidentally matching
             // global.json timestamp and PATH would reuse the first repository's dotnet.
+            //
+            // The read/write pair below is not atomic, so under multithreaded execution two threads
+            // can both miss and both populate it. That is benign here: the computation is pure and
+            // deterministic for a given (global.json, timestamp, PATH), so the loser of the race
+            // simply overwrites an identical entry. The cache is an optimization, not a lock.
             var cachedResult = (CacheEntry)BuildEngine4.GetRegisteredTaskObject(s_cacheKey, RegisteredTaskObjectLifetime.Build);
             if (cachedResult != null &&
                 string.Equals(globalJsonPath.Value, cachedResult.GlobalJsonPath, StringComparison.OrdinalIgnoreCase) &&

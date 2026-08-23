@@ -64,6 +64,11 @@ namespace Microsoft.DotNet.Arcade.Sdk
             // The cache is registered per build, not per project, so the repository and the SDK
             // version being validated have to be part of the entry. Otherwise a different repository
             // or a different required version could reuse this result.
+            //
+            // The read/write pair below is not atomic, so under multithreaded execution two threads
+            // can both miss and both run the check. The check itself is pure, so the result is
+            // identical either way; the only observable effect is that a failing check can log its
+            // error twice, since deduplicating that reporting is part of what the cache buys.
             var cachedResult = (CacheEntry)BuildEngine4.GetRegisteredTaskObject(s_cacheKey, RegisteredTaskObjectLifetime.Build);
             if (cachedResult != null &&
                 string.Equals(globalJsonPath.Value, cachedResult.GlobalJsonPath, StringComparison.OrdinalIgnoreCase) &&
