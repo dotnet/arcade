@@ -44,6 +44,7 @@ $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 
 . $PSScriptRoot\pipeline-logging-functions.ps1
+. $PSScriptRoot\github-app-functions.ps1
 
 function ConvertTo-Base64Url([byte[]] $bytes) {
     return [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
@@ -110,38 +111,27 @@ $headers = @{
 
 Write-Host "Looking up installation for '$InstallationOwner'..."
 try {
-    $installations = [System.Collections.Generic.List[object]]::new()
-    $page = 1
-    do {
-        $pageResponse = Invoke-RestMethod `
+    $installations = @(Get-GitHubAppInstallations -GetPage {
+        param($page)
+        Invoke-RestMethod `
             -Uri "https://api.github.com/app/installations?per_page=100&page=$page" `
             -Headers $headers `
             -Method Get
-        $pageInstallations = @($pageResponse | ForEach-Object { $_ })
-        foreach ($pageInstallation in $pageInstallations) {
-            # Add each installation separately. Adding the response array directly
-            # preserves it as one nested object in some PowerShell versions.
-            $installations.Add($pageInstallation)
-        }
-        $page++
-    } while ($pageInstallations.Count -eq 100)
+    })
 }
 catch {
     Write-PipelineTelemetryError -Category 'Build' -Message "Failed to list GitHub App installations: $_. The signed JWT may be invalid or the App's Client ID ('$AppClientId') may be incorrect."
     exit 1
 }
-$matchingInstallations = @($installations | Where-Object { $_.account.login -ieq $InstallationOwner })
-if ($matchingInstallations.Count -eq 0) {
-    $found = ($installations | ForEach-Object { $_.account.login }) -join ', '
-    Write-PipelineTelemetryError -Category 'Build' -Message "No installation found for '$InstallationOwner'. App is installed on: $found"
+try {
+    $installation = Select-GitHubAppInstallation `
+        -Installations $installations `
+        -InstallationOwner $InstallationOwner
+}
+catch {
+    Write-PipelineTelemetryError -Category 'Build' -Message $_
     exit 1
 }
-if ($matchingInstallations.Count -ne 1) {
-    $matchingIds = ($matchingInstallations | ForEach-Object { $_.id }) -join ', '
-    Write-PipelineTelemetryError -Category 'Build' -Message "Found multiple installations for '$InstallationOwner': $matchingIds"
-    exit 1
-}
-$installation = $matchingInstallations[0]
 Write-Host "Using installation $($installation.id) for '$($installation.account.login)'."
 
 try {

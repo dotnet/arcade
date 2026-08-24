@@ -155,6 +155,9 @@ stages:
         - checkout: self
           clean: true
         steps:
+        - powershell: eng\common\tests\Get-GitHubAppToken.Tests.ps1
+          displayName: Test GitHub App installation selection
+
         # The Test stage build runs the non-Helix unit tests inline, which includes the ported
         # Arcade SDK validation RepoTests (excluded from the Helix submission below). Passing
         # RunNonHelixTestsOnly skips the inline execution of the Helix-routed unit tests so only the
@@ -202,6 +205,9 @@ stages:
         - checkout: self
           clean: true
         steps:
+        - pwsh: eng/common/tests/Get-GitHubAppToken.Tests.ps1
+          displayName: Test GitHub App installation selection
+
         # See the Windows job: run the non-Helix unit tests (incl. the Arcade SDK validation
         # RepoTests) inline; RunNonHelixTestsOnly skips inline execution of the Helix-routed tests.
         - script: eng/common/cibuild.sh
