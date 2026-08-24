@@ -27,6 +27,11 @@ namespace Microsoft.DotNet.Helix.Client
         /// </summary>
         public static IHelixApi GetAuthenticatedWithEntra(TokenCredential credential)
         {
+            if (credential == null)
+            {
+                throw new ArgumentNullException(nameof(credential));
+            }
+
             return new HelixApi(new HelixApiOptions(credential));
         }
 
@@ -62,6 +67,11 @@ namespace Microsoft.DotNet.Helix.Client
         /// </summary>
         public static IHelixApi GetAuthenticatedWithEntra(string baseUri, TokenCredential credential)
         {
+            if (credential == null)
+            {
+                throw new ArgumentNullException(nameof(credential));
+            }
+
             return new HelixApi(new HelixApiOptions(new Uri(baseUri), credential));
         }
 
@@ -73,6 +83,11 @@ namespace Microsoft.DotNet.Helix.Client
             TokenCredential credential,
             string scope)
         {
+            if (credential == null)
+            {
+                throw new ArgumentNullException(nameof(credential));
+            }
+
             return new HelixApi(new HelixApiOptions(new Uri(baseUri), credential, new[] { scope }));
         }
 

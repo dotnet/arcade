@@ -83,6 +83,16 @@ namespace Microsoft.DotNet.Helix.Client
 
         private static string GetDefaultScope(Uri baseUri)
         {
+            if (baseUri == null)
+            {
+                throw new ArgumentNullException(nameof(baseUri));
+            }
+
+            if (!baseUri.IsAbsoluteUri)
+            {
+                throw new ArgumentException("The Helix API base URI must be absolute.", nameof(baseUri));
+            }
+
             if (baseUri.Host.Equals("helix.dot.net", StringComparison.OrdinalIgnoreCase))
             {
                 return ProductionScope;

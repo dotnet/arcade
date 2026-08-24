@@ -60,6 +60,20 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
+        public void EntraCredentialRequiresBaseUri()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new HelixApiOptions(null, new TestTokenCredential()));
+        }
+
+        [Fact]
+        public void EntraCredentialRequiresAbsoluteBaseUri()
+        {
+            Assert.Throws<ArgumentException>(() =>
+                new HelixApiOptions(new Uri("relative", UriKind.Relative), new TestTokenCredential()));
+        }
+
+        [Fact]
         public void CustomHostUsesExplicitScope()
         {
             const string scope = "api://custom-helix/.default";
@@ -102,6 +116,20 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.Equal(HelixApiAuthenticationMode.EntraId, api.Options.AuthenticationMode);
             Assert.Equal(new[] { HelixApiOptions.ProductionScope }, api.Options.TokenScopes);
+        }
+
+        [Fact]
+        public void EntraFactoryRequiresCredential()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                ApiFactory.GetAuthenticatedWithEntra(null));
+            Assert.Throws<ArgumentNullException>(() =>
+                ApiFactory.GetAuthenticatedWithEntra("https://helix.dot.net/", null));
+            Assert.Throws<ArgumentNullException>(() =>
+                ApiFactory.GetAuthenticatedWithEntra(
+                    "https://localhost:5001/",
+                    null,
+                    "api://custom-helix/.default"));
         }
 
         private sealed class TestTokenCredential : TokenCredential
