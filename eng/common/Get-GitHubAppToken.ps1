@@ -117,7 +117,7 @@ try {
             -Uri "https://api.github.com/app/installations?per_page=100&page=$page" `
             -Headers $headers `
             -Method Get
-        $pageInstallations = @($pageResponse)
+        $pageInstallations = @($pageResponse | ForEach-Object { $_ })
         foreach ($pageInstallation in $pageInstallations) {
             # Add each installation separately. Adding the response array directly
             # preserves it as one nested object in some PowerShell versions.
