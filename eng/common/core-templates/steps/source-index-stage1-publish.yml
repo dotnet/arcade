@@ -1,7 +1,7 @@
 parameters:
   runAsPublic: false
   sourceIndexUploadPackageVersion: '2.0.0-20260521.2'
-  sourceIndexComplogPackageVersion: '0.9.50'
+  sourceIndexComplogPackageVersion: '*'
   sourceIndexPackageSource: https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
   sourceIndexPublicPackageSource: https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json
   binlogPath: artifacts/log/Debug/Build.binlog
