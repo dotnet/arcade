@@ -192,7 +192,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 }
             }
 
-            _resolver = new AggregateNuGetAssetResolver(RuntimeFile);
+            _resolver = new AggregateNuGetAssetResolver(TaskEnvironment.GetAbsolutePath(RuntimeFile));
             foreach (string packageId in _packageToPackageItems.Keys)
             {
                 _resolver.AddPackageItems(packageId, _packageToPackageItems[packageId].Select(f => f.TargetPath));

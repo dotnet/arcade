@@ -14,10 +14,13 @@ using NuGet.Frameworks;
 namespace Microsoft.DotNet.Build.Tasks.TargetFramework
 {
     [MSBuildMultiThreadableTask]
-    public class ChooseBestP2PTargetFrameworkTask : Microsoft.Build.Utilities.Task
+    public class ChooseBestP2PTargetFrameworkTask : Microsoft.Build.Utilities.Task, IMultiThreadableTask
     {
         private const string NEAREST_TARGET_FRAMEWORK = "NearestTargetFramework";
         private const string TARGET_FRAMEWORKS = "TargetFrameworks";
+
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
         [Required]
         public string? RuntimeGraph { get; set; }
@@ -60,7 +63,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
                 return false;
             }
 
-            TargetFrameworkResolver targetFrameworkResolver = TargetFrameworkResolver.CreateOrGet(RuntimeGraph!);
+            TargetFrameworkResolver targetFrameworkResolver = TargetFrameworkResolver.CreateOrGet(TaskEnvironment.GetAbsolutePath(RuntimeGraph!));
             List<ITaskItem> assignedProjects = new(AnnotatedProjectReferences.Length);
 
             foreach (ITaskItem annotatedProjectReference in AnnotatedProjectReferences)

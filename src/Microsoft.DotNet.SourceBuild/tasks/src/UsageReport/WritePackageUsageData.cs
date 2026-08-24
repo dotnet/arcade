@@ -113,22 +113,22 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
             Log.LogMessage(MessageImportance.Low, "Reading package identities...");
 
             PackageIdentity[] restored = RestoredPackageFiles.NullAsEmpty()
-                .Select(ReadNuGetPackageInfos.ReadIdentity)
+                .Select(ReadIdentityFromResolvedPath)
                 .Distinct()
                 .ToArray();
 
             PackageIdentity[] tarballPrebuilt = TarballPrebuiltPackageFiles.NullAsEmpty()
-                .Select(ReadNuGetPackageInfos.ReadIdentity)
+                .Select(ReadIdentityFromResolvedPath)
                 .Distinct()
                 .ToArray();
 
             PackageIdentity[] referencePackages = ReferencePackageFiles.NullAsEmpty()
-                .Select(ReadNuGetPackageInfos.ReadIdentity)
+                .Select(ReadIdentityFromResolvedPath)
                 .Distinct()
                 .ToArray();
 
             PackageIdentity[] sourceBuilt = SourceBuiltPackageFiles.NullAsEmpty()
-                .Select(ReadNuGetPackageInfos.ReadIdentity)
+                .Select(ReadIdentityFromResolvedPath)
                 .Distinct()
                 .ToArray();
 
@@ -321,5 +321,8 @@ File.Open(TaskEnvironment.GetAbsolutePath(
                 .Select(o => o.Name)
                 .ToArray();
         }
+
+        private PackageIdentity ReadIdentityFromResolvedPath(string nupkgFile) =>
+            ReadNuGetPackageInfos.ReadIdentity(TaskEnvironment.GetAbsolutePath(nupkgFile));
     }
 }

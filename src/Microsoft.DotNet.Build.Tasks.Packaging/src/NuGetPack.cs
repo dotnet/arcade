@@ -274,7 +274,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 PackageBuilder builder = new PackageBuilder(deterministic: Deterministic);
                 SetDeterministicTimestamp(builder, DeterministicTimestamp);
 
-                string baseDirectoryPath = (string.IsNullOrEmpty(BaseDirectory)) ? Path.GetDirectoryName(nuspecPath) : BaseDirectory;
+                string baseDirectoryPath = string.IsNullOrEmpty(BaseDirectory)
+                    ? Path.GetDirectoryName(TaskEnvironment.GetAbsolutePath(nuspecPath))
+                    : TaskEnvironment.GetAbsolutePath(BaseDirectory);
                 builder.Populate(manifest.Metadata);
                 builder.PopulateFiles(baseDirectoryPath, manifest.Files);
 

@@ -337,7 +337,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 }
             }
 
-            _resolver = new AggregateNuGetAssetResolver(RuntimeFile);
+            _resolver = new AggregateNuGetAssetResolver(TaskEnvironment.GetAbsolutePath(RuntimeFile));
             foreach (string packageId in packageItems.Keys)
             {
                 _resolver.AddPackageItems(packageId, packageItems[packageId].Select(f => f.TargetPath));
@@ -352,7 +352,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                     .Select(pf => pf.TargetPath)
                     .Where(f => !NuGetAssetResolver.IsPlaceholder(f));
 
-                _resolverWithoutPlaceholders = new NuGetAssetResolver(RuntimeFile, filesWithoutPlaceholders);
+                _resolverWithoutPlaceholders = new NuGetAssetResolver(TaskEnvironment.GetAbsolutePath(RuntimeFile), filesWithoutPlaceholders);
             }
         }
 

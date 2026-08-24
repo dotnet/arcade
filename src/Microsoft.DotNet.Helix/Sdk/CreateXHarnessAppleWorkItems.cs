@@ -64,7 +64,9 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         public override void ConfigureServices(IServiceCollection collection)
         {
-            collection.TryAddProvisioningProfileProvider(ProvisioningProfileUrl, TmpDir);
+            // TmpDir is optional and flows into the provisioning profile provider, which does raw file IO.
+            string tmpDir = string.IsNullOrEmpty(TmpDir) ? TmpDir : TaskEnvironment.GetAbsolutePath(TmpDir);
+            collection.TryAddProvisioningProfileProvider(ProvisioningProfileUrl, tmpDir);
             collection.TryAddTransient<IZipArchiveManager, ZipArchiveManager>();
             collection.TryAddTransient<IFileSystem, FileSystem>();
             collection.TryAddSingleton(Log);
@@ -101,6 +103,12 @@ namespace Microsoft.DotNet.Helix.Sdk
             var (workItemName, appFolderPath) = GetNameAndPath(appBundleItem, MetadataNames.AppBundlePath, fileSystem);
 
             appFolderPath = appFolderPath.TrimEnd(Path.DirectorySeparatorChar);
+
+            // The app bundle path is documented as relative (see tools/xharness-runner/Readme.md), so it has to be
+            // resolved against the project directory before it reaches IFileSystem/ZipArchiveManager, which use raw
+            // File/Directory APIs and would otherwise bind to the shared node's current directory. Trim first so the
+            // trailing separator does not turn a bundle directory into a different resolved path.
+            appFolderPath = TaskEnvironment.GetAbsolutePath(appFolderPath);
 
             bool isAlreadyArchived = appFolderPath.EndsWith(".zip");
             if (isAlreadyArchived && workItemName.EndsWith(".app"))

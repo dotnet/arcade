@@ -10,8 +10,11 @@ using System.Linq;
 namespace Microsoft.DotNet.Build.Tasks.TargetFramework
 {
     [MSBuildMultiThreadableTask]
-    public class ChooseBestTargetFrameworksTask : Microsoft.Build.Utilities.Task
+    public class ChooseBestTargetFrameworksTask : Microsoft.Build.Utilities.Task, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         [Required]
         public ITaskItem[]? BuildTargetFrameworks { get; set; }
 
@@ -30,7 +33,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
         public override bool Execute()
         {
             List<ITaskItem> bestTargetFrameworkList = new(BuildTargetFrameworks!.Length);
-            TargetFrameworkResolver targetframeworkResolver = TargetFrameworkResolver.CreateOrGet(RuntimeGraph!);
+            TargetFrameworkResolver targetframeworkResolver = TargetFrameworkResolver.CreateOrGet(TaskEnvironment.GetAbsolutePath(RuntimeGraph!));
  
             foreach (ITaskItem buildTargetFramework in BuildTargetFrameworks)
             {

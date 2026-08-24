@@ -74,6 +74,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             var (workItemName, apkPath) = GetNameAndPath(appPackage, MetadataNames.ApkPath, fileSystem);
 
+            // The APK path is documented as relative (see tools/xharness-runner/Readme.md), so it has to be
+            // resolved against the project directory before it reaches IFileSystem/ZipArchiveManager, which
+            // use raw File/Directory APIs and would otherwise bind to the shared node's current directory.
+            apkPath = TaskEnvironment.GetAbsolutePath(apkPath);
+
             if (!fileSystem.FileExists(apkPath))
             {
                 Log.LogError($"App package not found in {apkPath}");

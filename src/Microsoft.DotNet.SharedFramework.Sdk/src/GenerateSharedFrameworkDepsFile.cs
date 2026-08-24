@@ -100,7 +100,12 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
 
             if (IncludeFallbacksInDepsFile)
             {
-                RuntimeGraph runtimeGraph = JsonRuntimeFormat.ReadRuntimeGraph(RuntimeIdentifierGraph);
+                // RuntimeIdentifierGraph is optional; only resolve it when set so an unset value keeps
+                // producing the existing error from ReadRuntimeGraph rather than throwing from GetAbsolutePath.
+                string runtimeIdentifierGraphPath = string.IsNullOrEmpty(RuntimeIdentifierGraph)
+                    ? RuntimeIdentifierGraph
+                    : TaskEnvironment.GetAbsolutePath(RuntimeIdentifierGraph);
+                RuntimeGraph runtimeGraph = JsonRuntimeFormat.ReadRuntimeGraph(runtimeIdentifierGraphPath);
                 runtimeFallbackGraph = runtimeGraph.Runtimes
                         .Select(runtimeDict => runtimeGraph.ExpandRuntime(runtimeDict.Key))
                         .Where(expansion => expansion.Contains(RuntimeIdentifier))
