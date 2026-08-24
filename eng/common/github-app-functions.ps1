@@ -15,7 +15,7 @@ function Get-GitHubAppInstallations {
         $page++
     } while ($pageInstallations.Count -eq 100)
 
-    return $installations
+    return $installations.ToArray()
 }
 
 function Select-GitHubAppInstallation {
