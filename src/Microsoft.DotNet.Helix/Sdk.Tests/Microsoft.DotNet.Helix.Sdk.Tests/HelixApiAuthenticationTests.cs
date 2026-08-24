@@ -115,11 +115,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     new HelixApiTokenCredential("legacy-token"),
                     new[] { "api://custom-helix/.default" }));
 
-            Assert.Contains("PAT-specific", exception.Message);
+            Assert.Contains("without explicit scopes", exception.Message);
         }
 
         [Fact]
-        public void EntraFactoryUsesDistinctApiNameAndProductionScope()
+        public void EntraFactoryUsesProductionScope()
         {
             var api = Assert.IsType<HelixApi>(
                 ApiFactory.GetAuthenticatedWithEntra(new TestTokenCredential()));
@@ -140,6 +140,26 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     "https://localhost:5001/",
                     null,
                     "api://custom-helix/.default"));
+        }
+
+        [Fact]
+        public void EntraFactoryRejectsPatCredential()
+        {
+            var credential = new HelixApiTokenCredential("legacy-token");
+
+            var productionException = Assert.Throws<ArgumentException>(() =>
+                ApiFactory.GetAuthenticatedWithEntra(credential));
+            var hostException = Assert.Throws<ArgumentException>(() =>
+                ApiFactory.GetAuthenticatedWithEntra("https://helix.dot.net/", credential));
+            var explicitScopeException = Assert.Throws<ArgumentException>(() =>
+                ApiFactory.GetAuthenticatedWithEntra(
+                    "https://localhost:5001/",
+                    credential,
+                    "api://custom-helix/.default"));
+
+            Assert.Contains("GetAuthenticated", productionException.Message);
+            Assert.Contains("GetAuthenticated", hostException.Message);
+            Assert.Contains("GetAuthenticated", explicitScopeException.Message);
         }
 
         private sealed class TestTokenCredential : TokenCredential

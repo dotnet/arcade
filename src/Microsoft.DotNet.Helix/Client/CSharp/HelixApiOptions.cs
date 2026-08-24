@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 throw new ArgumentException(
                     "Explicit scopes are only supported for Entra credentials. " +
-                    "Use the PAT-specific HelixApiOptions constructor instead.",
+                    "For PAT authentication, pass HelixApiTokenCredential without explicit scopes.",
                     nameof(credentials));
             }
 

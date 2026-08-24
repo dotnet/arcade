@@ -27,12 +27,7 @@ namespace Microsoft.DotNet.Helix.Client
         /// </summary>
         public static IHelixApi GetAuthenticatedWithEntra(TokenCredential credential)
         {
-            if (credential == null)
-            {
-                throw new ArgumentNullException(nameof(credential));
-            }
-
-            return new HelixApi(new HelixApiOptions(credential));
+            return new HelixApi(new HelixApiOptions(ValidateEntraCredential(credential)));
         }
 
         /// <summary>
@@ -67,12 +62,7 @@ namespace Microsoft.DotNet.Helix.Client
         /// </summary>
         public static IHelixApi GetAuthenticatedWithEntra(string baseUri, TokenCredential credential)
         {
-            if (credential == null)
-            {
-                throw new ArgumentNullException(nameof(credential));
-            }
-
-            return new HelixApi(new HelixApiOptions(new Uri(baseUri), credential));
+            return new HelixApi(new HelixApiOptions(new Uri(baseUri), ValidateEntraCredential(credential)));
         }
 
         /// <summary>
@@ -83,12 +73,10 @@ namespace Microsoft.DotNet.Helix.Client
             TokenCredential credential,
             string scope)
         {
-            if (credential == null)
-            {
-                throw new ArgumentNullException(nameof(credential));
-            }
-
-            return new HelixApi(new HelixApiOptions(new Uri(baseUri), credential, new[] { scope }));
+            return new HelixApi(new HelixApiOptions(
+                new Uri(baseUri),
+                ValidateEntraCredential(credential),
+                new[] { scope }));
         }
 
         /// <summary>
@@ -102,6 +90,23 @@ namespace Microsoft.DotNet.Helix.Client
         public static IHelixApi GetAnonymous(string baseUri)
         {
             return new HelixApi(new HelixApiOptions(new Uri(baseUri)));
+        }
+
+        private static TokenCredential ValidateEntraCredential(TokenCredential credential)
+        {
+            if (credential == null)
+            {
+                throw new ArgumentNullException(nameof(credential));
+            }
+
+            if (credential is HelixApiTokenCredential)
+            {
+                throw new ArgumentException(
+                    "HelixApiTokenCredential represents a PAT. Use GetAuthenticated(...) for PAT authentication.",
+                    nameof(credential));
+            }
+
+            return credential;
         }
     }
 }
