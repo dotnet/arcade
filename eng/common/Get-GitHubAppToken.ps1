@@ -110,17 +110,19 @@ $headers = @{
 
 Write-Host "Looking up installation for '$InstallationOwner'..."
 try {
-    $installations = @()
+    $installations = [System.Collections.Generic.List[object]]::new()
     $page = 1
     do {
-        # Assign the response before wrapping it in @(). PowerShell otherwise
-        # preserves a top-level JSON array as one nested pipeline object.
         $pageResponse = Invoke-RestMethod `
             -Uri "https://api.github.com/app/installations?per_page=100&page=$page" `
             -Headers $headers `
             -Method Get
         $pageInstallations = @($pageResponse)
-        $installations += $pageInstallations
+        foreach ($pageInstallation in $pageInstallations) {
+            # Add each installation separately. Adding the response array directly
+            # preserves it as one nested object in some PowerShell versions.
+            $installations.Add($pageInstallation)
+        }
         $page++
     } while ($pageInstallations.Count -eq 100)
 }
