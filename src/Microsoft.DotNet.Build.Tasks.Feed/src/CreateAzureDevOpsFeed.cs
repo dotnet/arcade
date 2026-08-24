@@ -18,7 +18,10 @@ using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    [MSBuildMultiThreadableTask]
+    // Deliberately not marked multithreadable: when no PAT is supplied this task builds an
+    // AzureCliCredential, which resolves and launches `az` from the ambient process environment
+    // rather than the project's injected one. Migrating requires supplying credentials explicitly or
+    // launching the CLI through TaskEnvironment.
     public class CreateAzureDevOpsFeed : MSBuild.Task
     {
         [Output]

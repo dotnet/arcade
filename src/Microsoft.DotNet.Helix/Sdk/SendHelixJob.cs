@@ -16,7 +16,11 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
-    [MSBuildMultiThreadableTask]
+    // Deliberately not marked multithreadable: SendAsync reaches JobDefinition, which reads
+    // BUILD_REPOSITORY_NAME, BUILD_SOURCEBRANCH, SYSTEM_TEAMPROJECT and BUILD_REASON straight from
+    // Environment (JobSender/JobDefinition.cs:209-223,402-423). In a shared node those reads see
+    // process-wide values rather than the project's, so a job could be tagged with another project's
+    // source metadata. Migrating requires threading TaskEnvironment into JobDefinition.
     public class SendHelixJob : HelixTask, IMultiThreadableTask
     {
         public static class MetadataNames

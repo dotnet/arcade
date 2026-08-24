@@ -14,7 +14,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     /// try creating a container [ContainerName]-1, [ContainerName]-2 and so on until the name is unique.
     /// The final name is saved in ContainerName.
     /// </summary>
-    [MSBuildMultiThreadableTask]
+    // Deliberately not marked multithreadable: the AccountKey is null path builds an
+    // AzureCliCredential, which resolves and launches `az` from the ambient process environment
+    // rather than the project's injected one. Migrating requires supplying credentials explicitly or
+    // launching the CLI through TaskEnvironment.
     public class CreateNewAzureContainer : CreateAzureContainer
     {
         public override async Task<AzureStorageUtils> GetBlobStorageUtilsAsync()

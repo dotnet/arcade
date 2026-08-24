@@ -19,7 +19,11 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.GenAPI
 {
-    [MSBuildMultiThreadableTask]
+    // Deliberately not marked multithreadable: HostEnvironment resolves the raw LibPath and
+    // Assembly values below through Environment.ExpandEnvironmentVariables plus Directory.Exists/
+    // File.Exists (Microsoft.Cci.Extensions/HostEnvironment.cs:719-740), so relative inputs and
+    // per-project variables would bind to process-wide state in a shared node. Migrating requires
+    // expanding and resolving those paths through TaskEnvironment before they enter HostEnvironment.
     public class GenAPITask : Microsoft.Build.Utilities.Task, IMultiThreadableTask
     {
         private const string InternalsVisibleTypeName = "System.Runtime.CompilerServices.InternalsVisibleToAttribute";

@@ -13,7 +13,10 @@ using Microsoft.DotNet.Build.Tasks.Feed;
 
 namespace Microsoft.DotNet.Build.CloudTestTasks
 {
-    [MSBuildMultiThreadableTask]
+    // Deliberately not marked multithreadable: cancellation state below is static, so Cancel()
+    // on one instance cancels the token handed to every other concurrent and future instance in the
+    // process, and the uploads use an unlinked timeout token instead of the task token. Migrating
+    // requires a per-instance CancellationTokenSource and uploads linked to it.
     public class UploadToAzure : AzureConnectionStringBuildTask, ICancelableTask, IMultiThreadableTask
     {
         private static readonly CancellationTokenSource TokenSource = new CancellationTokenSource();
