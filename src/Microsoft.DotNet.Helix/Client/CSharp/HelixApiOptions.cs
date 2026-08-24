@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         public HelixApiOptions(Uri baseUri, TokenCredential credentials, IEnumerable<string> scopes)
         {
-            BaseUri = baseUri ?? throw new ArgumentNullException(nameof(baseUri));
+            BaseUri = ValidateBaseUri(baseUri);
             Credentials = credentials ?? throw new ArgumentNullException(nameof(credentials));
             if (credentials is HelixApiTokenCredential)
             {
@@ -83,15 +83,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         private static string GetDefaultScope(Uri baseUri)
         {
-            if (baseUri == null)
-            {
-                throw new ArgumentNullException(nameof(baseUri));
-            }
-
-            if (!baseUri.IsAbsoluteUri)
-            {
-                throw new ArgumentException("The Helix API base URI must be absolute.", nameof(baseUri));
-            }
+            baseUri = ValidateBaseUri(baseUri);
 
             if (baseUri.Host.Equals("helix.dot.net", StringComparison.OrdinalIgnoreCase))
             {
@@ -107,6 +99,21 @@ namespace Microsoft.DotNet.Helix.Client
                 $"No default Entra scope is known for Helix API host '{baseUri.Host}'. " +
                 "Use the HelixApiOptions constructor that accepts explicit scopes.",
                 nameof(baseUri));
+        }
+
+        private static Uri ValidateBaseUri(Uri baseUri)
+        {
+            if (baseUri == null)
+            {
+                throw new ArgumentNullException(nameof(baseUri));
+            }
+
+            if (!baseUri.IsAbsoluteUri)
+            {
+                throw new ArgumentException("The Helix API base URI must be absolute.", nameof(baseUri));
+            }
+
+            return baseUri;
         }
     }
 }

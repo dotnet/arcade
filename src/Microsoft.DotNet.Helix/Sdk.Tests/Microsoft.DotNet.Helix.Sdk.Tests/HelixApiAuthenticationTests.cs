@@ -97,6 +97,16 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
+        public void ExplicitScopeRequiresAbsoluteBaseUri()
+        {
+            Assert.Throws<ArgumentException>(() =>
+                new HelixApiOptions(
+                    new Uri("relative", UriKind.Relative),
+                    new TestTokenCredential(),
+                    new[] { "api://custom-helix/.default" }));
+        }
+
+        [Fact]
         public void ExplicitScopeRejectsPatCredential()
         {
             var exception = Assert.Throws<ArgumentException>(() =>
