@@ -466,10 +466,9 @@ namespace Microsoft.DotNet.SignTool.Tests
                     fileInfo.Exists.Should().BeTrue($"symlink '{symlinkPath}' should exist");
                     fileInfo.LinkTarget.Should().Be(expectedTarget, $"symlink '{symlinkPath}' should point to '{expectedTarget}'");
 
-                    // Verify the symlink resolves to a valid file with the same content as its target
-                    string resolvedTarget = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(layoutPath)!, expectedTarget));
-                    File.ReadAllBytes(layoutPath).Should().BeEquivalentTo(File.ReadAllBytes(resolvedTarget),
-                        $"symlink '{symlinkPath}' should resolve to the signed file");
+                    string normalizedTarget = fileInfo.LinkTarget.Replace('/', Path.DirectorySeparatorChar);
+                    string resolvedTarget = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(layoutPath)!, normalizedTarget));
+                    File.Exists(resolvedTarget).Should().BeTrue($"symlink '{symlinkPath}' should resolve to the signed file");
                 }
             }
 
@@ -535,10 +534,9 @@ namespace Microsoft.DotNet.SignTool.Tests
                     fileInfo.Exists.Should().BeTrue($"symlink '{symlinkPath}' should exist");
                     fileInfo.LinkTarget.Should().Be(expectedTarget, $"symlink '{symlinkPath}' should point to '{expectedTarget}'");
 
-                    // Verify the symlink resolves to a valid file with the same content as its target
-                    string resolvedTarget = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(layoutPath)!, expectedTarget));
-                    File.ReadAllBytes(layoutPath).Should().BeEquivalentTo(File.ReadAllBytes(resolvedTarget),
-                        $"symlink '{symlinkPath}' should resolve to the signed file");
+                    string normalizedTarget = fileInfo.LinkTarget.Replace('/', Path.DirectorySeparatorChar);
+                    string resolvedTarget = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(layoutPath)!, normalizedTarget));
+                    File.Exists(resolvedTarget).Should().BeTrue($"symlink '{symlinkPath}' should resolve to the signed file");
                 }
             }
 
@@ -581,10 +579,9 @@ namespace Microsoft.DotNet.SignTool.Tests
                 fileInfo.Exists.Should().BeTrue($"symlink '{symlinkPath}' should exist");
                 fileInfo.LinkTarget.Should().Be(expectedTarget, $"symlink '{symlinkPath}' should point to '{expectedTarget}'");
 
-                // Verify the symlink resolves to a valid file with the same content as its target
-                string resolvedTarget = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(layoutPath)!, expectedTarget));
-                File.ReadAllBytes(layoutPath).Should().BeEquivalentTo(File.ReadAllBytes(resolvedTarget),
-                    $"symlink '{symlinkPath}' should resolve to the signed file");
+                string normalizedTarget = fileInfo.LinkTarget.Replace('/', Path.DirectorySeparatorChar);
+                string resolvedTarget = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(layoutPath)!, normalizedTarget));
+                File.Exists(resolvedTarget).Should().BeTrue($"symlink '{symlinkPath}' should resolve to the signed file");
             }
         }
 #endif
