@@ -1753,6 +1753,13 @@ $@"
 </FilesToSign>
 "
             });
+
+#if !NETFRAMEWORK
+            ValidateProducedTarGZipContent(Path.Combine(_tmpDir, "test.tgz"), new[]
+            {
+                ("test/this_is_a_big_folder_name_look/NativeLibrary.dll", "../NativeLibrary.dll")
+            });
+#endif
         }
 
         [Fact]
@@ -1858,13 +1865,6 @@ $@"
 </FilesToSign>
 "
             });
-
-#if !NETFRAMEWORK
-            ValidateProducedTarGZipContent(Path.Combine(_tmpDir, "test.tgz"), new[]
-            {
-                ("test/this_is_a_big_folder_name_look/NativeLibrary.dll", "../NativeLibrary.dll")
-            });
-#endif
         }
 
 #if !NETFRAMEWORK

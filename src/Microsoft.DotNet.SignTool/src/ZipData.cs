@@ -683,11 +683,18 @@ namespace Microsoft.DotNet.SignTool
                 string outputPath = Path.Join(destination, tar.Name);
                 Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 
-                using (FileStream outputFileStream = File.Create(outputPath))
+                if (tar.EntryType == TarEntryType.SymbolicLink)
                 {
-                    tar.DataStream?.CopyTo(outputFileStream);
+                    File.CreateSymbolicLink(outputPath, tar.LinkName);
                 }
-                SetUnixFileMode(log, (uint)tar.Mode, outputPath);
+                else
+                {
+                    using (FileStream outputFileStream = File.Create(outputPath))
+                    {
+                        tar.DataStream?.CopyTo(outputFileStream);
+                    }
+                    SetUnixFileMode(log, (uint)tar.Mode, outputPath);
+                }
             }
         }
 
