@@ -79,20 +79,20 @@ namespace Microsoft.DotNet.MacOsPkg.Tests
             Directory.CreateDirectory(testRoot);
         }
 
-public void Dispose()
-{
-    try
-    {
-        if (Directory.Exists(testRoot))
+        public void Dispose()
         {
-            Directory.Delete(testRoot, true);
+            try
+            {
+                if (Directory.Exists(testRoot))
+                {
+                    Directory.Delete(testRoot, true);
+                }
+            }
+            catch (Exception ex)
+            {
+                output.WriteLine($"Failed to delete test workspace '{testRoot}': {ex}");
+            }
         }
-    }
-    catch (Exception ex)
-    {
-        output.WriteLine($"Failed to delete test workspace '{testRoot}': {ex}");
-    }
-}
 
         [MacOSOnlyFact]
         public void UnpackPackSimplePkg()
