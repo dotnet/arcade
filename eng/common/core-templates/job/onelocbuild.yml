@@ -87,7 +87,7 @@ jobs:
         displayName: Generate LocProject.json
         condition: ${{ parameters.condition }}
 
-    # Acquire an Entra token for ceapex feed access via the connection scoped to the current project.
+    # Acquire an Entra token for ceapex feed access in the supported internal and DevDiv projects.
     - ${{ if and(ne(parameters.CeapexServiceConnection, ''), or(eq(variables['System.TeamProject'], 'internal'), eq(variables['System.TeamProject'], 'DevDiv'))) }}:
       - template: /eng/common/templates/steps/get-federated-access-token.yml
         parameters:
