@@ -41,7 +41,7 @@ internal sealed class AzureDevOpsResultPublisher
 
     public async Task<TestResultUploadSummary> UploadTestResultsWithSummaryAsync(
         List<string> testResultFiles,
-        string testStorage,
+        string workItemName,
         object resultMetadata,
         CancellationToken cancellationToken = default)
     {
@@ -78,7 +78,7 @@ internal sealed class AzureDevOpsResultPublisher
             {
                 uploadedCount = await UploadTestResultsWithCountAsync(
                     aggregatedResults,
-                    testStorage,
+                    workItemName,
                     resultMetadata,
                     cancellationToken);
             }
@@ -110,14 +110,14 @@ internal sealed class AzureDevOpsResultPublisher
 
     public async Task<long> UploadTestResultsWithCountAsync(
         IEnumerable<AggregatedResult> results,
-        string testStorage,
+        string workItemName,
         object resultMetadata,
         CancellationToken cancellationToken = default)
     {
         try
         {
             long publishedTestCount = 0;
-            foreach (List<ConvertedResult> requestBatch in CreateResultRequestBatches(ConvertResults(results, testStorage, resultMetadata)))
+            foreach (List<ConvertedResult> requestBatch in CreateResultRequestBatches(ConvertResults(results, workItemName, resultMetadata)))
             {
                 IReadOnlyList<PublishedTestCase> publishedTests = await PublishResultsAsync(requestBatch, cancellationToken);
                 publishedTestCount += publishedTests.Count;
@@ -220,7 +220,7 @@ internal sealed class AzureDevOpsResultPublisher
 
     private IEnumerable<ConvertedResult> ConvertResults(
         IEnumerable<AggregatedResult> results,
-        string testStorage,
+        string workItemName,
         object resultMetadata)
     {
         static string GetResultGroupType(AggregationType aggregationType)
@@ -294,7 +294,7 @@ internal sealed class AzureDevOpsResultPublisher
                     TestCaseTitle = displayName,
                     AutomatedTestName = useFullyQualifiedName ? result.FullyQualifiedName : result.Name,
                     AutomatedTestType = "helix",
-                    AutomatedTestStorage = testStorage,
+                    AutomatedTestStorage = workItemName,
                     Priority = 1,
                     DurationInMs = result.DurationSeconds * 1000.0,
                     Outcome = result.Result,
