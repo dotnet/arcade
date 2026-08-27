@@ -42,7 +42,7 @@ internal sealed class AzureDevOpsResultPublisher
     public async Task<TestResultUploadSummary> UploadTestResultsWithSummaryAsync(
         List<string> testResultFiles,
         string workItemName,
-        object resultMetadata,
+        string jobId,
         CancellationToken cancellationToken = default)
     {
         long parseStartedAt = JobMonitorMetrics.StartOperation();
@@ -79,7 +79,7 @@ internal sealed class AzureDevOpsResultPublisher
                 uploadedCount = await UploadTestResultsWithCountAsync(
                     aggregatedResults,
                     workItemName,
-                    resultMetadata,
+                    jobId,
                     cancellationToken);
             }
             finally
@@ -111,13 +111,13 @@ internal sealed class AzureDevOpsResultPublisher
     public async Task<long> UploadTestResultsWithCountAsync(
         IEnumerable<AggregatedResult> results,
         string workItemName,
-        object resultMetadata,
+        string jobId,
         CancellationToken cancellationToken = default)
     {
         try
         {
             long publishedTestCount = 0;
-            foreach (List<ConvertedResult> requestBatch in CreateResultRequestBatches(ConvertResults(results, workItemName, resultMetadata)))
+            foreach (List<ConvertedResult> requestBatch in CreateResultRequestBatches(ConvertResults(results, workItemName, jobId)))
             {
                 IReadOnlyList<PublishedTestCase> publishedTests = await PublishResultsAsync(requestBatch, cancellationToken);
                 publishedTestCount += publishedTests.Count;
@@ -221,7 +221,7 @@ internal sealed class AzureDevOpsResultPublisher
     private IEnumerable<ConvertedResult> ConvertResults(
         IEnumerable<AggregatedResult> results,
         string workItemName,
-        object resultMetadata)
+        string jobId)
     {
         static string GetResultGroupType(AggregationType aggregationType)
         {
@@ -234,7 +234,11 @@ internal sealed class AzureDevOpsResultPublisher
             };
         }
 
-        string comment = JsonSerializer.Serialize(resultMetadata) ?? string.Empty;
+        string comment = JsonSerializer.Serialize(new
+        {
+            HelixJobId = jobId,
+            HelixWorkItemName = workItemName,
+        });
         bool useFullyQualifiedName = _useFullyQualifiedTestName;
 
         string DisplayNameFor(AggregatedResult result, bool isDataDrivenSubResult)
@@ -294,6 +298,8 @@ internal sealed class AzureDevOpsResultPublisher
                     TestCaseTitle = displayName,
                     AutomatedTestName = useFullyQualifiedName ? result.FullyQualifiedName : result.Name,
                     AutomatedTestType = "helix",
+                    // Azure DevOps uses this as part of the test definition identity. The work item
+                    // name must remain stable across builds so existing test references are reused.
                     AutomatedTestStorage = workItemName,
                     Priority = 1,
                     DurationInMs = result.DurationSeconds * 1000.0,

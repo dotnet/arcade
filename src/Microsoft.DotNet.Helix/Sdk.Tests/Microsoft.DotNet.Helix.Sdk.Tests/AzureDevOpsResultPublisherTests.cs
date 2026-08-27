@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 CreateDataDrivenResult("Second", 600),
             ];
 
-            long uploadedCount = await publisher.UploadTestResultsWithCountAsync(results, "work-item", new { });
+            long uploadedCount = await publisher.UploadTestResultsWithCountAsync(results, "work-item", "job");
 
             Assert.Equal(2, uploadedCount);
             Assert.Equal(new[] { 2 }, transport.RequestResultCounts);
@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     .Select(i => new AggregatedResult(AggregationType.Single, $"Test{i}", 1, "Passed"))
             ];
 
-            long uploadedCount = await publisher.UploadTestResultsWithCountAsync(results, "work-item", new { });
+            long uploadedCount = await publisher.UploadTestResultsWithCountAsync(results, "work-item", "job");
 
             Assert.Equal(1001, uploadedCount);
             Assert.Equal(new[] { 1000, 1 }, transport.RequestResultCounts);
@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             long uploadedCount = await publisher.UploadTestResultsWithCountAsync(
                 [CreateDataDrivenResult("Theory", 950)],
                 "work-item",
-                new { });
+                "job");
 
             Assert.Equal(2, uploadedCount);
             Assert.Equal(new[] { 2 }, transport.RequestResultCounts);
@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 new(AggregationType.DataDriven, "Outer", 1, "Passed", [nested]),
             ];
 
-            long uploadedCount = await publisher.UploadTestResultsWithCountAsync(results, "work-item", new { });
+            long uploadedCount = await publisher.UploadTestResultsWithCountAsync(results, "work-item", "job");
 
             Assert.Equal(2, uploadedCount);
             Assert.Equal(new[] { 950, 4 }, transport.RequestHierarchyNodeCounts.Single());
@@ -154,7 +154,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 }
             }
 
-            Task<long> upload = publisher.UploadTestResultsWithCountAsync(Results(), "work-item", new { });
+            Task<long> upload = publisher.UploadTestResultsWithCountAsync(Results(), "work-item", "job");
             await transport.FirstRequestStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
             Assert.InRange(enumerated, 0, 1001);
@@ -176,7 +176,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 "Failed",
                 attachments: [new TestResultAttachment("failure.txt", "details")]);
 
-            Assert.Equal(1, await publisher.UploadTestResultsWithCountAsync([result], "work-item", new { }));
+            Assert.Equal(1, await publisher.UploadTestResultsWithCountAsync([result], "work-item", "job"));
 
             ResultAttachment attachment = Assert.Single(transport.Attachments);
             Assert.Equal(1, attachment.TestResultId);
@@ -195,11 +195,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             await publisher.UploadTestResultsWithCountAsync(
                 [result],
                 "work-item",
-                new { HelixJobId = "job-a", HelixWorkItemName = "work-item" });
+                "job-a");
             await publisher.UploadTestResultsWithCountAsync(
                 [result],
                 "work-item",
-                new { HelixJobId = "job-b", HelixWorkItemName = "work-item" });
+                "job-b");
 
             JsonElement firstResult = Assert.Single(transport.RequestBodies[0].EnumerateArray());
             JsonElement secondResult = Assert.Single(transport.RequestBodies[1].EnumerateArray());
@@ -231,7 +231,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     fullyQualifiedName: fullyQualifiedName)],
                 fullyQualifiedName: fullyQualifiedName);
 
-            await publisher.UploadTestResultsWithCountAsync([result], "work-item", new { });
+            await publisher.UploadTestResultsWithCountAsync([result], "work-item", "job");
 
             JsonElement publishedTest = Assert.Single(Assert.Single(transport.RequestBodies).EnumerateArray());
             Assert.Equal(fullyQualifiedName, publishedTest.GetProperty("TestCaseTitle").GetString());
@@ -268,7 +268,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 [rerunRow],
                 fullyQualifiedName: fullyQualifiedName);
 
-            await publisher.UploadTestResultsWithCountAsync([result], "work-item", new { });
+            await publisher.UploadTestResultsWithCountAsync([result], "work-item", "job");
 
             JsonElement publishedTest = Assert.Single(Assert.Single(transport.RequestBodies).EnumerateArray());
             JsonElement publishedRow = Assert.Single(publishedTest.GetProperty("SubResults").EnumerateArray());
