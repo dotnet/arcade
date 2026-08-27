@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.CMake.Sdk
     /// <summary>
     /// Reads CMake File API response to find artifacts for a specific source directory.
     /// </summary>
-    public class GetCMakeArtifactsFromFileApi : Microsoft.Build.Utilities.Task
+    public class GetCMakeArtifactsFromFileApi : Task
     {
         /// <summary>
         /// The CMake build output directory containing the File API response.

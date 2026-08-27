@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Newtonsoft.Json;
 using NuGet.RuntimeModel;
 using NuGet.Versioning;
@@ -12,7 +13,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GenerateRuntimeDependencies : Microsoft.Build.Utilities.Task
+    public class GenerateRuntimeDependencies : Task
     {
         private const string c_emptyDependency = "none";
 

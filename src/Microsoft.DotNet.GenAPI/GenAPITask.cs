@@ -19,7 +19,7 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.GenAPI
 {
-    public class GenAPITask : Microsoft.Build.Utilities.Task
+    public class GenAPITask : Task
     {
         private const string InternalsVisibleTypeName = "System.Runtime.CompilerServices.InternalsVisibleToAttribute";
         private const string DefaultFileHeader =

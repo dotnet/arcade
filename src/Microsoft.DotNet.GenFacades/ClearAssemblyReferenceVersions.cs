@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using System;
 using System.IO;
 using System.Reflection.Metadata;
@@ -13,7 +14,7 @@ namespace Microsoft.DotNet.GenFacades
     /// <summary>
     /// Rewrites an Assembly's references to be version 0.0.0.0.
     /// </summary>
-    public class ClearAssemblyReferenceVersions : Microsoft.Build.Utilities.Task
+    public class ClearAssemblyReferenceVersions : Task
     {
         /// <summary>
         /// Assembly to rewrite.

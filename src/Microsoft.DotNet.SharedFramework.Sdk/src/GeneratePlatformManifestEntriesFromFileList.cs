@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.SharedFramework.Sdk
 {
-    public class GeneratePlatformManifestEntriesFromFileList : Microsoft.Build.Utilities.Task
+    public class GeneratePlatformManifestEntriesFromFileList : Task
     {
         [Required]
         public ITaskItem[] Files { get; set; }

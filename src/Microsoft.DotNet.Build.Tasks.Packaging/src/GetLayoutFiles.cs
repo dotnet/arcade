@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetLayoutFiles : Microsoft.Build.Utilities.Task
+    public class GetLayoutFiles : Task
     {
         /// <summary>
         /// Package report files

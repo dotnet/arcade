@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.SharedFramework.Sdk
 {
-    public class GeneratePlatformManifestEntriesFromTemplate : Microsoft.Build.Utilities.Task
+    public class GeneratePlatformManifestEntriesFromTemplate : Task
     {
         [Required]
         public ITaskItem[] PlatformManifestEntryTemplates { get; set; }

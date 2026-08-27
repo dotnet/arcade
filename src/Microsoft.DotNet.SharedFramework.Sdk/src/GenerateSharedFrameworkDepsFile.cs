@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.SharedFramework.Sdk
 {
-    public class GenerateSharedFrameworkDepsFile : Microsoft.Build.Utilities.Task
+    public class GenerateSharedFrameworkDepsFile : Task
     {
         [Required]
         public string TargetFrameworkMoniker { get; set; }

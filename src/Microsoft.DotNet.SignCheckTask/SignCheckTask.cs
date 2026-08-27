@@ -8,10 +8,11 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.SignCheck;
 using Microsoft.SignCheck.Logging;
+using Microsoft.Build.Utilities;
 
 namespace SignCheckTask
 {
-    public class SignCheckTask : Microsoft.Build.Utilities.Task
+    public class SignCheckTask : Task
     {
         public bool EnableJarSignatureVerification { get; set; }
 

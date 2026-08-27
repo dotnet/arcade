@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
                 try
                 {
-                    System.Threading.Tasks.Task.Delay(delay, _cancelTokenSource.Token).Wait();
+                    Task.Delay(delay, _cancelTokenSource.Token).Wait();
                 }
                 catch (AggregateException e) when (e.InnerException is TaskCanceledException)
                 {

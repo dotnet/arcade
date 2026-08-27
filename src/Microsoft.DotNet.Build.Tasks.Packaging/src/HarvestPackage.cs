@@ -13,7 +13,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class HarvestPackage : Microsoft.Build.Utilities.Task
+    public class HarvestPackage : Task
     {
         /// <summary>
         /// Package ID to harvest

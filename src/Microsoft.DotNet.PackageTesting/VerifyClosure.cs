@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,7 +18,7 @@ namespace Microsoft.DotNet.PackageTesting
     /// <summary>
     /// Verifies the closure of a set of DLLs, making sure all files are present and no cycles exist
     /// </summary>
-    public class VerifyClosure : Microsoft.Build.Utilities.Task
+    public class VerifyClosure : Task
     {
 
         /// <summary>

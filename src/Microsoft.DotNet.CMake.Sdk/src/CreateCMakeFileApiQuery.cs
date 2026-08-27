@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using System;
 using System.IO;
 
@@ -10,7 +11,7 @@ namespace Microsoft.DotNet.CMake.Sdk
     /// <summary>
     /// Creates a CMake File API query file to request codemodel information.
     /// </summary>
-    public class CreateCMakeFileApiQuery : Microsoft.Build.Utilities.Task
+    public class CreateCMakeFileApiQuery : Task
     {
         /// <summary>
         /// The CMake build output directory where the query should be created.

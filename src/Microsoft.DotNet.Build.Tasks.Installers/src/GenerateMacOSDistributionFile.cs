@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +12,7 @@ using System.Xml.Linq;
 
 namespace Microsoft.DotNet.SharedFramework.Sdk
 {
-    public class GenerateMacOSDistributionFile : Microsoft.Build.Utilities.Task
+    public class GenerateMacOSDistributionFile : Task
     {
         [Required]
         public string TemplatePath { get; set; }

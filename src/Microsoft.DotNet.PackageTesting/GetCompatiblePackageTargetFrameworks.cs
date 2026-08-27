@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.PackageTesting
 {
-    public class GetCompatiblePackageTargetFrameworks : Microsoft.Build.Utilities.Task
+    public class GetCompatiblePackageTargetFrameworks : Task
     {
         private static List<NuGetFramework> allTargetFrameworks = new();
         private static Dictionary<NuGetFramework, HashSet<NuGetFramework>> packageTfmMapping = new();
