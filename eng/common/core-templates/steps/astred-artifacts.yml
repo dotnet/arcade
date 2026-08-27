@@ -15,7 +15,7 @@ parameters:
 
 steps:
 - task: AstredInstaller@0
-  displayName: 🟣 Install Astred CLI
+  displayName: Install Astred CLI
   inputs:
     Version: '2.14.1'
     FeedUrl: 'https://pkgs.dev.azure.com/dnceng/_packaging/dotnet-internal-FoSSE/nuget/v3/index.json'
@@ -32,29 +32,16 @@ steps:
       exit 0
     }
 
-    Push-Location $env:ASTRED_SOURCES_PATH
-    try {
-      $outFile = Join-Path $apjOut '.astred.project.json'
-      $binlogPaths = @($binlogs.FullName)
-      Write-Host "astproj: processing $($binlogPaths.Count) binlog(s)"
-      astred astproj -nofolders @binlogPaths "-o:$outFile"
-      if ($LASTEXITCODE -ne 0) {
-        Write-Host "##vso[task.logissue type=warning]astproj failed (exit $LASTEXITCODE)"
-      }
+    $project = Join-Path $apjOut '.astred.project.json'
+    $binlogPaths = @($binlogs.FullName)
+    Write-Host "astproj: processing $($binlogPaths.Count) binlog(s)"
+    astred astproj -nofolders @binlogPaths "-o:$project"
+    if ($LASTEXITCODE -ne 0) {
+      Write-Host "##vso[task.logissue type=warning]astproj failed (exit $LASTEXITCODE)"
     }
-    finally {
-      Pop-Location
-    }
-
-    $reportDir = Join-Path $apjOut 'checkproj'
-    New-Item -ItemType Directory -Force -Path $reportDir | Out-Null
-    Get-ChildItem $apjOut -Filter '*.astred.project.json' -Force | ForEach-Object {
-      $report = Join-Path $reportDir 'checkproj.txt'
-      astred "-repo:$env:ASTRED_SOURCES_PATH" "-project:$($_.FullName)" -checkproj *> $report
-    }
-  displayName: 🟣 Generate Astred Project Files
+  displayName: Generate Astred Project Files
+  workingDirectory: ${{ parameters.sourcesPath }}
   env:
-    ASTRED_SOURCES_PATH: ${{ parameters.sourcesPath }}
     ASTRED_BINLOG_DIR: ${{ parameters.binlogDir }}
     ASTRED_CAPTURE_PATH: ${{ parameters.capturePath }}
   condition: succeededOrFailed()
@@ -64,61 +51,51 @@ steps:
     $ErrorActionPreference = 'Continue'
     $apjDir = Join-Path $env:ASTRED_CAPTURE_PATH 'apj'
     $uploadRoot = Join-Path $env:ASTRED_CAPTURE_PATH 'upload'
+    $project = Join-Path $apjDir '.astred.project.json'
 
-    Push-Location $env:ASTRED_SOURCES_PATH
-    try {
-      $project = Get-ChildItem $apjDir -Filter '*.astred.project.json' -Force |
-        Select-Object -First 1
-      if ($project) {
-        $digest = Join-Path $project.DirectoryName '.astred.digest.zip'
-        Remove-Item $digest -ErrorAction SilentlyContinue
-        astred "-repo:$env:ASTRED_SOURCES_PATH" "-project:$($project.FullName)" -digest
-        if ($LASTEXITCODE -eq 0 -and (Test-Path $digest)) {
-          $commitTimeText = & git -C $env:ASTRED_SOURCES_PATH show -s --format=%cI $env:BUILD_SOURCEVERSION
-          if ($LASTEXITCODE -ne 0) {
-            throw "Could not read the commit timestamp for $env:BUILD_SOURCEVERSION."
-          }
+    if (-not (Test-Path $project)) {
+      Write-Host "##vso[task.logissue type=warning]No Astred project file was produced."
+      exit 0
+    }
 
-          $commitTime = [DateTimeOffset]::Parse(
-            $commitTimeText.Trim(),
-            [Globalization.CultureInfo]::InvariantCulture)
-          $eventFolder = '{0}_{1}' -f `
-            $commitTime.UtcDateTime.ToString('yyyy-MM-ddTHH-mm-ssZ'), `
-            $env:BUILD_SOURCEVERSION
-          $targetDir = Join-Path (Join-Path $uploadRoot 'AST') $eventFolder
-          $target = Join-Path $targetDir '.astred.digest.zip'
-          New-Item -ItemType Directory -Force -Path $targetDir | Out-Null
-          Move-Item $digest $target -Force
-          Write-Host "Prepared Astred digest: $target"
-          Write-Host "##vso[task.setvariable variable=ASTRED_DIGEST_READY]true"
-        }
-        elseif ($LASTEXITCODE -ne 0) {
-          Write-Host "##vso[task.logissue type=warning]Digest generation failed for $($project.Name) (exit $LASTEXITCODE)"
-          Remove-Item $digest -ErrorAction SilentlyContinue
-        }
-        else {
-          Write-Host "##vso[task.logissue type=warning]Digest not produced for $($project.Name)"
-        }
+    $digest = Join-Path $apjDir '.astred.digest.zip'
+    Remove-Item $digest -ErrorAction SilentlyContinue
+    astred "-repo:$env:ASTRED_SOURCES_PATH" "-project:$project" -digest
+    if ($LASTEXITCODE -eq 0 -and (Test-Path $digest)) {
+      $commitTimeText = & git -C $env:ASTRED_SOURCES_PATH show -s --format=%cI $env:BUILD_SOURCEVERSION
+      if ($LASTEXITCODE -ne 0) {
+        throw "Could not read the commit timestamp for $env:BUILD_SOURCEVERSION."
       }
-      else {
-        Write-Host "##vso[task.logissue type=warning]No Astred project file was produced."
-      }
+
+      $commitTime = [DateTimeOffset]::Parse(
+        $commitTimeText.Trim(),
+        [Globalization.CultureInfo]::InvariantCulture)
+      $eventFolder = '{0}_{1}' -f `
+        $commitTime.UtcDateTime.ToString('yyyy-MM-ddTHH-mm-ssZ'), `
+        $env:BUILD_SOURCEVERSION
+      $targetDir = Join-Path (Join-Path $uploadRoot 'AST') $eventFolder
+      $target = Join-Path $targetDir '.astred.digest.zip'
+      New-Item -ItemType Directory -Force -Path $targetDir | Out-Null
+      Move-Item $digest $target -Force
+      Write-Host "Prepared Astred digest: $target"
+      Write-Host "##vso[task.setvariable variable=ASTRED_DIGEST_READY]true"
     }
-    finally {
-      Pop-Location
-      Remove-Item $apjDir -Recurse -Force -ErrorAction SilentlyContinue
-      Remove-Item $env:ASTRED_BINLOG_DIR -Recurse -Force -ErrorAction SilentlyContinue
+    elseif ($LASTEXITCODE -ne 0) {
+      Write-Host "##vso[task.logissue type=warning]Digest generation failed for $project (exit $LASTEXITCODE)"
+      Remove-Item $digest -ErrorAction SilentlyContinue
     }
-  displayName: 🟣 Package Portable Astred Digests
+    else {
+      Write-Host "##vso[task.logissue type=warning]Digest not produced for $project"
+    }
+  displayName: Package Portable Astred Digests
   env:
     ASTRED_SOURCES_PATH: ${{ parameters.sourcesPath }}
-    ASTRED_BINLOG_DIR: ${{ parameters.binlogDir }}
     ASTRED_CAPTURE_PATH: ${{ parameters.capturePath }}
   condition: succeededOrFailed()
   continueOnError: true
 
 - task: UploadAstred@0
-  displayName: 🟣 Upload Digest to Astred
+  displayName: Upload Digest to Astred
   condition: and(succeededOrFailed(), eq(variables['ASTRED_DIGEST_READY'], 'true'))
   inputs:
     SourcePath: ${{ parameters.capturePath }}/upload

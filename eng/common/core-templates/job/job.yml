@@ -120,7 +120,7 @@ jobs:
         - name: ${{ pair.key }}
           value: ${{ pair.value }}
 
-  - ${{ if and(eq(parameters.enableAstred, true), eq(parameters.runAsPublic, 'false'), eq(variables['System.TeamProject'], 'internal')) }}:
+  - ${{ if and(eq(parameters.enableAstred, true), eq(parameters.runAsPublic, 'false'), eq(variables['System.TeamProject'], 'internal'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - name: MSBUILDDEBUGENGINE
       value: 1
     - name: MSBUILDDEBUGPATH
@@ -244,7 +244,7 @@ jobs:
   - ${{ each step in parameters.artifactPublishSteps }}:
     - ${{ step }}
 
-  - ${{ if and(eq(parameters.enableAstred, true), eq(parameters.runAsPublic, 'false'), eq(variables['System.TeamProject'], 'internal')) }}:
+  - ${{ if and(eq(parameters.enableAstred, true), eq(parameters.runAsPublic, 'false'), eq(variables['System.TeamProject'], 'internal'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - template: /eng/common/core-templates/steps/astred-artifacts.yml
       parameters:
         binlogDir: $(MSBUILDDEBUGPATH)

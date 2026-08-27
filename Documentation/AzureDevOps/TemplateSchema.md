@@ -32,7 +32,7 @@ parameters:
 
   # additional parameters
   artifacts: { artifactsReference }
-  # captures MSBuild binlogs and uploads an Astred digest for an internal job; enable on at most one Windows job per build; defaults to false
+  # captures MSBuild binlogs and uploads an Astred digest for an internal non-PR job; enable on at most one Windows job per build; defaults to false
   enableAstred: boolean
   # 'true' if Microbuild plugin should be installed for internal builds.
   #           if 'true', these "variables" must be specified in the variables object or as part of the queue matrix
