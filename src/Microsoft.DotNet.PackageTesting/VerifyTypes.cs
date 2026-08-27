@@ -8,7 +8,6 @@ using System.IO;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.PackageTesting
 {

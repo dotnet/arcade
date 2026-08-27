@@ -4,7 +4,6 @@
 using AwesomeAssertions;
 using Xunit.Abstractions;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 {

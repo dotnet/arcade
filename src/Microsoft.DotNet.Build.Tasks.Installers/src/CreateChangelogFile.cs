@@ -6,7 +6,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {

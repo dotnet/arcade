@@ -5,7 +5,6 @@ using System;
 using System.IO;
 using System.Text;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {

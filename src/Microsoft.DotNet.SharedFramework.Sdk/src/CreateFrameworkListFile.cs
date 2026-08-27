@@ -9,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SharedFramework.Sdk
 {

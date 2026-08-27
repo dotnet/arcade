@@ -8,7 +8,6 @@ using Microsoft.Build.Tasks;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {

@@ -11,7 +11,6 @@ using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Xml.Linq;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.PackageTesting
 {

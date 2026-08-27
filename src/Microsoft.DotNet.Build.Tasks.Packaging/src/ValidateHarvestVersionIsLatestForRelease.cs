@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 }
                 else
                 {
-                    Log.LogMessage(MessageImportance.Normal, $"Validation Succeeded: {packageReport.Id} is harvesting assets from package version {harvestVersion} which is the latest for that package erreleasea.");
+                    Log.LogMessage(MessageImportance.Normal, $"Validation Succeeded: {packageReport.Id} is harvesting assets from package version {harvestVersion} which is the latest for that package release.");
                 }
             }
             else

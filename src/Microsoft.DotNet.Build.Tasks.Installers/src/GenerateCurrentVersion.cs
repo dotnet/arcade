@@ -5,7 +5,6 @@ using Microsoft.Build.Framework;
 using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {
