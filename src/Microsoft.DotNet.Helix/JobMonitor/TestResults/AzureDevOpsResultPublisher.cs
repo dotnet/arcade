@@ -39,7 +39,11 @@ internal sealed class AzureDevOpsResultPublisher
         _metrics = metrics ?? new JobMonitorMetrics();
     }
 
-    public async Task<TestResultUploadSummary> UploadTestResultsWithSummaryAsync(List<string> testResultFiles, object resultMetadata, CancellationToken cancellationToken = default)
+    public async Task<TestResultUploadSummary> UploadTestResultsWithSummaryAsync(
+        List<string> testResultFiles,
+        string testStorage,
+        object resultMetadata,
+        CancellationToken cancellationToken = default)
     {
         long parseStartedAt = JobMonitorMetrics.StartOperation();
         bool parseRecorded = false;
@@ -74,6 +78,7 @@ internal sealed class AzureDevOpsResultPublisher
             {
                 uploadedCount = await UploadTestResultsWithCountAsync(
                     aggregatedResults,
+                    testStorage,
                     resultMetadata,
                     cancellationToken);
             }
@@ -103,12 +108,16 @@ internal sealed class AzureDevOpsResultPublisher
     internal static bool ComputeAllPassed(IReadOnlyList<AggregatedResult> results)
         => results.All(result => result.Result != "Failed" && result.Result != "None");
 
-    public async Task<long> UploadTestResultsWithCountAsync(IEnumerable<AggregatedResult> results, object resultMetadata, CancellationToken cancellationToken = default)
+    public async Task<long> UploadTestResultsWithCountAsync(
+        IEnumerable<AggregatedResult> results,
+        string testStorage,
+        object resultMetadata,
+        CancellationToken cancellationToken = default)
     {
         try
         {
             long publishedTestCount = 0;
-            foreach (List<ConvertedResult> requestBatch in CreateResultRequestBatches(ConvertResults(results, resultMetadata)))
+            foreach (List<ConvertedResult> requestBatch in CreateResultRequestBatches(ConvertResults(results, testStorage, resultMetadata)))
             {
                 IReadOnlyList<PublishedTestCase> publishedTests = await PublishResultsAsync(requestBatch, cancellationToken);
                 publishedTestCount += publishedTests.Count;
@@ -209,7 +218,10 @@ internal sealed class AzureDevOpsResultPublisher
             cancellationToken);
     }
 
-    private IEnumerable<ConvertedResult> ConvertResults(IEnumerable<AggregatedResult> results, object resultMetadata)
+    private IEnumerable<ConvertedResult> ConvertResults(
+        IEnumerable<AggregatedResult> results,
+        string testStorage,
+        object resultMetadata)
     {
         static string GetResultGroupType(AggregationType aggregationType)
         {
@@ -282,7 +294,7 @@ internal sealed class AzureDevOpsResultPublisher
                     TestCaseTitle = displayName,
                     AutomatedTestName = useFullyQualifiedName ? result.FullyQualifiedName : result.Name,
                     AutomatedTestType = "helix",
-                    AutomatedTestStorage = comment, // TODO: This was workitem ID
+                    AutomatedTestStorage = testStorage,
                     Priority = 1,
                     DurationInMs = result.DurationSeconds * 1000.0,
                     Outcome = result.Result,

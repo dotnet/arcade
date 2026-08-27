@@ -437,6 +437,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             return await publisher.UploadTestResultsWithSummaryAsync(
                 results.TestResultFiles,
+                results.WorkItemName,
                 new
                 {
                     HelixJobId = results.JobName,
