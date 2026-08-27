@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.GenFacades
     /// <summary>
     /// Rewrites an Assembly's references to be version 0.0.0.0.
     /// </summary>
-    public class ClearAssemblyReferenceVersions : BuildTask
+    public class ClearAssemblyReferenceVersions : Microsoft.Build.Utilities.Task
     {
         /// <summary>
         /// Assembly to rewrite.

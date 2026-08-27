@@ -5,6 +5,7 @@ using Microsoft.Build.Framework;
 using System;
 using System.Linq;
 using System.Xml.Linq;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {
@@ -13,7 +14,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
     /// it. This allows external tooling such as signature validators to rely on a stable identifier
     /// for certain files.
     /// </summary>
-    public class StabilizeWixFileId : BuildTask
+    public class StabilizeWixFileId : Microsoft.Build.Utilities.Task
     {
         /// <summary>
         /// File to read from. This is expected to be an output from heat.exe.

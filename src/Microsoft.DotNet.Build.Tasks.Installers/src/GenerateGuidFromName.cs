@@ -4,10 +4,11 @@
 using Microsoft.Build.Framework;
 using System;
 using System.Security.Cryptography;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {
-    public class GenerateGuidFromName : BuildTask
+    public class GenerateGuidFromName : Microsoft.Build.Utilities.Task
     {
         [Required]
         public string Name { get; set; }

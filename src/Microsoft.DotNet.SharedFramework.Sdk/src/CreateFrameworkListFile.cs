@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,10 +9,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SharedFramework.Sdk
 {
-    public class CreateFrameworkListFile : BuildTask
+    public class CreateFrameworkListFile : Microsoft.Build.Utilities.Task
     {
         /// <summary>
         /// Files to extract basic information from and include in the list.

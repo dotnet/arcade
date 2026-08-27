@@ -5,10 +5,11 @@ using Microsoft.Build.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class FilterUnknownPackages : BuildTask
+    public class FilterUnknownPackages : Microsoft.Build.Utilities.Task
     {
         /// <summary>
         /// Original dependencies

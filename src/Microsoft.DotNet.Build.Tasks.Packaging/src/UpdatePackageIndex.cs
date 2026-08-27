@@ -13,10 +13,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class UpdatePackageIndex : BuildTask
+    public class UpdatePackageIndex : Microsoft.Build.Utilities.Task
     {
         private HashSet<string> _packageIdsToInclude;
 

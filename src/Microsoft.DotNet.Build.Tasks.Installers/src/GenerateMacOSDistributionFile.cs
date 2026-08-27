@@ -13,7 +13,7 @@ using System.Xml.Linq;
 
 namespace Microsoft.DotNet.SharedFramework.Sdk
 {
-    public class GenerateMacOSDistributionFile : BuildTask
+    public class GenerateMacOSDistributionFile : Microsoft.Build.Utilities.Task
     {
         [Required]
         public string TemplatePath { get; set; }
