@@ -33,12 +33,6 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
 
         public override bool Execute()
         {
-            ExecuteImpl();
-            return !Log.HasLoggedErrors;
-        }
-
-        private void ExecuteImpl()
-        {
             OutputItems = Items;
            
             foreach (var item in Items)
@@ -65,6 +59,8 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
 
                 item.SetMetadata(OutputMetadata, new Guid(reducedHash).ToString("B").ToUpperInvariant());
             }
+
+            return !Log.HasLoggedErrors;
         }
     }
 }

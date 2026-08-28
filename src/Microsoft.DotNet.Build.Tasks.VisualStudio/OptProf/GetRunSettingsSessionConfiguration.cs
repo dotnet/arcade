@@ -47,12 +47,6 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
 
         public override bool Execute()
         {
-            ExecuteImpl();
-            return !Log.HasLoggedErrors;
-        }
-
-        private void ExecuteImpl()
-        {
             try
             {
                 var profilingInputsDropName = GetProfilingInputsDropName(ProductDropName);
@@ -73,6 +67,8 @@ $@"<TestStores>
             {
                 Log.LogError(e.Message);
             }
+
+            return !Log.HasLoggedErrors;
         }
 
         internal static string GetTestsDropName(string bootstrapperInfoJson)

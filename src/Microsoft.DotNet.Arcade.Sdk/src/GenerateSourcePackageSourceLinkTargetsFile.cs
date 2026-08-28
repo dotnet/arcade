@@ -32,14 +32,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         public override bool Execute()
         {
-            ExecuteImpl();
-            return !Log.HasLoggedErrors;
-        }
-
-        private void ExecuteImpl()
-        {
             Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(OutputPath)));
             File.WriteAllText(TaskEnvironment.GetAbsolutePath(OutputPath), GetOutputFileContent(), Encoding.UTF8);
+            return !Log.HasLoggedErrors;
         }
 
         // for testing
