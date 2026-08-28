@@ -73,7 +73,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
             items.Sort();
 
-            Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(OutputDirectory));
+            AbsolutePath outputDirectory = TaskEnvironment.GetAbsolutePath(OutputDirectory);
+            Directory.CreateDirectory(outputDirectory);
 
             // When AssemblyTargetFramework is set then this is an assembly that is being built by the current
             // build. Appending the target framework means we will avoid name clashes. When it's not set then
@@ -84,8 +85,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 ? GetAssemblyMvid().ToString()
                 : AssemblyTargetFramework;
             var outputFileName = $"{Path.GetFileNameWithoutExtension(AssemblyFilePath)}-{outputFileNameSuffix}.ngen.txt";
-            var outputFilePath = Path.Combine(OutputDirectory, outputFileName);
-            using (var outputFileStream = new StreamWriter(TaskEnvironment.GetAbsolutePath(outputFilePath), append: false))
+            var outputFilePath = TaskEnvironment.GetAbsolutePath(Path.Combine(outputDirectory, outputFileName));
+            using (var outputFileStream = new StreamWriter(outputFilePath, append: false))
             {
                 foreach (var item in items)
                 {
