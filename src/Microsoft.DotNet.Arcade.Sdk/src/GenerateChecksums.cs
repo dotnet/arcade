@@ -35,7 +35,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
                         return !Log.HasLoggedErrors;
                     }
 
-                    if (!File.Exists(TaskEnvironment.GetAbsolutePath(item.ItemSpec)))
+                    AbsolutePath itemPath = TaskEnvironment.GetAbsolutePath(item.ItemSpec);
+                    if (!File.Exists(itemPath))
                     {
                         Log.LogError($"The file '{item.ItemSpec}' does not exist.");
                         return !Log.HasLoggedErrors;
@@ -43,7 +44,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                     Log.LogMessage(MessageImportance.High, $"Generating checksum for '{item.ItemSpec}' into '{destinationPath}'...");
 
-                    using (FileStream stream = File.OpenRead(TaskEnvironment.GetAbsolutePath(item.ItemSpec)))
+                    using (FileStream stream = File.OpenRead(itemPath))
                     {
                         using(HashAlgorithm hashAlgorithm = SHA512.Create())
                         {

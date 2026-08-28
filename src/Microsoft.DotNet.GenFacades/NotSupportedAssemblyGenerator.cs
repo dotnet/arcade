@@ -60,27 +60,32 @@ namespace Microsoft.DotNet.GenFacades
         private void GenerateNotSupportedAssemblyFiles(IEnumerable<ITaskItem> sourceFiles)
         {
             string[] apiExclusions = null;
-            if (!string.IsNullOrEmpty(ApiExclusionListPath) && File.Exists(TaskEnvironment.GetAbsolutePath(ApiExclusionListPath)))
+            if (!string.IsNullOrEmpty(ApiExclusionListPath))
             {
-                apiExclusions = File.ReadAllLines(TaskEnvironment.GetAbsolutePath(ApiExclusionListPath));
+                AbsolutePath apiExclusionListPath = TaskEnvironment.GetAbsolutePath(ApiExclusionListPath);
+                if (File.Exists(apiExclusionListPath))
+                {
+                    apiExclusions = File.ReadAllLines(apiExclusionListPath);
+                }
             }
 
             foreach (ITaskItem item in sourceFiles)
             {
                 string sourceFile = item.ItemSpec;
                 string outputPath = item.GetMetadata("OutputPath");
+                AbsolutePath sourceFilePath = TaskEnvironment.GetAbsolutePath(sourceFile);
 
-                if (!File.Exists(TaskEnvironment.GetAbsolutePath(sourceFile)))
+                if (!File.Exists(sourceFilePath))
                 {
                     Log.LogError($"File {sourceFile} was not found.");
                     continue;
                 }
 
-                GenerateNotSupportedAssemblyForSourceFile(sourceFile, outputPath, apiExclusions);
+                GenerateNotSupportedAssemblyForSourceFile(sourceFilePath, outputPath, apiExclusions);
             }
         }
 
-        private void GenerateNotSupportedAssemblyForSourceFile(string sourceFile, string outputPath, string[] apiExclusions)
+        private void GenerateNotSupportedAssemblyForSourceFile(AbsolutePath sourceFilePath, string outputPath, string[] apiExclusions)
         {
             SyntaxTree syntaxTree;
 
@@ -92,7 +97,7 @@ namespace Microsoft.DotNet.GenFacades
                     Log.LogError($"Invalid LangVersion value '{LangVersion}'");
                     return;
                 }
-                syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(TaskEnvironment.GetAbsolutePath(sourceFile)), new CSharpParseOptions(languageVersion));
+                syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFilePath), new CSharpParseOptions(languageVersion));
             }
             catch(Exception ex)
             {

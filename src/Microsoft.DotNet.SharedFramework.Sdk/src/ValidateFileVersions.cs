@@ -99,10 +99,11 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
 
             if (File.Exists(filePath))
             {
+                AbsolutePath absoluteFilePath = TaskEnvironment.GetAbsolutePath(filePath);
                 return new FileVersionData()
                 {
-                    AssemblyVersion = FileUtilities.GetAssemblyName(TaskEnvironment.GetAbsolutePath(filePath))?.Version,
-                    FileVersion = FileUtilities.GetFileVersion(TaskEnvironment.GetAbsolutePath(filePath)),
+                    AssemblyVersion = FileUtilities.GetAssemblyName(absoluteFilePath)?.Version,
+                    FileVersion = FileUtilities.GetFileVersion(absoluteFilePath),
                     File = file
                 };
             }

@@ -39,11 +39,12 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                 {
                     // This file in the platform manifest template exists on this platform.
                     // Use the information from the file itself in its entry.
+                    AbsolutePath existingFilePath = TaskEnvironment.GetAbsolutePath(existingFile.ItemSpec);
                     entries.Add(new PlatformManifestEntry
                     {
                         Name = entryTemplate.ItemSpec,
-                        AssemblyVersion = FileUtilities.GetAssemblyName(TaskEnvironment.GetAbsolutePath(existingFile.ItemSpec))?.Version.ToString() ?? string.Empty,
-                        FileVersion = FileUtilities.GetFileVersion(TaskEnvironment.GetAbsolutePath(existingFile.ItemSpec))?.ToString() ?? string.Empty
+                        AssemblyVersion = FileUtilities.GetAssemblyName(existingFilePath)?.Version.ToString() ?? string.Empty,
+                        FileVersion = FileUtilities.GetFileVersion(existingFilePath)?.ToString() ?? string.Empty
                     });
                 }
                 else

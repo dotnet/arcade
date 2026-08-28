@@ -151,14 +151,16 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
                 string basePath = Path.Combine(outDir, entry.RelativeDirectoryPath.Replace("\\", "") + Path.GetFileNameWithoutExtension(entry.RelativeInstallationPath));
 
                 string fullPath;
+                AbsolutePath fullAbsolutePath;
                 do
                 {
                     fullPath = basePath + "." + index + ".IBC.json";
+                    fullAbsolutePath = TaskEnvironment.GetAbsolutePath(fullPath);
                     index++;
                 }
-                while (File.Exists(TaskEnvironment.GetAbsolutePath(fullPath)));
+                while (File.Exists(fullAbsolutePath));
 
-                using (var writer = new StreamWriter(File.Open(TaskEnvironment.GetAbsolutePath(fullPath), FileMode.Create, FileAccess.Write, FileShare.Read)))
+                using (var writer = new StreamWriter(File.Open(fullAbsolutePath, FileMode.Create, FileAccess.Write, FileShare.Read)))
                 {
                     writer.WriteLine(entry.ToJson().ToString());
                 }

@@ -70,16 +70,18 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
 
         public override bool Execute()
         {
-            ResolvedOutputPath = TaskEnvironment.GetAbsolutePath(OutputPath.Replace('\\', '/'));
+            AbsolutePath resolvedOutputPath = TaskEnvironment.GetAbsolutePath(OutputPath.Replace('\\', '/'));
+            ResolvedOutputPath = resolvedOutputPath;
 
-            if (!File.Exists(TaskEnvironment.GetAbsolutePath(TemplateFile)))
+            AbsolutePath templateFile = TaskEnvironment.GetAbsolutePath(TemplateFile);
+            if (!File.Exists(templateFile))
             {
                 Log.LogError($"File {TemplateFile} does not exist");
                 return false;
             }
 
             IDictionary<string, string> values = MSBuildListSplitter.GetNamedProperties(Properties, Log);
-            string template = File.ReadAllText(TaskEnvironment.GetAbsolutePath(TemplateFile));
+            string template = File.ReadAllText(templateFile);
 
             string result = Replace(template, values);
 
@@ -87,26 +89,26 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
             // to determine whether the on-disk bytes would actually change.
             byte[] resultBytes = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false).GetBytes(result);
 
-            if (SkipUnchanged && FileContentsMatch(ResolvedOutputPath, resultBytes))
+            if (SkipUnchanged && FileContentsMatch(resolvedOutputPath, resultBytes))
             {
                 Log.LogMessage(MessageImportance.Low, $"Skipping unchanged file {ResolvedOutputPath}");
                 return !Log.HasLoggedErrors;
             }
 
-            string directory = Path.GetDirectoryName(ResolvedOutputPath);
+            string directory = Path.GetDirectoryName(resolvedOutputPath);
             if (!string.IsNullOrEmpty(directory))
             {
-                Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(directory));
+                Directory.CreateDirectory(directory);
             }
 
-            File.WriteAllBytes(TaskEnvironment.GetAbsolutePath(ResolvedOutputPath), resultBytes);
+            File.WriteAllBytes(resolvedOutputPath, resultBytes);
 
             return !Log.HasLoggedErrors;
         }
 
-        private bool FileContentsMatch(string path, byte[] expectedBytes)
+        private bool FileContentsMatch(AbsolutePath path, byte[] expectedBytes)
         {
-            var fileInfo = new FileInfo(TaskEnvironment.GetAbsolutePath(path));
+            var fileInfo = new FileInfo(path);
             if (!fileInfo.Exists || fileInfo.Length != expectedBytes.Length)
             {
                 return false;

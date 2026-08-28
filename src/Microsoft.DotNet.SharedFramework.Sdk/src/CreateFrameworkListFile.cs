@@ -82,18 +82,23 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
 
             foreach (var f in Files
                 .Where(IsTargetPathIncluded)
-                .Select(item => new
+                .Select(item =>
                 {
-                    Item = item,
-                    Filename = Path.GetFileName(item.ItemSpec),
-                    TargetPath = item.GetMetadata("TargetPath"),
-                    AssemblyName = FileUtilities.GetAssemblyName(TaskEnvironment.GetAbsolutePath(item.ItemSpec)),
-                    FileVersion = FileUtilities.GetFileVersion(TaskEnvironment.GetAbsolutePath(item.ItemSpec)),
-                    IsNative = item.GetMetadata("IsNative") == "true",
-                    IsSymbolFile = item.GetMetadata("IsSymbolFile") == "true",
-                    IsPgoData = item.GetMetadata("IsPgoData") == "true",
-                    IsResourceFile = item.ItemSpec
-                        .EndsWith(".resources.dll", StringComparison.OrdinalIgnoreCase)
+                    AbsolutePath itemPath = TaskEnvironment.GetAbsolutePath(item.ItemSpec);
+
+                    return new
+                    {
+                        Item = item,
+                        Filename = Path.GetFileName(item.ItemSpec),
+                        TargetPath = item.GetMetadata("TargetPath"),
+                        AssemblyName = FileUtilities.GetAssemblyName(itemPath),
+                        FileVersion = FileUtilities.GetFileVersion(itemPath),
+                        IsNative = item.GetMetadata("IsNative") == "true",
+                        IsSymbolFile = item.GetMetadata("IsSymbolFile") == "true",
+                        IsPgoData = item.GetMetadata("IsPgoData") == "true",
+                        IsResourceFile = item.ItemSpec
+                            .EndsWith(".resources.dll", StringComparison.OrdinalIgnoreCase)
+                    };
                 })
                 .Where(f =>
                     !f.IsSymbolFile &&

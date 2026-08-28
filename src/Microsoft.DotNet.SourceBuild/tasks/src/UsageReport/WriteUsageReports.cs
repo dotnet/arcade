@@ -80,30 +80,38 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
                     item.GetMetadata("OriginBuildName"));
             }
 
-            if (!string.IsNullOrEmpty(ProdConBuildManifestFile) && File.Exists(TaskEnvironment.GetAbsolutePath(ProdConBuildManifestFile)))
+            if (!string.IsNullOrEmpty(ProdConBuildManifestFile))
             {
-                var xml = XElement.Parse(File.ReadAllText(TaskEnvironment.GetAbsolutePath(ProdConBuildManifestFile)));
-                foreach (var x in xml.Descendants("Package"))
+                AbsolutePath prodConBuildManifestFile = TaskEnvironment.GetAbsolutePath(ProdConBuildManifestFile);
+                if (File.Exists(prodConBuildManifestFile))
                 {
-                    AddProdConPackage(
-                        prodConPackageOrigin,
-                        x.Attribute("Id")?.Value,
-                        x.Attribute("OriginBuildName")?.Value);
+                    var xml = XElement.Parse(File.ReadAllText(prodConBuildManifestFile));
+                    foreach (var x in xml.Descendants("Package"))
+                    {
+                        AddProdConPackage(
+                            prodConPackageOrigin,
+                            x.Attribute("Id")?.Value,
+                            x.Attribute("OriginBuildName")?.Value);
+                    }
                 }
             }
 
             var poisonNupkgFilenames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            if (!string.IsNullOrEmpty(PoisonedReportFile) && File.Exists(TaskEnvironment.GetAbsolutePath(PoisonedReportFile)))
+            if (!string.IsNullOrEmpty(PoisonedReportFile))
             {
-                foreach (string line in File.ReadAllLines(TaskEnvironment.GetAbsolutePath(PoisonedReportFile)))
+                AbsolutePath poisonedReportFile = TaskEnvironment.GetAbsolutePath(PoisonedReportFile);
+                if (File.Exists(poisonedReportFile))
                 {
-                    string[] segments = line.Split('\\');
-                    if (segments.Length > 2 &&
-                        segments[0].Trim() == "intermediate" &&
-                        segments[1].EndsWith(".nupkg"))
+                    foreach (string line in File.ReadAllLines(poisonedReportFile))
                     {
-                        poisonNupkgFilenames.Add(Path.GetFileNameWithoutExtension(segments[1]));
+                        string[] segments = line.Split('\\');
+                        if (segments.Length > 2 &&
+                            segments[0].Trim() == "intermediate" &&
+                            segments[1].EndsWith(".nupkg"))
+                        {
+                            poisonNupkgFilenames.Add(Path.GetFileNameWithoutExtension(segments[1]));
+                        }
                     }
                 }
             }

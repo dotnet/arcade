@@ -556,7 +556,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
             }
 
-            if (Directory.Exists(TaskEnvironment.GetAbsolutePath(path)))
+            AbsolutePath payloadPath = TaskEnvironment.GetAbsolutePath(path);
+            if (Directory.Exists(payloadPath))
             {
                 string includeDirectoryNameStr = correlationPayload.GetMetadata(MetadataNames.IncludeDirectoryName);
                 if (!bool.TryParse(includeDirectoryNameStr, out bool includeDirectoryName))
@@ -572,7 +573,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             }
 
-            if (File.Exists(TaskEnvironment.GetAbsolutePath(path)))
+            if (File.Exists(payloadPath))
             {
                 string asArchiveStr = correlationPayload.GetMetadata(MetadataNames.AsArchive);
                 if (!bool.TryParse(asArchiveStr, out bool asArchive))

@@ -116,9 +116,10 @@ namespace Microsoft.DotNet.Tools
             #pragma warning disable MSBuildTask0002
             string tempPackagePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             #pragma warning restore MSBuildTask0002
+            AbsolutePath tempPackageAbsolutePath = TaskEnvironment.GetAbsolutePath(tempPackagePath);
             try
             {
-                File.Copy(TaskEnvironment.GetAbsolutePath(SourcePackage), TaskEnvironment.GetAbsolutePath(tempPackagePath));
+                File.Copy(TaskEnvironment.GetAbsolutePath(SourcePackage), tempPackageAbsolutePath);
 
                 using (var package = Package.Open(tempPackagePath, FileMode.Open, FileAccess.ReadWrite))
                 {
@@ -224,7 +225,7 @@ namespace Microsoft.DotNet.Tools
                 }
 
                 // remove signature if present (the signature part is not accessible thru Package API):
-                using (var archive = new ZipArchive(File.Open(TaskEnvironment.GetAbsolutePath(tempPackagePath), FileMode.Open, FileAccess.ReadWrite), ZipArchiveMode.Update))
+                using (var archive = new ZipArchive(File.Open(tempPackageAbsolutePath, FileMode.Open, FileAccess.ReadWrite), ZipArchiveMode.Update))
                 {
                     archive.Entries.FirstOrDefault(e => e.FullName == NuGetUtils.SignaturePartUri)?.Delete();
                 }
@@ -232,11 +233,11 @@ namespace Microsoft.DotNet.Tools
                 NewPackage = Path.Combine(DestinationFolder, packageId + "." + packageVersion + ".nupkg");
 
                 Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(DestinationFolder));
-                File.Copy(TaskEnvironment.GetAbsolutePath(tempPackagePath), TaskEnvironment.GetAbsolutePath(NewPackage), overwrite: true);
+                File.Copy(tempPackageAbsolutePath, TaskEnvironment.GetAbsolutePath(NewPackage), overwrite: true);
             }
             finally
             {
-                File.Delete(TaskEnvironment.GetAbsolutePath(tempPackagePath));
+                File.Delete(tempPackageAbsolutePath);
             }
         }
 

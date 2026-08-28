@@ -153,13 +153,14 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                     Log.LogError($"File trigger '{trigger.ItemSpec}' does not specify any paths in its 'Paths' metadata.");
                     return false;
                 }
-                if (!File.Exists(TaskEnvironment.GetAbsolutePath(trigger.ItemSpec)))
+                AbsolutePath triggerPath = TaskEnvironment.GetAbsolutePath(trigger.ItemSpec);
+                if (!File.Exists(triggerPath))
                 {
                     Log.LogError($"File trigger script '{trigger.ItemSpec}' does not exist.");
                     return false;
                 }
 
-                builder.AddFileTrigger(kind, File.ReadAllText(TaskEnvironment.GetAbsolutePath(trigger.ItemSpec)), paths);
+                builder.AddFileTrigger(kind, File.ReadAllText(triggerPath), paths);
             }
 
             // Normalize ghost paths (e.g. "/usr/bin/dnx") to the CPIO-relative form used for payload entries ("./usr/bin/dnx").

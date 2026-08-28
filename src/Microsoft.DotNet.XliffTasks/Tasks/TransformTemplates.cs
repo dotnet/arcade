@@ -92,6 +92,7 @@ namespace XliffTasks.Tasks
             {
                 string templateItemFullPath = Path.Combine(templateDirectory, templateItem.Value);
                 string templateItemDestinationPath = Path.Combine(localizedTemplateDirectory, templateItem.Value);
+                AbsolutePath templateItemDestinationAbsolutePath = TaskEnvironment.GetAbsolutePath(templateItemDestinationPath);
                 if (transformingDefaultTemplate)
                 {
                     // if not localizing anything, simply strip out the translation markers
@@ -99,7 +100,7 @@ namespace XliffTasks.Tasks
                     document.Load(TaskEnvironment.GetAbsolutePath(templateItemFullPath));
                     Dictionary<string, string> defaultTranslation = document.Nodes.ToDictionary(node => node.Id, node => node.Source);
                     document.Translate(defaultTranslation);
-                    document.Save(TaskEnvironment.GetAbsolutePath(templateItemDestinationPath));
+                    document.Save(templateItemDestinationAbsolutePath);
                 }
                 else
                 {
@@ -112,12 +113,12 @@ namespace XliffTasks.Tasks
                             ".",
                             language,
                             Path.GetExtension(unstructuredResource.ItemSpec));
-                        File.Copy(TaskEnvironment.GetAbsolutePath(Path.Combine(TranslatedOutputDirectory, localizedFileName)), TaskEnvironment.GetAbsolutePath(templateItemDestinationPath), overwrite: true);
+                        File.Copy(TaskEnvironment.GetAbsolutePath(Path.Combine(TranslatedOutputDirectory, localizedFileName)), templateItemDestinationAbsolutePath, overwrite: true);
                     }
                     else
                     {
                         // copy the original unaltered file
-                        File.Copy(TaskEnvironment.GetAbsolutePath(templateItemFullPath), TaskEnvironment.GetAbsolutePath(templateItemDestinationPath), overwrite: true);
+                        File.Copy(TaskEnvironment.GetAbsolutePath(templateItemFullPath), templateItemDestinationAbsolutePath, overwrite: true);
                     }
                 }
             }

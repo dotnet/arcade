@@ -113,33 +113,38 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         private void WriteNuSpecFile()
         {
             var manifest = CreateManifest();
+            AbsolutePath outputFileName = TaskEnvironment.GetAbsolutePath(OutputFileName);
 
-            if (!IsDifferent(manifest))
+            if (!IsDifferent(manifest, outputFileName))
             {
                 Log.LogMessage("Skipping generation of .nuspec because contents are identical.");
                 return;
             }
 
             var directory = Path.GetDirectoryName(OutputFileName);
-            if (!String.IsNullOrEmpty(directory) && !Directory.Exists(TaskEnvironment.GetAbsolutePath(directory)))
+            if (!String.IsNullOrEmpty(directory))
             {
-                Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(directory));
+                AbsolutePath directoryPath = TaskEnvironment.GetAbsolutePath(directory);
+                if (!Directory.Exists(directoryPath))
+                {
+                    Directory.CreateDirectory(directoryPath);
+                }
             }
 
-            using (var file = File.Create(TaskEnvironment.GetAbsolutePath(OutputFileName)))
+            using (var file = File.Create(outputFileName))
             {
                 Save(manifest, file);
             }
         }
 
-        private bool IsDifferent(Manifest newManifest)
+        private bool IsDifferent(Manifest newManifest, AbsolutePath outputFileName)
         {
-            if (!File.Exists(TaskEnvironment.GetAbsolutePath(OutputFileName)))
+            if (!File.Exists(outputFileName))
                 return true;
 
             // Note: don't use ReadAllText here, because it gets rid of the BOM
             // that is present at the beginning of the file.
-            var oldSource = Encoding.UTF8.GetString(File.ReadAllBytes(TaskEnvironment.GetAbsolutePath(OutputFileName)));
+            var oldSource = Encoding.UTF8.GetString(File.ReadAllBytes(outputFileName));
             var newSource = "";
             using (var stream = new MemoryStream())
             {

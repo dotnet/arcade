@@ -49,18 +49,21 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         public override bool Execute()
         {
-            if (!File.Exists(TaskEnvironment.GetAbsolutePath(GlobalJsonPath)))
+            AbsolutePath globalJsonPath = TaskEnvironment.GetAbsolutePath(GlobalJsonPath);
+            if (!File.Exists(globalJsonPath))
             {
                 Log.LogWarning($"Unable to find global.json file '{GlobalJsonPath} exiting");
                 return true;
             }
-            if (!File.Exists(TaskEnvironment.GetAbsolutePath(DotNetInstallScript)))
+
+            AbsolutePath dotNetInstallScript = TaskEnvironment.GetAbsolutePath(DotNetInstallScript);
+            if (!File.Exists(dotNetInstallScript))
             {
                 Log.LogError($"Unable to find dotnet install script '{DotNetInstallScript} exiting");
                 return !Log.HasLoggedErrors;
             }
 
-            var jsonContent = File.ReadAllText(TaskEnvironment.GetAbsolutePath(GlobalJsonPath));
+            var jsonContent = File.ReadAllText(globalJsonPath);
             var bytes = Encoding.UTF8.GetBytes(jsonContent);
 
             using (JsonDocument jsonDocument = JsonDocument.Parse(bytes))
@@ -88,16 +91,21 @@ namespace Microsoft.DotNet.Arcade.Sdk
                             // Only load Versions.props if there's a need to look for a version identifier (ie, there's a value listed that's not a parsable version).
                             if (runtimeItems.SelectMany(r => r.Value).Select(r => r.Key).FirstOrDefault(f => !SemanticVersion.TryParse(f, out SemanticVersion version)) != null)
                             {
-                                if (string.IsNullOrEmpty(VersionsPropsPath) || !File.Exists(TaskEnvironment.GetAbsolutePath(VersionsPropsPath)))
+                                if (string.IsNullOrEmpty(VersionsPropsPath))
                                 {
                                     Log.LogError($"Unable to find translation file {VersionsPropsPath}");
                                     return !Log.HasLoggedErrors;
                                 }
-                                else
+
+                                AbsolutePath versionsPropsPath = TaskEnvironment.GetAbsolutePath(VersionsPropsPath);
+                                if (!File.Exists(versionsPropsPath))
                                 {
-                                    var proj = Project.FromFile(TaskEnvironment.GetAbsolutePath(VersionsPropsPath), new Build.Definition.ProjectOptions() { ProjectCollection = new ProjectCollection() });
-                                    properties = proj.AllEvaluatedProperties.ToLookup(p => p.Name, StringComparer.OrdinalIgnoreCase);
+                                    Log.LogError($"Unable to find translation file {VersionsPropsPath}");
+                                    return !Log.HasLoggedErrors;
                                 }
+
+                                var proj = Project.FromFile(versionsPropsPath, new Build.Definition.ProjectOptions() { ProjectCollection = new ProjectCollection() });
+                                properties = proj.AllEvaluatedProperties.ToLookup(p => p.Name, StringComparer.OrdinalIgnoreCase);
                             }
 
                             foreach (var runtimeItem in runtimeItems)
@@ -151,7 +159,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                                         Log.LogMessage(MessageImportance.Low, $"Executing: {DotNetInstallScript} {arguments}");
                                         var startInfo = TaskEnvironment.GetProcessStartInfo();
-                                        startInfo.FileName = TaskEnvironment.GetAbsolutePath(DotNetInstallScript);
+                                        startInfo.FileName = dotNetInstallScript;
                                         startInfo.Arguments = arguments;
                                         startInfo.UseShellExecute = false;
                                         // Redirect to stdout/err. Addressing https://github.com/dotnet/msbuild/issues/7913

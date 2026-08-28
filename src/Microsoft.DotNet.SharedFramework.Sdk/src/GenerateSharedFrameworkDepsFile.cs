@@ -63,8 +63,9 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                 }
                 string filePath = file.ItemSpec;
                 string fileName = Path.GetFileName(filePath);
-                string fileVersion = FileUtilities.GetFileVersion(TaskEnvironment.GetAbsolutePath(filePath))?.ToString() ?? string.Empty;
-                Version assemblyVersion = FileUtilities.GetAssemblyName(TaskEnvironment.GetAbsolutePath(filePath))?.Version;
+                AbsolutePath absoluteFilePath = TaskEnvironment.GetAbsolutePath(filePath);
+                string fileVersion = FileUtilities.GetFileVersion(absoluteFilePath)?.ToString() ?? string.Empty;
+                Version assemblyVersion = FileUtilities.GetAssemblyName(absoluteFilePath)?.Version;
                 string cultureMaybe = file.GetMetadata("Culture");
                 if (!string.IsNullOrEmpty(cultureMaybe))
                 {
@@ -130,9 +131,10 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
             catch (Exception ex)
             {
                 // If there is a problem, ensure we don't write a partially complete version to disk.
-                if (File.Exists(TaskEnvironment.GetAbsolutePath(depsFilePath)))
+                AbsolutePath absoluteDepsFilePath = TaskEnvironment.GetAbsolutePath(depsFilePath);
+                if (File.Exists(absoluteDepsFilePath))
                 {
-                    File.Delete(TaskEnvironment.GetAbsolutePath(depsFilePath));
+                    File.Delete(absoluteDepsFilePath);
                 }
                 Log.LogErrorFromException(ex, false);
                 return false;

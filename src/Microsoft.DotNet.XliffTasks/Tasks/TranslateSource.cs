@@ -21,7 +21,8 @@ namespace XliffTasks.Tasks
             string language = XlfFile.GetMetadataOrThrow(MetadataKey.XlfLanguage);
             string translatedFullPath = XlfFile.GetMetadataOrThrow(MetadataKey.XlfTranslatedFullPath);
 
-            TranslatableDocument sourceDocument = XlfTask.LoadSourceDocument(TaskEnvironment.GetAbsolutePath(sourcePath), XlfFile.GetMetadata(MetadataKey.XlfSourceFormat));
+            AbsolutePath sourceAbsolutePath = TaskEnvironment.GetAbsolutePath(sourcePath);
+            TranslatableDocument sourceDocument = XlfTask.LoadSourceDocument(sourceAbsolutePath, XlfFile.GetMetadata(MetadataKey.XlfSourceFormat));
             XlfDocument xlfDocument = XlfTask.LoadXlfDocument(TaskEnvironment.GetAbsolutePath(XlfFile.ItemSpec));
 
             bool validationFailed = false;
@@ -39,7 +40,7 @@ namespace XliffTasks.Tasks
 
             Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(translatedFullPath)));
 
-            sourceDocument.RewriteRelativePathsToAbsolute(TaskEnvironment.GetAbsolutePath(sourcePath));
+            sourceDocument.RewriteRelativePathsToAbsolute(sourceAbsolutePath);
             sourceDocument.Save(TaskEnvironment.GetAbsolutePath(translatedFullPath));
         }
     }

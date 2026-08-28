@@ -161,7 +161,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         {
             List<ITaskItem> supportedFrameworks = new List<ITaskItem>();
 
-            AggregateNuGetAssetResolver resolver = new AggregateNuGetAssetResolver(TaskEnvironment.GetAbsolutePath(RuntimeFile));
+            AbsolutePath runtimeFile = TaskEnvironment.GetAbsolutePath(RuntimeFile);
+            AggregateNuGetAssetResolver resolver = new AggregateNuGetAssetResolver(runtimeFile);
             string packagePath = _packageFolders[PackageId];
 
             foreach (var packageFolder in _packageFolders)
@@ -174,7 +175,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             // and use the netstandard reference assembly to determine the API version
             var filesWithoutPlaceholders = GetPackageItems(packagePath)
                 .Where(f => !NuGetAssetResolver.IsPlaceholder(f));
-            NuGetAssetResolver resolverWithoutPlaceholders = new NuGetAssetResolver(TaskEnvironment.GetAbsolutePath(RuntimeFile), filesWithoutPlaceholders);
+            NuGetAssetResolver resolverWithoutPlaceholders = new NuGetAssetResolver(runtimeFile, filesWithoutPlaceholders);
 
             string package = $"{PackageId}/{PackageVersion}";
 

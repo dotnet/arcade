@@ -26,10 +26,12 @@ namespace XliffTasks.Tasks
                 {
                     string xlfPath = XlfTask.GetXlfPath(sourceDocumentPath, language);
                     XlfDocument xlfDocument;
+                    AbsolutePath xlfAbsolutePath;
 
                     try
                     {
-                        xlfDocument = XlfTask.LoadXlfDocument(TaskEnvironment.GetAbsolutePath(xlfPath));
+                        xlfAbsolutePath = TaskEnvironment.GetAbsolutePath(xlfPath);
+                        xlfDocument = XlfTask.LoadXlfDocument(xlfAbsolutePath);
                     }
                     catch (FileNotFoundException)
                     {
@@ -44,7 +46,7 @@ namespace XliffTasks.Tasks
                     }
 
                     Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(xlfPath)));
-                    xlfDocument.Save(TaskEnvironment.GetAbsolutePath(xlfPath));
+                    xlfDocument.Save(xlfAbsolutePath);
                 }
             }
         }

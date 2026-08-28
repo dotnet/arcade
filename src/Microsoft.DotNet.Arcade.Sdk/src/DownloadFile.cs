@@ -63,7 +63,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 return false;
             }
 
-            if (File.Exists(TaskEnvironment.GetAbsolutePath(DestinationPath)) && !Overwrite)
+            AbsolutePath destinationPath = TaskEnvironment.GetAbsolutePath(DestinationPath);
+
+            if (File.Exists(destinationPath) && !Overwrite)
             {
                 return true;
             }
@@ -73,10 +75,10 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 return false;
             }
 
-            Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(DestinationPath)));
+            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
 
             if (!string.IsNullOrWhiteSpace(Uri)) {
-                return DownloadFromUriAsync(Uri).Result;
+                return DownloadFromUriAsync(Uri, destinationPath).Result;
             }
 
             if (Uris != null) {
@@ -98,7 +100,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                         uri = $"{uri}{decodedToken}";
                     }
 
-                    if (DownloadFromUriAsync(uri).Result) {
+                    if (DownloadFromUriAsync(uri, destinationPath).Result) {
                         return true;
                     }
                 }
@@ -111,14 +113,15 @@ namespace Microsoft.DotNet.Arcade.Sdk
             return false;
         }
 
-        private async Tasks.Task<bool> DownloadFromUriAsync(string uri) {
+        private async Tasks.Task<bool> DownloadFromUriAsync(string uri, AbsolutePath destinationPath) {
             if (uri.StartsWith(FileUriProtocol, StringComparison.Ordinal))
             {
                 var filePath = uri.Substring(FileUriProtocol.Length);
+                AbsolutePath sourcePath = TaskEnvironment.GetAbsolutePath(filePath);
 
-                if (File.Exists(TaskEnvironment.GetAbsolutePath(filePath))) {
+                if (File.Exists(sourcePath)) {
                     Log.LogMessage($"Copying '{filePath}' to '{DestinationPath}'");
-                    File.Copy(TaskEnvironment.GetAbsolutePath(filePath), TaskEnvironment.GetAbsolutePath(DestinationPath), overwrite: true);
+                    File.Copy(sourcePath, destinationPath, overwrite: true);
                     return true;
                 } else {
                     Log.LogMessage($"'{filePath}' does not exist.");
@@ -158,7 +161,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 httpClient.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
                 try
                 {
-                    return await DownloadWithRetriesAsync(httpClient, uri);
+                    return await DownloadWithRetriesAsync(httpClient, uri, destinationPath);
                 }
                 catch (AggregateException e)
                 {
@@ -173,7 +176,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
         }
 
-        private async Tasks.Task<bool> DownloadWithRetriesAsync(HttpClient httpClient, string uri)
+        private async Tasks.Task<bool> DownloadWithRetriesAsync(HttpClient httpClient, string uri, AbsolutePath destinationPath)
         {            
             int attempt = 0;
 
@@ -195,7 +198,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                     httpResponse.EnsureSuccessStatusCode();
 
-                    using (var outStream = File.Create(TaskEnvironment.GetAbsolutePath(DestinationPath)))
+                    using (var outStream = File.Create(destinationPath))
                     {
                         await httpResponse.Content.CopyToAsync(outStream).ConfigureAwait(false);
                     }

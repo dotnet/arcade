@@ -28,11 +28,12 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
             var entries = new List<PlatformManifestEntry>();
             foreach (var file in Files)
             {
+                AbsolutePath originalFilePath = TaskEnvironment.GetAbsolutePath(file.GetMetadata("OriginalFilePath"));
                 entries.Add(new PlatformManifestEntry
                 {
                     Name = file.ItemSpec,
-                    AssemblyVersion = FileUtilities.GetAssemblyName(TaskEnvironment.GetAbsolutePath(file.GetMetadata("OriginalFilePath")))?.Version.ToString() ?? string.Empty,
-                    FileVersion = FileUtilities.GetFileVersion(TaskEnvironment.GetAbsolutePath(file.GetMetadata("OriginalFilePath")))?.ToString() ?? string.Empty
+                    AssemblyVersion = FileUtilities.GetAssemblyName(originalFilePath)?.Version.ToString() ?? string.Empty,
+                    FileVersion = FileUtilities.GetFileVersion(originalFilePath)?.ToString() ?? string.Empty
                 });
             }
 

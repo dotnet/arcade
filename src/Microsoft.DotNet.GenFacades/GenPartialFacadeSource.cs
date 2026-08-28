@@ -53,13 +53,18 @@ namespace Microsoft.DotNet.GenFacades
             bool result = true;
             try
             {
+                AbsolutePath[] referencePaths = GetAbsolutePaths(ReferencePaths);
+                AbsolutePath referenceAssembly = TaskEnvironment.GetAbsolutePath(ReferenceAssembly);
+                AbsolutePath[] compileFiles = GetAbsolutePaths(CompileFiles);
+                AbsolutePath outputSourcePath = TaskEnvironment.GetAbsolutePath(OutputSourcePath);
+
                 result = GenPartialFacadeSourceGenerator.Execute(
-                    ReferencePaths?.Select(item => TaskEnvironment.GetAbsolutePath(item.ItemSpec)).ToArray(),
-                    TaskEnvironment.GetAbsolutePath(ReferenceAssembly),
-                    CompileFiles?.Select(item => TaskEnvironment.GetAbsolutePath(item.ItemSpec)).ToArray(),
+                    referencePaths,
+                    referenceAssembly,
+                    compileFiles,
                     DefineConstants,
                     LangVersion,
-                    TaskEnvironment.GetAbsolutePath(OutputSourcePath),
+                    outputSourcePath,
                     Log,
                     IgnoreMissingTypes,
                     IgnoreMissingTypesList,
@@ -72,6 +77,15 @@ namespace Microsoft.DotNet.GenFacades
             }
 
             return result && !Log.HasLoggedErrors;
+        }
+
+        private AbsolutePath[] GetAbsolutePaths(ITaskItem[] items)
+        {
+            return items?.Select(item =>
+            {
+                AbsolutePath itemSpecPath = TaskEnvironment.GetAbsolutePath(item.ItemSpec);
+                return itemSpecPath;
+            }).ToArray();
         }
     }
 }

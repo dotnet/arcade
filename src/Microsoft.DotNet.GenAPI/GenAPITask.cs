@@ -294,12 +294,14 @@ namespace Microsoft.DotNet.GenAPI
             if (string.IsNullOrWhiteSpace(outFilePath))
                 return new LogTextWriter(Log);
 
-            if (Directory.Exists(TaskEnvironment.GetAbsolutePath(outFilePath)) && !string.IsNullOrEmpty(filename))
+            AbsolutePath outputPath = TaskEnvironment.GetAbsolutePath(outFilePath);
+
+            if (Directory.Exists(outputPath) && !string.IsNullOrEmpty(filename))
             {
                 return File.CreateText(TaskEnvironment.GetAbsolutePath(Path.Combine(outFilePath, filename)));
             }
 
-            return File.CreateText(TaskEnvironment.GetAbsolutePath(outFilePath));
+            return File.CreateText(outputPath);
         }
 
         /// <summary>
