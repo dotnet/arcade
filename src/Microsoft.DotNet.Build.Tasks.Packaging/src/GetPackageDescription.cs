@@ -11,7 +11,7 @@ using System.Text;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetPackageDescription : BuildTask
+    public class GetPackageDescription : Task
     {
         // avoid parsing the same document multiple times on a single node.
         private static readonly ConcurrentDictionary<string, Dictionary<string, string>> s_descriptionCache = new();

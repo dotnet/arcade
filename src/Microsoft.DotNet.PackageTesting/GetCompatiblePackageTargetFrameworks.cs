@@ -3,7 +3,6 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.DotNet.Build.Tasks;
 using NuGet.Frameworks;
 using System;
 using System.Collections.Generic;
@@ -11,7 +10,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.PackageTesting
 {
-    public class GetCompatiblePackageTargetFrameworks : BuildTask
+    public class GetCompatiblePackageTargetFrameworks : Task
     {
         private readonly List<NuGetFramework> allTargetFrameworks = new();
         private readonly Dictionary<NuGetFramework, HashSet<NuGetFramework>> packageTfmMapping = new();
