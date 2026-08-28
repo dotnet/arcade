@@ -95,15 +95,14 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
 
         FileVersionData GetFileVersionData(ITaskItem file)
         {
-            var filePath = file.GetMetadata("FullPath");
+            AbsolutePath filePath = TaskEnvironment.GetAbsolutePath(file.ItemSpec);
 
             if (File.Exists(filePath))
             {
-                AbsolutePath absoluteFilePath = TaskEnvironment.GetAbsolutePath(filePath);
                 return new FileVersionData()
                 {
-                    AssemblyVersion = FileUtilities.GetAssemblyName(absoluteFilePath)?.Version,
-                    FileVersion = FileUtilities.GetFileVersion(absoluteFilePath),
+                    AssemblyVersion = FileUtilities.GetAssemblyName(filePath)?.Version,
+                    FileVersion = FileUtilities.GetFileVersion(filePath),
                     File = file
                 };
             }
