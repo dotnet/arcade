@@ -53,7 +53,7 @@ function GetConfiguration {
     Write-Host "Fetching configuration file from $urlToConfigurationFile"
 
     try {
-        $response = Invoke-WebRequest -UseBasicParsing -Method GET -MaximumRetryCount 3 -Headers $headers `
+        $response = Invoke-WebRequest -UseBasicParsing -Method GET -MaximumRetryCount 3 -Headers $headers -ErrorAction Stop `
                 $urlToConfigurationFile
     } catch {
         $statusCode = if ($null -ne $_.Exception.Response) {
@@ -106,13 +106,25 @@ if ($configuration -ne $null) {
 
     $ExtraSwitches = "";
     if ($configuration.ContainsKey('ExtraSwitches')) {
-        $ExtraSwitches = $configuration['ExtraSwitches']
+        $configuredExtraSwitches = $configuration['ExtraSwitches']
+        if ($configuredExtraSwitches -isnot [string]) {
+            throw "Configuration for branch '$MergeFromBranch' must contain a string 'ExtraSwitches' value."
+        }
+
+        $ExtraSwitches = $configuredExtraSwitches
     }
 
     $ResetToTargetPaths = "";
     if ($configuration.ContainsKey('ResetToTargetPaths')) {
-        # Convert array to semicolon-separated string for output
-        $ResetToTargetPaths = $configuration['ResetToTargetPaths'] -join ";"
+        $configuredResetToTargetPaths = $configuration['ResetToTargetPaths']
+        if ($configuredResetToTargetPaths -is [string]) {
+            $ResetToTargetPaths = $configuredResetToTargetPaths
+        } elseif ($configuredResetToTargetPaths -is [array] -and
+            @($configuredResetToTargetPaths | Where-Object { $_ -isnot [string] }).Count -eq 0) {
+            $ResetToTargetPaths = $configuredResetToTargetPaths -join ";"
+        } else {
+            throw "Configuration for branch '$MergeFromBranch' must contain a string or an array of strings 'ResetToTargetPaths' value."
+        }
     }
 
     "mergeSwitchArguments=$ExtraSwitches" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
