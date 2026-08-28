@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading;
+using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Build.Utilities;
@@ -33,17 +34,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 var blobClient = CreateBlobClient(blobPath);
                 if (!options.AllowOverwrite && await blobClient.ExistsAsync())
                 {
-                    if (options.PassIfExistingItemIdentical)
-                    {
-                        if (!await blobClient.IsFileIdenticalToBlobAsync(file))
-                        {
-                            _log.LogError($"Asset '{file}' already exists with different contents at '{blobClient.Uri}'");
-                        }
-
-                        return;
-                    }
-
-                    _log.LogError($"Asset '{file}' already exists at '{blobClient.Uri}'");
+                    await HandleExistingBlobAsync(blobClient, file, options);
                     return;
                 }
 
@@ -53,15 +44,41 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     BlobUploadOptions blobUploadOptions = new()
                     {
-                        HttpHeaders = AzureStorageUtils.GetBlobHeadersByExtension(file)
+                        HttpHeaders = AzureStorageUtils.GetBlobHeadersByExtension(file),
+                        Conditions = options.AllowOverwrite
+                            ? null
+                            : new BlobRequestConditions { IfNoneMatch = ETag.All }
                     };
                     await blobClient.UploadAsync(file, blobUploadOptions);
+                }
+                catch (RequestFailedException e) when (
+                    !options.AllowOverwrite &&
+                    (e.Status == 412 ||
+                     e.ErrorCode == "BlobAlreadyExists" ||
+                     e.ErrorCode == "BlobImmutableDueToLegalHold"))
+                {
+                    await HandleExistingBlobAsync(blobClient, file, options);
                 }
                 catch (Exception e)
                 {
                     _log.LogError($"Unexpected exception publishing file {file} to {blobClient.Uri}: {e.Message}");
                 }
             }
+        }
+
+        private async Task HandleExistingBlobAsync(BlobClient blobClient, string file, PushOptions options)
+        {
+            if (options.PassIfExistingItemIdentical)
+            {
+                if (!await blobClient.IsFileIdenticalToBlobAsync(file))
+                {
+                    _log.LogError($"Asset '{file}' already exists with different contents at '{blobClient.Uri}'");
+                }
+
+                return;
+            }
+
+            _log.LogError($"Asset '{file}' already exists at '{blobClient.Uri}'");
         }
     }
 }
