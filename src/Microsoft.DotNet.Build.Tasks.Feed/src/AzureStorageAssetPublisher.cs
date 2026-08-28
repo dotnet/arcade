@@ -42,22 +42,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 try
                 {
-                    BlobUploadOptions blobUploadOptions = new()
+                    try
                     {
-                        HttpHeaders = AzureStorageUtils.GetBlobHeadersByExtension(file),
-                        Conditions = options.AllowOverwrite
-                            ? null
-                            : new BlobRequestConditions { IfNoneMatch = ETag.All }
-                    };
-                    await blobClient.UploadAsync(file, blobUploadOptions);
-                }
-                catch (RequestFailedException e) when (
-                    !options.AllowOverwrite &&
-                    (e.Status == 412 ||
-                     e.ErrorCode == "BlobAlreadyExists" ||
-                     e.ErrorCode == "BlobImmutableDueToLegalHold"))
-                {
-                    await HandleExistingBlobAsync(blobClient, file, options);
+                        BlobUploadOptions blobUploadOptions = new()
+                        {
+                            HttpHeaders = AzureStorageUtils.GetBlobHeadersByExtension(file),
+                            Conditions = options.AllowOverwrite
+                                ? null
+                                : new BlobRequestConditions { IfNoneMatch = ETag.All }
+                        };
+                        await blobClient.UploadAsync(file, blobUploadOptions);
+                    }
+                    catch (RequestFailedException e) when (
+                        !options.AllowOverwrite &&
+                        (e.Status == 412 ||
+                         e.ErrorCode == "BlobAlreadyExists" ||
+                         e.ErrorCode == "BlobImmutableDueToLegalHold"))
+                    {
+                        await HandleExistingBlobAsync(blobClient, file, options);
+                    }
                 }
                 catch (Exception e)
                 {
