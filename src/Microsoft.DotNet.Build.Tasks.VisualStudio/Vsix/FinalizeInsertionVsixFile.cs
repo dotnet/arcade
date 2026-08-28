@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
     /// Replaces Experimental="true" attribute of the Installation element with SystemComponent="true" in the VSIX manifest file.
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public sealed class FinalizeInsertionVsixFile : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public sealed class FinalizeInsertionVsixFile : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

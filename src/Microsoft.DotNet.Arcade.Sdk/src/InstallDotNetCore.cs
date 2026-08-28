@@ -17,7 +17,7 @@ using System.Text.Json;
 namespace Microsoft.DotNet.Arcade.Sdk
 {
     [MSBuildMultiThreadableTask]
-    public class InstallDotNetCore : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class InstallDotNetCore : Task, IMultiThreadableTask
     {
         private static readonly char[] s_keyTrimChars = ['$', '(', ')'];
 

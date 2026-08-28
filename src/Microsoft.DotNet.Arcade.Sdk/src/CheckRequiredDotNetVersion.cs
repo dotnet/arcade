@@ -12,7 +12,7 @@ using NuGet.Versioning;
 namespace Microsoft.DotNet.Arcade.Sdk
 {
     [MSBuildMultiThreadableTask]
-    public class CheckRequiredDotNetVersion : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class CheckRequiredDotNetVersion : Task, IMultiThreadableTask
     {
         private static readonly string s_cacheKey = "CheckRequiredDotNetVersion-6ED0A075-A4B3-46B1-97D4-448558D515D3";
 

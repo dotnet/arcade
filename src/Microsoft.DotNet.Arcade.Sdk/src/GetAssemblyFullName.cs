@@ -8,7 +8,7 @@ using Microsoft.Build.Utilities;
 namespace Microsoft.DotNet.Arcade.Sdk
 {
     [MSBuildMultiThreadableTask]
-    public class GetAssemblyFullName : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class GetAssemblyFullName : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     /// See https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Versioning.md#assembly-version.
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public class CalculateAssemblyAndFileVersions : Microsoft.Build.Utilities.Task
+    public class CalculateAssemblyAndFileVersions : Task
     {
         private const int MaxMinor = 654;
         private const int MaxBuild = 9999;

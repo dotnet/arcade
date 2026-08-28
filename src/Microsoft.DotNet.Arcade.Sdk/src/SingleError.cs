@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     // atomic, so two instances with the same Text running concurrently in one node can both miss the
     // sentinel and both log the error, defeating the single-error contract. Opting in requires an
     // atomic register-if-absent primitive, which the BuildEngine task-object API does not offer.
-    public sealed class SingleError : Microsoft.Build.Utilities.Task
+    public sealed class SingleError : Task
     {
         private static readonly string s_cacheKeyPrefix = "SingleError-F88E25C6-1488-4E81-A458-A0921794E6E3:";
 

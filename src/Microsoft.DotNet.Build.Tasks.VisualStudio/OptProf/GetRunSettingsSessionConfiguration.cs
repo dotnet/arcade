@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
     /// based on given OptProf.json configuration and VS bootstrapper information.
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public sealed class GetRunSettingsSessionConfiguration : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public sealed class GetRunSettingsSessionConfiguration : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

@@ -11,7 +11,7 @@ using Microsoft.Build.Utilities;
 namespace Microsoft.DotNet.Tools
 {
     [MSBuildMultiThreadableTask]
-    public class UpdatePackageVersionTask : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class UpdatePackageVersionTask : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

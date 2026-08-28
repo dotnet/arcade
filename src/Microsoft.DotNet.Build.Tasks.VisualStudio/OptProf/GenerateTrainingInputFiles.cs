@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
     /// their VSIX files located in the specified directory.
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public sealed class GenerateTrainingInputFiles : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public sealed class GenerateTrainingInputFiles : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

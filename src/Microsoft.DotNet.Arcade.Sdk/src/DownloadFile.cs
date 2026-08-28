@@ -15,7 +15,7 @@ using Tasks = System.Threading.Tasks;
 namespace Microsoft.DotNet.Arcade.Sdk
 {
     [MSBuildMultiThreadableTask]
-    public class DownloadFile : Microsoft.Build.Utilities.Task, ICancelableTask, IMultiThreadableTask
+    public class DownloadFile : Task, ICancelableTask, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     /// partial NGEN is enabled
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public sealed class ExtractNgenMethodList : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public sealed class ExtractNgenMethodList : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

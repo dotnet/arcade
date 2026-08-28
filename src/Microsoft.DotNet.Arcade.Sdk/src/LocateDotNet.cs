@@ -11,7 +11,7 @@ using Microsoft.Build.Utilities;
 namespace Microsoft.DotNet.Arcade.Sdk
 {
     [MSBuildMultiThreadableTask]
-    public class LocateDotNet : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class LocateDotNet : Task, IMultiThreadableTask
     {
         private static readonly string s_cacheKey = "LocateDotNet-FCDFF825-F35B-4601-9CB5-74DCA498B589";
 

@@ -20,7 +20,7 @@ using System.Xml.Linq;
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
     [MSBuildMultiThreadableTask]
-    public class GenerateNuSpec : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class GenerateNuSpec : Task, IMultiThreadableTask
     {
         private static readonly XNamespace NuSpecXmlNamespace = @"http://schemas.microsoft.com/packaging/2013/01/nuspec.xsd";
 

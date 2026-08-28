@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     /// Useful to statically save a status of an Item that will be used later on by just importing the generated file.
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public class SaveItems : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class SaveItems : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

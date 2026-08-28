@@ -14,7 +14,7 @@ using System.Text.RegularExpressions;
 namespace Microsoft.DotNet.SourceBuild.Tasks
 {
     [MSBuildMultiThreadableTask]
-    public class WriteBuildOutputProps : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class WriteBuildOutputProps : Task, IMultiThreadableTask
     {
         private static readonly Regex InvalidElementNameCharRegex = new Regex(@"(^|[^A-Za-z0-9])(?<FirstPartChar>.)");
 

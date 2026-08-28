@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     /// Checks that the content of two license files is the same modulo line breaks, leading and trailing whitespace.
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public class ValidateLicense : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class ValidateLicense : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

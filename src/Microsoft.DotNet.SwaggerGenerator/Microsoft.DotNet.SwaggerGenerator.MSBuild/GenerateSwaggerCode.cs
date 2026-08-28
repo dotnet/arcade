@@ -17,7 +17,7 @@ using Task = Microsoft.Build.Utilities.Task;
 namespace Microsoft.DotNet.SwaggerGenerator.MSBuild
 {
     [MSBuildMultiThreadableTask]
-    public class GenerateSwaggerCode : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class GenerateSwaggerCode : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

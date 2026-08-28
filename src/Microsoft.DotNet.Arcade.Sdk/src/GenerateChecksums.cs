@@ -10,7 +10,7 @@ using System.Security.Cryptography;
 namespace Microsoft.DotNet.Arcade.Sdk
 {
     [MSBuildMultiThreadableTask]
-    public class GenerateChecksums : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class GenerateChecksums : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

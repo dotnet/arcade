@@ -13,7 +13,7 @@ using System.Xml.Linq;
 namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
 {
     [MSBuildMultiThreadableTask]
-    public class WriteUsageReports : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class WriteUsageReports : Task, IMultiThreadableTask
     {
         private const string SnapshotPrefix = "PackageVersions.props.pre.";
         private const string SnapshotSuffix = ".xml";

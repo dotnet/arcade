@@ -5,10 +5,11 @@ using System;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Deployment.Tasks.Links
 {
-    public abstract class AkaMSLinksBase : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public abstract class AkaMSLinksBase : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

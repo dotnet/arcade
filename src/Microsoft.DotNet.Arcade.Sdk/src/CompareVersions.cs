@@ -8,7 +8,7 @@ using NuGet.Versioning;
 namespace Microsoft.DotNet.Arcade.Sdk
 {
     [MSBuildMultiThreadableTask]
-    public class CompareVersions : Microsoft.Build.Utilities.Task
+    public class CompareVersions : Task
     {
         [Required]
         public string Left { get; set; }

@@ -15,7 +15,7 @@ using Microsoft.Build.Utilities;
 namespace Microsoft.DotNet.Arcade.Sdk
 {
     [MSBuildMultiThreadableTask]
-    public sealed class GenerateResxSource : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public sealed class GenerateResxSource : Task, IMultiThreadableTask
     {
         private const int maxDocCommentLength = 256;
 
