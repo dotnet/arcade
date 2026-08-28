@@ -569,7 +569,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     MessageImportance.Low,
                     $"Adding Correlation Payload Directory '{path}', destination '{destination}'"
                 );
-                return def.WithCorrelationPayloadDirectory(path, includeDirectoryName, destination);
+                return def.WithCorrelationPayloadDirectory(payloadPath, includeDirectoryName, destination);
 
             }
 
@@ -589,14 +589,14 @@ namespace Microsoft.DotNet.Helix.Sdk
                         MessageImportance.Low,
                         $"Adding Correlation Payload Archive '{path}', destination '{destination}'"
                     );
-                    return def.WithCorrelationPayloadArchive(path, destination);
+                    return def.WithCorrelationPayloadArchive(payloadPath, destination);
                 }
 
                 Log.LogMessage(
                     MessageImportance.Low,
                     $"Adding Correlation Payload File '{path}', destination '{destination}'"
                 );
-                return def.WithCorrelationPayloadFiles(path);
+                return def.WithCorrelationPayloadFiles(payloadPath);
             }
 
             Log.LogError(FailureCategory.Build, $"Correlation Payload '{path}' not found.");

@@ -183,21 +183,21 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 }
 
                 AbsolutePath absoluteNuspecPath = TaskEnvironment.GetAbsolutePath(nuspecPath);
-                Manifest manifest = GetManifest(nuspecPath, absoluteNuspecPath, nuspecPropertyProvider, false);
+                Manifest manifest = GetManifest(absoluteNuspecPath, nuspecPropertyProvider, false);
                 string nupkgPath = GetPackageOutputPath(nuspecPath, manifest, false, false);
                 Pack(nuspecPath, absoluteNuspecPath, nupkgPath, manifest, IncludeSymbolsInPackage);
 
                 bool packSymbols = CreateSymbolPackage || CreatePackedPackage;
                 if (CreateSymbolPackage)
                 {
-                    Manifest symbolsManifest = GetManifest(nuspecPath, absoluteNuspecPath, nuspecPropertyProvider, false);
+                    Manifest symbolsManifest = GetManifest(absoluteNuspecPath, nuspecPropertyProvider, false);
                     nupkgPath = GetPackageOutputPath(nuspecPath, symbolsManifest, true, false);
                     Pack(nuspecPath, absoluteNuspecPath, nupkgPath, symbolsManifest, packSymbols);
                 }
 
                 if (CreatePackedPackage)
                 {
-                    Manifest packedManifest = GetManifest(nuspecPath, absoluteNuspecPath, nuspecPropertyProvider, true);
+                    Manifest packedManifest = GetManifest(absoluteNuspecPath, nuspecPropertyProvider, true);
                     nupkgPath = GetPackageOutputPath(nuspecPath, packedManifest, false, true);
                     Pack(nuspecPath, absoluteNuspecPath, nupkgPath, packedManifest, packSymbols);
                 }
@@ -211,20 +211,29 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return nuspecProperties == null ? null : NuspecPropertyStringProvider.GetNuspecPropertyProviderFunction(nuspecProperties.Select(p => p.ItemSpec).ToArray());
         }
 
-        private Manifest GetManifest(string nuspecPath, AbsolutePath absoluteNuspecPath, Func<string, string> nuspecPropertyProvider, bool isPackedPackage)
+        private Manifest GetManifest(AbsolutePath absoluteNuspecPath, Func<string, string> nuspecPropertyProvider, bool isPackedPackage)
         {
             using (var nuspecFile = File.Open(absoluteNuspecPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
             {
-                string baseDirectoryPath = (string.IsNullOrEmpty(BaseDirectory)) ? Path.GetDirectoryName(nuspecPath) : BaseDirectory;
                 Manifest manifest = Manifest.ReadFrom(nuspecFile, nuspecPropertyProvider, false);
 
                 if (isPackedPackage)
                 {
-                    manifest = TransformManifestToPackedPackageManifest(manifest);
+                    manifest = TransformManifestToPackedPackageManifest(manifest, GetBaseDirectory(absoluteNuspecPath));
                 }
                 return manifest;
             }
         }
+
+        /// <summary>
+        /// Gets the directory that manifest file sources are resolved against. This has to be used
+        /// everywhere a manifest source is probed or packed, so that probing cannot look in a
+        /// different place than <see cref="PackageBuilder.PopulateFiles"/> later reads from.
+        /// </summary>
+        private AbsolutePath GetBaseDirectory(AbsolutePath absoluteNuspecPath)
+            => string.IsNullOrEmpty(BaseDirectory)
+                ? TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(absoluteNuspecPath))
+                : TaskEnvironment.GetAbsolutePath(BaseDirectory);
 
         private string GetPackageOutputPath(string nuspecPath, Manifest manifest, bool isSymbolsPackage, bool applyPrefix)
         {
@@ -277,9 +286,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 PackageBuilder builder = new PackageBuilder(deterministic: Deterministic);
                 SetDeterministicTimestamp(builder, DeterministicTimestamp);
 
-                string baseDirectoryPath = string.IsNullOrEmpty(BaseDirectory)
-                    ? Path.GetDirectoryName(absoluteNuspecPath)
-                    : TaskEnvironment.GetAbsolutePath(BaseDirectory);
+                string baseDirectoryPath = GetBaseDirectory(absoluteNuspecPath);
                 builder.Populate(manifest.Metadata);
                 builder.PopulateFiles(baseDirectoryPath, manifest.Files);
 
@@ -369,7 +376,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             propertyInfo.SetValue(packageBuilder, deterministicTimestamp);
         }
 
-        private Manifest TransformManifestToPackedPackageManifest(Manifest manifest)
+        private Manifest TransformManifestToPackedPackageManifest(Manifest manifest, AbsolutePath baseDirectoryPath)
         {
             ManifestMetadata manifestMetadata = manifest.Metadata;
 
@@ -401,7 +408,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 if(Path.GetFileName(fileName) == "runtime.json" && file.Target == "")
                 {
                     string packedPackageSourcePath = Path.Combine(Path.GetDirectoryName(fileName), string.Join(".", _packageNamePrefix, Path.GetFileName(fileName)));
-                    file.Source = File.Exists(TaskEnvironment.GetAbsolutePath(packedPackageSourcePath)) ? packedPackageSourcePath : fileName;
+                    file.Source = File.Exists(Path.Combine(baseDirectoryPath, packedPackageSourcePath)) ? packedPackageSourcePath : fileName;
                     file.Target = "runtime.json";
                 }
                 manifestFiles.Add(file);

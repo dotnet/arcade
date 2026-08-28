@@ -17,12 +17,12 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         private sealed class CacheEntry
         {
-            public readonly string GlobalJsonPath;
+            public readonly AbsolutePath GlobalJsonPath;
             public readonly DateTime LastWrite;
             public readonly string Paths;
             public readonly string Value;
 
-            public CacheEntry(string globalJsonPath, DateTime lastWrite, string paths, string value)
+            public CacheEntry(AbsolutePath globalJsonPath, DateTime lastWrite, string paths, string value)
             {
                 GlobalJsonPath = globalJsonPath;
                 LastWrite = lastWrite;
@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             // simply overwrites an identical entry. The cache is an optimization, not a lock.
             var cachedResult = (CacheEntry)BuildEngine4.GetRegisteredTaskObject(s_cacheKey, RegisteredTaskObjectLifetime.Build);
             if (cachedResult != null &&
-                string.Equals(globalJsonPath.Value, cachedResult.GlobalJsonPath, StringComparison.OrdinalIgnoreCase) &&
+                globalJsonPath == cachedResult.GlobalJsonPath &&
                 lastWrite == cachedResult.LastWrite &&
                 paths == cachedResult.Paths)
             {
@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
 
             DotNetPath = TaskEnvironment.GetAbsolutePath(Path.Combine(dotNetDir, fileName));
-            BuildEngine4.RegisterTaskObject(s_cacheKey, new CacheEntry(globalJsonPath.Value, lastWrite, paths, DotNetPath), RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
+            BuildEngine4.RegisterTaskObject(s_cacheKey, new CacheEntry(globalJsonPath, lastWrite, paths, DotNetPath), RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
         }
     }
 }

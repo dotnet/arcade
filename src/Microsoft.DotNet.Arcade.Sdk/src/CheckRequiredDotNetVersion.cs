@@ -18,12 +18,12 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         private sealed class CacheEntry
         {
-            public readonly string GlobalJsonPath;
+            public readonly AbsolutePath GlobalJsonPath;
             public readonly string SdkVersion;
             public readonly DateTime LastWrite;
             public readonly bool Success;
 
-            public CacheEntry(string globalJsonPath, string sdkVersion, DateTime lastWrite, bool success)
+            public CacheEntry(AbsolutePath globalJsonPath, string sdkVersion, DateTime lastWrite, bool success)
             {
                 GlobalJsonPath = globalJsonPath;
                 SdkVersion = sdkVersion;
@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             // error twice, since deduplicating that reporting is part of what the cache buys.
             var cachedResult = (CacheEntry)BuildEngine4.GetRegisteredTaskObject(s_cacheKey, RegisteredTaskObjectLifetime.Build);
             if (cachedResult != null &&
-                string.Equals(globalJsonPath.Value, cachedResult.GlobalJsonPath, StringComparison.OrdinalIgnoreCase) &&
+                globalJsonPath == cachedResult.GlobalJsonPath &&
                 string.Equals(SdkVersion, cachedResult.SdkVersion, StringComparison.Ordinal) &&
                 lastWrite == cachedResult.LastWrite)
             {
@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
 
             bool success = execute();
-            BuildEngine4.RegisterTaskObject(s_cacheKey, new CacheEntry(globalJsonPath.Value, SdkVersion, lastWrite, success), RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
+            BuildEngine4.RegisterTaskObject(s_cacheKey, new CacheEntry(globalJsonPath, SdkVersion, lastWrite, success), RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
             return success;
         }
     }
