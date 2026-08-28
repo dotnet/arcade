@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
     /// Examines all dependencies 
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public class SplitDependenciesBySupport : Microsoft.Build.Utilities.Task
+    public class SplitDependenciesBySupport : Task
     {
         [Required]
         public ITaskItem[] OriginalDependencies { get; set; }

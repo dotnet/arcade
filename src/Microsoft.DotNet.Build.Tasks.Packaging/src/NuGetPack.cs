@@ -11,11 +11,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using NuGet.Common;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
     [MSBuildMultiThreadableTask]
-    public class NuGetPack : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class NuGetPack : Task, IMultiThreadableTask
     {
         /// <summary>
         /// Target file paths to exclude when building the lib package for symbol server scenario

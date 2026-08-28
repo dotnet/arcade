@@ -3,7 +3,6 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.DotNet.Build.Tasks;
 using System;
 using System.IO;
 using System.Reflection.Metadata;
@@ -16,7 +15,7 @@ namespace Microsoft.DotNet.GenFacades
     /// Rewrites an Assembly's references to be version 0.0.0.0.
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public class ClearAssemblyReferenceVersions : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class ClearAssemblyReferenceVersions : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

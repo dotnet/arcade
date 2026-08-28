@@ -3,7 +3,6 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.DotNet.Build.Tasks;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,7 +13,7 @@ using System.Xml.Linq;
 namespace Microsoft.DotNet.SharedFramework.Sdk
 {
     [MSBuildMultiThreadableTask]
-    public class GenerateMacOSDistributionFile : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class GenerateMacOSDistributionFile : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

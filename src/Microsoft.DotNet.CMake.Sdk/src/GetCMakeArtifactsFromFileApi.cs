@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.CMake.Sdk
     /// Reads CMake File API response to find artifacts for a specific source directory.
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public class GetCMakeArtifactsFromFileApi : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class GetCMakeArtifactsFromFileApi : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

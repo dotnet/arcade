@@ -6,6 +6,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {
@@ -16,7 +17,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
     /// Emits a file of the format specified by https://manpages.debian.org/bookworm/dpkg-dev/deb-md5sums.5.en.html
     /// </remarks>
     [MSBuildMultiThreadableTask]
-    public sealed class CreateMD5SumsFile : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public sealed class CreateMD5SumsFile : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

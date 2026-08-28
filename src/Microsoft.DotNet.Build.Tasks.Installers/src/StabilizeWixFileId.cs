@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using System;
 using System.Linq;
 using System.Xml.Linq;
@@ -14,7 +15,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
     /// for certain files.
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public class StabilizeWixFileId : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class StabilizeWixFileId : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

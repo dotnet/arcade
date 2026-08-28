@@ -11,7 +11,7 @@ using System.Linq;
 namespace Microsoft.DotNet.PackageTesting
 {
     [MSBuildMultiThreadableTask]
-    public class GetCompatiblePackageTargetFrameworks : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class GetCompatiblePackageTargetFrameworks : Task, IMultiThreadableTask
     {
         private readonly List<NuGetFramework> allTargetFrameworks = new();
         private readonly Dictionary<NuGetFramework, HashSet<NuGetFramework>> packageTfmMapping = new();

@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Text;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {
@@ -15,7 +16,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
     /// Implements the format specified in https://manpages.debian.org/bookworm/dpkg-dev/deb.5.en.html
     /// </remarks>
     [MSBuildMultiThreadableTask]
-    public sealed class CreateDebPackage : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public sealed class CreateDebPackage : Task, IMultiThreadableTask
     {
         private static readonly DateTime UnixEpoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         private static readonly uint Permissions = Convert.ToUInt32("100644", 8);

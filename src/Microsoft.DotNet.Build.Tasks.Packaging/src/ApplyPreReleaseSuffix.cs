@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
     /// If not stable, it will append a pre-release suffix.  It will also standardize on 3-part versions.
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public class ApplyPreReleaseSuffix : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class ApplyPreReleaseSuffix : Task, IMultiThreadableTask
     {
         private Dictionary<string, Version> _stablePackageVersions;
         private PackageIndex _index;

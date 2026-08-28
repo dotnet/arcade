@@ -12,7 +12,7 @@ using System.Text;
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
     [MSBuildMultiThreadableTask]
-    public class GetPackageDescription : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class GetPackageDescription : Task, IMultiThreadableTask
     {
         // avoid parsing the same document multiple times on a single node. Concurrent because
         // instances of this task can run in parallel on the same node in multithreaded builds.
@@ -68,10 +68,10 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             {
                 descriptionTable = LoadDescriptions(descriptionPath);
 
-                // Only successful loads are cached. LoadDescriptions returns null after logging an
+                // Only cache successful loads. LoadDescriptions returns null after logging an
                 // IOException or UnauthorizedAccessException, and caching that would memoize a
-                // transient failure for every later invocation on this node. A concurrent race just
-                // parses the document twice, which is harmless.
+                // transient failure for every later invocation on this node, including subsequent
+                // builds that reuse it.
                 if (descriptionTable != null)
                 {
                     s_descriptionCache.TryAdd(descriptionPath, descriptionTable);

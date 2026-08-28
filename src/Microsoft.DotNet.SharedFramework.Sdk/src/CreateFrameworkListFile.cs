@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -13,7 +14,7 @@ using System.Xml.Linq;
 namespace Microsoft.DotNet.SharedFramework.Sdk
 {
     [MSBuildMultiThreadableTask]
-    public class CreateFrameworkListFile : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class CreateFrameworkListFile : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

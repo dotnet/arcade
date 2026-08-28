@@ -6,11 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {
     [MSBuildMultiThreadableTask]
-    public sealed class CreateControlFile : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public sealed class CreateControlFile : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Cci;
 using Microsoft.Cci.Extensions;
@@ -14,7 +15,6 @@ using Microsoft.Cci.Filters;
 using Microsoft.Cci.Writers;
 using Microsoft.Cci.Writers.CSharp;
 using Microsoft.Cci.Writers.Syntax;
-using System.Text;
 using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.GenAPI
@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.GenAPI
     // File.Exists (Microsoft.Cci.Extensions/HostEnvironment.cs:719-740), so relative inputs and
     // per-project variables would bind to process-wide state in a shared node. Migrating requires
     // expanding and resolving those paths through TaskEnvironment before they enter HostEnvironment.
-    public class GenAPITask : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class GenAPITask : Task, IMultiThreadableTask
     {
         private const string InternalsVisibleTypeName = "System.Runtime.CompilerServices.InternalsVisibleToAttribute";
         private const string DefaultFileHeader =
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.GenAPI
         public string ApiList { get; set; }
 
         /// <summary>
-        /// Output path. Default is the console. Can specify an existing directory as well and
+        /// Output path. Default is the build log. Can specify an existing directory as well and
         /// then a file will be created for each assembly with the matching name of the assembly.
         /// </summary>
         public string OutputPath { get; set; }
@@ -303,8 +303,8 @@ namespace Microsoft.DotNet.GenAPI
         }
 
         /// <summary>
-        /// Forwards writes to the build log so that generated output is captured by MSBuild's
-        /// loggers rather than written to the process-wide console.
+        /// Forwards writes to the build log a line at a time, so that generated output is captured by
+        /// MSBuild's loggers instead of being written to the process-wide console.
         /// </summary>
         private sealed class LogTextWriter : TextWriter
         {
@@ -319,7 +319,7 @@ namespace Microsoft.DotNet.GenAPI
             {
                 if (value == '\n')
                 {
-                    Flush();
+                    LogPendingLine();
                 }
                 else if (value != '\r')
                 {
@@ -327,20 +327,22 @@ namespace Microsoft.DotNet.GenAPI
                 }
             }
 
-            public override void Flush()
-            {
-                _log.LogMessage(MessageImportance.High, _line.ToString());
-                _line.Clear();
-            }
-
             protected override void Dispose(bool disposing)
             {
                 if (disposing && _line.Length > 0)
                 {
-                    Flush();
+                    LogPendingLine();
                 }
 
                 base.Dispose(disposing);
+            }
+
+            // The pending line is passed with no format arguments so that MSBuild leaves it unchanged.
+            // Generated C# is full of braces and would otherwise be treated as a composite format string.
+            private void LogPendingLine()
+            {
+                _log.LogMessage(MessageImportance.High, _line.ToString());
+                _line.Clear();
             }
         }
 

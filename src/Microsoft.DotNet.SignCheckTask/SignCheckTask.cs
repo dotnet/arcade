@@ -8,6 +8,7 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.SignCheck;
 using Microsoft.SignCheck.Logging;
+using Microsoft.Build.Utilities;
 
 namespace SignCheckTask
 {
@@ -22,7 +23,7 @@ namespace SignCheckTask
     // the ecosystem. The interface only causes TaskEnvironment to be injected. Do not remove it to
     // "make this safe" - that would revert the path resolution below to the process current
     // directory while leaving the task exactly as unsafe as it is now.
-    public class SignCheckTask : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class SignCheckTask : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

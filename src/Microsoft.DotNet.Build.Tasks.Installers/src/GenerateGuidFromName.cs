@@ -2,13 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using System;
 using System.Security.Cryptography;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {
     [MSBuildMultiThreadableTask]
-    public class GenerateGuidFromName : Microsoft.Build.Utilities.Task
+    public class GenerateGuidFromName : Task
     {
         [Required]
         public string Name { get; set; }

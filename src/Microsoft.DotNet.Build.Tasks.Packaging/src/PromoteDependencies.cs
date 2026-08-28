@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
     /// from a less specific ref to the more specific lib, and from a less specific lib to a more specific ref.
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public class PromoteDependencies : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class PromoteDependencies : Task, IMultiThreadableTask
     {
         private const string TargetFrameworkMetadataName = "TargetFramework";
 

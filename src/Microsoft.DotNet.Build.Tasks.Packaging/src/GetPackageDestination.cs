@@ -13,7 +13,7 @@ using System.Text;
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
     [MSBuildMultiThreadableTask]
-    public class GetPackageDestination : Microsoft.Build.Utilities.Task
+    public class GetPackageDestination : Task
     {
         /// <summary>
         /// All target monikers that this project wants to support

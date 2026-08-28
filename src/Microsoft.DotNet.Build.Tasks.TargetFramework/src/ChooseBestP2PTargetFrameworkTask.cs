@@ -14,7 +14,7 @@ using NuGet.Frameworks;
 namespace Microsoft.DotNet.Build.Tasks.TargetFramework
 {
     [MSBuildMultiThreadableTask]
-    public class ChooseBestP2PTargetFrameworkTask : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class ChooseBestP2PTargetFrameworkTask : Task, IMultiThreadableTask
     {
         private const string NEAREST_TARGET_FRAMEWORK = "NearestTargetFramework";
         private const string TARGET_FRAMEWORKS = "TargetFrameworks";

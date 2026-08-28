@@ -12,7 +12,7 @@ using System.Linq;
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
     [MSBuildMultiThreadableTask]
-    public class GeneratePackageReport : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class GeneratePackageReport : Task, IMultiThreadableTask
     {
         private Dictionary<string, PackageItem> _targetPathToPackageItem;
         private AggregateNuGetAssetResolver _resolver;

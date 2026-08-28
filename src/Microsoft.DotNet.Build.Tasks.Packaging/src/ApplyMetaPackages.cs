@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
     /// Replaces package dependencies with meta-package dependencies where appropriate.
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public class ApplyMetaPackages : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class ApplyMetaPackages : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

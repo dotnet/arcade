@@ -14,7 +14,7 @@ using System.Text;
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
     [MSBuildMultiThreadableTask]
-    public class GetApplicableAssetsFromPackages : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class GetApplicableAssetsFromPackages : Task, IMultiThreadableTask
     {
         private Dictionary<string, List<PackageItem>> _packageToPackageItems;
         private Dictionary<string, PackageItem> _targetPathToPackageItem;

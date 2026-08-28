@@ -15,7 +15,7 @@ using System.Linq;
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
     [MSBuildMultiThreadableTask]
-    public class CreateTrimDependencyGroups : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class CreateTrimDependencyGroups : Task, IMultiThreadableTask
     {
         private const string PlaceHolderDependency = "_._";
 

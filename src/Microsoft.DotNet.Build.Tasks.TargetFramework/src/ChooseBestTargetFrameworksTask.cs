@@ -10,7 +10,7 @@ using System.Linq;
 namespace Microsoft.DotNet.Build.Tasks.TargetFramework
 {
     [MSBuildMultiThreadableTask]
-    public class ChooseBestTargetFrameworksTask : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class ChooseBestTargetFrameworksTask : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

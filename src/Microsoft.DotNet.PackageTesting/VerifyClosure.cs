@@ -1,7 +1,8 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,7 +19,7 @@ namespace Microsoft.DotNet.PackageTesting
     /// Verifies the closure of a set of DLLs, making sure all files are present and no cycles exist
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public class VerifyClosure : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class VerifyClosure : Task, IMultiThreadableTask
     {
 
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>

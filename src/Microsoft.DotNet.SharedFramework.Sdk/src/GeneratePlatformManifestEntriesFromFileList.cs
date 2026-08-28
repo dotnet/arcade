@@ -12,7 +12,7 @@ using System.Linq;
 namespace Microsoft.DotNet.SharedFramework.Sdk
 {
     [MSBuildMultiThreadableTask]
-    public class GeneratePlatformManifestEntriesFromFileList : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class GeneratePlatformManifestEntriesFromFileList : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

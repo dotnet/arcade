@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.FileCatalog
 {
@@ -13,7 +14,7 @@ namespace Microsoft.DotNet.Build.Tasks.FileCatalog
     /// Authenticode-signed by the Arcade signing infrastructure (via <c>FileExtensionSignInfo</c>).
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public class GenerateFileCatalog : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class GenerateFileCatalog : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

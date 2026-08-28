@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.CMake.Sdk
     /// Creates a CMake File API query file to request codemodel information.
     /// </summary>
     [MSBuildMultiThreadableTask]
-    public class CreateCMakeFileApiQuery : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class CreateCMakeFileApiQuery : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;

@@ -6,11 +6,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SharedFramework.Sdk
 {
     [MSBuildMultiThreadableTask]
-    public class ValidateFileVersions : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public class ValidateFileVersions : Task, IMultiThreadableTask
     {
         private static readonly Version ZeroVersion = new Version(0, 0, 0, 0);
 

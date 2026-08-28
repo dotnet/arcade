@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {
@@ -16,7 +17,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
     /// The format is specified at https://manpages.debian.org/bookworm/dpkg-dev/deb-changelog.5.en.html
     /// </remarks>
     [MSBuildMultiThreadableTask]
-    public sealed class CreateChangelogFile : Microsoft.Build.Utilities.Task, IMultiThreadableTask
+    public sealed class CreateChangelogFile : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
