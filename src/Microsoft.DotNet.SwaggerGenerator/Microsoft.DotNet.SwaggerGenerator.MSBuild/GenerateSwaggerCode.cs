@@ -16,7 +16,12 @@ using Task = Microsoft.Build.Utilities.Task;
 
 namespace Microsoft.DotNet.SwaggerGenerator.MSBuild
 {
-    [MSBuildMultiThreadableTask]
+    // Not annotated with [MSBuildMultiThreadableTask]: the code generation path calls
+    // TypeReference.Array/Object, which do a non-atomic TryGetValue/Add against
+    // ConditionalWeakTables keyed by process-wide singletons. Two concurrent cold
+    // invocations can both miss and the second Add throws. The interface is still
+    // implemented so that TaskEnvironment is injected and paths resolve correctly;
+    // the task simply keeps running in the task host under -mt.
     public class GenerateSwaggerCode : Task, IMultiThreadableTask
     {
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
