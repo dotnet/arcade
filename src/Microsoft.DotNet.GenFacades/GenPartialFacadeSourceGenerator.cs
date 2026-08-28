@@ -16,12 +16,12 @@ namespace Microsoft.DotNet.GenFacades
     public class GenPartialFacadeSourceGenerator
     {
         public static bool Execute(
-            Microsoft.Build.Framework.AbsolutePath[] seeds,
-            Microsoft.Build.Framework.AbsolutePath contractAssembly,
-            Microsoft.Build.Framework.AbsolutePath[] compileFiles,
+            AbsolutePath[] seeds,
+            AbsolutePath contractAssembly,
+            AbsolutePath[] compileFiles,
             string defineConstants,
             string langVersion,
-            Microsoft.Build.Framework.AbsolutePath outputSourcePath,
+            AbsolutePath outputSourcePath,
             TaskLoggingHelper logger,
             bool ignoreMissingTypes = false,
             string[] ignoreMissingTypesList = null,
@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.GenFacades
             IEnumerable<string> referenceTypes = GetPublicVisibleTypes(contractAssembly, includeTypeForwards: true);
 
             // Normalizing and Removing Relative Segments from the seed paths.
-            Microsoft.Build.Framework.AbsolutePath[] distinctSeeds = seeds.Distinct().ToArray();
+            AbsolutePath[] distinctSeeds = seeds.Distinct().ToArray();
             string[] seedNames = distinctSeeds.Select(seed => Path.GetFileName(seed.Value)).ToArray();
 
             if (distinctSeeds.Count() != seedNames.Distinct(StringComparer.InvariantCultureIgnoreCase).Count())
@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.GenFacades
             return dictionary;
         }
 
-        private static IEnumerable<string> GetPublicVisibleTypes(Microsoft.Build.Framework.AbsolutePath assembly, bool includeTypeForwards = false)
+        private static IEnumerable<string> GetPublicVisibleTypes(AbsolutePath assembly, bool includeTypeForwards = false)
         {
             using (var peReader = new PEReader(new FileStream(assembly, FileMode.Open, FileAccess.Read, FileShare.Delete | FileShare.Read)))
             {
@@ -139,10 +139,10 @@ namespace Microsoft.DotNet.GenFacades
             return (typeDefination.Attributes & TypeAttributes.Public) != 0;
         }
 
-        private static IReadOnlyDictionary<string, IList<string>> GenerateTypeTable(IEnumerable<Microsoft.Build.Framework.AbsolutePath> seedAssemblies)
+        private static IReadOnlyDictionary<string, IList<string>> GenerateTypeTable(IEnumerable<AbsolutePath> seedAssemblies)
         {
             var typeTable = new Dictionary<string, IList<string>>();
-            foreach(Microsoft.Build.Framework.AbsolutePath assembly in seedAssemblies)
+            foreach(AbsolutePath assembly in seedAssemblies)
             {                
                 IEnumerable<string> types = GetPublicVisibleTypes(assembly);
                 foreach (string type in types)

@@ -149,7 +149,7 @@ namespace Microsoft.DotNet.PackageTesting
             public string Name { get; }
             public string[] Types { get; }
 
-            public static AssemblyInfo GetAssemblyInfo(Microsoft.Build.Framework.AbsolutePath path)
+            public static AssemblyInfo GetAssemblyInfo(AbsolutePath path)
             {
                 try
                 {

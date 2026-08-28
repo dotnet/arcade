@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Build.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -54,19 +55,19 @@ namespace Microsoft.DotNet.Tools
         }
 
         public static void Run(
-            IEnumerable<Microsoft.Build.Framework.AbsolutePath> packagePaths,
-            Microsoft.Build.Framework.AbsolutePath? outDirectoryOpt,
+            IEnumerable<AbsolutePath> packagePaths,
+            AbsolutePath? outDirectoryOpt,
             VersionTranslation translation,
             bool exactVersions,
             Func<string, string, string, bool> allowPreReleaseDependency = null)
         {
-            Microsoft.Build.Framework.AbsolutePath? tempDirectoryOpt;
+            AbsolutePath? tempDirectoryOpt;
             if (outDirectoryOpt != null)
             {
                 // MSBuildTask0002: the temp root is only used as the parent of a freshly generated unique
                 // directory/file name, so it is never shared between concurrently running tasks.
                 #pragma warning disable MSBuildTask0002
-                tempDirectoryOpt = new Microsoft.Build.Framework.AbsolutePath(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+                tempDirectoryOpt = new AbsolutePath(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
                 #pragma warning restore MSBuildTask0002
                 Directory.CreateDirectory(tempDirectoryOpt.Value);
             }
@@ -101,7 +102,7 @@ namespace Microsoft.DotNet.Tools
             }
         }
 
-        private static void LoadPackages(IEnumerable<Microsoft.Build.Framework.AbsolutePath> packagePaths, Dictionary<string, PackageInfo> packages, Microsoft.Build.Framework.AbsolutePath? tempDirectoryOpt, VersionTranslation translation)
+        private static void LoadPackages(IEnumerable<AbsolutePath> packagePaths, Dictionary<string, PackageInfo> packages, AbsolutePath? tempDirectoryOpt, VersionTranslation translation)
         {
             bool readOnly = tempDirectoryOpt == null;
 
@@ -118,7 +119,7 @@ namespace Microsoft.DotNet.Tools
                 else
                 {
                     tempPathOpt = Path.Combine(tempDirectoryOpt.Value, Guid.NewGuid().ToString());
-                    File.Copy(packagePath, new Microsoft.Build.Framework.AbsolutePath(tempPathOpt));
+                    File.Copy(packagePath, new AbsolutePath(tempPathOpt));
                     package = Package.Open(tempPathOpt, FileMode.Open, FileAccess.ReadWrite);
                 }
 
@@ -256,7 +257,7 @@ namespace Microsoft.DotNet.Tools
 
                         if (tempPathOpt != null)
                         {
-                            File.Delete(new Microsoft.Build.Framework.AbsolutePath(tempPathOpt));
+                            File.Delete(new AbsolutePath(tempPathOpt));
                         }
                     }
                 }
@@ -359,7 +360,7 @@ namespace Microsoft.DotNet.Tools
             ThrowExceptions(errors);
         }
 
-        private static void SavePackages(Dictionary<string, PackageInfo> packages, Microsoft.Build.Framework.AbsolutePath outDirectory)
+        private static void SavePackages(Dictionary<string, PackageInfo> packages, AbsolutePath outDirectory)
         {
             Directory.CreateDirectory(outDirectory);
 
@@ -375,7 +376,7 @@ namespace Microsoft.DotNet.Tools
 
                 try
                 {
-                    File.Copy(new Microsoft.Build.Framework.AbsolutePath(package.TempPathOpt), new Microsoft.Build.Framework.AbsolutePath(finalPath), overwrite: true);
+                    File.Copy(new AbsolutePath(package.TempPathOpt), new AbsolutePath(finalPath), overwrite: true);
                 }
                 catch (Exception e)
                 {

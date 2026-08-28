@@ -14,13 +14,14 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using AbsolutePath = Microsoft.Build.Framework.AbsolutePath;
 using TaskLoggingHelper = Microsoft.Build.Utilities.TaskLoggingHelper;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
     public static class NuGetUtility
     {
-        internal static IEnumerable<Version> GetAllVersionsForPackageId(string packageId, bool includePrerelease, bool includeUnlisted, TaskLoggingHelper log, Microsoft.Build.Framework.AbsolutePath rootDirectory, CancellationToken cancellationToken)
+        internal static IEnumerable<Version> GetAllVersionsForPackageId(string packageId, bool includePrerelease, bool includeUnlisted, TaskLoggingHelper log, AbsolutePath rootDirectory, CancellationToken cancellationToken)
         {
             List<Version> result = new List<Version>();
             ISettings settings = Settings.LoadDefaultSettings(rootDirectory);
@@ -89,7 +90,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                            .FirstOrDefault();
         }
 
-        public static void WriteRuntimeGraph(Microsoft.Build.Framework.AbsolutePath filePath, RuntimeGraph runtimeGraph)
+        public static void WriteRuntimeGraph(AbsolutePath filePath, RuntimeGraph runtimeGraph)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Create))
             using (var textWriter = new StreamWriter(fileStream))

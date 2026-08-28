@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Build.Framework;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -13,7 +14,7 @@ namespace Microsoft.DotNet.GenFacades
 {
     internal class TypeParser
     {
-        public static HashSet<string> GetAllPublicTypes(IEnumerable<Microsoft.Build.Framework.AbsolutePath> files, IEnumerable<string> constants, string langVersion)
+        public static HashSet<string> GetAllPublicTypes(IEnumerable<AbsolutePath> files, IEnumerable<string> constants, string langVersion)
         {
             HashSet<string> types = new HashSet<string>();
 
@@ -130,11 +131,11 @@ namespace Microsoft.DotNet.GenFacades
             return namespaceSyntax.Name.ToFullString().Trim();
         }
 
-        private static IEnumerable<SyntaxTree> GetSourceTrees(IEnumerable<Microsoft.Build.Framework.AbsolutePath> sourceFiles, IEnumerable<string> constants, LanguageVersion languageVersion)
+        private static IEnumerable<SyntaxTree> GetSourceTrees(IEnumerable<AbsolutePath> sourceFiles, IEnumerable<string> constants, LanguageVersion languageVersion)
         {
             CSharpParseOptions options = new CSharpParseOptions(languageVersion: languageVersion, preprocessorSymbols: constants);
             List<SyntaxTree> result = new List<SyntaxTree>();
-            foreach (Microsoft.Build.Framework.AbsolutePath sourceFile in sourceFiles)
+            foreach (AbsolutePath sourceFile in sourceFiles)
             {
                 if (string.IsNullOrEmpty(sourceFile.Value))
                 {

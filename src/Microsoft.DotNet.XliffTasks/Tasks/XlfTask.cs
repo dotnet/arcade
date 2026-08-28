@@ -44,7 +44,7 @@ namespace XliffTasks.Tasks
 
         protected abstract void ExecuteCore();
 
-        internal static TranslatableDocument LoadSourceDocument(Microsoft.Build.Framework.AbsolutePath path, string format)
+        internal static TranslatableDocument LoadSourceDocument(AbsolutePath path, string format)
         {
             TranslatableDocument document;
 
@@ -80,7 +80,7 @@ namespace XliffTasks.Tasks
             return document;
         }
 
-        internal static XlfDocument LoadXlfDocument(Microsoft.Build.Framework.AbsolutePath path, string language = null, bool createIfNonExistent = false)
+        internal static XlfDocument LoadXlfDocument(AbsolutePath path, string language = null, bool createIfNonExistent = false)
         {
             XlfDocument document = new();
 

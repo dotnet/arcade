@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Build.Framework;
 using System;
 using System.Threading;
 using Azure.Storage.Blobs;
@@ -35,7 +36,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     if (options.PassIfExistingItemIdentical)
                     {
-                        if (!await blobClient.IsFileIdenticalToBlobAsync(new Microsoft.Build.Framework.AbsolutePath(file)))
+                        if (!await blobClient.IsFileIdenticalToBlobAsync(new AbsolutePath(file)))
                         {
                             _log.LogError($"Asset '{file}' already exists with different contents at '{blobClient.Uri}'");
                         }

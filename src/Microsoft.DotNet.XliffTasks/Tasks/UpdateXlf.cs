@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
@@ -38,7 +38,7 @@ namespace XliffTasks.Tasks
                 foreach (string language in Languages)
                 {
                     string xlfPath = XlfTask.GetXlfPath(sourceDocumentPath, language);
-                    Microsoft.Build.Framework.AbsolutePath absoluteXlfPath = TaskEnvironment.GetAbsolutePath(xlfPath);
+                    AbsolutePath absoluteXlfPath = TaskEnvironment.GetAbsolutePath(xlfPath);
                     XlfDocument xlfDocument;
 
                     try

@@ -428,7 +428,7 @@ namespace Microsoft.DotNet.PackageTesting
             public string[] ModuleReferences { get; }
             public CheckState State { get; set; }
 
-            public static AssemblyInfo GetAssemblyInfo(Microsoft.Build.Framework.AbsolutePath path)
+            public static AssemblyInfo GetAssemblyInfo(AbsolutePath path)
             {
                 try
                 {

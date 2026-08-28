@@ -1,6 +1,7 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Build.Framework;
 using System;
 using System.IO;
 using System.Text;
@@ -26,7 +27,7 @@ namespace XliffTasks.Model
         /// <summary>
         /// Loads (or reloads) the document content from the given file path.
         /// </summary>
-        public void Load(Microsoft.Build.Framework.AbsolutePath path)
+        public void Load(AbsolutePath path)
         {
             using FileStream stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
             Load(stream);
@@ -56,7 +57,7 @@ namespace XliffTasks.Model
         /// <summary>
         /// Saves the document's content to the given file path.
         /// </summary>
-        public void Save(Microsoft.Build.Framework.AbsolutePath path)
+        public void Save(AbsolutePath path)
         {
             //On Windows:
             // Readers will prevent the file from being overwritten due to FileShare.Read.
@@ -67,7 +68,7 @@ namespace XliffTasks.Model
             // reading is happening, each reader will see file before or after overwrite, not in between
 
             EnsureContent();
-            Microsoft.Build.Framework.AbsolutePath tempPath = new(Path.Combine(Path.GetDirectoryName(path), Path.GetRandomFileName()));
+            AbsolutePath tempPath = new(Path.Combine(Path.GetDirectoryName(path), Path.GetRandomFileName()));
 
             using (FileStream stream = File.Open(tempPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
             {
