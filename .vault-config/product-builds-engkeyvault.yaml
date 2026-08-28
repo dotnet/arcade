@@ -12,6 +12,10 @@ references:
       name: helixkv
 
 keys:
+  dotnet-monitor-release-app-key:
+    type: RSA
+    size: 2048
+
   oneloc-localization-app-key:
     type: RSA
     size: 2048
