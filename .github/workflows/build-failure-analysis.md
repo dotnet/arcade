@@ -393,13 +393,15 @@ jobs:
             ZIP_ALLOWANCE=$((MAX_TOTAL_ZIP_BYTES - TOTAL_ZIP_BYTES))
             [ "${ZIP_ALLOWANCE}" -lt "${ZIP_CAP}" ] && ZIP_CAP="${ZIP_ALLOWANCE}"
             if [ "${ZIP_CAP}" -le 0 ]; then
-              echo "::warning::Cumulative compressed download budget ${MAX_TOTAL_ZIP_BYTES} is exhausted before ${safe_name}; stopping downloads."None
+              echo "::warning::Cumulative compressed download budget ${MAX_TOTAL_ZIP_BYTES} is exhausted before ${safe_name}; stopping downloads."
+              break
             fi
             # Bound this transfer by the time left as well, and never start one with
             # no time to finish in.
             TIME_LEFT=$(( DOWNLOAD_DEADLINE - $(date +%s) ))
             if [ "${TIME_LEFT}" -le 0 ]; then
-              echo "::warning::Download time budget ${DOWNLOAD_BUDGET}s exhausted before ${safe_name}; stopping downloads."None
+              echo "::warning::Download time budget ${DOWNLOAD_BUDGET}s exhausted before ${safe_name}; stopping downloads."
+              break
             fi
             ATTEMPT_SECONDS="${MAX_ATTEMPT_SECONDS}"
             [ "${TIME_LEFT}" -lt "${ATTEMPT_SECONDS}" ] && ATTEMPT_SECONDS="${TIME_LEFT}"

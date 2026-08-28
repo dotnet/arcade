@@ -1643,8 +1643,9 @@ jobs:
           # the newest build is completed AND failed. The head SHA is then
           # anchored to that build's own revision (below), so links/suggestions
           # always match the analysed binlog.
-          builds_json=$(curl -sSL --retry 3 --connect-timeout 10 --max-time 20 --retry-max-time 40 \
-            "${ADO_API}/build/builds?definitions=${ADO_BUILD_DEFINITION_ID}&branchName=refs/pull/${PR_NUMBER}/merge&queryOrder=queueTimeDescending&\$top=1&api-version=7.1")
+          ado_get "build list for PR #${PR_NUMBER}" \
+            "${ADO_API}/build/builds?definitions=${ADO_BUILD_DEFINITION_ID}&branchName=refs/pull/${PR_NUMBER}/merge&queryOrder=queueTimeDescending&\$top=1&api-version=7.1" || emit_none
+          builds_json="${ADO_DOC}"
           BUILD_ID=$(printf '%s' "${builds_json}" | jq -r '.value // [] | .[0].id // empty')
           BUILD_STATUS=$(printf '%s' "${builds_json}" | jq -r '.value // [] | .[0].status // empty')
           BUILD_RESULT=$(printf '%s' "${builds_json}" | jq -r '.value // [] | .[0].result // empty')
@@ -1763,13 +1764,15 @@ jobs:
             ZIP_ALLOWANCE=$((MAX_TOTAL_ZIP_BYTES - TOTAL_ZIP_BYTES))
             [ "${ZIP_ALLOWANCE}" -lt "${ZIP_CAP}" ] && ZIP_CAP="${ZIP_ALLOWANCE}"
             if [ "${ZIP_CAP}" -le 0 ]; then
-              echo "::warning::Cumulative compressed download budget ${MAX_TOTAL_ZIP_BYTES} is exhausted before ${safe_name}; stopping downloads."None
+              echo "::warning::Cumulative compressed download budget ${MAX_TOTAL_ZIP_BYTES} is exhausted before ${safe_name}; stopping downloads."
+              break
             fi
             # Bound this transfer by the time left as well, and never start one with
             # no time to finish in.
             TIME_LEFT=$(( DOWNLOAD_DEADLINE - $(date +%s) ))
             if [ "${TIME_LEFT}" -le 0 ]; then
-              echo "::warning::Download time budget ${DOWNLOAD_BUDGET}s exhausted before ${safe_name}; stopping downloads."None
+              echo "::warning::Download time budget ${DOWNLOAD_BUDGET}s exhausted before ${safe_name}; stopping downloads."
+              break
             fi
             ATTEMPT_SECONDS="${MAX_ATTEMPT_SECONDS}"
             [ "${TIME_LEFT}" -lt "${ATTEMPT_SECONDS}" ] && ATTEMPT_SECONDS="${TIME_LEFT}"
