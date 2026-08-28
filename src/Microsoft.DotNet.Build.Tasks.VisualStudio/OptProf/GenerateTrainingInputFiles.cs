@@ -69,7 +69,8 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
                 Log.LogError($"Invalid configuration file format: missing 'assemblies' element in '{ConfigurationFile}'.");
             }
 
-            if (!Directory.Exists(TaskEnvironment.GetAbsolutePath(InsertionDirectory)))
+            AbsolutePath insertionDirectory = TaskEnvironment.GetAbsolutePath(InsertionDirectory);
+            if (!Directory.Exists(insertionDirectory))
             {
                 Log.LogError($"Directory specified in InsertionDirectory does not exist: '{InsertionDirectory}'.");
             }
@@ -82,9 +83,7 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
             // Handle product entries
             foreach (var product in config.Products)
             {
-                string vsixFilePath = Path.Combine(InsertionDirectory, product.Name);
-
-                var jsonManifest = ReadVsixJsonManifest(vsixFilePath);
+                var jsonManifest = ReadVsixJsonManifest(TaskEnvironment.GetAbsolutePath(Path.Combine(insertionDirectory, product.Name)));
                 var ibcEntries = IbcEntry.GetEntriesFromVsixJsonManifest(jsonManifest).ToArray();
 
                 WriteEntries(product.Tests, ibcEntries);
@@ -98,9 +97,9 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
             }
         }
 
-        private JObject ReadVsixJsonManifest(string vsixPath)
+        private JObject ReadVsixJsonManifest(AbsolutePath vsixPath)
         {
-            using (var archive = new ZipArchive(File.Open(TaskEnvironment.GetAbsolutePath(vsixPath), FileMode.Open), ZipArchiveMode.Read))
+            using (var archive = new ZipArchive(File.Open(vsixPath, FileMode.Open), ZipArchiveMode.Read))
             {
                 var entry = archive.GetEntry("manifest.json");
 
@@ -143,19 +142,18 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
 
         private void WriteEntries(IbcEntry[] ibcEntries, string outDir)
         {
-            Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(outDir));
+            AbsolutePath outDirPath = TaskEnvironment.GetAbsolutePath(outDir);
+            Directory.CreateDirectory(outDirPath);
 
             foreach (var entry in ibcEntries)
             {
                 int index = 0;
-                string basePath = Path.Combine(outDir, entry.RelativeDirectoryPath.Replace("\\", "") + Path.GetFileNameWithoutExtension(entry.RelativeInstallationPath));
+                string basePath = Path.Combine(outDirPath, entry.RelativeDirectoryPath.Replace("\\", "") + Path.GetFileNameWithoutExtension(entry.RelativeInstallationPath));
 
-                string fullPath;
                 AbsolutePath fullAbsolutePath;
                 do
                 {
-                    fullPath = basePath + "." + index + ".IBC.json";
-                    fullAbsolutePath = TaskEnvironment.GetAbsolutePath(fullPath);
+                    fullAbsolutePath = TaskEnvironment.GetAbsolutePath(basePath + "." + index + ".IBC.json");
                     index++;
                 }
                 while (File.Exists(fullAbsolutePath));

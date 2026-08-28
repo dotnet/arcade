@@ -120,9 +120,8 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                     // Copy wixproj file - fail if ProjectPath is not defined
                     if (_defineConstantsDictionary.TryGetValue("ProjectPath", out var projectPath))
                     {
-                        string destPath = Path.Combine(WixpackWorkingDir, Path.GetFileName(projectPath));
                         AbsolutePath projectPathAbsolute = TaskEnvironment.GetAbsolutePath(projectPath);
-                        AbsolutePath destPathAbsolute = TaskEnvironment.GetAbsolutePath(destPath);
+                        AbsolutePath destPathAbsolute = TaskEnvironment.GetAbsolutePath(Path.Combine(wixpackWorkingDir, Path.GetFileName(projectPath)));
                         File.Copy(projectPathAbsolute, destPathAbsolute, overwrite: true);
                     }
                     else
@@ -1040,8 +1039,8 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
         private AbsolutePath CopySourceFile(string fileId, string source, string relativeRoot = "")
         {
-            string destDir = Path.Combine(WixpackWorkingDir, fileId);
-            Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(destDir));
+            AbsolutePath destDir = TaskEnvironment.GetAbsolutePath(Path.Combine(WixpackWorkingDir, fileId));
+            Directory.CreateDirectory(destDir);
 
             source = GetAbsoluteSourcePath(source, relativeRoot);
             AbsolutePath sourcePath = TaskEnvironment.GetAbsolutePath(source);

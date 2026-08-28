@@ -53,10 +53,10 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
 
             var dropName = hasDropName ? ProductDropName.Substring(ProductDropNamePrefix.Length) : "dummy";
             var outputFileNameNoExt = string.IsNullOrEmpty(RepositoryName) ? "ProfilingInputs" : RepositoryName.Replace('/', '.');
-            var outputFilePath = Path.Combine(OutputDirectory, outputFileNameNoExt + ".props");
+            AbsolutePath outputDirectory = TaskEnvironment.GetAbsolutePath(OutputDirectory);
 
-            Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(OutputDirectory));
-            File.WriteAllText(TaskEnvironment.GetAbsolutePath(outputFilePath),
+            Directory.CreateDirectory(outputDirectory);
+            File.WriteAllText(Path.Combine(outputDirectory, outputFileNameNoExt + ".props"),
 $@"<?xml version=""1.0""?>
 <Project>
   <ItemGroup>
