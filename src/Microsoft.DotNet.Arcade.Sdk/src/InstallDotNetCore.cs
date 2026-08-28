@@ -52,14 +52,14 @@ namespace Microsoft.DotNet.Arcade.Sdk
             AbsolutePath globalJsonPath = TaskEnvironment.GetAbsolutePath(GlobalJsonPath);
             if (!File.Exists(globalJsonPath))
             {
-                Log.LogWarning($"Unable to find global.json file '{GlobalJsonPath} exiting");
+                Log.LogWarning($"Unable to find global.json file '{globalJsonPath}' exiting");
                 return true;
             }
 
             AbsolutePath dotNetInstallScript = TaskEnvironment.GetAbsolutePath(DotNetInstallScript);
             if (!File.Exists(dotNetInstallScript))
             {
-                Log.LogError($"Unable to find dotnet install script '{DotNetInstallScript} exiting");
+                Log.LogError($"Unable to find dotnet install script '{dotNetInstallScript}' exiting");
                 return !Log.HasLoggedErrors;
             }
 
@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                 AbsolutePath versionsPropsPath = TaskEnvironment.GetAbsolutePath(VersionsPropsPath);
                                 if (!File.Exists(versionsPropsPath))
                                 {
-                                    Log.LogError($"Unable to find translation file {VersionsPropsPath}");
+                                    Log.LogError($"Unable to find translation file {versionsPropsPath}");
                                     return !Log.HasLoggedErrors;
                                 }
 
@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                             }
                                         }
 
-                                        Log.LogMessage(MessageImportance.Low, $"Executing: {DotNetInstallScript} {arguments}");
+                                        Log.LogMessage(MessageImportance.Low, $"Executing: {dotNetInstallScript} {arguments}");
                                         var startInfo = TaskEnvironment.GetProcessStartInfo();
                                         startInfo.FileName = dotNetInstallScript;
                                         startInfo.Arguments = arguments;
@@ -189,7 +189,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                         if (process.ExitCode != 0)
                                         {
                                             string safeArguments = BuildInstallArguments(runtime, normalizedVersion, architecture, includeRuntimeSourceOptions: false);
-                                            Log.LogError($"dotnet-install failed for runtime '{runtime}' version '{normalizedVersion}' (exit code {process.ExitCode}). Command: {DotNetInstallScript} {safeArguments}");
+                                            Log.LogError($"dotnet-install failed for runtime '{runtime}' version '{normalizedVersion}' (exit code {process.ExitCode}). Command: {dotNetInstallScript} {safeArguments}");
                                         }
                                     }
                                 }
@@ -305,9 +305,10 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 _ => Path.Combine(dotnetRoot, "shared", version)
             };
 
-            if (Directory.Exists(TaskEnvironment.GetAbsolutePath(runtimePath)))
+            AbsolutePath runtimeDirectory = TaskEnvironment.GetAbsolutePath(runtimePath);
+            if (Directory.Exists(runtimeDirectory))
             {
-                Log.LogMessage(MessageImportance.Normal, $"  Runtime toolset '{runtime}/{architecture} v{version}' already installed in directory '{runtimePath}'.");
+                Log.LogMessage(MessageImportance.Normal, $"  Runtime toolset '{runtime}/{architecture} v{version}' already installed in directory '{runtimeDirectory}'.");
                 return true;
             }
 
