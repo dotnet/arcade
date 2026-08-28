@@ -92,13 +92,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
 
         private async Task PushPackagesToFeed(string assetsFolder, string feedUrl)
         {
-            string packagesFolder = Path.Combine(assetsFolder, "packages");
+            AbsolutePath packagesFolder = TaskEnvironment.GetAbsolutePath(Path.Combine(assetsFolder, "packages"));
 
             TargetFeedConfig targetFeedConfig = new TargetFeedConfig(TargetFeedContentType.Package, feedUrl, FeedType.AzDoNugetFeed, AzureDevOpsPersonalAccessToken);
             HashSet<PackageIdentity> packagesToPublish = new HashSet<PackageIdentity>(
-                Directory.GetFiles(TaskEnvironment.GetAbsolutePath(packagesFolder)).Select(packagePath =>
+                Directory.GetFiles(packagesFolder).Select(packagePath =>
                 {
-                    using (BinaryReader reader = new BinaryReader(File.Open(TaskEnvironment.GetAbsolutePath(packagePath), FileMode.Open)))
+                    using (BinaryReader reader = new BinaryReader(File.Open(new AbsolutePath(packagePath), FileMode.Open)))
                     {
                         PackageArchiveReader packageReader = new PackageArchiveReader(reader.BaseStream);
                         return packageReader.NuspecReader.GetIdentity();
@@ -110,7 +110,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
                 {
                     string localPackagePath = Path.Combine(packagesFolder, $"{package.Id}.{package.Version}.nupkg");
 
-                    if (!File.Exists(TaskEnvironment.GetAbsolutePath(localPackagePath)))
+                    if (!File.Exists(localPackagePath))
                     {
                         Log.LogError($"Could not locate '{package.Id}.{package.Version}' at '{localPackagePath}'");
                         return;
