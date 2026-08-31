@@ -41,6 +41,20 @@ namespace Microsoft.Arcade.Common
         public Action<int, TimeSpan> RetryDelayCallback { get; set; }
         public CancellationToken DefaultCancellationToken { get; set; } = CancellationToken.None;
 
+        public Task<bool> RunAsync(Func<int, Task<bool>> actionSuccessfulAsync)
+        {
+            return RunAsync(actionSuccessfulAsync, DefaultCancellationToken);
+        }
+
+        public Task<bool> RunAsync(
+            Func<int, Task<bool>> actionSuccessfulAsync,
+            CancellationToken cancellationToken)
+        {
+            return RunAsync(
+                async attempt => (RetryResult)await actionSuccessfulAsync(attempt),
+                cancellationToken);
+        }
+
         public Task<bool> RunAsync(Func<int, Task<RetryResult>> actionAsync)
         {
             return RunAsync(actionAsync, DefaultCancellationToken);

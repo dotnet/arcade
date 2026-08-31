@@ -24,6 +24,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles
             _maxAttempts = maxAttempts;
         }
 
+        public Task<bool> RunAsync(Func<int, Task<bool>> actionSuccessfulAsync)
+            => RunAsync(actionSuccessfulAsync, CancellationToken.None);
+
+        public Task<bool> RunAsync(Func<int, Task<bool>> actionSuccessfulAsync, CancellationToken cancellationToken)
+            => RunAsync(
+                async attempt => (RetryResult)await actionSuccessfulAsync(attempt),
+                cancellationToken);
+
         public Task<bool> RunAsync(Func<int, Task<RetryResult>> actionAsync)
             => RunAsync(actionAsync, CancellationToken.None);
 

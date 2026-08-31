@@ -34,6 +34,7 @@ namespace Microsoft.DotNet.Helix.Client
         IMachine Machine { get; }
         IScaleSets ScaleSets { get; }
         IStorage Storage { get; }
+        ITelemetry Telemetry { get; }
         IWorkItem WorkItem { get; }
     }
 
@@ -126,6 +127,8 @@ namespace Microsoft.DotNet.Helix.Client
 
         public IStorage Storage { get; }
 
+        public ITelemetry Telemetry { get; }
+
         public IWorkItem WorkItem { get; }
 
 
@@ -145,6 +148,7 @@ namespace Microsoft.DotNet.Helix.Client
             Machine = new Machine(this);
             ScaleSets = new ScaleSets(this);
             Storage = new Storage(this);
+            Telemetry = new Telemetry(this);
             WorkItem = new WorkItem(this);
             SerializerSettings = new JsonSerializerSettings
             {

@@ -15,8 +15,7 @@ namespace Microsoft.DotNet.Helix.JobSender.Test
     {
         /// <summary>
         /// A legacy <see cref="IJobDefinition"/> implementer that only implements the original
-        /// single-callback <c>SendAsync</c> overload and relies on the default interface
-        /// implementation for the new two-callback overload. It records the callback and
+        /// single-callback <c>SendAsync</c> overload. It records the callback and
         /// cancellation token it receives so the delegation can be asserted.
         /// </summary>
         private sealed class LegacySingleCallbackJobDefinition : IJobDefinition
@@ -51,18 +50,16 @@ namespace Microsoft.DotNet.Helix.JobSender.Test
             public IJobDefinition WithStorageAccountConnectionString(string accountConnectionString) => throw new NotImplementedException();
             public IJobDefinition WithResultsContainerName(string resultsContainerName) => throw new NotImplementedException();
             public IJobDefinition WithMaxRetryCount(int? maxRetryCount) => throw new NotImplementedException();
-            public IJobDefinition WithQueueStats() => throw new NotImplementedException();
         }
 
         /// <summary>
-        /// The two-callback <c>SendAsync</c> overload is a new member on the public
-        /// <see cref="IJobDefinition"/> interface. Its default interface implementation must keep
+        /// The two-callback <c>SendAsync</c> extension must keep
         /// existing external implementers working by delegating to the single-callback overload
         /// (dropping the separate queue-stats callback), forwarding the caller's log and
         /// cancellation token unchanged.
         /// </summary>
         [Fact]
-        public async Task DefaultInterfaceImplementation_DelegatesToSingleCallbackOverload()
+        public async Task ExtensionMethod_DelegatesToSingleCallbackOverload()
         {
             var sentJob = new Mock<ISentJob>().Object;
             Action<string> log = _ => { };
@@ -71,7 +68,6 @@ namespace Microsoft.DotNet.Helix.JobSender.Test
 
             var def = new LegacySingleCallbackJobDefinition { JobToReturn = sentJob };
 
-            // Invoke through the interface so the default interface implementation is exercised.
             ISentJob result = await ((IJobDefinition)def).SendAsync(log, queueStatsLog, cts.Token);
 
             Assert.Equal(1, def.SendInvocations);
