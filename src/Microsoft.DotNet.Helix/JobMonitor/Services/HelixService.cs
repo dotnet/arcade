@@ -106,9 +106,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             string outputDirectory = _fileSystem.PathCombine(workingDirectory, SanitizeDirName(jobName));
             _fileSystem.CreateDirectory(outputDirectory);
 
-            JobResultsUri resultsUri = await RetryAsync(() => _helixApi.Job.ResultsAsync(jobName), cancellationToken);
+            JobResultsUri resultsUri = await RetryAsync(() => _helixApi.Job.ResultsAsync(jobName, cancellationToken), cancellationToken);
             IImmutableList<UploadedFile> availableFiles = await RetryAsync(
-                () => _helixApi.WorkItem.ListFilesAsync(workItemName, jobName, false),
+                () => _helixApi.WorkItem.ListFilesAsync(workItemName, jobName, false, cancellationToken: cancellationToken),
                 cancellationToken);
 
             availableFiles = [.. availableFiles.Where(f => LooksLikeTestResultFile(f.Name))];
