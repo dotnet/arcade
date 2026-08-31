@@ -49,7 +49,9 @@ jobs:
   displayName: OneLocBuild${{ parameters.JobNameSuffix }}
 
   variables:
-    - group: OneLocBuildVariables # Contains the CeapexPat and GithubPat
+    # Attach legacy secrets only when either PAT fallback can be selected.
+    - ${{ if or(eq(parameters.CeapexServiceConnection, ''), and(ne(variables['System.TeamProject'], 'internal'), ne(variables['System.TeamProject'], 'DevDiv')), and(eq(parameters.RepoType, 'gitHub'), or(ne(parameters.UseGitHubAppAuthentication, true), and(ne(variables['System.TeamProject'], 'internal'), ne(variables['System.TeamProject'], 'DevDiv'), ne(parameters.UseGitHubAppAuthenticationInOtherProjects, true))))) }}:
+      - group: OneLocBuildVariables # Contains the CeapexPat and GithubPat
     - name: _GenerateLocProjectArguments
       value: -SourcesDirectory ${{ parameters.SourcesDirectory }}
         -LanguageSet "${{ parameters.LanguageSet }}"
