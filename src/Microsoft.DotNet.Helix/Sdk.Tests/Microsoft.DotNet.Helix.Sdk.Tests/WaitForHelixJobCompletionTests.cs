@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Collections.Generic;
-using AwesomeAssertions;
+using FluentAssertions;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.Sdk;
 using Xunit;

@@ -17,8 +17,18 @@ namespace Microsoft.Arcade.Common
             CancellationToken cancellationToken);
     }
 
-    public readonly record struct RetryResult(bool Succeeded, TimeSpan? RetryAfter = null)
+    public readonly struct RetryResult
     {
+        public RetryResult(bool succeeded, TimeSpan? retryAfter = null)
+        {
+            Succeeded = succeeded;
+            RetryAfter = retryAfter;
+        }
+
+        public bool Succeeded { get; }
+
+        public TimeSpan? RetryAfter { get; }
+
         public static RetryResult Success => new(true);
 
         public static RetryResult Retry(TimeSpan? retryAfter = null)

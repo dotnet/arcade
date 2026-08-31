@@ -399,7 +399,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             if (properties is not JObject obj)
             {
-                return [];
+                return ImmutableDictionary<string, string>.Empty;
             }
 
             ImmutableDictionary<string, string>.Builder builder = ImmutableDictionary.CreateBuilder<string, string>();

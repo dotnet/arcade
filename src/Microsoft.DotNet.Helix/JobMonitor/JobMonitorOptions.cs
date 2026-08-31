@@ -282,7 +282,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             SystemAccessToken ??= new ChainedTokenCredential(
                     new AzureCliCredential(),
                     new VisualStudioCredential(),
+#pragma warning disable CS0618 // Retain VS Code authentication support on the release branch.
                     new VisualStudioCodeCredential())
+#pragma warning restore CS0618
                 .GetToken(new Azure.Core.TokenRequestContext(["499b84ac-1321-427f-aa17-267ca6975798/.default"]))
                 .Token;
 #endif

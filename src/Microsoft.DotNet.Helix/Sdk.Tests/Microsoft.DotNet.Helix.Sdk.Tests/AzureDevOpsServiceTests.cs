@@ -10,7 +10,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using AwesomeAssertions;
+using FluentAssertions;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Microsoft.DotNet.Helix.JobMonitor;
@@ -398,7 +398,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             IReadOnlyDictionary<string, IReadOnlySet<string>> failed = await service.GetFailedTestWorkItemsAsync(CancellationToken.None);
 
-            failed.Should().ContainKey(HelixJobGuid);
+            failed.Keys.Should().Contain(HelixJobGuid);
             failed[HelixJobGuid].Should().BeEquivalentTo("wi-a", "wi-b");
 
             // Sanity check that no /results pagination calls were issued.
@@ -512,7 +512,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             string tag = AzureDevOpsService.EncodeHelixJobTag(jobName);
 
             tag.Should().Be(expectedTag);
-            tag.Length.Should().BeLessThanOrEqualTo(50, "Azure DevOps limits test run tags to 50 characters");
+            tag.Length.Should().BeLessOrEqualTo(50, "Azure DevOps limits test run tags to 50 characters");
             tag.Should().MatchRegex("^[a-zA-Z0-9]+$", "Azure DevOps only allows alphanumeric test run tags");
 
             // The tag round-trips back to the canonical (dashed, lower-case) GUID form.

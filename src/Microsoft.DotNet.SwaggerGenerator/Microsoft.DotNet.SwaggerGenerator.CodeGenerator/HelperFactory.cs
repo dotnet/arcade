@@ -3,10 +3,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
+using System.Runtime.CompilerServices;
 using HandlebarsDotNet;
 using JetBrains.Annotations;
 
@@ -123,154 +125,217 @@ namespace Microsoft.DotNet.SwaggerGenerator
 
         private static HandlebarsBlockHelper CreateBlockHelperFunctionForMethod(MethodInfo method, object instance)
         {
-            return (output, options, context, arguments) =>
+            var outputParameter = Expression.Parameter(typeof(TextWriter), "output");
+            var optionsParameter = Expression.Parameter(typeof(HelperOptions), "options");
+            var contextParameter = Expression.Parameter(typeof(object), "context");
+            var argumentsParameter = Expression.Parameter(typeof(object[]), "arguments");
+
+            var parameterExpressions = GetParameterExpressions(method, argumentsParameter, new List<ProvidedParameter>
             {
-                var templateOutput = output;
-                var writer = new SafeTextWriter(output);
-                Action<TextWriter, object> template = (_, value) => options.Template(in templateOutput, value);
-                Action<TextWriter, object> inverse = (_, value) => options.Inverse(in templateOutput, value);
+                new ProvidedParameter("context", typeof(object), contextParameter),
+                new ProvidedParameter("output", typeof(TextWriter), outputParameter),
+                new ProvidedParameter("template", typeof(Action<TextWriter, object>), Expression.MakeMemberAccess(optionsParameter, typeof(HelperOptions).GetProperty("Template"))),
+                new ProvidedParameter("inverse", typeof(Action<TextWriter, object>), Expression.MakeMemberAccess(optionsParameter, typeof(HelperOptions).GetProperty("Inverse"))),
+            });
 
-                object result = method.Invoke(
-                    instance,
-                    GetParameterValues(method, context.Value, writer, template, inverse, arguments));
+            Expression invokeExpression;
+            if (!method.IsStatic)
+            {
+                invokeExpression = Expression.Call(Expression.Constant(instance), method, parameterExpressions);
+            }
+            else
+            {
+                invokeExpression = Expression.Call(method, parameterExpressions);
+            }
 
-                WriteResult(output, method.ReturnType, result);
-            };
+            Expression body;
+            if (method.ReturnType == typeof(void))
+            {
+                body = invokeExpression;
+            }
+            else
+            {
+                var writerOutput = ConvertResultExpression(method.ReturnType, invokeExpression);
+                body = Expression.Call(HandlebarsExtensionsWriteSafeString, outputParameter, writerOutput);
+            }
+
+            var result = Expression.Lambda<HandlebarsBlockHelper>(
+                body,
+                outputParameter,
+                optionsParameter,
+                contextParameter,
+                argumentsParameter);
+            Debug.WriteLine("Compiling Expression: " + result);
+            var function = result.Compile();
+            return (output, options, context, parameters) => { function(output, options, context, parameters); };
         }
 
         private static HandlebarsHelper CreateHelperFunctionForMethod(MethodInfo method, object instance)
         {
-            return (output, context, arguments) =>
-            {
-                object result = method.Invoke(
-                    instance,
-                    GetParameterValues(method, context.Value, new SafeTextWriter(output), null, null, arguments));
+            var outputParameter = Expression.Parameter(typeof(TextWriter), "output");
+            var contextParameter = Expression.Parameter(typeof(object), "context");
+            var argumentsParameter = Expression.Parameter(typeof(object[]), "arguments");
 
-                WriteResult(output, method.ReturnType, result);
-            };
+            var parameterExpressions = GetParameterExpressions(method, argumentsParameter, new List<ProvidedParameter>
+            {
+                new ProvidedParameter("context", typeof(object), contextParameter),
+                new ProvidedParameter("output", typeof(TextWriter), outputParameter),
+            });
+
+            Expression invokeExpression;
+            if (!method.IsStatic)
+            {
+                invokeExpression = Expression.Call(Expression.Constant(instance), method, parameterExpressions);
+            }
+            else
+            {
+                invokeExpression = Expression.Call(method, parameterExpressions);
+            }
+            var writerOutput = ConvertResultExpression(method.ReturnType, invokeExpression);
+            var body = Expression.Call(HandlebarsExtensionsWriteSafeString, outputParameter, writerOutput);
+
+            var result = Expression.Lambda<HandlebarsHelper>(
+                body,
+                outputParameter,
+                contextParameter,
+                argumentsParameter);
+            Debug.WriteLine("Compiling Expression: " + result.ToString());
+            var function = result.Compile();
+            return (output, context, parameters) => { function(output, context, parameters); };
         }
 
-        private static object[] GetParameterValues(
-            MethodInfo method,
-            object context,
-            TextWriter output,
-            Action<TextWriter, object> template,
-            Action<TextWriter, object> inverse,
-            Arguments arguments)
+        private static MethodInfo ObjectToString = typeof(object).GetMethod("ToString");
+
+        private static MethodInfo HandlebarsExtensionsWriteSafeString = typeof(HandlebarsExtensions).GetMethod(
+            "WriteSafeString",
+            new[] {typeof(TextWriter), typeof(string)});
+
+        private static MethodInfo EnumerableSkip(Type member) =>
+            typeof(Enumerable).GetMethod("Skip").MakeGenericMethod(member);
+
+        private static MethodInfo EnumerableToArray(Type member) =>
+            typeof(Enumerable).GetMethod("ToArray").MakeGenericMethod(member);
+
+        private static MethodInfo EnumerableSelect(Type input, Type output) =>
+            typeof(Enumerable).GetMethods()
+                .Single(
+                    m => m.Name == "Select" &&
+                         m.GetParameters().Length == 2 &&
+                         m.GetParameters()[1].ParameterType.GetGenericTypeDefinition() == typeof(Func<,>))
+                .MakeGenericMethod(input, output);
+
+        private static MethodInfo ConvertChangeType = typeof(Convert).GetMethod(
+            "ChangeType",
+            new[] {typeof(object), typeof(Type)});
+
+        private static MethodInfo HandlebarsUtilsIsTruthyOrNonEmpty = typeof(HandlebarsUtils).GetMethod("IsTruthyOrNonEmpty");
+
+        private class ProvidedParameter
         {
-            var values = new List<object>();
-            int argumentIndex = 0;
-
-            foreach (ParameterInfo parameter in method.GetParameters())
+            public ProvidedParameter(string name, Type type, Expression value)
             {
-                if (parameter.ParameterType == typeof(object) && parameter.Name == "context")
-                {
-                    values.Add(context);
-                }
-                else if (parameter.ParameterType == typeof(TextWriter) && parameter.Name == "output")
-                {
-                    values.Add(output);
-                }
-                else if (parameter.ParameterType == typeof(Action<TextWriter, object>) && parameter.Name == "template")
-                {
-                    values.Add(template);
-                }
-                else if (parameter.ParameterType == typeof(Action<TextWriter, object>) && parameter.Name == "inverse")
-                {
-                    values.Add(inverse);
-                }
-                else if (parameter.ParameterType.IsArray && parameter.GetCustomAttribute<ParamArrayAttribute>() != null)
-                {
-                    Type elementType = parameter.ParameterType.GetElementType();
-                    Array remainingArguments = Array.CreateInstance(elementType, arguments.Length - argumentIndex);
-                    for (int i = argumentIndex; i < arguments.Length; i++)
-                    {
-                        remainingArguments.SetValue(CoerceObject(elementType, arguments[i]), i - argumentIndex);
-                    }
-
-                    values.Add(remainingArguments);
-                    argumentIndex = arguments.Length;
-                }
-                else
-                {
-                    values.Add(CoerceObject(parameter.ParameterType, arguments[argumentIndex]));
-                    argumentIndex++;
-                }
+                Name = name;
+                Type = type;
+                Value = value;
             }
 
-            return values.ToArray();
+            public string Name { get; }
+            public Type Type { get; }
+            public Expression Value { get; }
+        }
+
+        private static IEnumerable<Expression> GetParameterExpressions(MethodInfo method, ParameterExpression argumentsParameter, List<ProvidedParameter> providedParameters)
+        {
+            var parameters = method.GetParameters();
+            var consumedInputCount = 0;
+
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                var parameter = parameters[i];
+                var providedParameter = providedParameters.FirstOrDefault(
+                    p => p.Type == parameter.ParameterType && p.Name == parameter.Name);
+                if (providedParameter != null)
+                {
+                    yield return providedParameter.Value;
+                    continue;
+                }
+
+                yield return GetExpressionForParameter(parameter, consumedInputCount, argumentsParameter);
+                consumedInputCount++;
+            }
         }
 
         private static readonly Type UndefinedBindingResultType =
-            typeof(Handlebars).Assembly.GetType("HandlebarsDotNet.UndefinedBindingResult");
+            typeof(Handlebars).Assembly.GetType("HandlebarsDotNet.Compiler.UndefinedBindingResult");
 
-        private static object CoerceObject(Type output, object input)
+        private static Expression CoerceObjectExpression(Type output, Expression input)
         {
             if (output == typeof(bool))
             {
-                return HandlebarsUtils.IsTruthyOrNonEmpty(input, includeZero: false);
-            }
-
-            if (input?.GetType() == UndefinedBindingResultType)
-            {
-                input = null;
-            }
-
-            Type nullableType = Nullable.GetUnderlyingType(output);
-            if (nullableType != null)
-            {
-                return input == null ? null : Convert.ChangeType(input, nullableType);
+                return Expression.Call(HandlebarsUtilsIsTruthyOrNonEmpty, input);
             }
 
             if (output.IsPrimitive)
             {
-                return Convert.ChangeType(input, output);
+                return Expression.Convert(Expression.Call(ConvertChangeType, input, Expression.Constant(output)), output);
             }
 
-            return input;
+            if (!output.IsValueType ||
+                (output.IsConstructedGenericType && output.GetGenericTypeDefinition() == typeof(Nullable<>)))
+            {
+                input = Expression.Condition(
+                    Expression.TypeIs(input, UndefinedBindingResultType),
+                    Expression.Constant(null, typeof(object)),
+                    input);
+            }
+
+            return Expression.Convert(input, output);
         }
 
-        private static void WriteResult(EncodedTextWriter output, Type type, object result)
+        private static Expression ConvertResultExpression(Type type, Expression input)
         {
-            if (type == typeof(void))
-            {
-                return;
-            }
-
             if (type == typeof(bool))
             {
-                output.Write((bool)result ? "true" : "", encode: false);
-                return;
+                return Expression.Condition(input, Expression.Constant("true"), Expression.Constant(""));
             }
 
-            output.Write(result.ToString(), encode: false);
+            return Expression.Call(input, ObjectToString);
         }
 
-        private sealed class SafeTextWriter : TextWriter
+        private static Expression GetExpressionForParameter(
+            ParameterInfo parameter,
+            int index,
+            ParameterExpression argumentsParameter)
         {
-            private EncodedTextWriter _writer;
-
-            public SafeTextWriter(EncodedTextWriter writer)
+            var parameterType = parameter.ParameterType;
+            if (parameter.ParameterType.IsArray && parameter.GetCustomAttribute<ParamArrayAttribute>() != null)
             {
-                _writer = writer;
+                return GetExpressionForParamArrayParameter(parameterType, index, argumentsParameter);
             }
 
-            public override Encoding Encoding => _writer.Encoding;
+            var element = Expression.ArrayIndex(argumentsParameter, Expression.Constant(index));
+            return CoerceObjectExpression(parameterType, element);
+        }
 
-            public override void Write(char value)
+        private static Expression GetExpressionForParamArrayParameter(Type parameterType, int index, ParameterExpression argumentsParameter)
+        {
+            Expression result = argumentsParameter;
+            if (index != 0)
             {
-                _writer.Write(value.ToString(), encode: false);
+                result = Expression.Call(EnumerableSkip(typeof(object)), result, Expression.Constant(index));
             }
 
-            public override void Write(string value)
-            {
-                _writer.Write(value, encode: false);
-            }
+            var elementType = parameterType.GetElementType();
+            var selectParam = Expression.Parameter(typeof(object), "o");
 
-            public override void Write(object value)
-            {
-                _writer.Write(value?.ToString(), encode: false);
-            }
+            result = Expression.Call(
+                EnumerableToArray(elementType),
+                Expression.Call(
+                    EnumerableSelect(typeof(object), elementType),
+                    result,
+                    Expression.Lambda(CoerceObjectExpression(elementType, selectParam), selectParam)));
+
+            return result;
         }
     }
 }
