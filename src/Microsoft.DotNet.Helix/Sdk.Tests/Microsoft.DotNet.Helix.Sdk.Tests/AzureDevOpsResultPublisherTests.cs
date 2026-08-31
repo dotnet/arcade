@@ -303,11 +303,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         {
             public List<int> RequestResultCounts { get; } = [];
             public List<int[]> RequestHierarchyNodeCounts { get; } = [];
+            public List<JsonElement> RequestBodies { get; } = [];
             public List<ResultAttachment> Attachments { get; } = [];
 
             public virtual Task<string> PublishResultsAsync(object results, CancellationToken cancellationToken)
             {
                 using JsonDocument requestBody = JsonDocument.Parse(JsonSerializer.Serialize(results));
+                RequestBodies.Add(requestBody.RootElement.Clone());
                 int resultCount = requestBody.RootElement.GetArrayLength();
                 RequestResultCounts.Add(resultCount);
                 RequestHierarchyNodeCounts.Add(

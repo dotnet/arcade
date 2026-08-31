@@ -241,12 +241,12 @@ internal sealed class AzureDevOpsResultPublisher
         });
         bool useFullyQualifiedName = _useFullyQualifiedTestName;
 
-        string DisplayNameFor(AggregatedResult result)
+        string DisplayNameFor(AggregatedResult result, bool isDataDrivenSubResult)
             => useFullyQualifiedName
-                ? TestNameFormatter.FormatDisplayName(result.FullyQualifiedName, result.Name)
+                ? TestNameFormatter.FormatDisplayName(result.FullyQualifiedName, result.Name, isDataDrivenSubResult)
                 : result.Name;
 
-        PublishedSubResult ConvertToSubTest(AggregatedResult result)
+        PublishedSubResult ConvertToSubTest(AggregatedResult result, bool isDataDrivenSubResult)
         {
             var customFields = new List<CustomField>();
             if (result.IsFlaky)
@@ -263,12 +263,16 @@ internal sealed class AzureDevOpsResultPublisher
             {
                 Comment = comment,
                 CustomFields = customFields,
-                DisplayName = DisplayNameFor(result),
+                DisplayName = DisplayNameFor(result, isDataDrivenSubResult),
                 Outcome = result.Result,
                 DurationInMs = result.DurationSeconds * 1000.0,
                 StackTrace = result.StackTrace,
                 ErrorMessage = result.FailureMessage,
-                SubResults = result.SubResults.Count == 0 ? null : [.. result.SubResults.Select(ConvertToSubTest)],
+                SubResults = result.SubResults.Count == 0
+                    ? null
+                    : [.. result.SubResults.Select(subResult => ConvertToSubTest(
+                        subResult,
+                        result.AggregationType == AggregationType.DataDriven))],
                 ResultGroupType = GetResultGroupType(result.AggregationType),
             };
         }
@@ -286,7 +290,7 @@ internal sealed class AzureDevOpsResultPublisher
                 customFields.Add(new CustomField("AttemptId", result.SubResults.Count - 1));
             }
 
-            string displayName = DisplayNameFor(result);
+            string displayName = DisplayNameFor(result, isDataDrivenSubResult: false);
 
             return new ConvertedResult(
                 new PublishedTestCase
@@ -304,7 +308,11 @@ internal sealed class AzureDevOpsResultPublisher
                     Comment = comment,
                     StackTrace = result.StackTrace,
                     ErrorMessage = result.FailureMessage,
-                    SubResults = result.SubResults.Count == 0 ? null : [.. result.SubResults.Select(ConvertToSubTest)],
+                    SubResults = result.SubResults.Count == 0
+                        ? null
+                        : [.. result.SubResults.Select(subResult => ConvertToSubTest(
+                            subResult,
+                            result.AggregationType == AggregationType.DataDriven))],
                     ResultGroupType = GetResultGroupType(result.AggregationType),
                     CustomFields = customFields,
                 },
