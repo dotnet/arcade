@@ -3,7 +3,9 @@
 
 using System;
 using System.CommandLine;
+#if DEBUG
 using Azure.Identity;
+#endif
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 
 namespace Microsoft.DotNet.Helix.JobMonitor
