@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         public void ComputeAllPassed_SingleResult_OnlyFailedAndNoneCountAsFailure(string result, bool expectedAllPassed)
         {
             var results = new[] { new AggregatedResult(AggregationType.Single, "Test1", 1, result) };
-            Assert.Equal(expectedAllPassed, AzureDevOpsResultPublisher.ComputeAllPassed(results));
+            Assert.Equal(expectedAllPassed, TestResultProcessor.ComputeAllPassed(results));
         }
 
         [Fact]
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 new(AggregationType.DataDriven, "Test2", 1, "Inconclusive"),
             ];
 
-            Assert.True(AzureDevOpsResultPublisher.ComputeAllPassed(results));
+            Assert.True(TestResultProcessor.ComputeAllPassed(results));
         }
 
         [Fact]
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 new(AggregationType.DataDriven, "Test2", 1, "Failed"),
             ];
 
-            Assert.False(AzureDevOpsResultPublisher.ComputeAllPassed(results));
+            Assert.False(TestResultProcessor.ComputeAllPassed(results));
         }
 
         [Fact]
@@ -283,9 +283,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             IAzureDevOpsResultTransport transport,
             bool useFullyQualifiedTestName = false)
             => new(
-                TestResultAttachmentMode.Failed,
-                useFullyQualifiedTestName,
                 NullLogger.Instance,
+                useFullyQualifiedTestName,
                 transport);
 
         private static AggregatedResult CreateDataDrivenResult(string name, int subResultCount)
@@ -306,7 +305,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             public List<JsonElement> RequestBodies { get; } = [];
             public List<ResultAttachment> Attachments { get; } = [];
 
-            public virtual Task<string> PublishResultsAsync(object results, CancellationToken cancellationToken)
+            public virtual Task<string> PublishResultsAsync(
+                int testRunId,
+                object results,
+                CancellationToken cancellationToken)
             {
                 using JsonDocument requestBody = JsonDocument.Parse(JsonSerializer.Serialize(results));
                 RequestBodies.Add(requestBody.RootElement.Clone());
@@ -322,6 +324,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             }
 
             public Task UploadAttachmentAsync(
+                int testRunId,
                 long testResultId,
                 long? testSubResultId,
                 string fileName,
@@ -354,7 +357,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 new(TaskCreationOptions.RunContinuationsAsynchronously);
             private int _requestCount;
 
-            public override async Task<string> PublishResultsAsync(object results, CancellationToken cancellationToken)
+            public override async Task<string> PublishResultsAsync(
+                int testRunId,
+                object results,
+                CancellationToken cancellationToken)
             {
                 if (Interlocked.Increment(ref _requestCount) == 1)
                 {
@@ -362,7 +368,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     await ReleaseFirstRequest.Task.WaitAsync(cancellationToken);
                 }
 
-                return await base.PublishResultsAsync(results, cancellationToken);
+                return await base.PublishResultsAsync(testRunId, results, cancellationToken);
             }
         }
 
