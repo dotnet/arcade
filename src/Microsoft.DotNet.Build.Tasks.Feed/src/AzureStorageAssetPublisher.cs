@@ -32,16 +32,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 blobPath = blobPath.Replace("\\", "/");
                 var blobClient = CreateBlobClient(blobPath);
-                if (!options.AllowOverwrite && await blobClient.ExistsAsync())
-                {
-                    await HandleExistingBlobAsync(blobClient, file, options);
-                    return;
-                }
-
-                _log.LogMessage($"Uploading '{file}' to '{blobClient.Uri}'");
 
                 try
                 {
+                    if (!options.AllowOverwrite && await blobClient.ExistsAsync())
+                    {
+                        await HandleExistingBlobAsync(blobClient, file, options);
+                        return;
+                    }
+
+                    _log.LogMessage($"Uploading '{file}' to '{blobClient.Uri}'");
+
                     try
                     {
                         BlobUploadOptions blobUploadOptions = new()

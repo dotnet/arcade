@@ -200,6 +200,55 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             }
         }
 
+        [Fact]
+        public async Task ExistingBlobInspectionFailureIsLogged()
+        {
+            string file = Path.GetTempFileName();
+
+            try
+            {
+                var blobClient = new Mock<BlobClient>();
+                blobClient
+                    .SetupGet(client => client.Uri)
+                    .Returns(new Uri("https://example.blob.core.windows.net/assets/test.bin"));
+
+                blobClient
+                    .Setup(client => client.ExistsAsync(It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(Response.FromValue(true, Mock.Of<Response>()));
+                blobClient
+                    .Setup(client => client.GetPropertiesAsync(
+                        It.IsAny<BlobRequestConditions>(),
+                        It.IsAny<CancellationToken>()))
+                    .ThrowsAsync(new RequestFailedException(
+                        503,
+                        "The service is temporarily unavailable."));
+
+                var buildEngine = new MockBuildEngine();
+                var task = new StubTask { BuildEngine = buildEngine };
+                var publisher = new TestAzureStorageAssetPublisher(
+                    new TaskLoggingHelper(task),
+                    blobClient.Object);
+
+                await publisher.PublishAssetAsync(
+                    file,
+                    "test.bin",
+                    new PushOptions
+                    {
+                        AllowOverwrite = false,
+                        PassIfExistingItemIdentical = true
+                    });
+
+                Assert.Single(buildEngine.BuildErrorEvents);
+                Assert.Contains("Unexpected exception publishing file", buildEngine.BuildErrorEvents[0].Message);
+                Assert.Contains("The service is temporarily unavailable", buildEngine.BuildErrorEvents[0].Message);
+                blobClient.VerifyAll();
+            }
+            finally
+            {
+                File.Delete(file);
+            }
+        }
+
         private sealed class TestAzureStorageAssetPublisher : AzureStorageAssetPublisher
         {
             private readonly BlobClient _blobClient;
