@@ -53,7 +53,7 @@ function GetConfiguration {
     Write-Host "Fetching configuration file from $urlToConfigurationFile"
 
     try {
-        $response = Invoke-WebRequest -UseBasicParsing -Method GET -MaximumRetryCount 3 -Headers $headers -ErrorAction Stop `
+        $response = Invoke-WebRequest -Method GET -MaximumRetryCount 3 -Headers $headers -ErrorAction Stop `
                 $urlToConfigurationFile
     } catch {
         $statusCode = if ($null -ne $_.Exception.Response) {
