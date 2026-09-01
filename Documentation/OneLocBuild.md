@@ -193,6 +193,7 @@ The parameters that can be passed to the template are as follows:
 | `ReusePr` | `true` | When set to `true`, instructs the OneLocBuild task to update an existing PR (if one exists) rather than open a new one to reduce PR noise. |
 | `UseLfLineEndings` | `true` | When set to `true`, instructs the OneLocBuild task to use LF line endings during check-in rather than CRLF. |
 | `GitHubOrg` | `'dotnet'` | The GitHub organization to be used when making a PR (only used when using a mirrored repository). |
+| `GithubPat` | `$(BotAccount-dotnet-bot-repo-PAT)` | PAT used for the GitHub check-in PR when GitHub App authentication is disabled or unavailable for the current project. |
 | `MirrorRepo` | `''` | The name of the GitHub repository to make a PR to (only used when using a mirrored repository). |
 | `MirrorBranch` | `'main'` | The branch on GitHub to make a PR to (only used when using a mirrored repository). |
 | `UseCheckedInLocProjectJson` | `false` | When set to `true`, instructs the LocProject.json generation script to use build-time validation rather than build-time generation, as described above. |
