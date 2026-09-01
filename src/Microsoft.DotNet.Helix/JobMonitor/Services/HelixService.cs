@@ -353,7 +353,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 Source = details.Source,
                 Creator = details.Creator,
-                DockerTag = details.DockerTag,
+                DockerTag = ResolveDockerTag(details, originalJobName),
                 QueueAlias = details.QueueAlias,
                 Properties = resubmittedProperties,
             };
@@ -393,6 +393,32 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 HelixJobInfo.GetDetailsUri(newJob.Name));
 
             return newJobInfo;
+        }
+
+        private string ResolveDockerTag(JobDetails details, string originalJobName)
+        {
+            if (string.IsNullOrEmpty(details.DockerTag)
+                || !details.DockerTag.EndsWith("...", StringComparison.Ordinal))
+            {
+                return details.DockerTag;
+            }
+
+            string operatingSystem = GetStringPropertyFromProperties(details.Properties, "operatingSystem");
+            int dockerTagSeparator = operatingSystem?.IndexOf('@') ?? -1;
+            if (dockerTagSeparator >= 0 && dockerTagSeparator < operatingSystem.Length - 1)
+            {
+                string recoveredDockerTag = operatingSystem.Substring(dockerTagSeparator + 1);
+                if (!recoveredDockerTag.EndsWith("...", StringComparison.Ordinal))
+                {
+                    _logger.LogWarning(
+                        "Recovered the complete Docker tag for job '{JobName}' from its 'operatingSystem' property because Job.Details returned a truncated value.",
+                        originalJobName);
+                    return recoveredDockerTag;
+                }
+            }
+
+            throw new InvalidOperationException(
+                $"Cannot resubmit job '{originalJobName}' because Job.Details returned a truncated Docker tag and the complete value could not be recovered from its 'operatingSystem' property.");
         }
 
         private static ImmutableDictionary<string, string> ConvertPropertiesToImmutableDictionary(JToken properties)

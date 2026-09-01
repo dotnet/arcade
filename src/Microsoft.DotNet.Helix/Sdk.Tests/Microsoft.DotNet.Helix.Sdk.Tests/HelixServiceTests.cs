@@ -361,10 +361,45 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             Assert.Null(request.DockerTag);
         }
 
+        [Fact]
+        public async Task ResubmitWorkItemsAsync_RecoversTruncatedDockerTagFromOperatingSystemProperty()
+        {
+            const string queueId = "azurelinux.3.amd64.open.rt";
+            const string dockerTag = "mcr.microsoft.com/dotnet-buildtools/prereqs:alpine-3.24-helix-amd64@sha256:bb86a22446b4f275a23a440b77072d386b1f58393b2d38cb833b506116295b38";
+            const string truncatedDockerTag = "mcr.microsoft.com/dotnet-buildtools/prereqs:alpine-3.24-helix-amd64@sha256:bb86a22446b4f275a23a440b77072d386b1f58393b2d38cb83...";
+
+            Assert.Equal(139, dockerTag.Length);
+            Assert.Equal(128, truncatedDockerTag.Length);
+            Assert.Equal(truncatedDockerTag, dockerTag.Substring(0, 125) + "...");
+
+            JobCreationRequest request = await ResubmitAndCaptureRequestAsync(
+                queueId,
+                queueAlias: queueId,
+                dockerTag: truncatedDockerTag,
+                operatingSystem: $"{queueId}@{dockerTag}");
+
+            Assert.Equal(dockerTag, request.DockerTag);
+        }
+
+        [Fact]
+        public async Task ResubmitWorkItemsAsync_RejectsTruncatedDockerTagWhenRecoveryIsUnavailable()
+        {
+            const string truncatedDockerTag = "mcr.microsoft.com/dotnet-buildtools/prereqs:alpine-3.24-helix-amd64@sha256:bb86a22446b4f275a23a440b77072d386b1f58393b2d38cb83...";
+
+            InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => ResubmitAndCaptureRequestAsync(
+                    queueId: "azurelinux.3.amd64.open.rt",
+                    queueAlias: "azurelinux.3.amd64.open.rt",
+                    dockerTag: truncatedDockerTag));
+
+            Assert.Contains("the complete value could not be recovered", exception.Message);
+        }
+
         private static async Task<JobCreationRequest> ResubmitAndCaptureRequestAsync(
             string queueId,
             string queueAlias,
-            string dockerTag)
+            string dockerTag,
+            string operatingSystem = null)
         {
             var api = CreateApi();
             var properties = new JObject
@@ -375,6 +410,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 [HelixJobInfo.StageAttemptPropertyName] = "1",
                 [HelixJobInfo.JobAttemptPropertyName] = "1",
             };
+            if (operatingSystem != null)
+            {
+                properties["operatingSystem"] = operatingSystem;
+            }
 
             api.Job
                 .Setup(j => j.DetailsAsync("original-job", It.IsAny<CancellationToken>()))
