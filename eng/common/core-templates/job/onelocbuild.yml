@@ -50,7 +50,7 @@ jobs:
 
   variables:
     # Attach legacy secrets only when either PAT fallback can be selected.
-    - ${{ if or(eq(parameters.CeapexServiceConnection, ''), and(ne(variables['System.TeamProject'], 'internal'), ne(variables['System.TeamProject'], 'DevDiv')), and(eq(parameters.RepoType, 'gitHub'), or(ne(parameters.UseGitHubAppAuthentication, true), and(ne(variables['System.TeamProject'], 'internal'), ne(variables['System.TeamProject'], 'DevDiv'), ne(parameters.UseGitHubAppAuthenticationInOtherProjects, true))))) }}:
+    - ${{ if or(eq(parameters.CeapexServiceConnection, ''), and(ne(variables['System.TeamProject'], 'internal'), ne(variables['System.TeamProject'], 'DevDiv')), and(eq(parameters.RepoType, 'gitHub'), or(ne(parameters.UseGitHubAppAuthentication, 'true'), and(ne(variables['System.TeamProject'], 'internal'), ne(variables['System.TeamProject'], 'DevDiv'), ne(parameters.UseGitHubAppAuthenticationInOtherProjects, 'true'))))) }}:
       - group: OneLocBuildVariables # Contains the CeapexPat and GithubPat
     - name: _GenerateLocProjectArguments
       value: -SourcesDirectory ${{ parameters.SourcesDirectory }}
@@ -101,7 +101,7 @@ jobs:
 
     # Mint a short-lived GitHub App installation token for the loc check-in PR. Use the connection
     # provisioned in each supported project; other projects must explicitly opt in and override it.
-    - ${{ if and(eq(parameters.RepoType, 'gitHub'), eq(parameters.UseGitHubAppAuthentication, true), or(eq(variables['System.TeamProject'], 'internal'), eq(variables['System.TeamProject'], 'DevDiv'), eq(parameters.UseGitHubAppAuthenticationInOtherProjects, true))) }}:
+    - ${{ if and(eq(parameters.RepoType, 'gitHub'), eq(parameters.UseGitHubAppAuthentication, 'true'), or(eq(variables['System.TeamProject'], 'internal'), eq(variables['System.TeamProject'], 'DevDiv'), eq(parameters.UseGitHubAppAuthenticationInOtherProjects, 'true'))) }}:
       - template: /eng/common/core-templates/steps/get-github-app-token.yml
         parameters:
           is1ESPipeline: ${{ parameters.is1ESPipeline }}
@@ -137,7 +137,7 @@ jobs:
           patVariable: ${{ parameters.CeapexPat }}
         ${{ if eq(parameters.RepoType, 'gitHub') }}:
           repoType: ${{ parameters.RepoType }}
-          ${{ if and(eq(parameters.UseGitHubAppAuthentication, true), or(eq(variables['System.TeamProject'], 'internal'), eq(variables['System.TeamProject'], 'DevDiv'), eq(parameters.UseGitHubAppAuthenticationInOtherProjects, true))) }}:
+          ${{ if and(eq(parameters.UseGitHubAppAuthentication, 'true'), or(eq(variables['System.TeamProject'], 'internal'), eq(variables['System.TeamProject'], 'DevDiv'), eq(parameters.UseGitHubAppAuthenticationInOtherProjects, 'true'))) }}:
             gitHubPatVariable: "$(GitHubAppInstallationToken)"
           ${{ else }}:
             gitHubPatVariable: "${{ parameters.GithubPat }}"
