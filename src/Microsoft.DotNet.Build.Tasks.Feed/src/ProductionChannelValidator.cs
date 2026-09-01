@@ -457,11 +457,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private readonly ILogger<BranchClassificationService> _logger;
         private readonly string _token;
 
-        /// <remarks>
-        /// The caller supplies the token. Falling back to the process environment here would make
-        /// the service unsafe to reach from a multithreaded task, so that fallback lives at the
-        /// task boundary instead (see <c>PublishArtifactsInManifest.ConfigureServices</c>).
-        /// </remarks>
         public BranchClassificationService(HttpClient httpClient, ILogger<BranchClassificationService> logger, string token = null)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
