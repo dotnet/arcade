@@ -435,8 +435,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 System.Text.Json.JsonSerializer.Serialize(results, s_serializerOptions),
                 AzureDevOpsRequestKind.ResultBatch,
                 retryTransientFailures: true,
-                ResultRequestAttemptCount,
-                cancellationToken);
+                attemptCount: ResultRequestAttemptCount,
+                cancellationToken: cancellationToken);
 
         public Task UploadAttachmentAsync(
             int testRunId,
