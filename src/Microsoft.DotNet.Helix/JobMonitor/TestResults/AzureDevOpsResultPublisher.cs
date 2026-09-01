@@ -76,18 +76,6 @@ internal sealed class AzureDevOpsResultPublisher : IAzureDevOpsResultPublisher
         }
     }
 
-    public Task<long> UploadTestResultsWithCountAsync(
-        IEnumerable<AggregatedResult> results,
-        string workItemName,
-        string jobId,
-        CancellationToken cancellationToken = default)
-        => UploadTestResultsWithCountAsync(
-            results,
-            workItemName,
-            jobId,
-            testRunId: 0,
-            cancellationToken);
-
     private async Task<long> UploadTestResultsWithCountAsync(
         IEnumerable<AggregatedResult> results,
         string workItemName,

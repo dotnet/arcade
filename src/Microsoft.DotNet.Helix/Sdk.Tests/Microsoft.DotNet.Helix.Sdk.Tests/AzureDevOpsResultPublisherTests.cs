@@ -17,6 +17,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 {
     public class AzureDevOpsResultPublisherTests
     {
+        private const int TestRunId = 123;
+
         [Fact]
         public void AttachmentModeDefaultsToFailed()
         {
@@ -82,10 +84,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 CreateDataDrivenResult("Second", 600),
             ];
 
-            long uploadedCount = await publisher.UploadTestResultsWithCountAsync(results, "work-item", "job");
+            long uploadedCount = await PublishAsync(publisher, results);
 
             Assert.Equal(2, uploadedCount);
             Assert.Equal(new[] { 2 }, transport.RequestResultCounts);
+            Assert.Equal([TestRunId], transport.TestRunIds);
         }
 
         [Fact]
@@ -99,7 +102,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     .Select(i => new AggregatedResult(AggregationType.Single, $"Test{i}", 1, "Passed"))
             ];
 
-            long uploadedCount = await publisher.UploadTestResultsWithCountAsync(results, "work-item", "job");
+            long uploadedCount = await PublishAsync(publisher, results);
 
             Assert.Equal(1001, uploadedCount);
             Assert.Equal(new[] { 1000, 1 }, transport.RequestResultCounts);
@@ -111,10 +114,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             var transport = new RecordingResultTransport();
             var publisher = CreatePublisher(transport);
 
-            long uploadedCount = await publisher.UploadTestResultsWithCountAsync(
-                [CreateDataDrivenResult("Theory", 950)],
-                "work-item",
-                "job");
+            long uploadedCount = await PublishAsync(
+                publisher,
+                [CreateDataDrivenResult("Theory", 950)]);
 
             Assert.Equal(2, uploadedCount);
             Assert.Equal(new[] { 2 }, transport.RequestResultCounts);
@@ -132,7 +134,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 new(AggregationType.DataDriven, "Outer", 1, "Passed", [nested]),
             ];
 
-            long uploadedCount = await publisher.UploadTestResultsWithCountAsync(results, "work-item", "job");
+            long uploadedCount = await PublishAsync(publisher, results);
 
             Assert.Equal(2, uploadedCount);
             Assert.Equal(new[] { 950, 4 }, transport.RequestHierarchyNodeCounts.Single());
@@ -143,21 +145,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         {
             var transport = new BlockingResultTransport();
             var publisher = CreatePublisher(transport);
-            int enumerated = 0;
+            var results = new TrackingResultList(2_000);
 
-            IEnumerable<AggregatedResult> Results()
-            {
-                for (int i = 0; i < 2_000; i++)
-                {
-                    enumerated++;
-                    yield return new AggregatedResult(AggregationType.Single, $"Test{i}", 1, "Passed");
-                }
-            }
-
-            Task<long> upload = publisher.UploadTestResultsWithCountAsync(Results(), "work-item", "job");
+            Task<long> upload = PublishAsync(publisher, results);
             await transport.FirstRequestStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
-            Assert.InRange(enumerated, 0, 1001);
+            Assert.InRange(results.EnumeratedCount, 0, 1001);
             transport.ReleaseFirstRequest.SetResult();
 
             Assert.Equal(2_000, await upload);
@@ -176,7 +169,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 "Failed",
                 attachments: [new TestResultAttachment("failure.txt", "details")]);
 
-            Assert.Equal(1, await publisher.UploadTestResultsWithCountAsync([result], "work-item", "job"));
+            Assert.Equal(1, await PublishAsync(publisher, [result]));
 
             ResultAttachment attachment = Assert.Single(transport.Attachments);
             Assert.Equal(1, attachment.TestResultId);
@@ -192,11 +185,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             var publisher = CreatePublisher(transport);
             var result = new AggregatedResult(AggregationType.Single, "Test", 1, "Passed");
 
-            await publisher.UploadTestResultsWithCountAsync(
+            await PublishAsync(
+                publisher,
                 [result],
                 "work-item",
                 "job-a");
-            await publisher.UploadTestResultsWithCountAsync(
+            await PublishAsync(
+                publisher,
                 [result],
                 "work-item",
                 "job-b");
@@ -231,7 +226,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     fullyQualifiedName: fullyQualifiedName)],
                 fullyQualifiedName: fullyQualifiedName);
 
-            await publisher.UploadTestResultsWithCountAsync([result], "work-item", "job");
+            await PublishAsync(publisher, [result]);
 
             JsonElement publishedTest = Assert.Single(Assert.Single(transport.RequestBodies).EnumerateArray());
             Assert.Equal(fullyQualifiedName, publishedTest.GetProperty("TestCaseTitle").GetString());
@@ -268,7 +263,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 [rerunRow],
                 fullyQualifiedName: fullyQualifiedName);
 
-            await publisher.UploadTestResultsWithCountAsync([result], "work-item", "job");
+            await PublishAsync(publisher, [result]);
 
             JsonElement publishedTest = Assert.Single(Assert.Single(transport.RequestBodies).EnumerateArray());
             JsonElement publishedRow = Assert.Single(publishedTest.GetProperty("SubResults").EnumerateArray());
@@ -287,6 +282,17 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 useFullyQualifiedTestName,
                 transport);
 
+        private static Task<long> PublishAsync(
+            AzureDevOpsResultPublisher publisher,
+            IReadOnlyList<AggregatedResult> results,
+            string workItemName = "work-item",
+            string jobId = "job")
+            => publisher.PublishAsync(
+                TestRunId,
+                new WorkItemTestResults(jobId, workItemName, []),
+                new PreparedTestResults(results, AllPassed: true),
+                CancellationToken.None);
+
         private static AggregatedResult CreateDataDrivenResult(string name, int subResultCount)
             => new(
                 AggregationType.DataDriven,
@@ -300,6 +306,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
         private class RecordingResultTransport : IAzureDevOpsResultTransport
         {
+            public List<int> TestRunIds { get; } = [];
             public List<int> RequestResultCounts { get; } = [];
             public List<int[]> RequestHierarchyNodeCounts { get; } = [];
             public List<JsonElement> RequestBodies { get; } = [];
@@ -310,6 +317,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 object results,
                 CancellationToken cancellationToken)
             {
+                TestRunIds.Add(testRunId);
                 using JsonDocument requestBody = JsonDocument.Parse(JsonSerializer.Serialize(results));
                 RequestBodies.Add(requestBody.RootElement.Clone());
                 int resultCount = requestBody.RootElement.GetArrayLength();
@@ -331,6 +339,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 string stream,
                 CancellationToken cancellationToken)
             {
+                TestRunIds.Add(testRunId);
                 Attachments.Add(new(testResultId, testSubResultId, fileName, stream));
                 return Task.CompletedTask;
             }
@@ -370,6 +379,29 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
                 return await base.PublishResultsAsync(testRunId, results, cancellationToken);
             }
+        }
+
+        private sealed class TrackingResultList(int count) : IReadOnlyList<AggregatedResult>
+        {
+            public int Count => count;
+            public int EnumeratedCount { get; private set; }
+
+            public AggregatedResult this[int index] => CreateResult(index);
+
+            public IEnumerator<AggregatedResult> GetEnumerator()
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    EnumeratedCount++;
+                    yield return CreateResult(i);
+                }
+            }
+
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+                => GetEnumerator();
+
+            private static AggregatedResult CreateResult(int index)
+                => new(AggregationType.Single, $"Test{index}", 1, "Passed");
         }
 
         private sealed record ResultAttachment(
