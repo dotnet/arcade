@@ -52,8 +52,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         public string RuntimeFile { get; set; }
 
         public bool SkipGenerationCheck { get; set; }
-
         public bool SkipIndexCheck { get; set; }
+
 
         public bool SkipSupportCheck { get; set; }
 

@@ -14,23 +14,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     [MSBuildMultiThreadableTask]
     public class CheckRequiredDotNetVersion : Task, IMultiThreadableTask
     {
-        private static readonly string s_cacheKey = "CheckRequiredDotNetVersion-6ED0A075-A4B3-46B1-97D4-448558D515D3";
-
-        private sealed class CacheEntry
-        {
-            public readonly AbsolutePath GlobalJsonPath;
-            public readonly string SdkVersion;
-            public readonly DateTime LastWrite;
-            public readonly bool Success;
-
-            public CacheEntry(AbsolutePath globalJsonPath, string sdkVersion, DateTime lastWrite, bool success)
-            {
-                GlobalJsonPath = globalJsonPath;
-                SdkVersion = sdkVersion;
-                LastWrite = lastWrite;
-                Success = success;
-            }
-        }
+        private readonly record struct CacheKey(AbsolutePath GlobalJsonPath, string SdkVersion, DateTime LastWrite);
 
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
@@ -61,27 +45,20 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 return false;
             }
 
-            // The cache is registered per build, not per project, so the repository and the SDK
-            // version being validated have to be part of the entry. Otherwise a different repository
-            // or a different required version could reuse this result.
-            //
             // The read/write pair below is not atomic, so under multithreaded execution two threads
             // can both miss and both run the check. The check itself is pure, so the result is
             // identical either way; the only observable effect is that a failing check can log its
             // error twice, since deduplicating that reporting is part of what the cache buys.
-            var cachedResult = (CacheEntry)BuildEngine4.GetRegisteredTaskObject(s_cacheKey, RegisteredTaskObjectLifetime.Build);
-            if (cachedResult != null &&
-                globalJsonPath == cachedResult.GlobalJsonPath &&
-                string.Equals(SdkVersion, cachedResult.SdkVersion, StringComparison.Ordinal) &&
-                lastWrite == cachedResult.LastWrite)
+            var cacheKey = new CacheKey(globalJsonPath, SdkVersion, lastWrite);
+            if (BuildEngine4.GetRegisteredTaskObject(cacheKey, RegisteredTaskObjectLifetime.Build) is bool cachedSuccess)
             {
                 // Error has already been reported if the current SDK version is not sufficient.
-                if (!cachedResult.Success)
+                if (!cachedSuccess)
                 {
                     Log.LogMessage(MessageImportance.Low, $"Previous .NET Core SDK version check failed.");
                 }
 
-                return cachedResult.Success;
+                return cachedSuccess;
             }
 
             bool execute()
@@ -122,7 +99,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
 
             bool success = execute();
-            BuildEngine4.RegisterTaskObject(s_cacheKey, new CacheEntry(globalJsonPath, SdkVersion, lastWrite, success), RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
+            BuildEngine4.RegisterTaskObject(cacheKey, success, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
             return success;
         }
     }

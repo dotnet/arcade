@@ -13,23 +13,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     [MSBuildMultiThreadableTask]
     public class LocateDotNet : Task, IMultiThreadableTask
     {
-        private static readonly string s_cacheKey = "LocateDotNet-FCDFF825-F35B-4601-9CB5-74DCA498B589";
-
-        private sealed class CacheEntry
-        {
-            public readonly AbsolutePath GlobalJsonPath;
-            public readonly DateTime LastWrite;
-            public readonly string Paths;
-            public readonly string Value;
-
-            public CacheEntry(AbsolutePath globalJsonPath, DateTime lastWrite, string paths, string value)
-            {
-                GlobalJsonPath = globalJsonPath;
-                LastWrite = lastWrite;
-                Paths = paths;
-                Value = value;
-            }
-        }
+        private readonly record struct CacheKey(AbsolutePath GlobalJsonPath, DateTime LastWrite, string Paths);
 
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
@@ -53,22 +37,16 @@ namespace Microsoft.DotNet.Arcade.Sdk
             var lastWrite = File.GetLastWriteTimeUtc(globalJsonPath);
             var paths = TaskEnvironment.GetEnvironmentVariable("PATH");
 
-            // The cache is registered per build, not per project, so the repository identity has to
-            // be part of the entry. Otherwise a second repository with a coincidentally matching
-            // global.json timestamp and PATH would reuse the first repository's dotnet.
-            //
             // The read/write pair below is not atomic, so under multithreaded execution two threads
-            // can both miss and both populate it. That is benign here: the computation is pure and
-            // deterministic for a given (global.json, timestamp, PATH), so the loser of the race
-            // simply overwrites an identical entry. The cache is an optimization, not a lock.
-            var cachedResult = (CacheEntry)BuildEngine4.GetRegisteredTaskObject(s_cacheKey, RegisteredTaskObjectLifetime.Build);
-            if (cachedResult != null &&
-                globalJsonPath == cachedResult.GlobalJsonPath &&
-                lastWrite == cachedResult.LastWrite &&
-                paths == cachedResult.Paths)
+            // can both miss and both compute the value. That is benign here: the computation is pure
+            // and deterministic for a given (global.json, timestamp, PATH), so the loser of the race
+            // has its registration dropped and the winner's identical entry stands. The cache is an
+            // optimization, not a lock.
+            var cacheKey = new CacheKey(globalJsonPath, lastWrite, paths);
+            if (BuildEngine4.GetRegisteredTaskObject(cacheKey, RegisteredTaskObjectLifetime.Build) is string cachedPath)
             {
                 Log.LogMessage(MessageImportance.Low, $"Reused cached value.");
-                DotNetPath = cachedResult.Value;
+                DotNetPath = cachedPath;
                 return;
             }
 
@@ -85,7 +63,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             var sdkVersion = match.Groups[1].Value;
 
             var fileName = (Path.DirectorySeparatorChar == '\\') ? "dotnet.exe" : "dotnet";
-            var dotNetDir = paths.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(p => File.Exists(TaskEnvironment.GetAbsolutePath(Path.Combine(p, fileName))));
+            var dotNetDir = paths.Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(p => File.Exists(TaskEnvironment.GetAbsolutePath(Path.Combine(p, fileName))));
 
             if (dotNetDir == null || !Directory.Exists(TaskEnvironment.GetAbsolutePath(Path.Combine(dotNetDir, "sdk", sdkVersion))))
             {
@@ -94,7 +72,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
 
             DotNetPath = TaskEnvironment.GetAbsolutePath(Path.Combine(dotNetDir, fileName));
-            BuildEngine4.RegisterTaskObject(s_cacheKey, new CacheEntry(globalJsonPath, lastWrite, paths, DotNetPath), RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
+            BuildEngine4.RegisterTaskObject(cacheKey, DotNetPath, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
         }
     }
 }
