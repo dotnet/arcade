@@ -12,11 +12,6 @@ references:
       name: helixkv
 
 keys:
-  # DDFuse signs App JWTs through Key Vault and cannot export this key.
-  ddfuse-pr-review-dashboard-app-key:
-    type: RSA
-    size: 2048
-
   oneloc-localization-app-key:
     type: RSA
     size: 2048
