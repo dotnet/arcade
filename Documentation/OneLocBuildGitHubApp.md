@@ -126,6 +126,11 @@ the pipeline must be authorized to use the connection.
 The token is minted for the installation on the `GitHubOrg` account (default `dotnet`), so make sure
 `GitHubOrg` (and `MirrorRepo`, if mirroring) point at the org/repo where the App is installed.
 
+The underlying `get-github-app-token.yml` step also accepts optional `repositories` and
+`permissions` objects. These narrow a token below the installation's repository and permission
+grants for consumers that need less access. OneLocBuild does not set them because it needs the
+installation's configured write access to create or update localization pull requests.
+
 ## Verifying it works
 
 1. Run your pipeline from a branch where the OneLocBuild job runs.

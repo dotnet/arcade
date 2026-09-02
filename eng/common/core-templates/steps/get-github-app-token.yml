@@ -45,6 +45,16 @@ parameters:
 - name: outputVariableName
   type: string
 
+# Optional repository names and permissions that narrow the installation token
+# below the GitHub App installation's grants.
+- name: repositories
+  type: object
+  default: []
+
+- name: permissions
+  type: object
+  default: {}
+
 - name: is1ESPipeline
   type: boolean
 
@@ -76,4 +86,9 @@ steps:
           -KeyName '${{ parameters.keyName }}' `
           -AppClientId '${{ parameters.appClientId }}' `
           -InstallationOwner '${{ parameters.installationOwner }}' `
+          -RepositoriesJson $env:GITHUB_APP_REPOSITORIES `
+          -PermissionsJson $env:GITHUB_APP_PERMISSIONS `
           -OutputVariableName '${{ parameters.outputVariableName }}'
+    env:
+      GITHUB_APP_REPOSITORIES: ${{ convertToJson(parameters.repositories) }}
+      GITHUB_APP_PERMISSIONS: ${{ convertToJson(parameters.permissions) }}

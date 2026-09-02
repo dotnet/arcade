@@ -33,6 +33,14 @@ param(
     [Parameter(Mandatory = $true)]
     [string] $InstallationOwner,
 
+    # Optional JSON array of repository names to restrict the installation token to.
+    [Parameter(Mandatory = $false)]
+    [string] $RepositoriesJson,
+
+    # Optional JSON object of permissions to grant the installation token.
+    [Parameter(Mandatory = $false)]
+    [string] $PermissionsJson,
+
     # Optional Azure DevOps pipeline variable name to set with the installation
     # token (marked as a secret). When not specified, the token is written to
     # stdout instead.
@@ -143,12 +151,35 @@ if ($matchingInstallations.Count -ne 1) {
 $installation = $matchingInstallations[0]
 Write-Host "Using installation $($installation.id) for '$($installation.account.login)'."
 
+$tokenRequest = @{}
+if ($RepositoriesJson) {
+    $repositories = @($RepositoriesJson | ConvertFrom-Json | Where-Object { $_ })
+    if ($repositories.Count -gt 0) {
+        $tokenRequest.repositories = $repositories
+        Write-Host "Restricting installation token to repositories: $($repositories -join ', ')."
+    }
+}
+if ($PermissionsJson) {
+    $permissions = $PermissionsJson | ConvertFrom-Json
+    $permissionProperties = @($permissions.PSObject.Properties)
+    if ($permissionProperties.Count -gt 0) {
+        $tokenRequest.permissions = $permissions
+        $permissionSummary = $permissionProperties | ForEach-Object { "$($_.Name)=$($_.Value)" }
+        Write-Host "Restricting installation token permissions: $($permissionSummary -join ', ')."
+    }
+}
+
 try {
-    $tokenResponse = Invoke-RestMethod `
-        -Uri "https://api.github.com/app/installations/$($installation.id)/access_tokens" `
-        -Headers $headers `
-        -Method Post `
-        -ContentType 'application/json'
+    $tokenRequestParameters = @{
+        Uri         = "https://api.github.com/app/installations/$($installation.id)/access_tokens"
+        Headers     = $headers
+        Method      = 'Post'
+        ContentType = 'application/json'
+    }
+    if ($tokenRequest.Count -gt 0) {
+        $tokenRequestParameters.Body = $tokenRequest | ConvertTo-Json -Depth 10 -Compress
+    }
+    $tokenResponse = Invoke-RestMethod @tokenRequestParameters
 }
 catch {
     Write-PipelineTelemetryError -Category 'Build' -Message "Failed to mint an installation access token for '$InstallationOwner' (installation $($installation.id)): $_"
