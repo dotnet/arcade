@@ -61,7 +61,9 @@ jobs:
           if (context.eventName !== "issue_comment") throw "Error: This action only works on issue_comment events.";
 
           const comment_body = context.payload.comment.body || '';
-          const comment_user = context.payload.comment.user.login;
+          core.setOutput('target_branch', '');
+          core.setOutput('parsing_succeeded', 'false');
+          core.setOutput('invalid_command', 'false');
 
           // find a line that starts with the /backport command; comments that only mention the
           // command in the middle of a sentence are ignored
@@ -74,25 +76,39 @@ jobs:
 
           // extract the target branch name from the trigger phrase containing these characters: a-z, A-Z, digits, forward slash, dot, hyphen, underscore
           const command_arguments = command[1].trim().split(/\s+/).filter(argument => argument.length > 0);
-          if (command_arguments[0] === 'to') command_arguments.shift();
-          const target_branch = command_arguments[0] || '';
+          const target_branch = command_arguments.length === 2 && command_arguments[0] === 'to'
+            ? command_arguments[1]
+            : '';
 
           if (!/^[a-zA-Z\d\/\.\-\_]+$/.test(target_branch)) {
-            const invalid_command_body = `@${comment_user} the \`/backport\` command was not recognized because it didn't specify a valid target branch. The expected format is \`/backport to <target-branch>\`, for example \`/backport to release/9.0\`.`;
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: invalid_command_body
-            });
-            core.setFailed("Error: No backport branch found in the trigger phrase.");
+            core.setOutput('invalid_command', 'true');
             return '';
           }
 
-          return target_branch;
+          core.setOutput('target_branch', target_branch);
+          core.setOutput('parsing_succeeded', 'true');
+    - name: Report invalid backport command
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      if: ${{ steps.target-branch-extractor.outputs.invalid_command == 'true' && github.event.issue.locked != true }}
+      with:
+        script: |
+          const comment_user = context.payload.comment.user.login;
+          const invalid_command_body = `@${comment_user} the \`/backport\` command was not recognized because it didn't specify a valid target branch. The expected format is \`/backport to <target-branch>\`, for example \`/backport to release/9.0\`.`;
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: invalid_command_body
+          });
+    - name: Fail invalid backport command
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      if: ${{ steps.target-branch-extractor.outputs.invalid_command == 'true' && (success() || failure()) }}
+      with:
+        script: |
+          core.setFailed("Error: No backport branch found in the trigger phrase.");
     - name: Unlock comments if PR is locked
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      if: ${{ github.event.issue.locked == true && steps.target-branch-extractor.outputs.result != '' }}
+      if: ${{ github.event.issue.locked == true && steps.target-branch-extractor.outputs.parsing_succeeded == 'true' }}
       with:
         script: |
           console.log(`Unlocking locked PR #${context.issue.number}.`);
@@ -103,10 +119,10 @@ jobs:
           });
     - name: Post backport started comment to pull request
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      if: ${{ steps.target-branch-extractor.outputs.result != '' }}
+      if: ${{ steps.target-branch-extractor.outputs.parsing_succeeded == 'true' }}
       with:
         script: |
-          const target_branch = '${{ steps.target-branch-extractor.outputs.result }}';
+          const target_branch = '${{ steps.target-branch-extractor.outputs.target_branch }}';
           const workflow_run_url = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
           const backport_start_body = `Started backporting to \`${target_branch}\` ([link to workflow run](${workflow_run_url}))`;
           await github.rest.issues.createComment({
@@ -117,12 +133,12 @@ jobs:
           });
     - name: Checkout repo
       uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      if: ${{ steps.target-branch-extractor.outputs.result != '' }}
+      if: ${{ steps.target-branch-extractor.outputs.parsing_succeeded == 'true' }}
       with:
         fetch-depth: 0
     - name: Run backport
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      if: ${{ steps.target-branch-extractor.outputs.result != '' }}
+      if: ${{ steps.target-branch-extractor.outputs.parsing_succeeded == 'true' }}
       env:
         GH_TOKEN: ${{ github.token }}
         BACKPORT_PR_TITLE_TEMPLATE: ${{ inputs.pr_title_template }}
@@ -132,7 +148,7 @@ jobs:
         CONFLICT_RESOLUTION_COMMAND: ${{ inputs.conflict_resolution_command }}
       with:
         script: |
-          const target_branch = '${{ steps.target-branch-extractor.outputs.result }}';
+          const target_branch = '${{ steps.target-branch-extractor.outputs.target_branch }}';
           const repo_owner = context.payload.repository.owner.login;
           const repo_name = context.payload.repository.name;
           const pr_number = context.payload.issue.number;
@@ -410,7 +426,7 @@ jobs:
 
     - name: Re-lock PR comments
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      if: ${{ github.event.issue.locked == true && steps.target-branch-extractor.outputs.result != '' && (success() || failure()) }}
+      if: ${{ github.event.issue.locked == true && steps.target-branch-extractor.outputs.parsing_succeeded == 'true' && (success() || failure()) }}
       with:
         script: |
           console.log(`Locking previously locked PR #${context.issue.number} again.`);
