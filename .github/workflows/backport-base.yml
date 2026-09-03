@@ -45,7 +45,7 @@ jobs:
       repository_owners: ${{ inputs.repository_owners }}
 
   run_backport:
-    if: ${{ contains(format('{0},', inputs.repository_owners), format('{0},', github.repository_owner)) && github.event.issue.pull_request != '' && contains(github.event.comment.body, '/backport ') }}
+    if: ${{ contains(format('{0},', inputs.repository_owners), format('{0},', github.repository_owner)) && github.event.issue.pull_request != '' && contains(github.event.comment.body, '/backport') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -60,15 +60,39 @@ jobs:
         script: |
           if (context.eventName !== "issue_comment") throw "Error: This action only works on issue_comment events.";
 
-          // extract the target branch name from the trigger phrase containing these characters: a-z, A-Z, digits, forward slash, dot, hyphen, underscore
-          const regex = /^\s*\/backport (?:to )?((?!to(?:\s|$))[a-zA-Z\d\/\.\-\_]+)/m;
-          target_branch = regex.exec(context.payload.comment.body);
-          if (target_branch == null) throw "Error: No backport branch found in the trigger phrase.";
+          const comment_body = context.payload.comment.body || '';
+          const comment_user = context.payload.comment.user.login;
 
-          return target_branch[1];
+          // find a line that starts with the /backport command; comments that only mention the
+          // command in the middle of a sentence are ignored
+          const command_regex = /^[ \t]*\/backport(?=[ \t]|$)(.*)$/m;
+          const command = command_regex.exec(comment_body);
+          if (command == null) {
+            console.log("No /backport command found at the beginning of a line, skipping.");
+            return '';
+          }
+
+          // extract the target branch name from the trigger phrase containing these characters: a-z, A-Z, digits, forward slash, dot, hyphen, underscore
+          const command_arguments = command[1].trim().split(/\s+/).filter(argument => argument.length > 0);
+          if (command_arguments[0] === 'to') command_arguments.shift();
+          const target_branch = command_arguments[0] || '';
+
+          if (!/^[a-zA-Z\d\/\.\-\_]+$/.test(target_branch)) {
+            const invalid_command_body = `@${comment_user} the \`/backport\` command was not recognized because it didn't specify a valid target branch. The expected format is \`/backport to <target-branch>\`, for example \`/backport to release/9.0\`.`;
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: invalid_command_body
+            });
+            core.setFailed("Error: No backport branch found in the trigger phrase.");
+            return '';
+          }
+
+          return target_branch;
     - name: Unlock comments if PR is locked
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      if: ${{ github.event.issue.locked == true }}
+      if: ${{ github.event.issue.locked == true && steps.target-branch-extractor.outputs.result != '' }}
       with:
         script: |
           console.log(`Unlocking locked PR #${context.issue.number}.`);
@@ -79,6 +103,7 @@ jobs:
           });
     - name: Post backport started comment to pull request
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      if: ${{ steps.target-branch-extractor.outputs.result != '' }}
       with:
         script: |
           const target_branch = '${{ steps.target-branch-extractor.outputs.result }}';
@@ -92,10 +117,12 @@ jobs:
           });
     - name: Checkout repo
       uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      if: ${{ steps.target-branch-extractor.outputs.result != '' }}
       with:
         fetch-depth: 0
     - name: Run backport
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      if: ${{ steps.target-branch-extractor.outputs.result != '' }}
       env:
         GH_TOKEN: ${{ github.token }}
         BACKPORT_PR_TITLE_TEMPLATE: ${{ inputs.pr_title_template }}
@@ -383,7 +410,7 @@ jobs:
 
     - name: Re-lock PR comments
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      if: ${{ github.event.issue.locked == true && (success() || failure()) }}
+      if: ${{ github.event.issue.locked == true && steps.target-branch-extractor.outputs.result != '' && (success() || failure()) }}
       with:
         script: |
           console.log(`Locking previously locked PR #${context.issue.number} again.`);
