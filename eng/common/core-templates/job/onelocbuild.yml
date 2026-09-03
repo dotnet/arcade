@@ -73,6 +73,8 @@ jobs:
       - 'OneLocBuild is supported only in dnceng/internal and DevDiv/DevDiv.': error
     - ${{ if eq(parameters.CeapexServiceConnection, '') }}:
       - 'CeapexServiceConnection must identify a WIF service connection.': error
+    - ${{ if and(eq(parameters.RepoType, 'gitHub'), eq(parameters.GitHubAppServiceConnection, '')) }}:
+      - 'GitHubAppServiceConnection must identify a WIF service connection for GitHub repositories.': error
 
     - ${{ if ne(parameters.SkipLocProjectJsonGeneration, 'true') }}:
       - task: Powershell@2
