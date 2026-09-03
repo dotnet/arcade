@@ -67,7 +67,7 @@ jobs:
 
           // find a line that starts with the /backport command; comments that only mention the
           // command in the middle of a sentence are ignored
-          const command_regex = /^[ \t]*\/backport(?=[ \t]|$)(.*)$/m;
+          const command_regex = /^[ \t]*\/backport(?=[ \t\r]|$)(.*)$/m;
           const command = command_regex.exec(comment_body);
           if (command == null) {
             console.log("No /backport command found at the beginning of a line, skipping.");
