@@ -82,7 +82,9 @@ jobs:
             invalid_reason = 'no target branch was provided';
           } else if (command_arguments[0] !== 'to') {
             invalid_reason = 'the "to" keyword is missing before the target branch';
-          } else if (command_arguments.length !== 2) {
+          } else if (command_arguments.length === 1) {
+            invalid_reason = 'no target branch was provided after the "to" keyword';
+          } else if (command_arguments.length > 2) {
             invalid_reason = 'more than one target branch was provided';
           } else if (!/^[a-zA-Z\d\/\.\-\_]+$/.test(command_arguments[1])) {
             invalid_reason = 'the target branch contains characters that are not allowed (only letters, digits, "/", ".", "-", and "_" are permitted)';
