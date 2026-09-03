@@ -53,11 +53,12 @@ function GetConfiguration {
     Write-Host "Fetching configuration file from $urlToConfigurationFile"
 
     try {
-        $response = Invoke-WebRequest -Method GET -MaximumRetryCount 3 -Headers $headers -ErrorAction Stop `
+        $response = Invoke-WebRequest -UseBasicParsing -Method GET -MaximumRetryCount 3 -Headers $headers -ErrorAction Stop `
                 $urlToConfigurationFile
     } catch {
-        $statusCode = if ($null -ne $_.Exception.Response) {
-            " HTTP status $([int]$_.Exception.Response.StatusCode)."
+        $responseProperty = $_.Exception.PSObject.Properties['Response']
+        $statusCode = if ($null -ne $responseProperty -and $null -ne $responseProperty.Value) {
+            " HTTP status $([int]$responseProperty.Value.StatusCode)."
         } else {
             ""
         }
