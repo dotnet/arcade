@@ -161,7 +161,7 @@ jobs:
               '',
               `# 5. Delete the patch file and push the branch to the ${repo_owner}/${repo_name} repository`,
               `rm ${patch_file}`,
-              `git push --force --set-upstream origin HEAD:${temp_branch}`,
+              `git push --force-with-lease --set-upstream origin HEAD:${temp_branch}`,
               '',
               '# 6. Open the backport pull request',
               `gh pr create --base ${target_branch} --head ${temp_branch}${label_switches} \\`,
