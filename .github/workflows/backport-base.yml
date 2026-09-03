@@ -89,7 +89,7 @@ jobs:
           core.setOutput('parsing_succeeded', 'true');
     - name: Unlock comments if PR is locked
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      if: ${{ github.event.issue.locked == true && (steps.target-branch-extractor.outputs.parsing_succeeded == 'true' || steps.target-branch-extractor.outputs.invalid_command == 'true') }}
+      if: ${{ github.event.issue.locked && (fromJSON(steps.target-branch-extractor.outputs.parsing_succeeded) || fromJSON(steps.target-branch-extractor.outputs.invalid_command)) }}
       with:
         script: |
           console.log(`Unlocking locked PR #${context.issue.number}.`);
@@ -100,7 +100,7 @@ jobs:
           });
     - name: Report invalid backport command
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      if: ${{ steps.target-branch-extractor.outputs.invalid_command == 'true' }}
+      if: ${{ fromJSON(steps.target-branch-extractor.outputs.invalid_command) }}
       with:
         script: |
           const comment_user = context.payload.comment.user.login;
@@ -113,13 +113,13 @@ jobs:
           });
     - name: Fail invalid backport command
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      if: ${{ steps.target-branch-extractor.outputs.invalid_command == 'true' && (success() || failure()) }}
+      if: ${{ fromJSON(steps.target-branch-extractor.outputs.invalid_command) && (success() || failure()) }}
       with:
         script: |
           core.setFailed("Error: No backport branch found in the trigger phrase.");
     - name: Post backport started comment to pull request
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      if: ${{ steps.target-branch-extractor.outputs.parsing_succeeded == 'true' }}
+      if: ${{ fromJSON(steps.target-branch-extractor.outputs.parsing_succeeded) }}
       with:
         script: |
           const target_branch = '${{ steps.target-branch-extractor.outputs.target_branch }}';
@@ -133,12 +133,12 @@ jobs:
           });
     - name: Checkout repo
       uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      if: ${{ steps.target-branch-extractor.outputs.parsing_succeeded == 'true' }}
+      if: ${{ fromJSON(steps.target-branch-extractor.outputs.parsing_succeeded) }}
       with:
         fetch-depth: 0
     - name: Run backport
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      if: ${{ steps.target-branch-extractor.outputs.parsing_succeeded == 'true' }}
+      if: ${{ fromJSON(steps.target-branch-extractor.outputs.parsing_succeeded) }}
       env:
         GH_TOKEN: ${{ github.token }}
         BACKPORT_PR_TITLE_TEMPLATE: ${{ inputs.pr_title_template }}
@@ -426,7 +426,7 @@ jobs:
 
     - name: Re-lock PR comments
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      if: ${{ github.event.issue.locked == true && (steps.target-branch-extractor.outputs.parsing_succeeded == 'true' || steps.target-branch-extractor.outputs.invalid_command == 'true') && (success() || failure()) }}
+      if: ${{ github.event.issue.locked && (fromJSON(steps.target-branch-extractor.outputs.parsing_succeeded) || fromJSON(steps.target-branch-extractor.outputs.invalid_command)) && (success() || failure()) }}
       with:
         script: |
           console.log(`Locking previously locked PR #${context.issue.number} again.`);
