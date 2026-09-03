@@ -12,21 +12,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 {
     public class LocateDotNet : Microsoft.Build.Utilities.Task
     {
-        private static readonly string s_cacheKey = "LocateDotNet-FCDFF825-F35B-4601-9CB5-74DCA498B589";
-
-        private sealed class CacheEntry
-        {
-            public readonly DateTime LastWrite;
-            public readonly string Paths;
-            public readonly string Value;
-
-            public CacheEntry(DateTime lastWrite, string paths, string value)
-            {
-                LastWrite = lastWrite;
-                Paths = paths;
-                Value = value;
-            }
-        }
+        private readonly record struct CacheKey(string GlobalJsonPath, DateTime LastWrite, string Paths);
 
         [Required]
         public string RepositoryRoot { get; set; }
@@ -47,11 +33,11 @@ namespace Microsoft.DotNet.Arcade.Sdk
             var lastWrite = File.GetLastWriteTimeUtc(globalJsonPath);
             var paths = Environment.GetEnvironmentVariable("PATH");
 
-            var cachedResult = (CacheEntry)BuildEngine4.GetRegisteredTaskObject(s_cacheKey, RegisteredTaskObjectLifetime.Build);
-            if (cachedResult != null && lastWrite == cachedResult.LastWrite && paths == cachedResult.Paths)
+            var cacheKey = new CacheKey(globalJsonPath, lastWrite, paths);
+            if (BuildEngine4.GetRegisteredTaskObject(cacheKey, RegisteredTaskObjectLifetime.Build) is string cachedPath)
             {
                 Log.LogMessage(MessageImportance.Low, $"Reused cached value.");
-                DotNetPath = cachedResult.Value;
+                DotNetPath = cachedPath;
                 return;
             }
 
@@ -68,7 +54,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             var sdkVersion = match.Groups[1].Value;
 
             var fileName = (Path.DirectorySeparatorChar == '\\') ? "dotnet.exe" : "dotnet";
-            var dotNetDir = paths.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(p => File.Exists(Path.Combine(p, fileName)));
+            var dotNetDir = paths.Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(p => File.Exists(Path.Combine(p, fileName)));
 
             if (dotNetDir == null || !Directory.Exists(Path.Combine(dotNetDir, "sdk", sdkVersion)))
             {
@@ -77,7 +63,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
 
             DotNetPath = Path.GetFullPath(Path.Combine(dotNetDir, fileName));
-            BuildEngine4.RegisterTaskObject(s_cacheKey, new CacheEntry(lastWrite, paths, DotNetPath), RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
+            BuildEngine4.RegisterTaskObject(cacheKey, DotNetPath, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
         }
     }
 }
