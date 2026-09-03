@@ -87,9 +87,20 @@ jobs:
 
           core.setOutput('target_branch', target_branch);
           core.setOutput('parsing_succeeded', 'true');
+    - name: Unlock comments if PR is locked
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      if: ${{ github.event.issue.locked == true && (steps.target-branch-extractor.outputs.parsing_succeeded == 'true' || steps.target-branch-extractor.outputs.invalid_command == 'true') }}
+      with:
+        script: |
+          console.log(`Unlocking locked PR #${context.issue.number}.`);
+          await github.rest.issues.unlock({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
     - name: Report invalid backport command
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      if: ${{ steps.target-branch-extractor.outputs.invalid_command == 'true' && github.event.issue.locked != true }}
+      if: ${{ steps.target-branch-extractor.outputs.invalid_command == 'true' }}
       with:
         script: |
           const comment_user = context.payload.comment.user.login;
@@ -106,17 +117,6 @@ jobs:
       with:
         script: |
           core.setFailed("Error: No backport branch found in the trigger phrase.");
-    - name: Unlock comments if PR is locked
-      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      if: ${{ github.event.issue.locked == true && steps.target-branch-extractor.outputs.parsing_succeeded == 'true' }}
-      with:
-        script: |
-          console.log(`Unlocking locked PR #${context.issue.number}.`);
-          await github.rest.issues.unlock({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-          });
     - name: Post backport started comment to pull request
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       if: ${{ steps.target-branch-extractor.outputs.parsing_succeeded == 'true' }}
@@ -426,7 +426,7 @@ jobs:
 
     - name: Re-lock PR comments
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-      if: ${{ github.event.issue.locked == true && steps.target-branch-extractor.outputs.parsing_succeeded == 'true' && (success() || failure()) }}
+      if: ${{ github.event.issue.locked == true && (steps.target-branch-extractor.outputs.parsing_succeeded == 'true' || steps.target-branch-extractor.outputs.invalid_command == 'true') && (success() || failure()) }}
       with:
         script: |
           console.log(`Locking previously locked PR #${context.issue.number} again.`);
