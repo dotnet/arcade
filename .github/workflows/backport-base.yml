@@ -64,6 +64,7 @@ jobs:
           core.setOutput('target_branch', '');
           core.setOutput('parsing_succeeded', 'false');
           core.setOutput('invalid_command', 'false');
+          core.setOutput('invalid_reason', '');
 
           // find a line that starts with the /backport command; comments that only mention the
           // command in the middle of a sentence are ignored
@@ -74,18 +75,26 @@ jobs:
             return '';
           }
 
-          // extract the target branch name from the trigger phrase containing these characters: a-z, A-Z, digits, forward slash, dot, hyphen, underscore
+          // the expected grammar is exactly: /backport to <target-branch>
           const command_arguments = command[1].trim().split(/\s+/).filter(argument => argument.length > 0);
-          const target_branch = command_arguments.length === 2 && command_arguments[0] === 'to'
-            ? command_arguments[1]
-            : '';
+          let invalid_reason = '';
+          if (command_arguments.length === 0) {
+            invalid_reason = 'no target branch was provided';
+          } else if (command_arguments[0] !== 'to') {
+            invalid_reason = 'the "to" keyword is missing before the target branch';
+          } else if (command_arguments.length !== 2) {
+            invalid_reason = 'more than one target branch was provided';
+          } else if (!/^[a-zA-Z\d\/\.\-\_]+$/.test(command_arguments[1])) {
+            invalid_reason = 'the target branch contains characters that are not allowed (only letters, digits, "/", ".", "-", and "_" are permitted)';
+          }
 
-          if (!/^[a-zA-Z\d\/\.\-\_]+$/.test(target_branch)) {
+          if (invalid_reason !== '') {
             core.setOutput('invalid_command', 'true');
+            core.setOutput('invalid_reason', invalid_reason);
             return '';
           }
 
-          core.setOutput('target_branch', target_branch);
+          core.setOutput('target_branch', command_arguments[1]);
           core.setOutput('parsing_succeeded', 'true');
     - name: Unlock comments if PR is locked
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -101,10 +110,12 @@ jobs:
     - name: Report invalid backport command
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       if: ${{ fromJSON(steps.target-branch-extractor.outputs.invalid_command) }}
+      env:
+        INVALID_REASON: ${{ steps.target-branch-extractor.outputs.invalid_reason }}
       with:
         script: |
           const comment_user = context.payload.comment.user.login;
-          const invalid_command_body = `@${comment_user} the \`/backport\` command was not recognized because it didn't specify a valid target branch. The expected format is \`/backport to <target-branch>\`, for example \`/backport to release/9.0\`.`;
+          const invalid_command_body = `@${comment_user} the \`/backport\` command was not recognized because ${process.env.INVALID_REASON}. The expected format is \`/backport to <target-branch>\`, for example \`/backport to release/9.0\`.`;
           await github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
@@ -114,9 +125,11 @@ jobs:
     - name: Fail invalid backport command
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       if: ${{ fromJSON(steps.target-branch-extractor.outputs.invalid_command) && (success() || failure()) }}
+      env:
+        INVALID_REASON: ${{ steps.target-branch-extractor.outputs.invalid_reason }}
       with:
         script: |
-          core.setFailed("Error: No backport branch found in the trigger phrase.");
+          core.setFailed(`Error: the /backport command was not recognized because ${process.env.INVALID_REASON}. The expected format is "/backport to <target-branch>".`);
     - name: Post backport started comment to pull request
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       if: ${{ fromJSON(steps.target-branch-extractor.outputs.parsing_succeeded) }}
