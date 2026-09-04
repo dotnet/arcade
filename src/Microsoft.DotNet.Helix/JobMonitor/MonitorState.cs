@@ -62,6 +62,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         // way as _workItemOutcomes. Cleared per key when a later incarnation passes.
         private readonly Dictionary<(string ChainKey, string WorkItemName), FailedWorkItemConsoleInfo> _failedWorkItemConsoleInfo
             = new(WorkItemOutcomeKeyComparer.Instance);
+        // Latest console output URI per work item, updated as each job incarnation is reconciled.
         private readonly Dictionary<(string ChainKey, string WorkItemName), string> _workItemConsoleOutputs
             = new(WorkItemOutcomeKeyComparer.Instance);
 
@@ -297,7 +298,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     // one for the same work item name. Independent original Helix jobs have
                     // different roots, even when they share an AzDO submitter and queue.
                     var key = (chainKey, wi.Name);
-                    _workItemConsoleOutputs[key] = wi.ConsoleOutputUri;
+                    if (string.IsNullOrEmpty(wi.ConsoleOutputUri))
+                    {
+                        _workItemConsoleOutputs.Remove(key);
+                    }
+                    else
+                    {
+                        _workItemConsoleOutputs[key] = wi.ConsoleOutputUri;
+                    }
                     bool passed = !wi.IsFailed && !_failedTestWorkItems.Contains(key);
                     // This marker only bridges the race where incremental test-result upload
                     // finishes before the Helix outcome is reconciled. A later incarnation in
@@ -367,7 +375,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                             job.DisplayName,
                             entry.Key.WorkItemName,
                             "Failed (AzDO tests)",
-                            GetConsoleOutputText(consoleOutputUri ?? job.DetailsUri));
+                            GetConsoleOutputText(
+                                string.IsNullOrEmpty(consoleOutputUri) ? job.DetailsUri : consoleOutputUri));
                     }
                 }
 
