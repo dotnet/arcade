@@ -1,9 +1,9 @@
 [CmdletBinding(PositionalBinding=$false)]
 Param(
   [string] $verbosity = 'minimal',
-  [bool] $warnAsError = $true,
-  [bool] $nodeReuse = $true,
-  [bool][Alias('mt')]$msbuildMultiThreaded = $false,
+  $warnAsError = $true,
+  $nodeReuse = $true,
+  [Alias('mt')]$msbuildMultiThreaded = $false,
   [switch] $ci,
   [switch] $prepareMachine,
   [switch] $excludePrereleaseVS,

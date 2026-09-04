@@ -1,6 +1,28 @@
 # Initialize variables if they aren't already defined.
 # These may be defined as parameters of the importing script, or set after importing this script.
 
+# Wrapper scripts (build.cmd, CIBuild.cmd, ...) invoke PowerShell with -File, which passes every
+# argument to the script as a literal string. '-warnAsError $false' therefore arrives as the text
+# '$false', which does not bind to [bool]. Accept the spellings a caller can reasonably produce and
+# fail on anything else, so that a typo is an error rather than a silently flipped value.
+function ParseBooleanArgument([string] $name, $value) {
+  if ($value -is [bool]) {
+    return $value
+  }
+
+  $text = "$value".Trim()
+
+  if ($text -in '$true', 'true', '1') {
+    return $true
+  }
+
+  if ($text -in '$false', 'false', '0') {
+    return $false
+  }
+
+  throw "Invalid value '$value' for -$name. Expected one of: `$true, true, 1, `$false, false, 0."
+}
+
 # CI mode - set to true on CI server for PR validation build or official build.
 [bool]$ci = if (Test-Path variable:ci) { $ci } else { $false }
 
@@ -29,14 +51,14 @@
 [string]$verbosity = if (Test-Path variable:verbosity) { $verbosity } else { 'minimal' }
 
 # Set to true to reuse msbuild nodes. Recommended to not reuse on CI.
-[bool]$nodeReuse = if (Test-Path variable:nodeReuse) { $nodeReuse } else { !$ci }
+[bool]$nodeReuse = if ((Test-Path variable:nodeReuse) -and ($null -ne $nodeReuse)) { ParseBooleanArgument 'nodeReuse' $nodeReuse } else { !$ci }
 
 # Set to true to build with MSBuild's multi-threaded mode (-mt). Opt-in for now, so off unless it was
 # explicitly requested. It's intended to become the default for local builds once it has proven out.
-[bool]$msbuildMultiThreaded = if (Test-Path variable:msbuildMultiThreaded) { $msbuildMultiThreaded } else { $false }
+[bool]$msbuildMultiThreaded = if ((Test-Path variable:msbuildMultiThreaded) -and ($null -ne $msbuildMultiThreaded)) { ParseBooleanArgument 'msbuildMultiThreaded' $msbuildMultiThreaded } else { $false }
 
 # Configures warning treatment in msbuild.
-[bool]$warnAsError = if (Test-Path variable:warnAsError) { $warnAsError } else { $true }
+[bool]$warnAsError = if ((Test-Path variable:warnAsError) -and ($null -ne $warnAsError)) { ParseBooleanArgument 'warnAsError' $warnAsError } else { $true }
 
 # Specifies semi-colon delimited list of warning codes that should not be treated as errors.
 # Defaults to NuGet Audit warning codes NU1901-NU1904.
