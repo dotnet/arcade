@@ -877,6 +877,47 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             state.SnapshotFailedWorkItemConsoleInfo().Should().BeEmpty();
         }
 
+        /// <summary>
+        /// A work item can finish (and have its test results uploaded and observed) before its
+        /// Helix job as a whole is reconciled, because other work items in the same job are
+        /// still running. <see cref="MonitorState.ObserveTestResults"/> can therefore record an
+        /// AzDO-test failure before <see cref="MonitorState.TryRecordWorkItemOutcomes"/> has
+        /// cached the work item's console link. Once the job is later reconciled, the recorded
+        /// failure must be refreshed with the now-known console link instead of staying stale.
+        /// </summary>
+        [Fact]
+        public void ObserveTestResults_BeforeJobReconciled_ConsoleLinkRefreshedOnReconcile()
+        {
+            var state = new MonitorState();
+            HelixJobInfo job = HelixJob("helix-linux", "running");
+            state.ObserveJobs([job]);
+
+            // The test-result upload for workitem-1 races ahead of the job-level reconciliation
+            // pass (other work items in the job are still running), so no console link is
+            // cached yet and the failure is recorded without one.
+            state.ObserveTestResult(job.JobName, "workitem-1", allPassed: false);
+            state.SnapshotFailedWorkItemConsoleInfo().Should().ContainSingle(info =>
+                info.WorkItemName == "workitem-1"
+                && info.ConsoleOutput == job.DetailsUri);
+
+            // The job later finishes and is reconciled; workitem-1 passed by Helix exit code but
+            // its summary now carries the console link that was missing earlier.
+            state.TryRecordWorkItemOutcomes(
+                job,
+                [
+                    new WorkItemSummary("details/workitem-1", job.JobName, "workitem-1", "Finished")
+                    {
+                        ConsoleOutputUri = "https://helix.example/workitem-1/console",
+                        ExitCode = 0,
+                    },
+                ]);
+
+            state.HasFailedWorkItem.Should().BeTrue();
+            state.SnapshotFailedWorkItemConsoleInfo().Should().ContainSingle(info =>
+                info.WorkItemName == "workitem-1"
+                && info.ConsoleOutput == "https://helix.example/workitem-1/console");
+        }
+
         [Fact]
         public async Task UploadPipeline_DoesNotDropCompletedJobsWhenBacklogged()
         {
@@ -4900,8 +4941,18 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                         new WorkItemTestResults("helix-linux", "workitem-1", ["results.trx"])
                     ],
                 });
+            helix.WithWorkItems(
+                "helix-linux",
+                [
+                    new WorkItemSummary("details/workitem-1", "helix-linux", "workitem-1", "Finished")
+                    {
+                        ConsoleOutputUri = "https://helix.example/workitem-1/console",
+                        ExitCode = 0,
+                    },
+                ]);
 
-            var runner = CreateRunner(azdo, helix);
+            var logger = new RecordingLogger();
+            var runner = CreateRunner(azdo, helix, logger: logger);
             int exitCode = await runner.RunAsync(CancellationToken.None);
 
             exitCode.Should().Be(1);
@@ -4911,6 +4962,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             IReadOnlyDictionary<string, IReadOnlySet<string>> failedTestWorkItems =
                 await azdo.GetFailedTestWorkItemsAsync(CancellationToken.None);
             failedTestWorkItems["helix-linux"].Should().BeEquivalentTo(["workitem-1"]);
+            logger.Messages.Should().Contain(message =>
+                message.Contains("Test results: https://dev.azure.com/dnceng/public/_build/results?buildId=123&view=ms.vss-test-web.build-test-results-tab", StringComparison.Ordinal)
+                && message.Contains("└─ Console: https://helix.example/workitem-1/console", StringComparison.Ordinal));
         }
 
         /// <summary>
