@@ -4900,8 +4900,18 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                         new WorkItemTestResults("helix-linux", "workitem-1", ["results.trx"])
                     ],
                 });
+            helix.WithWorkItems(
+                "helix-linux",
+                [
+                    new WorkItemSummary("details/workitem-1", "helix-linux", "workitem-1", "Finished")
+                    {
+                        ConsoleOutputUri = "https://helix.example/workitem-1/console",
+                        ExitCode = 0,
+                    },
+                ]);
 
-            var runner = CreateRunner(azdo, helix);
+            var logger = new RecordingLogger();
+            var runner = CreateRunner(azdo, helix, logger: logger);
             int exitCode = await runner.RunAsync(CancellationToken.None);
 
             exitCode.Should().Be(1);
@@ -4911,6 +4921,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             IReadOnlyDictionary<string, IReadOnlySet<string>> failedTestWorkItems =
                 await azdo.GetFailedTestWorkItemsAsync(CancellationToken.None);
             failedTestWorkItems["helix-linux"].Should().BeEquivalentTo(["workitem-1"]);
+            logger.Messages.Should().Contain(message =>
+                message.Contains("Test results: https://dev.azure.com/dnceng/public/_build/results?buildId=123&view=ms.vss-test-web.build-test-results-tab", StringComparison.Ordinal)
+                && message.Contains("└─ Console: https://helix.example/workitem-1/console", StringComparison.Ordinal));
         }
 
         /// <summary>

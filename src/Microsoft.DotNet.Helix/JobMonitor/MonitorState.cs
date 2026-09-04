@@ -62,6 +62,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         // way as _workItemOutcomes. Cleared per key when a later incarnation passes.
         private readonly Dictionary<(string ChainKey, string WorkItemName), FailedWorkItemConsoleInfo> _failedWorkItemConsoleInfo
             = new(WorkItemOutcomeKeyComparer.Instance);
+        private readonly Dictionary<(string ChainKey, string WorkItemName), string> _workItemConsoleOutputs
+            = new(WorkItemOutcomeKeyComparer.Instance);
 
         // Deduplication set for per-failure console-link warnings.
         private readonly HashSet<string> _reportedFailedWorkItemConsoleLinks = new(StringComparer.OrdinalIgnoreCase);
@@ -295,6 +297,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     // one for the same work item name. Independent original Helix jobs have
                     // different roots, even when they share an AzDO submitter and queue.
                     var key = (chainKey, wi.Name);
+                    _workItemConsoleOutputs[key] = wi.ConsoleOutputUri;
                     bool passed = !wi.IsFailed && !_failedTestWorkItems.Contains(key);
                     // This marker only bridges the race where incremental test-result upload
                     // finishes before the Helix outcome is reconciled. A later incarnation in
@@ -359,11 +362,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     // Ensure the final failure report includes test-only failures too.
                     if (!_failedWorkItemConsoleInfo.ContainsKey(key))
                     {
+                        _workItemConsoleOutputs.TryGetValue(key, out string consoleOutputUri);
                         _failedWorkItemConsoleInfo[key] = new FailedWorkItemConsoleInfo(
                             job.DisplayName,
                             entry.Key.WorkItemName,
                             "Failed (AzDO tests)",
-                            "see Azure DevOps test run results");
+                            GetConsoleOutputText(consoleOutputUri ?? job.DetailsUri));
                     }
                 }
 
