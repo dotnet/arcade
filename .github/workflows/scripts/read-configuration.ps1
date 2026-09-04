@@ -8,7 +8,7 @@ The GitHub repository owner.
 .PARAMETER RepoName
 The GitHub repository name.
 .PARAMETER MergeFromBranch
-The current branch
+The source branch to merge from. This is the key used to look up the merge flow configuration.
 .PARAMETER ConfigurationFileBranch
 The ConfigurationFileBranch is the branch where the configuration file is stored.
 .PARAMETER ConfigurationFilePath
@@ -86,11 +86,16 @@ function GetConfiguration {
 $configuration = GetConfiguration
 
 if ($configuration -ne $null) {
+    # A matching configuration entry always carries the merge policy, but MergeToBranch is optional:
+    # the caller of the workflow may supply the merge target instead. 'configurationFound' keeps its
+    # original meaning of a complete, self-contained entry so that copies of the workflow pinned to
+    # an older ref keep behaving exactly as before, while 'policyFound' reports the weaker condition
+    # that an entry matched at all.
+    $MergeToBranch = "";
     if($configuration.ContainsKey('MergeToBranch')){
         $MergeToBranch = $configuration['MergeToBranch']
     }else{
-        Write-Warning "Configuration provided is incorrect and does not contain the required parameter: MergeToBranch"
-        exit 0
+        Write-Host "Configuration does not contain MergeToBranch. The merge target must be supplied by the caller."
     }
 
     $ExtraSwitches = "";
@@ -107,7 +112,10 @@ if ($configuration -ne $null) {
     "mergeSwitchArguments=$ExtraSwitches" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
     "mergeToBranch=$MergeToBranch" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
     "resetToTargetPaths=$ResetToTargetPaths" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-    "configurationFound=$true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+    "policyFound=$true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+    if ($MergeToBranch) {
+        "configurationFound=$true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+    }
 }
 
 exit 0
