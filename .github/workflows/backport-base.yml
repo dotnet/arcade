@@ -115,6 +115,67 @@ jobs:
           const wrap_in_code_block = (language, content) => `\`\`\`${language}\n${content}\n\`\`\``;
           const wrap_in_details_block = (summary, content) => `<details>\n<summary>${summary}</summary>\n\n${content}\n</details>`;
 
+          // get users to cc (append PR author if different from user who issued the backport command)
+          let cc_users = `@${comment_user}`;
+          if (comment_user !== context.payload.issue.user.login) cc_users += ` @${context.payload.issue.user.login}`;
+
+          // replace the special placeholder tokens with values
+          const apply_template = (template) => (template || '')
+            .replace(/%target_branch%/g, target_branch)
+            .replace(/%source_pr_title%/g, context.payload.issue.title)
+            .replace(/%source_pr_number%/g, context.payload.issue.number)
+            .replace(/%source_pr_author%/g, context.payload.issue.user.login)
+            .replace(/%cc_users%/g, cc_users);
+
+          const backport_pr_title = apply_template(process.env.BACKPORT_PR_TITLE_TEMPLATE);
+          const backport_pr_description = apply_template(process.env.BACKPORT_PR_DESCRIPTION_TEMPLATE);
+          const backport_pr_labels = (process.env.BACKPORT_PR_LABELS || '')
+            .split(',')
+            .map(label => label.trim())
+            .filter(label => label.length > 0);
+
+          // escape a value so that it can be safely used inside a double quoted shell string
+          const shell_escape = (value) => value.replace(/([\\"$`])/g, '\\$1');
+
+          // Build step by step instructions that mirror what this workflow does, so that a user
+          // can finish the backport manually when the automated backport fails.
+          function manual_backport_instructions(temp_branch, patch_file, git_am_command) {
+            const label_switches = backport_pr_labels.map(label => ` --label "${shell_escape(label)}"`).join('');
+            const commands = [
+              '# 1. Get the latest sources and create the backport branch from the target branch',
+              `git fetch origin`,
+              `git checkout -b ${temp_branch} origin/${target_branch}`,
+              '',
+              `# 2. Download the patch of the changes from pull request #${pr_number}`,
+              `gh pr diff --patch ${pr_number} > ${patch_file}`,
+              `git fetch origin refs/pull/${pr_number}/head`,
+              '',
+              '# 3. Apply the patch (this is the step that failed in the automated backport)',
+              git_am_command,
+              '',
+              '# 4. If the patch does not apply cleanly, fix up the conflicts in the reported files, then',
+              '#    stage them and continue applying the remaining commits. Repeat until git am finishes.',
+              'git add <conflicted files>',
+              'git am --continue',
+              '#    Use `git am --abort` if you want to start over.',
+              '',
+              `# 5. Delete the patch file and push the branch to the ${repo_owner}/${repo_name} repository`,
+              `rm ${patch_file}`,
+              `git push --force-with-lease --set-upstream origin HEAD:${temp_branch}`,
+              '',
+              '# 6. Open the backport pull request',
+              `gh pr create --base ${target_branch} --head ${temp_branch}${label_switches} \\`,
+              `  --title "${shell_escape(backport_pr_title)}" \\`,
+              `  --body "${shell_escape(backport_pr_description)}"`,
+            ].join('\n');
+
+            const labels_note = backport_pr_labels.length > 0
+              ? `\nMake sure the backport pull request has the following labels: ${backport_pr_labels.map(label => `\`${label}\``).join(', ')}.`
+              : '';
+
+            return `### How to backport manually\n\nRun the following steps from a clone of the \`${repo_owner}/${repo_name}\` repository (the [GitHub CLI](https://cli.github.com/) is used to download the patch and to open the pull request; you can also open the pull request from the GitHub UI):\n\n${wrap_in_code_block('bash', commands)}\n${labels_note}`;
+          }
+
           // Post a comment on the PR and return the comment URL
           async function postComment(body) {
             const { data: comment } = await github.rest.issues.createComment({
@@ -280,7 +341,7 @@ jobs:
               // If no resolution command supplied, fail immediately
               if (resolution_command.trim().length === 0) {
                 const details = `${wrap_in_code_block('console', git_am_output)}\n[Link to workflow output](${workflow_run_url})`;
-                const git_am_failed_body = `@${comment_user} backporting to \`${target_branch}\` failed, the patch most likely resulted in conflicts. Please backport manually!\n${wrap_in_details_block('git am output', details)}`;
+                const git_am_failed_body = `@${comment_user} backporting to \`${target_branch}\` failed, the patch most likely resulted in conflicts. Please backport manually!\n\n${manual_backport_instructions(temp_branch, patch_file, git_am_command)}\n${wrap_in_details_block('git am output', details)}`;
                 postComment(git_am_failed_body);
                 core.setFailed("git am failed, most likely due to a merge conflict.");
                 return;
@@ -293,7 +354,7 @@ jobs:
               const resolution_result = await exec.getExecOutput(`bash -c "${resolution_command}"`, [], { ignoreReturnCode: true });
               if (resolution_result.exitCode !== 0) {
                 const details = `\`${resolution_command}\` stderr:\n${wrap_in_code_block('console', resolution_result.stderr)}\n[Link to workflow output](${workflow_run_url})`;
-                const resolution_failed_body = `@${comment_user} backporting to \`${target_branch}\` failed during automated conflict resolution. Please backport manually!\n${wrap_in_details_block('Error details', details)}`;
+                const resolution_failed_body = `@${comment_user} backporting to \`${target_branch}\` failed during automated conflict resolution. Please backport manually!\n\n${manual_backport_instructions(temp_branch, patch_file, git_am_command)}\n${wrap_in_details_block('Error details', details)}`;
                 postComment(resolution_failed_body);
                 core.setFailed(`Automated conflict resolution command exited with code ${resolution_result.exitCode}`);
                 return;
@@ -308,7 +369,7 @@ jobs:
               const diff_result = await exec.getExecOutput(diff_command);
               if (diff_result.stdout.trim().length !== 0) {
                 const details = `${wrap_in_code_block('console', diff_result.stdout)}\n[Link to workflow output](${workflow_run_url})`;
-                const conflicts_body = `@${comment_user} backporting to \`${target_branch}\` failed. Automated conflict resolution did not resolve all conflicts. Please backport manually!\n${wrap_in_details_block(`${diff_command} output`, details)}`;
+                const conflicts_body = `@${comment_user} backporting to \`${target_branch}\` failed. Automated conflict resolution did not resolve all conflicts. Please backport manually!\n\n${manual_backport_instructions(temp_branch, patch_file, git_am_command)}\n${wrap_in_details_block(`${diff_command} output`, details)}`;
                 postComment(conflicts_body);
                 core.setFailed(`Automated conflict resolution did not resolve all conflicts.`);
                 return;
@@ -325,34 +386,6 @@ jobs:
               console.log("Backport temp branch already exists, skipping opening a PR.");
               return;
             }
-
-            // prepare the GitHub PR details
-
-            // get users to cc (append PR author if different from user who issued the backport command)
-            let cc_users = `@${comment_user}`;
-            if (comment_user != context.payload.issue.user.login) cc_users += ` @${context.payload.issue.user.login}`;
-
-            // replace the special placeholder tokens with values
-            const { BACKPORT_PR_TITLE_TEMPLATE, BACKPORT_PR_DESCRIPTION_TEMPLATE } = process.env
-
-            const backport_pr_title = BACKPORT_PR_TITLE_TEMPLATE
-              .replace(/%target_branch%/g, target_branch)
-              .replace(/%source_pr_title%/g, context.payload.issue.title)
-              .replace(/%source_pr_number%/g, context.payload.issue.number)
-              .replace(/%source_pr_author%/g, context.payload.issue.user.login)
-              .replace(/%cc_users%/g, cc_users);
-
-            const backport_pr_description = BACKPORT_PR_DESCRIPTION_TEMPLATE
-              .replace(/%target_branch%/g, target_branch)
-              .replace(/%source_pr_title%/g, context.payload.issue.title)
-              .replace(/%source_pr_number%/g, context.payload.issue.number)
-              .replace(/%source_pr_author%/g, context.payload.issue.user.login)
-              .replace(/%cc_users%/g, cc_users);
-
-            const backport_pr_labels = (process.env.BACKPORT_PR_LABELS || '')
-              .split(',')
-              .map(label => label.trim())
-              .filter(label => label.length > 0);
 
             // open the GitHub PR
             const { data: backportPullRequest } = await github.rest.pulls.create({
