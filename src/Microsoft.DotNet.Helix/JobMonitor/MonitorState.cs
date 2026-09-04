@@ -320,6 +320,19 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     {
                         _failedWorkItemConsoleInfo.Remove(key);
                     }
+                    else if (!string.IsNullOrEmpty(wi.ConsoleOutputUri)
+                        && _failedWorkItemConsoleInfo.TryGetValue(key, out FailedWorkItemConsoleInfo recordedFailure))
+                    {
+                        // The work item passed by Helix exit code but was already recorded as
+                        // failed by ObserveTestResults (AzDO test failure) before this reconcile
+                        // pass could cache its console link. Refresh the recorded entry now that
+                        // the link is known, instead of leaving it pointing at the job details
+                        // URL or "no console link available".
+                        _failedWorkItemConsoleInfo[key] = recordedFailure with
+                        {
+                            ConsoleOutput = GetConsoleOutputText(wi.ConsoleOutputUri),
+                        };
+                    }
                 }
 
                 return true;
