@@ -9,8 +9,22 @@ using System.Linq;
 
 namespace Microsoft.DotNet.GenFacades
 {
-    public class GenPartialFacadeSource : RoslynBuildTask
+    // TODO: Not opted into multithreading. RoslynBuildTask.Execute subscribes every instance to the
+    // process-wide AssemblyLoadContext.Resolving event, so with differing RoslynAssembliesPath values
+    // one instance can satisfy another instance's resolution. The TaskEnvironment below is still used
+    // for path resolution. Tracked by https://github.com/dotnet/arcade/issues/17378.
+    //
+    // Implementing IMultiThreadableTask without the attribute is deliberate. Routing is decided by
+    // the attribute alone (TaskRouter.NeedsTaskHostInMultiThreadedMode); it cannot key off the
+    // interface, because ToolTask implements it and that would opt in every ToolTask-derived task in
+    // the ecosystem. The interface only causes TaskEnvironment to be injected. Do not remove it to
+    // "make this safe" - that would revert the path resolution below to the process current
+    // directory while leaving the task exactly as unsafe as it is now.
+    public class GenPartialFacadeSource : RoslynBuildTask, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         [Required]
         public ITaskItem[] ReferencePaths { get; set; }
 
@@ -39,13 +53,18 @@ namespace Microsoft.DotNet.GenFacades
             bool result = true;
             try
             {
+                AbsolutePath[] referencePaths = GetAbsolutePaths(ReferencePaths);
+                AbsolutePath referenceAssembly = TaskEnvironment.GetAbsolutePath(ReferenceAssembly);
+                AbsolutePath[] compileFiles = GetAbsolutePaths(CompileFiles);
+                AbsolutePath outputSourcePath = TaskEnvironment.GetAbsolutePath(OutputSourcePath);
+
                 result = GenPartialFacadeSourceGenerator.Execute(
-                    ReferencePaths?.Select(item => item.ItemSpec).ToArray(),
-                    ReferenceAssembly,
-                    CompileFiles?.Select(item => item.ItemSpec).ToArray(),
+                    referencePaths,
+                    referenceAssembly,
+                    compileFiles,
                     DefineConstants,
                     LangVersion,
-                    OutputSourcePath,
+                    outputSourcePath,
                     Log,
                     IgnoreMissingTypes,
                     IgnoreMissingTypesList,
@@ -58,6 +77,15 @@ namespace Microsoft.DotNet.GenFacades
             }
 
             return result && !Log.HasLoggedErrors;
+        }
+
+        private AbsolutePath[] GetAbsolutePaths(ITaskItem[] items)
+        {
+            return items?.Select(item =>
+            {
+                AbsolutePath itemSpecPath = TaskEnvironment.GetAbsolutePath(item.ItemSpec);
+                return itemSpecPath;
+            }).ToArray();
         }
     }
 }

@@ -16,6 +16,7 @@ using PropertyNames = NuGet.Client.ManagedCodeConventions.PropertyNames;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
+    [MSBuildMultiThreadableTask]
     public class ValidatePackage : ValidationTask
     {
         [Required]
@@ -51,6 +52,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         public string RuntimeFile { get; set; }
 
         public bool SkipGenerationCheck { get; set; }
+
         public bool SkipIndexCheck { get; set; }
 
         public bool SkipSupportCheck { get; set; }
@@ -335,7 +337,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 return;
             }
 
-            var index = PackageIndex.Load(PackageIndexes.Select(pi => pi.GetMetadata("FullPath")));
+            var index = PackageIndex.Load(PackageIndexes.Select(pi => TaskEnvironment.GetAbsolutePath(pi.GetMetadata("FullPath"))));
 
             PackageInfo info;
             if (!index.Packages.TryGetValue(PackageId, out info))

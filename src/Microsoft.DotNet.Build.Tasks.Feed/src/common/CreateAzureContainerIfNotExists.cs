@@ -4,9 +4,14 @@
 using System.Threading.Tasks;
 using Azure.Identity;
 using Microsoft.DotNet.Build.CloudTestTasks;
+using Microsoft.Build.Framework;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
+    // Deliberately not marked multithreadable: the AccountKey is null path builds an
+    // AzureCliCredential, which resolves and launches `az` from the ambient process environment
+    // rather than the project's injected one. Migrating requires supplying credentials explicitly or
+    // launching the CLI through TaskEnvironment.
     public class CreateAzureContainerIfNotExists : CreateAzureContainer
     {
         /// <summary>

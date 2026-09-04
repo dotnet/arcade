@@ -15,8 +15,24 @@ namespace Microsoft.DotNet.Helix.Sdk
     /// Task that installs a .NET tool in a given folder.
     /// Handles parallel builds that install the same tool.
     /// </summary>
-    public class InstallDotNetTool : MSBuildTaskBase
+    // TODO: https://github.com/dotnet/arcade/issues/17378 - not yet annotated with
+    // [MSBuildMultiThreadableTask]. Paths are resolved through TaskEnvironment below, but the child
+    // `dotnet tool install` process is spawned through Microsoft.Arcade.Common's ICommandFactory,
+    // which builds its ProcessStartInfo from the ambient process environment rather than from an
+    // injected TaskEnvironment. Per-project environment variables would therefore leak between
+    // projects sharing a node, so MSBuild keeps routing this task through the out-of-proc TaskHost.
+    //
+    // Implementing IMultiThreadableTask without the attribute is deliberate. Routing is decided by
+    // the attribute alone (TaskRouter.NeedsTaskHostInMultiThreadedMode); it cannot key off the
+    // interface, because ToolTask implements it and that would opt in every ToolTask-derived task in
+    // the ecosystem. The interface only causes TaskEnvironment to be injected. Do not remove it to
+    // "make this safe" - that would revert the path resolution below to the process current
+    // directory while leaving the task exactly as unsafe as it is now.
+    public class InstallDotNetTool : MSBuildTaskBase, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         /// <summary>
         /// The name of the tool to install (same as the NuGet package name, e.g. Microsoft.DotNet.XHarness.CLI)
         /// </summary>
@@ -96,11 +112,12 @@ namespace Microsoft.DotNet.Helix.Sdk
             // We install the tool in [dest]/[name]/[version] because if we tried to install 2 versions in the same dir,
             // `dotnet tool install` would fail.
             var version = Version.ToLowerInvariant();
-            ToolPath = Path.Combine(DestinationPath, Name, Version);
+            string absoluteDestinationPath = TaskEnvironment.GetAbsolutePath(DestinationPath);
+            ToolPath = Path.Combine(absoluteDestinationPath, Name, Version);
 
             if (!fileSystem.DirectoryExists(ToolPath))
             {
-                fileSystem.CreateDirectory(DestinationPath);
+                fileSystem.CreateDirectory(absoluteDestinationPath);
             }
 
             string versionInstallPath = Path.Combine(ToolPath, ".store", Name.ToLowerInvariant(), version);
@@ -156,14 +173,16 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             args.Add(Name);
 
-            var executable = string.IsNullOrEmpty(DotnetPath) ? "dotnet" : DotnetPath;
+            // A bare "dotnet" is resolved through PATH by the process launcher and must stay
+            // unresolved; only an explicitly supplied path is made absolute.
+            var executable = string.IsNullOrEmpty(DotnetPath) ? "dotnet" : (string)TaskEnvironment.GetAbsolutePath(DotnetPath);
             Log.LogMessage($"Executing {DotnetPath} {string.Join(" ", args)}");
 
             ICommand command = commandFactory.Create(executable, args);
 
             if (!string.IsNullOrEmpty(WorkingDirectory))
             {
-                command.WorkingDirectory(WorkingDirectory);
+                command.WorkingDirectory(TaskEnvironment.GetAbsolutePath(WorkingDirectory));
             }
 
             CommandResult result = command.Execute();

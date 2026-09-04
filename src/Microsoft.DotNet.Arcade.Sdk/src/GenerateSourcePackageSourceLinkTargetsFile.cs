@@ -12,8 +12,12 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
-    public sealed class GenerateSourcePackageSourceLinkTargetsFile : Microsoft.Build.Utilities.Task
+    [MSBuildMultiThreadableTask]
+    public sealed class GenerateSourcePackageSourceLinkTargetsFile : Task, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         [Required]
         public string ProjectDirectory { get; set; }
 
@@ -28,8 +32,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         public override bool Execute()
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(OutputPath));
-            File.WriteAllText(OutputPath, GetOutputFileContent(), Encoding.UTF8);
+            Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(OutputPath)));
+            File.WriteAllText(TaskEnvironment.GetAbsolutePath(OutputPath), GetOutputFileContent(), Encoding.UTF8);
 
             return !Log.HasLoggedErrors;
         }

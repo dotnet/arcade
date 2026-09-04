@@ -7,6 +7,7 @@ using XliffTasks.Model;
 
 namespace XliffTasks.Tasks
 {
+    [MSBuildMultiThreadableTask]
     public sealed class SortXlf : XlfTask
     {
         [Required]
@@ -25,10 +26,12 @@ namespace XliffTasks.Tasks
                 {
                     string xlfPath = XlfTask.GetXlfPath(sourceDocumentPath, language);
                     XlfDocument xlfDocument;
+                    AbsolutePath xlfAbsolutePath;
 
                     try
                     {
-                        xlfDocument = XlfTask.LoadXlfDocument(xlfPath);
+                        xlfAbsolutePath = TaskEnvironment.GetAbsolutePath(xlfPath);
+                        xlfDocument = XlfTask.LoadXlfDocument(xlfAbsolutePath);
                     }
                     catch (FileNotFoundException)
                     {
@@ -42,8 +45,8 @@ namespace XliffTasks.Tasks
                         continue; // no changes
                     }
 
-                    Directory.CreateDirectory(Path.GetDirectoryName(xlfPath));
-                    xlfDocument.Save(xlfPath);
+                    Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(xlfPath)));
+                    xlfDocument.Save(xlfAbsolutePath);
                 }
             }
         }

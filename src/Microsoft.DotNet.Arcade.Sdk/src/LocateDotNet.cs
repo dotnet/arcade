@@ -10,9 +10,13 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
-    public class LocateDotNet : Microsoft.Build.Utilities.Task
+    [MSBuildMultiThreadableTask]
+    public class LocateDotNet : Task, IMultiThreadableTask
     {
-        private readonly record struct CacheKey(string GlobalJsonPath, DateTime LastWrite, string Paths);
+        private readonly record struct CacheKey(AbsolutePath GlobalJsonPath, DateTime LastWrite, string Paths);
+
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
         [Required]
         public string RepositoryRoot { get; set; }
@@ -28,11 +32,16 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         private void ExecuteImpl()
         {
-            var globalJsonPath = Path.Combine(RepositoryRoot, "global.json");
+            var globalJsonPath = TaskEnvironment.GetAbsolutePath(Path.Combine(RepositoryRoot, "global.json"));
 
             var lastWrite = File.GetLastWriteTimeUtc(globalJsonPath);
-            var paths = Environment.GetEnvironmentVariable("PATH");
+            var paths = TaskEnvironment.GetEnvironmentVariable("PATH");
 
+            // The read/write pair below is not atomic, so under multithreaded execution two threads
+            // can both miss and both compute the value. That is benign here: the computation is pure
+            // and deterministic for a given (global.json, timestamp, PATH), so the loser of the race
+            // has its registration dropped and the winner's identical entry stands. The cache is an
+            // optimization, not a lock.
             var cacheKey = new CacheKey(globalJsonPath, lastWrite, paths);
             if (BuildEngine4.GetRegisteredTaskObject(cacheKey, RegisteredTaskObjectLifetime.Build) is string cachedPath)
             {
@@ -54,15 +63,15 @@ namespace Microsoft.DotNet.Arcade.Sdk
             var sdkVersion = match.Groups[1].Value;
 
             var fileName = (Path.DirectorySeparatorChar == '\\') ? "dotnet.exe" : "dotnet";
-            var dotNetDir = paths.Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(p => File.Exists(Path.Combine(p, fileName)));
+            var dotNetDir = paths.Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(p => File.Exists(TaskEnvironment.GetAbsolutePath(Path.Combine(p, fileName))));
 
-            if (dotNetDir == null || !Directory.Exists(Path.Combine(dotNetDir, "sdk", sdkVersion)))
+            if (dotNetDir == null || !Directory.Exists(TaskEnvironment.GetAbsolutePath(Path.Combine(dotNetDir, "sdk", sdkVersion))))
             {
                 Log.LogError($"Unable to find dotnet with SDK version '{sdkVersion}'");
                 return;
             }
 
-            DotNetPath = Path.GetFullPath(Path.Combine(dotNetDir, fileName));
+            DotNetPath = TaskEnvironment.GetAbsolutePath(Path.Combine(dotNetDir, fileName));
             BuildEngine4.RegisterTaskObject(cacheKey, DotNetPath, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
         }
     }

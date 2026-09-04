@@ -11,13 +11,17 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GeneratePackageReport : Task
+    [MSBuildMultiThreadableTask]
+    public class GeneratePackageReport : Task, IMultiThreadableTask
     {
         private Dictionary<string, PackageItem> _targetPathToPackageItem;
         private AggregateNuGetAssetResolver _resolver;
         private Dictionary<NuGetFramework, string[]> _frameworks;
         private NuGetAssetResolver _resolverWithoutPlaceholders;
         private HashSet<string> _unusedTargetPaths;
+
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
         [Required]
         public string PackageId
@@ -174,7 +178,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
             report.UnusedAssets = _unusedTargetPaths.Select(tp => GetPackageAssetFromTargetPath(tp)).ToArray();
 
-            report.Save(ReportFile);
+            report.Save(TaskEnvironment.GetAbsolutePath(ReportFile));
 
             return !Log.HasLoggedErrors;
         }
@@ -235,7 +239,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             // inspect any TFMs inbox
             if (PackageIndexes != null && PackageIndexes.Length > 0)
             {
-                var index = PackageIndex.Load(PackageIndexes.Select(pi => pi.GetMetadata("FullPath")));
+                var index = PackageIndex.Load(PackageIndexes.Select(pi => TaskEnvironment.GetAbsolutePath(pi.GetMetadata("FullPath"))));
                 var inboxFrameworks = index.GetInboxFrameworks(PackageId).NullAsEmpty();
                 
                 foreach (var inboxFramework in inboxFrameworks)
@@ -333,7 +337,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 }
             }
 
-            _resolver = new AggregateNuGetAssetResolver(RuntimeFile);
+            AbsolutePath runtimeFile = TaskEnvironment.GetAbsolutePath(RuntimeFile);
+            _resolver = new AggregateNuGetAssetResolver(runtimeFile);
             foreach (string packageId in packageItems.Keys)
             {
                 _resolver.AddPackageItems(packageId, packageItems[packageId].Select(f => f.TargetPath));
@@ -348,7 +353,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                     .Select(pf => pf.TargetPath)
                     .Where(f => !NuGetAssetResolver.IsPlaceholder(f));
 
-                _resolverWithoutPlaceholders = new NuGetAssetResolver(RuntimeFile, filesWithoutPlaceholders);
+                _resolverWithoutPlaceholders = new NuGetAssetResolver(runtimeFile, filesWithoutPlaceholders);
             }
         }
 

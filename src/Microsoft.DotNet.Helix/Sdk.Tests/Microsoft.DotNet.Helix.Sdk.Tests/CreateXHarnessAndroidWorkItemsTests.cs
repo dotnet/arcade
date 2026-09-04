@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 CreateApk("apks/System.Bar.apk", "System.Bar"),
             };
 
-            _fileSystem.Files.Add("apks/xharness-payload-system.foo.zip", "archive");
+            _fileSystem.Files.Add(_task.TaskEnvironment.GetAbsolutePath("apks/xharness-payload-system.foo.zip"), "archive");
 
             // Act
             using var provider = collection.BuildServiceProvider();
@@ -245,7 +245,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAndroidWorkItems.MetadataNames.ApkPath)).Returns(apkPath);
             }
 
-            _fileSystem.WriteToFile(apkPath ?? itemSpec, "apk");
+            _fileSystem.WriteToFile(_task.TaskEnvironment.GetAbsolutePath(apkPath ?? itemSpec), "apk");
 
             return mockBundle.Object;
         }

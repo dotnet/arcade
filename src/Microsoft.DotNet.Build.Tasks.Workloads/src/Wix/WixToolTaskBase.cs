@@ -39,13 +39,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
         {
             BuildEngine = engine ?? throw new ArgumentNullException(nameof(engine));
 
-            if (!File.Exists(toolPath))
+            AbsolutePath toolFullPath = TaskEnvironment.GetAbsolutePath(toolPath);
+            if (!File.Exists(toolFullPath))
             {
-                throw new FileNotFoundException("The specified tool executable was not found.", toolPath);
+                throw new FileNotFoundException("The specified tool executable was not found.", toolFullPath);
             }
 
-            ToolPath = Path.GetDirectoryName(toolPath);
-            ToolName = Path.GetFileName(toolPath);
+            ToolPath = Path.GetDirectoryName(toolFullPath);
+            ToolName = Path.GetFileName(toolFullPath);
         }
         
         protected override string GenerateFullPathToTool() => Path.Combine(ToolPath, ToolName);

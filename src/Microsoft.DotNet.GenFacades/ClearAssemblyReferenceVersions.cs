@@ -14,8 +14,12 @@ namespace Microsoft.DotNet.GenFacades
     /// <summary>
     /// Rewrites an Assembly's references to be version 0.0.0.0.
     /// </summary>
-    public class ClearAssemblyReferenceVersions : Task
+    [MSBuildMultiThreadableTask]
+    public class ClearAssemblyReferenceVersions : Task, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         /// <summary>
         /// Assembly to rewrite.
         /// </summary>
@@ -26,7 +30,7 @@ namespace Microsoft.DotNet.GenFacades
         {
             try
             {
-                using (FileStream stream = File.Open(Assembly, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
+                using (FileStream stream = File.Open(TaskEnvironment.GetAbsolutePath(Assembly), FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
                 using (PEReader peReader = new PEReader(stream))
                 {
                     using (BinaryWriter writer = new BinaryWriter(stream))

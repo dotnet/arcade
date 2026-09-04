@@ -16,8 +16,24 @@ namespace Microsoft.DotNet.GenFacades
     /// <summary>
     /// The class generates an NotSupportedAssembly from the reference sources.
     /// </summary>
-    public class NotSupportedAssemblyGenerator : RoslynBuildTask
+    /// <remarks>
+    /// TODO: Not opted into multithreading. RoslynBuildTask.Execute subscribes every instance to the
+    /// process-wide AssemblyLoadContext.Resolving event, so with differing RoslynAssembliesPath values
+    /// one instance can satisfy another instance's resolution. The TaskEnvironment below is still used
+    /// for path resolution. Tracked by https://github.com/dotnet/arcade/issues/17378.
+    ///
+    /// Implementing IMultiThreadableTask without the attribute is deliberate. Routing is decided by
+    /// the attribute alone (TaskRouter.NeedsTaskHostInMultiThreadedMode); it cannot key off the
+    /// interface, because ToolTask implements it and that would opt in every ToolTask-derived task in
+    /// the ecosystem. The interface only causes TaskEnvironment to be injected. Do not remove it to
+    /// "make this safe" - that would revert the path resolution below to the process current
+    /// directory while leaving the task exactly as unsafe as it is now.
+    /// </remarks>
+    public class NotSupportedAssemblyGenerator : RoslynBuildTask, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         [Required]
         public ITaskItem[] SourceFiles { get; set; }
 
@@ -44,27 +60,32 @@ namespace Microsoft.DotNet.GenFacades
         private void GenerateNotSupportedAssemblyFiles(IEnumerable<ITaskItem> sourceFiles)
         {
             string[] apiExclusions = null;
-            if (!string.IsNullOrEmpty(ApiExclusionListPath) && File.Exists(ApiExclusionListPath))
+            if (!string.IsNullOrEmpty(ApiExclusionListPath))
             {
-                apiExclusions = File.ReadAllLines(ApiExclusionListPath);
+                AbsolutePath apiExclusionListPath = TaskEnvironment.GetAbsolutePath(ApiExclusionListPath);
+                if (File.Exists(apiExclusionListPath))
+                {
+                    apiExclusions = File.ReadAllLines(apiExclusionListPath);
+                }
             }
 
             foreach (ITaskItem item in sourceFiles)
             {
                 string sourceFile = item.ItemSpec;
                 string outputPath = item.GetMetadata("OutputPath");
+                AbsolutePath sourceFilePath = TaskEnvironment.GetAbsolutePath(sourceFile);
 
-                if (!File.Exists(sourceFile))
+                if (!File.Exists(sourceFilePath))
                 {
                     Log.LogError($"File {sourceFile} was not found.");
                     continue;
                 }
 
-                GenerateNotSupportedAssemblyForSourceFile(sourceFile, outputPath, apiExclusions);
+                GenerateNotSupportedAssemblyForSourceFile(sourceFilePath, outputPath, apiExclusions);
             }
         }
 
-        private void GenerateNotSupportedAssemblyForSourceFile(string sourceFile, string outputPath, string[] apiExclusions)
+        private void GenerateNotSupportedAssemblyForSourceFile(AbsolutePath sourceFilePath, string outputPath, string[] apiExclusions)
         {
             SyntaxTree syntaxTree;
 
@@ -76,7 +97,7 @@ namespace Microsoft.DotNet.GenFacades
                     Log.LogError($"Invalid LangVersion value '{LangVersion}'");
                     return;
                 }
-                syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFile), new CSharpParseOptions(languageVersion));
+                syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFilePath), new CSharpParseOptions(languageVersion));
             }
             catch(Exception ex)
             {
@@ -87,7 +108,7 @@ namespace Microsoft.DotNet.GenFacades
             var rewriter = new NotSupportedAssemblyRewriter(Message, apiExclusions);
             SyntaxNode root = rewriter.Visit(syntaxTree.GetRoot());
             string text = root.GetText().ToString();
-            File.WriteAllText(outputPath, text);
+            File.WriteAllText(TaskEnvironment.GetAbsolutePath(outputPath), text);
         }
     }
 

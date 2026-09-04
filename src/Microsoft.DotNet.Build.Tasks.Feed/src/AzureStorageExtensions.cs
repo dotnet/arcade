@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Build.Framework;
 using System;
 using System.IO;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 {
     public static class AzureStorageExtensions
     {
-        public static string CalculateMD5(string filename)
+        public static string CalculateMD5(AbsolutePath filename)
         {
             using var md5 = MD5.Create(); // lgtm [cs/weak-crypto] Azure Storage specifies use of MD5
             using var stream = File.OpenRead(filename);
@@ -22,7 +23,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return Convert.ToBase64String(hash);
         }
 
-        public static async Task<bool> IsFileIdenticalToBlobAsync(this BlobClient client, string file)
+        public static async Task<bool> IsFileIdenticalToBlobAsync(this BlobClient client, AbsolutePath file)
         {
             BlobProperties properties = await client.GetPropertiesAsync();
             if (properties.ContentHash != null)

@@ -13,6 +13,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
     /// <summary>
     /// Tool task for invoking the WiX CLI (version 5 and above). This commands is responsible for compiling and linking.
     /// </summary>
+    // Deliberately not annotated with [MSBuildMultiThreadableTask]. This type is never registered via
+    // UsingTask; it is constructed directly by MsiBase, so MSBuild neither routes it nor injects a
+    // TaskEnvironment, leaving WixToolTaskBase resolving against TaskEnvironment.Fallback (the process
+    // current directory). The attribute would therefore be inert while falsely marking part of the
+    // CreateVisualStudioWorkload helper chain as migrated. See dotnet/arcade#17378: the fix is to flow
+    // the owning task's TaskEnvironment into these instances once that chain takes AbsolutePath.
     public class WixToolTask : WixToolTaskBase
     {
         private List<string> _sourceFiles = new();

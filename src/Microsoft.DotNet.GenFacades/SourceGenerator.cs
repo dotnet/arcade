@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
 using System.IO;
@@ -14,7 +15,7 @@ namespace Microsoft.DotNet.GenFacades
         private readonly IReadOnlyDictionary<string, string> _seedTypePreferences;
         private readonly IEnumerable<string> _referenceTypes;
         private readonly IReadOnlyDictionary<string, IList<string>> _seedTypes;
-        private readonly string _outputSourcePath;
+        private readonly AbsolutePath _outputSourcePath;
         private readonly HashSet<string> _ignoreMissingTypesList = new HashSet<string>();
         private readonly TaskLoggingHelper _logger;
 
@@ -22,7 +23,7 @@ namespace Microsoft.DotNet.GenFacades
             IEnumerable<string> referenceTypes,
             IReadOnlyDictionary<string, IList<string>> seedTypes,
             IReadOnlyDictionary<string, string> seedTypePreferences,
-            string outputSourcePath,
+            AbsolutePath outputSourcePath,
             string[] ignoreMissingTypesList,
             TaskLoggingHelper logger
             )
@@ -38,7 +39,7 @@ namespace Microsoft.DotNet.GenFacades
         }
 
         public bool GenerateSource(
-            IEnumerable<string> compileFiles,
+            IEnumerable<AbsolutePath> compileFiles,
             IEnumerable<string> constants,
             string langVersion,
             bool ignoreMissingTypes)

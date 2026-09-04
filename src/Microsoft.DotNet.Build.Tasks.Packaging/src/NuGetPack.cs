@@ -15,7 +15,8 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class NuGetPack : Task
+    [MSBuildMultiThreadableTask]
+    public class NuGetPack : Task, IMultiThreadableTask
     {
         /// <summary>
         /// Target file paths to exclude when building the lib package for symbol server scenario
@@ -37,6 +38,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         private static readonly string _defaultPackedPackagePrefix = "transport";
         private static readonly string _symbolsPackageExtension = ".symbols.nupkg";
         private static readonly string _packageExtension = ".nupkg";
+
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
         [Required]
         public ITaskItem[] Nuspecs
@@ -160,9 +164,10 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 return false;
             }
 
-            if (!Directory.Exists(OutputDirectory))
+            AbsolutePath outputDirectory = TaskEnvironment.GetAbsolutePath(OutputDirectory);
+            if (!Directory.Exists(outputDirectory))
             {
-                Directory.CreateDirectory(OutputDirectory);
+                Directory.CreateDirectory(outputDirectory);
             }
 
             Func<string, string> nuspecPropertyProvider = GetNuspecPropertyProviderFunction(NuspecProperties);
@@ -177,23 +182,24 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                     continue;
                 }
 
-                Manifest manifest = GetManifest(nuspecPath, nuspecPropertyProvider, false);
+                AbsolutePath absoluteNuspecPath = TaskEnvironment.GetAbsolutePath(nuspecPath);
+                Manifest manifest = GetManifest(absoluteNuspecPath, nuspecPropertyProvider, false);
                 string nupkgPath = GetPackageOutputPath(nuspecPath, manifest, false, false);
-                Pack(nuspecPath, nupkgPath, manifest, IncludeSymbolsInPackage);
+                Pack(nuspecPath, absoluteNuspecPath, nupkgPath, manifest, IncludeSymbolsInPackage);
 
                 bool packSymbols = CreateSymbolPackage || CreatePackedPackage;
                 if (CreateSymbolPackage)
                 {
-                    Manifest symbolsManifest = GetManifest(nuspecPath, nuspecPropertyProvider, false);
+                    Manifest symbolsManifest = GetManifest(absoluteNuspecPath, nuspecPropertyProvider, false);
                     nupkgPath = GetPackageOutputPath(nuspecPath, symbolsManifest, true, false);
-                    Pack(nuspecPath, nupkgPath, symbolsManifest, packSymbols);
+                    Pack(nuspecPath, absoluteNuspecPath, nupkgPath, symbolsManifest, packSymbols);
                 }
 
                 if (CreatePackedPackage)
                 {
-                    Manifest packedManifest = GetManifest(nuspecPath, nuspecPropertyProvider, true);
+                    Manifest packedManifest = GetManifest(absoluteNuspecPath, nuspecPropertyProvider, true);
                     nupkgPath = GetPackageOutputPath(nuspecPath, packedManifest, false, true);
-                    Pack(nuspecPath, nupkgPath, packedManifest, packSymbols);
+                    Pack(nuspecPath, absoluteNuspecPath, nupkgPath, packedManifest, packSymbols);
                 }
             }
 
@@ -205,20 +211,29 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return nuspecProperties == null ? null : NuspecPropertyStringProvider.GetNuspecPropertyProviderFunction(nuspecProperties.Select(p => p.ItemSpec).ToArray());
         }
 
-        private Manifest GetManifest(string nuspecPath, Func<string, string> nuspecPropertyProvider, bool isPackedPackage)
+        private Manifest GetManifest(AbsolutePath absoluteNuspecPath, Func<string, string> nuspecPropertyProvider, bool isPackedPackage)
         {
-            using (var nuspecFile = File.Open(nuspecPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            using (var nuspecFile = File.Open(absoluteNuspecPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
             {
-                string baseDirectoryPath = (string.IsNullOrEmpty(BaseDirectory)) ? Path.GetDirectoryName(nuspecPath) : BaseDirectory;
                 Manifest manifest = Manifest.ReadFrom(nuspecFile, nuspecPropertyProvider, false);
 
                 if (isPackedPackage)
                 {
-                    manifest = TransformManifestToPackedPackageManifest(manifest);
+                    manifest = TransformManifestToPackedPackageManifest(manifest, GetBaseDirectory(absoluteNuspecPath));
                 }
                 return manifest;
             }
         }
+
+        /// <summary>
+        /// Gets the directory that manifest file sources are resolved against. This has to be used
+        /// everywhere a manifest source is probed or packed, so that probing cannot look in a
+        /// different place than <see cref="PackageBuilder.PopulateFiles"/> later reads from.
+        /// </summary>
+        private AbsolutePath GetBaseDirectory(AbsolutePath absoluteNuspecPath)
+            => string.IsNullOrEmpty(BaseDirectory)
+                ? TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(absoluteNuspecPath))
+                : TaskEnvironment.GetAbsolutePath(BaseDirectory);
 
         private string GetPackageOutputPath(string nuspecPath, Manifest manifest, bool isSymbolsPackage, bool applyPrefix)
         {
@@ -263,7 +278,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return Path.Combine(nupkgOutputDirectory, $"{id}.{version}{nupkgExtension}");
         }
 
-        public void Pack(string nuspecPath, string nupkgPath, Manifest manifest, bool packSymbols)
+        public void Pack(string nuspecPath, AbsolutePath absoluteNuspecPath, string nupkgPath, Manifest manifest, bool packSymbols)
         {
             bool creatingSymbolsPackage = packSymbols && (Path.GetExtension(nupkgPath) == _symbolsPackageExtension);
             try
@@ -271,7 +286,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 PackageBuilder builder = new PackageBuilder(deterministic: Deterministic);
                 SetDeterministicTimestamp(builder, DeterministicTimestamp);
 
-                string baseDirectoryPath = (string.IsNullOrEmpty(BaseDirectory)) ? Path.GetDirectoryName(nuspecPath) : BaseDirectory;
+                string baseDirectoryPath = GetBaseDirectory(absoluteNuspecPath);
                 builder.Populate(manifest.Metadata);
                 builder.PopulateFiles(baseDirectoryPath, manifest.Files);
 
@@ -309,12 +324,13 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 }
 
                 var directory = Path.GetDirectoryName(nupkgPath);
-                if (!Directory.Exists(directory))
+                AbsolutePath directoryPath = TaskEnvironment.GetAbsolutePath(directory);
+                if (!Directory.Exists(directoryPath))
                 {
-                    Directory.CreateDirectory(directory);
+                    Directory.CreateDirectory(directoryPath);
                 }
 
-                using (var fileStream = File.Create(nupkgPath))
+                using (var fileStream = File.Create(TaskEnvironment.GetAbsolutePath(nupkgPath)))
                 {
                     builder.Save(fileStream);
                 }
@@ -360,7 +376,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             propertyInfo.SetValue(packageBuilder, deterministicTimestamp);
         }
 
-        private Manifest TransformManifestToPackedPackageManifest(Manifest manifest)
+        private Manifest TransformManifestToPackedPackageManifest(Manifest manifest, AbsolutePath baseDirectoryPath)
         {
             ManifestMetadata manifestMetadata = manifest.Metadata;
 
@@ -392,7 +408,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 if(Path.GetFileName(fileName) == "runtime.json" && file.Target == "")
                 {
                     string packedPackageSourcePath = Path.Combine(Path.GetDirectoryName(fileName), string.Join(".", _packageNamePrefix, Path.GetFileName(fileName)));
-                    file.Source = File.Exists(packedPackageSourcePath) ? packedPackageSourcePath : fileName;
+                    file.Source = File.Exists(Path.Combine(baseDirectoryPath, packedPackageSourcePath)) ? packedPackageSourcePath : fileName;
                     file.Target = "runtime.json";
                 }
                 manifestFiles.Add(file);

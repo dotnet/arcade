@@ -19,12 +19,27 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
     /// <summary>
     /// An MSBuild task used to create workload artifacts including MSIs and SWIX projects for Visual Studio Installer.
     /// </summary>
-    public class CreateVisualStudioWorkload : VisualStudioWorkloadTaskBase
+    // TODO: https://github.com/dotnet/arcade/issues/17378 - this task is not yet annotated with
+    // [MSBuildMultiThreadableTask] because workload MSI generation reads and writes files through a
+    // deep helper chain (WorkloadPackageBase, MsiBase, SwixProject, EmbeddedTemplates, Utils) that
+    // still resolves paths against the process-wide current directory. Until those helpers take
+    // AbsolutePath, MSBuild keeps routing this task through the out-of-proc TaskHost.
+    //
+    // Implementing IMultiThreadableTask without the attribute is deliberate. Routing is decided by
+    // the attribute alone (TaskRouter.NeedsTaskHostInMultiThreadedMode); it cannot key off the
+    // interface, because ToolTask implements it and that would opt in every ToolTask-derived task in
+    // the ecosystem. The interface only causes TaskEnvironment to be injected. Do not remove it to
+    // "make this safe" - that would revert the path resolution below to the process current
+    // directory while leaving the task exactly as unsafe as it is now.
+    public class CreateVisualStudioWorkload : VisualStudioWorkloadTaskBase, IMultiThreadableTask
     {
         /// <summary>
         /// Used to track which feature bands support the machineArch property.
         /// </summary>
         private Dictionary<ReleaseVersion, bool> _supportsMachineArch = new();
+
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
         /// <summary>
         /// A set of items that provide metadata associated with the Visual Studio components derived from
@@ -130,7 +145,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         } = false;
 
+        // MSBuildTask0005 is suppressed while this task is still routed through the TaskHost.
+        // See the TODO on the class declaration and https://github.com/dotnet/arcade/issues/17378.
+        #pragma warning disable MSBuildTask0005
         protected override bool ExecuteCore()
+        #pragma warning restore MSBuildTask0005
         {
             // TODO: trim out duplicate manifests.
             List<WorkloadManifestPackage> manifestPackages = new();
@@ -232,7 +251,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                             foreach ((string sourcePackage, string[] platforms) in WorkloadPackPackage.GetSourcePackages(PackageSource, pack))
                             {
-                                if (!File.Exists(sourcePackage))
+                                if (!File.Exists(TaskEnvironment.GetAbsolutePath(sourcePackage)))
                                 {
                                     if (AllowMissingPacks)
                                     {

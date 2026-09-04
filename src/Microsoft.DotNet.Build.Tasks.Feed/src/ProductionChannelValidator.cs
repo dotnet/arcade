@@ -461,9 +461,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _token = string.IsNullOrEmpty(token)
-                ? Environment.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN")
-                : token;
+            _token = token;
         }
 
         public async Task<BranchClassificationResponse> GetBranchClassificationsAsync(string organizationName, string projectId, string repositoryId)

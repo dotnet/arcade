@@ -12,8 +12,12 @@ using System.Reflection.PortableExecutable;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetAssemblyReferences : Task
+    [MSBuildMultiThreadableTask]
+    public class GetAssemblyReferences : Task, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         [Required]
         public ITaskItem[] Assemblies
         {
@@ -47,13 +51,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             {
                 try
                 {
-                    if (!File.Exists(assemblyItem.ItemSpec))
+                    AbsolutePath assemblyPath = TaskEnvironment.GetAbsolutePath(assemblyItem.ItemSpec);
+                    if (!File.Exists(assemblyPath))
                     {
                         Log.LogError($"File {assemblyItem.ItemSpec} does not exist, ensure you have built libraries before building the package.");
                         continue;
                     }
 
-                    using (PEReader peReader = new PEReader(new FileStream(assemblyItem.ItemSpec, FileMode.Open, FileAccess.Read, FileShare.Delete | FileShare.Read)))
+                    using (PEReader peReader = new PEReader(new FileStream(assemblyPath, FileMode.Open, FileAccess.Read, FileShare.Delete | FileShare.Read)))
                     {
                         MetadataReader reader = peReader.GetMetadataReader();
                         foreach (var handle in reader.AssemblyReferences)

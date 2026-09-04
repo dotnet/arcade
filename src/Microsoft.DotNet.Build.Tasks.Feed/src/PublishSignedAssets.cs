@@ -15,9 +15,23 @@ using NuGet.Packaging.Core;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.src
 {
-    public class PublishSignedAssets : PublishArtifactsInManifestBase
+    // TODO: Not opted into multithreading. PublishArtifactsInManifestBase resolves Azure credentials
+    // by reading AZURESUBSCRIPTION_*, SYSTEM_ACCESSTOKEN and workload-identity variables straight
+    // from the process environment. The TaskEnvironment below is still used for path resolution.
+    // Tracked by https://github.com/dotnet/arcade/issues/17378.
+    //
+    // Implementing IMultiThreadableTask without the attribute is deliberate. Routing is decided by
+    // the attribute alone (TaskRouter.NeedsTaskHostInMultiThreadedMode); it cannot key off the
+    // interface, because ToolTask implements it and that would opt in every ToolTask-derived task in
+    // the ecosystem. The interface only causes TaskEnvironment to be injected. Do not remove it to
+    // "make this safe" - that would revert the path resolution below to the process current
+    // directory while leaving the task exactly as unsafe as it is now.
+    public class PublishSignedAssets : PublishArtifactsInManifestBase, IMultiThreadableTask
     {
         private static readonly string AzureDevOpsScope = "499b84ac-1321-427f-aa17-267ca6975798/.default";
+
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
         /// <summary>
         /// Required token to publishe packages to the feeds
@@ -78,13 +92,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
 
         private async Task PushPackagesToFeed(string assetsFolder, string feedUrl)
         {
-            string packagesFolder = Path.Combine(assetsFolder, "packages");
+            AbsolutePath packagesFolder = TaskEnvironment.GetAbsolutePath(Path.Combine(assetsFolder, "packages"));
 
             TargetFeedConfig targetFeedConfig = new TargetFeedConfig(TargetFeedContentType.Package, feedUrl, FeedType.AzDoNugetFeed, AzureDevOpsPersonalAccessToken);
             HashSet<PackageIdentity> packagesToPublish = new HashSet<PackageIdentity>(
                 Directory.GetFiles(packagesFolder).Select(packagePath =>
                 {
-                    using (BinaryReader reader = new BinaryReader(File.Open(packagePath, FileMode.Open)))
+                    using (BinaryReader reader = new BinaryReader(File.Open(new AbsolutePath(packagePath), FileMode.Open)))
                     {
                         PackageArchiveReader packageReader = new PackageArchiveReader(reader.BaseStream);
                         return packageReader.NuspecReader.GetIdentity();

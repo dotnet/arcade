@@ -7,8 +7,22 @@ using System.Text;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {
-    public class CreateLightCommandPackageDrop : CreateWixCommandPackageDropBase
+    // TODO: Not opted into multithreading. Most of the execution lives in
+    // CreateWixCommandPackageDropBase, which still passes raw OutputFolder, InstallerFile and
+    // WixSrcFiles paths to File/Directory APIs. The TaskEnvironment below is still used for path
+    // resolution. Tracked by https://github.com/dotnet/arcade/issues/17378.
+    //
+    // Implementing IMultiThreadableTask without the attribute is deliberate. Routing is decided by
+    // the attribute alone (TaskRouter.NeedsTaskHostInMultiThreadedMode); it cannot key off the
+    // interface, because ToolTask implements it and that would opt in every ToolTask-derived task in
+    // the ecosystem. The interface only causes TaskEnvironment to be injected. Do not remove it to
+    // "make this safe" - that would revert the path resolution below to the process current
+    // directory while leaving the task exactly as unsafe as it is now.
+    public class CreateLightCommandPackageDrop : CreateWixCommandPackageDropBase, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         [Required]
         public string LightCommandWorkingDir { get; set; }
         /// <summary>
@@ -53,7 +67,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             if (WixProjectFile != null)
             {
                 var destinationPath = Path.Combine(packageDropOutputFolder, Path.GetFileName(WixProjectFile));
-                File.Copy(WixProjectFile, destinationPath, true);
+                File.Copy(TaskEnvironment.GetAbsolutePath(WixProjectFile), TaskEnvironment.GetAbsolutePath(destinationPath), true);
                 commandString.Append($" -wixprojectfile {Path.GetFileName(WixProjectFile)}");
             }
             if (ContentsFile != null)

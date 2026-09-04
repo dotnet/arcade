@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Build.Framework;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,7 +18,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
             new[] { ".dll", ".exe" },
             StringComparer.OrdinalIgnoreCase);
 
-        public static Version GetFileVersion(string sourcePath)
+        public static Version GetFileVersion(AbsolutePath sourcePath)
         {
             var fvi = FileVersionInfo.GetVersionInfo(sourcePath);
 
@@ -29,7 +30,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
             return null;
         }
 
-        public static AssemblyName GetAssemblyName(string path)
+        public static AssemblyName GetAssemblyName(AbsolutePath path)
         {
             if (!s_assemblyExtensions.Contains(Path.GetExtension(path)))
             {

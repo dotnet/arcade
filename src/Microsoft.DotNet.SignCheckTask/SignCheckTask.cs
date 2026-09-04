@@ -12,8 +12,22 @@ using Microsoft.Build.Utilities;
 
 namespace SignCheckTask
 {
-    public class SignCheckTask : Task
+    // TODO: Not opted into multithreading. SignCheckRunner builds a SignatureVerificationManager whose
+    // static _fileVerifiers dictionary is populated by every constructor via AddFileVerifier, so
+    // concurrent or repeated instances race and can throw on duplicate keys. The TaskEnvironment below
+    // is still used for path resolution. Tracked by https://github.com/dotnet/arcade/issues/17378.
+    //
+    // Implementing IMultiThreadableTask without the attribute is deliberate. Routing is decided by
+    // the attribute alone (TaskRouter.NeedsTaskHostInMultiThreadedMode); it cannot key off the
+    // interface, because ToolTask implements it and that would opt in every ToolTask-derived task in
+    // the ecosystem. The interface only causes TaskEnvironment to be injected. Do not remove it to
+    // "make this safe" - that would revert the path resolution below to the process current
+    // directory while leaving the task exactly as unsafe as it is now.
+    public class SignCheckTask : Task, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         public bool EnableJarSignatureVerification { get; set; }
 
         public bool EnableXmlSignatureVerification { get; set; }
@@ -74,7 +88,7 @@ namespace SignCheckTask
             List<string> inputFiles = new List<string>();
             if (InputFiles != null)
             {
-                ArtifactFolder = ArtifactFolder ?? Environment.CurrentDirectory;
+                ArtifactFolder = ArtifactFolder ?? TaskEnvironment.ProjectDirectory;
                 SearchOption fileSearchOptions = Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
 
                 foreach (var checkFile in InputFiles.Select(s => s.ItemSpec).ToArray())
@@ -85,7 +99,7 @@ namespace SignCheckTask
                     }
                     else
                     {
-                        var matchedFiles = Directory.GetFiles(ArtifactFolder, checkFile, fileSearchOptions);
+                        var matchedFiles = Directory.GetFiles(TaskEnvironment.GetAbsolutePath(ArtifactFolder), checkFile, fileSearchOptions);
 
                         if (matchedFiles.Length == 1)
                         {

@@ -13,8 +13,12 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class HarvestPackage : Task
+    [MSBuildMultiThreadableTask]
+    public class HarvestPackage : Task, IMultiThreadableTask
     {
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
         /// <summary>
         /// Package ID to harvest
         /// </summary>
@@ -157,7 +161,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         {
             List<ITaskItem> supportedFrameworks = new List<ITaskItem>();
 
-            AggregateNuGetAssetResolver resolver = new AggregateNuGetAssetResolver(RuntimeFile);
+            AbsolutePath runtimeFile = TaskEnvironment.GetAbsolutePath(RuntimeFile);
+            AggregateNuGetAssetResolver resolver = new AggregateNuGetAssetResolver(runtimeFile);
             string packagePath = _packageFolders[PackageId];
 
             foreach (var packageFolder in _packageFolders)
@@ -170,7 +175,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             // and use the netstandard reference assembly to determine the API version
             var filesWithoutPlaceholders = GetPackageItems(packagePath)
                 .Where(f => !NuGetAssetResolver.IsPlaceholder(f));
-            NuGetAssetResolver resolverWithoutPlaceholders = new NuGetAssetResolver(RuntimeFile, filesWithoutPlaceholders);
+            NuGetAssetResolver resolverWithoutPlaceholders = new NuGetAssetResolver(runtimeFile, filesWithoutPlaceholders);
 
             string package = $"{PackageId}/{PackageVersion}";
 
@@ -249,7 +254,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                     string version = "unknown";
                     if (refAssm != null)
                     {
-                        version = VersionUtility.GetAssemblyVersion(Path.Combine(packagePath, refAssm))?.ToString() ?? version;
+                        version = VersionUtility.GetAssemblyVersion(TaskEnvironment.GetAbsolutePath(Path.Combine(packagePath, refAssm)))?.ToString() ?? version;
                     }
 
                     supportedFramework.SetMetadata("Version", version);
@@ -300,7 +305,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
             foreach (var extension in s_includedExtensions)
             {
-                foreach (var packageFile in Directory.EnumerateFiles(pathToPackage, $"*{extension}", SearchOption.AllDirectories))
+                // pathToPackage is already absolute (see LocatePackageFolder), so the substring
+                // offset below lines up with the absolute paths EnumerateFiles yields.
+                foreach (var packageFile in Directory.EnumerateFiles(TaskEnvironment.GetAbsolutePath(pathToPackage), $"*{extension}", SearchOption.AllDirectories))
                 {
                     string harvestPackagePath = packageFile.Substring(pathToPackage.Length + 1).Replace('\\', '/');
 
@@ -341,7 +348,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                         }
                     }
 
-                    var assemblyVersion = extension == s_dll ? VersionUtility.GetAssemblyVersion(packageFile) : null;
+                    var assemblyVersion = extension == s_dll ? VersionUtility.GetAssemblyVersion(TaskEnvironment.GetAbsolutePath(packageFile)) : null;
                     PackageItem liveFile = null;
 
                     foreach (var livePackagePath in targetPaths)
@@ -465,11 +472,13 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             }
         }
 
+        // Returns an absolute path so that callers can both enumerate the folder and compute
+        // package-relative paths from the enumerated (absolute) results consistently.
         private string LocatePackageFolder(string packageId, string packageVersion)
         {
             foreach (var packageFolder in PackagesFolders)
             {
-                var candidateFolder = Path.Combine(packageFolder, packageId, packageVersion);
+                var candidateFolder = TaskEnvironment.GetAbsolutePath(Path.Combine(packageFolder, packageId, packageVersion));
 
                 if (Directory.Exists(candidateFolder))
                 {
@@ -477,7 +486,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 }
 
                 // handle lower-case restore path
-                candidateFolder = Path.Combine(packageFolder, packageId.ToLowerInvariant(), packageVersion.ToLowerInvariant());
+                candidateFolder = TaskEnvironment.GetAbsolutePath(Path.Combine(packageFolder, packageId.ToLowerInvariant(), packageVersion.ToLowerInvariant()));
 
                 if (Directory.Exists(candidateFolder))
                 {
@@ -612,7 +621,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         private IEnumerable<string> GetPackageItems(string packageFolder)
         {
-            return Directory.EnumerateFiles(packageFolder, "*", SearchOption.AllDirectories)
+            // packageFolder is already absolute (see LocatePackageFolder), so the substring offset
+            // below lines up with the absolute paths EnumerateFiles yields.
+            return Directory.EnumerateFiles(TaskEnvironment.GetAbsolutePath(packageFolder), "*", SearchOption.AllDirectories)
                 .Select(f => f.Substring(packageFolder.Length + 1).Replace('\\', '/'))
                 .Where(f => !ShouldSuppress(f));
         }

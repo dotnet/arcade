@@ -4,6 +4,7 @@
 using Microsoft.Build.Framework;
 using System;
 using System.Collections;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 {

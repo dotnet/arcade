@@ -11,10 +11,15 @@ using System.Text;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetPackageDescription : Task
+    [MSBuildMultiThreadableTask]
+    public class GetPackageDescription : Task, IMultiThreadableTask
     {
-        // avoid parsing the same document multiple times on a single node.
+        // avoid parsing the same document multiple times on a single node. Concurrent because
+        // instances of this task can run in parallel on the same node in multithreaded builds.
         private static readonly ConcurrentDictionary<string, Dictionary<string, string>> s_descriptionCache = new();
+
+        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
         [Required]
         public ITaskItem DescriptionFile
@@ -61,7 +66,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
             if (!s_descriptionCache.TryGetValue(descriptionPath, out Dictionary<string, string> descriptionTable))
             {
-                // no cache, load it now.
                 descriptionTable = LoadDescriptions(descriptionPath);
 
                 // Only cache successful loads. LoadDescriptions returns null after logging an
@@ -97,7 +101,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             {
                 Dictionary<string, string> descriptions = new Dictionary<string, string>();
 
-                var allMetadata = PackageMetadata.ReadFrom(descriptionPath);
+                var allMetadata = PackageMetadata.ReadFrom(TaskEnvironment.GetAbsolutePath(descriptionPath));
 
                 foreach (PackageMetadata metadata in allMetadata)
                 {
