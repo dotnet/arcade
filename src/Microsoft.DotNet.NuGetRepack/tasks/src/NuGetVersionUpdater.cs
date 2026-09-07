@@ -64,11 +64,12 @@ namespace Microsoft.DotNet.Tools
             AbsolutePath? tempDirectoryOpt;
             if (outDirectoryOpt != null)
             {
-                // MSBuildTask0002: the temp root is only used as the parent of a freshly generated unique
-                // directory/file name, so it is never shared between concurrently running tasks.
-                #pragma warning disable MSBuildTask0002
+                // MSBuildTask0002/0005: the temp root is only used as the parent of a freshly generated
+                // unique directory/file name, so it is never shared between concurrently running tasks.
+                // 0005 reports the same call through UpdatePackageVersionTask.Execute, so suppress both.
+                #pragma warning disable MSBuildTask0002, MSBuildTask0005
                 tempDirectoryOpt = new AbsolutePath(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
-                #pragma warning restore MSBuildTask0002
+                #pragma warning restore MSBuildTask0002, MSBuildTask0005
                 Directory.CreateDirectory(tempDirectoryOpt.Value);
             }
             else

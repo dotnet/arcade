@@ -36,8 +36,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     // _getEnvProxy, whose implementation calls Environment.GetEnvironmentVariable directly (for
     // example GetAzDevAccount and GetAzDevBuildId). The TaskEnvironment below is still used for
     // path resolution. Tracked by https://github.com/dotnet/arcade/issues/17378.
+#pragma warning disable MSBuildTask0013 // Interface without the attribute is deliberate; see the comment above.
     public class PublishBuildToMaestro : MSBuildTaskBase, ICancelableTask, IMultiThreadableTask
     {
+#pragma warning restore MSBuildTask0013
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 

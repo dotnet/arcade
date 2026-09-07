@@ -21,8 +21,10 @@ namespace Microsoft.DotNet.Helix.Sdk
     // Environment (JobSender/JobDefinition.cs:209-223,402-423). In a shared node those reads see
     // process-wide values rather than the project's, so a job could be tagged with another project's
     // source metadata. Migrating requires threading TaskEnvironment into JobDefinition.
+#pragma warning disable MSBuildTask0013 // Interface without the attribute is deliberate; see the comment above.
     public class SendHelixJob : HelixTask, IMultiThreadableTask
     {
+#pragma warning restore MSBuildTask0013
         public static class MetadataNames
         {
             public const string Identity = "Identity";

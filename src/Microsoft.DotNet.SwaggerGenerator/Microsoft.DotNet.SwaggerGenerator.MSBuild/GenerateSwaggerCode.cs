@@ -22,8 +22,10 @@ namespace Microsoft.DotNet.SwaggerGenerator.MSBuild
     // invocations can both miss and the second Add throws. The interface is still
     // implemented so that TaskEnvironment is injected and paths resolve correctly;
     // the task simply keeps running in the task host under -mt.
+#pragma warning disable MSBuildTask0013 // Interface without the attribute is deliberate; see the comment above.
     public class GenerateSwaggerCode : Task, IMultiThreadableTask
     {
+#pragma warning restore MSBuildTask0013
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 

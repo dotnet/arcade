@@ -24,8 +24,10 @@ namespace Microsoft.DotNet.GenAPI
     // File.Exists (Microsoft.Cci.Extensions/HostEnvironment.cs:719-740), so relative inputs and
     // per-project variables would bind to process-wide state in a shared node. Migrating requires
     // expanding and resolving those paths through TaskEnvironment before they enter HostEnvironment.
+#pragma warning disable MSBuildTask0013 // Interface without the attribute is deliberate; see the comment above.
     public class GenAPITask : Task, IMultiThreadableTask
     {
+#pragma warning restore MSBuildTask0013
         private const string InternalsVisibleTypeName = "System.Runtime.CompilerServices.InternalsVisibleToAttribute";
         private const string DefaultFileHeader =
                 "//------------------------------------------------------------------------------\r\n" +

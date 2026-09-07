@@ -37,8 +37,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     /// "make this safe" - that would revert the path resolution below to the process current
     /// directory while leaving the task exactly as unsafe as it is now.
     /// </remarks>
+#pragma warning disable MSBuildTask0013 // Interface without the attribute is deliberate; see the comment above.
     public class PublishArtifactsInManifest : MSBuildTaskBase, IMultiThreadableTask
     {
+#pragma warning restore MSBuildTask0013
         /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
