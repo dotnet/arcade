@@ -13,7 +13,10 @@ using Microsoft.DotNet.Helix.JobMonitor;
 
 namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes;
 
-internal sealed class FakeAzureDevOpsService : IAzureDevOpsService
+internal sealed class FakeAzureDevOpsService :
+    IAzureDevOpsService,
+    ITestResultProcessor,
+    IAzureDevOpsResultPublisher
 {
     // FakeAzureDevOpsService is exercised concurrently when JobMonitorRunner kicks off
     // multiple test-result uploads in parallel via Task.Run. All mutable state is
@@ -39,9 +42,10 @@ internal sealed class FakeAzureDevOpsService : IAzureDevOpsService
     public List<string> CreatedTestRuns { get; } = [];
     public List<int> CompletedTestRunIds { get; } = [];
     public Dictionary<int, List<WorkItemTestResults>> UploadedResultsByRunId { get; } = [];
+    public Dictionary<(string JobName, string WorkItemName), PreparedTestResults> PublishedPreparedResults { get; } = [];
     public List<string> UploadedJobNames { get; } = [];
     public int CreateTestRunCallCount { get; private set; }
-    public int UploadTestResultsCallCount { get; private set; }
+    public int PublishTestResultsCallCount { get; private set; }
     public int CompleteTestRunCallCount { get; private set; }
     public int MaximumConcurrentUploads => Volatile.Read(ref _maximumConcurrentUploads);
     public TaskCompletionSource UploadStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -50,7 +54,7 @@ internal sealed class FakeAzureDevOpsService : IAzureDevOpsService
     public Task UploadBlocker { get; set; } = Task.CompletedTask;
 
     /// <summary>
-    /// When true, <see cref="UploadTestResultsAsync"/> waits on <see cref="UploadBlocker"/>
+    /// When true, <see cref="PublishAsync"/> waits on <see cref="UploadBlocker"/>
     /// without observing the cancellation token, simulating an upload stuck in a
     /// non-cancellable operation when the monitor is cancelled.
     /// </summary>
@@ -140,12 +144,12 @@ internal sealed class FakeAzureDevOpsService : IAzureDevOpsService
     }
 
     /// <summary>
-    /// Configures <see cref="UploadTestResultsAsync"/> to report
+    /// Configures <see cref="PrepareAsync"/> to report
     /// <c>AllPassed = false</c> for the given (Helix job, work item) pair when the next
-    /// upload includes it. Used to test that the monitor marks work items as failed
-    /// based on their uploaded test results even when the work item passed by exit code.
+    /// preparation includes it. Used to test that the monitor marks work items as failed
+    /// based on their test results even when the work item passed by exit code.
     /// </summary>
-    public FakeAzureDevOpsService WithFailedUpload(string helixJobName, string workItemName)
+    public FakeAzureDevOpsService WithFailedTestResults(string helixJobName, string workItemName)
     {
         lock (_sync)
         {
@@ -241,9 +245,21 @@ internal sealed class FakeAzureDevOpsService : IAzureDevOpsService
         }
     }
 
-    public async Task<TestResultUploadSummary> UploadTestResultsAsync(
+    public Task<PreparedTestResults> PrepareAsync(
+        WorkItemTestResults results,
+        CancellationToken cancellationToken)
+    {
+        lock (_sync)
+        {
+            bool allPassed = !_uploadFailedTests.Contains((results.JobName, results.WorkItemName));
+            return Task.FromResult(new PreparedTestResults([], allPassed));
+        }
+    }
+
+    public async Task<long> PublishAsync(
         int testRunId,
         WorkItemTestResults results,
+        PreparedTestResults prepared,
         CancellationToken cancellationToken)
     {
         UploadStarted.TrySetResult();
@@ -270,7 +286,7 @@ internal sealed class FakeAzureDevOpsService : IAzureDevOpsService
 
             lock (_sync)
             {
-                UploadTestResultsCallCount++;
+                PublishTestResultsCallCount++;
                 if (_uploadFailures.Count > 0)
                 {
                     throw _uploadFailures.Dequeue();
@@ -283,13 +299,13 @@ internal sealed class FakeAzureDevOpsService : IAzureDevOpsService
                 }
 
                 existing.Add(results);
+                PublishedPreparedResults[(results.JobName, results.WorkItemName)] = prepared;
                 if (!UploadedJobNames.Contains(results.JobName, StringComparer.OrdinalIgnoreCase))
                 {
                     UploadedJobNames.Add(results.JobName);
                 }
 
-                bool allPassed = !_uploadFailedTests.Contains((results.JobName, results.WorkItemName));
-                return new TestResultUploadSummary(allPassed, results.TestResultFiles.Count);
+                return results.TestResultFiles.Count;
             }
         }
         finally

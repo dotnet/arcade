@@ -16,6 +16,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging;
 /// <summary>
 /// Examines all dependencies 
 /// </summary>
+[MSBuildMultiThreadableTask]
 public class SplitDependenciesBySupport : Task
 {
     [Required]
@@ -23,7 +24,7 @@ public class SplitDependenciesBySupport : Task
 
     [Output]
     public ITaskItem[] SplitDependencies { get; set; }
-    
+
     public override bool Execute()
     {
         var dependencies = OriginalDependencies.Select(od => new Dependency(od)).ToArray();

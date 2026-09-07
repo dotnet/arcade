@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.AzureDevOps;
 
+[MSBuildMultiThreadableTask]
 public class StartAzurePipelinesTestRun : AzureDevOpsTask
 {
     [Required]
@@ -24,7 +25,7 @@ public class StartAzurePipelinesTestRun : AzureDevOpsTask
 
     [Output]
     public int TestRunId { get; set; }
-    
+
     protected override Task ExecuteCoreAsync(HttpClient client)
     {
         return RetryAsync(

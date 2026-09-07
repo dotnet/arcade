@@ -15,6 +15,7 @@ namespace Microsoft.DotNet.Helix.Sdk;
 /// <summary>
 /// MSBuild custom task to create HelixWorkItems given xUnit project publish information
 /// </summary>
+[MSBuildMultiThreadableTask]
 public class CreateXUnitWorkItems : BaseTask
 {
     /// <summary>
@@ -89,7 +90,7 @@ public class CreateXUnitWorkItems : BaseTask
     {
         // Forces this task to run asynchronously
         await Task.Yield();
-        
+
         if (!xunitProject.GetRequiredMetadata(Log, "PublishDirectory", out string publishDirectory))
         {
             return null;

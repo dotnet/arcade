@@ -36,7 +36,8 @@ public class AzureDevOpsServiceTests
             });
         using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
 
-        await service.CreateResultTransport(123).PublishResultsAsync(
+        await service.PublishResultsAsync(
+            123,
             Array.Empty<object>(),
             CancellationToken.None);
 
@@ -74,16 +75,22 @@ public class AzureDevOpsServiceTests
     }
 
     [Fact]
-    public async Task CreateTestRunAsync_DoesNotRetryAmbiguousWrite()
+    public async Task CreateTestRunAsync_RetriesTransientFailure()
     {
+        int attempt = 0;
         var handler = new RecordingHttpMessageHandler(_ =>
-            new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+            Interlocked.Increment(ref attempt) == 1
+                ? new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+                : new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(@"{""id"":123}")
+                });
         using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
 
-        Func<Task> action = () => service.CreateTestRunAsync("Test Run", CancellationToken.None);
+        int testRunId = await service.CreateTestRunAsync("Test Run", CancellationToken.None);
 
-        await action.Should().ThrowAsync<HttpRequestException>();
-        handler.Requests.Should().ContainSingle();
+        testRunId.Should().Be(123);
+        handler.Requests.Should().HaveCount(2);
     }
 
     [Fact]
@@ -206,10 +213,10 @@ public class AzureDevOpsServiceTests
         });
         var metrics = new JobMonitorMetrics();
         using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler), metrics);
-        IAzureDevOpsResultTransport transport = service.CreateResultTransport(123);
+        IAzureDevOpsResultTransport transport = service;
 
-        await transport.PublishResultsAsync(new[] { new { outcome = "Passed" } }, CancellationToken.None);
-        await transport.UploadAttachmentAsync(1, null, "log.txt", "YQ==", CancellationToken.None);
+        await transport.PublishResultsAsync(123, new[] { new { outcome = "Passed" } }, CancellationToken.None);
+        await transport.UploadAttachmentAsync(123, 1, null, "log.txt", "YQ==", CancellationToken.None);
 
         JobMonitorMetricsSnapshot snapshot = metrics.Snapshot();
         snapshot.AzureDevOpsResultRequests.Should().Be(2);
@@ -229,8 +236,10 @@ public class AzureDevOpsServiceTests
             });
         using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
 
-        Func<Task> action = () => service.CreateResultTransport(123)
-            .PublishResultsAsync(new[] { new { outcome = "Passed" } }, CancellationToken.None);
+        Func<Task> action = () => service.PublishResultsAsync(
+            123,
+            new[] { new { outcome = "Passed" } },
+            CancellationToken.None);
 
         await action.Should().ThrowAsync<TerminalError>();
         handler.Requests.Should().ContainSingle();
@@ -464,10 +473,10 @@ public class AzureDevOpsServiceTests
         var handler = new RoutingHttpMessageHandler
         {
             TagsResponse = @"{""count"":3,""value"":[
-                    {""name"":""helixjobf79561f86c134e869c6f0527cd707a54""},
-                    {""name"":""helixjob0b66c2e3ff384227a779810236d37238""},
-                    {""name"":""someothertag""}
-                ]}"
+                {""name"":""helixjobf79561f86c134e869c6f0527cd707a54""},
+                {""name"":""helixjob0b66c2e3ff384227a779810236d37238""},
+                {""name"":""someothertag""}
+            ]}"
         };
         using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
 

@@ -53,6 +53,7 @@ internal sealed class MonitorState
     // _workItemOutcomes. Prevents the second reconciliation pass from re-processing
     // jobs that were observed in an earlier poll.
     private readonly HashSet<string> _workItemOutcomeJobs = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _ignoredWorkItemOutcomeJobs = new(StringComparer.OrdinalIgnoreCase);
 
     // Previous-attempt jobs whose submitter has a newer timeline attempt. These remain
     // uploadable history but must not contribute to current status or pass/fail.
@@ -254,6 +255,7 @@ internal sealed class MonitorState
         lock (_sync)
         {
             _workItemOutcomeJobs.Add(jobName);
+            _ignoredWorkItemOutcomeJobs.Add(jobName);
         }
     }
 
@@ -323,18 +325,23 @@ internal sealed class MonitorState
     /// test results.
     /// </summary>
     public void ObserveTestResults(
-        IReadOnlyDictionary<(string JobName, string WorkItemName), TestResultUploadSummary> testResults)
+        IReadOnlyDictionary<(string JobName, string WorkItemName), bool> testResults)
     {
         lock (_sync)
         {
-            foreach (KeyValuePair<(string JobName, string WorkItemName), TestResultUploadSummary> entry in testResults)
+            foreach (KeyValuePair<(string JobName, string WorkItemName), bool> entry in testResults)
             {
-                if (entry.Value.AllPassed)
+                if (entry.Value)
                 {
                     continue;
                 }
 
                 if (!_associatedJobs.TryGetValue(entry.Key.JobName, out HelixJobInfo job))
+                {
+                    continue;
+                }
+
+                if (_ignoredWorkItemOutcomeJobs.Contains(job.JobName))
                 {
                     continue;
                 }
@@ -373,11 +380,11 @@ internal sealed class MonitorState
     public void ObserveTestResult(
         string jobName,
         string workItemName,
-        TestResultUploadSummary summary)
+        bool allPassed)
         => ObserveTestResults(
-            new Dictionary<(string JobName, string WorkItemName), TestResultUploadSummary>
+            new Dictionary<(string JobName, string WorkItemName), bool>
             {
-                [(jobName, workItemName)] = summary,
+                [(jobName, workItemName)] = allPassed,
             });
 
     /// <summary>

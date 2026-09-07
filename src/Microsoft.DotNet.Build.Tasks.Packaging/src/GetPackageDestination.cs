@@ -12,6 +12,7 @@ using System.Text;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging;
 
+[MSBuildMultiThreadableTask]
 public class GetPackageDestination : Task
 {
     /// <summary>
@@ -59,7 +60,7 @@ public class GetPackageDestination : Task
     /// </summary>
     [Output]
     public ITaskItem[] PackageDestinations { get; set; }
-    
+
     /// <summary>
     /// True if this project contained any package destinations under ref.
     /// </summary>

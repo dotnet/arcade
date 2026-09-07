@@ -10,6 +10,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging;
 
+[MSBuildMultiThreadableTask]
 public class GetMinimumNETStandard : Task
 {
     [Required]
@@ -38,7 +39,7 @@ public class GetMinimumNETStandard : Task
             minNETStandard = FrameworkConstants.CommonFrameworks.NetStandard10;
             Log.LogMessage($"Could not find any NETStandard frameworks, defaulting to {minNETStandard}.");
         }
-        
+
         MinimumNETStandard = minNETStandard.ToString();
 
         return !Log.HasLoggedErrors;
