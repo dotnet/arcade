@@ -21,7 +21,10 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 {
     public abstract class AzureDevOpsTask : BaseTask, IMultiThreadableTask
     {
-        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+        /// <summary>
+        /// Assigned by MSBuild whenever the host supports it, giving the task its own environment
+        /// instead of the process-wide one. Falls back to the process environment otherwise.
+        /// </summary>
         public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
         private bool InAzurePipeline => !string.IsNullOrEmpty(TaskEnvironment.GetEnvironmentVariable("BUILD_BUILDNUMBER"));
