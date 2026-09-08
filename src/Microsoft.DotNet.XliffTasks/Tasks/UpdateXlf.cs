@@ -71,7 +71,7 @@ public sealed class UpdateXlf : XlfTask
                     throw new BuildErrorException($"'{xlfPath}' is out-of-date with '{sourcePath}'. {HowToUpdate}");
                 }
 
-                Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(absoluteXlfPath)));
+                Directory.CreateDirectory(Path.GetDirectoryName(absoluteXlfPath));
                 xlfDocument.Save(new FileInfo(absoluteXlfPath));
             }
         }

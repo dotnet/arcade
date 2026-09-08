@@ -45,7 +45,7 @@ public sealed class SortXlf : XlfTask
                     continue; // no changes
                 }
 
-                Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(xlfPath)));
+                Directory.CreateDirectory(Path.GetDirectoryName(xlfAbsolutePath));
                 xlfDocument.Save(new FileInfo(xlfAbsolutePath));
             }
         }
