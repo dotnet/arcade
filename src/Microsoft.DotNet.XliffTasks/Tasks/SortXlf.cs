@@ -26,12 +26,12 @@ public sealed class SortXlf : XlfTask
             {
                 string xlfPath = XlfTask.GetXlfPath(sourceDocumentPath, language);
                 XlfDocument xlfDocument;
-                AbsolutePath xlfAbsolutePath;
+                FileInfo xlfFile;
 
                 try
                 {
-                    xlfAbsolutePath = TaskEnvironment.GetAbsolutePath(xlfPath);
-                    xlfDocument = XlfTask.LoadXlfDocument(xlfAbsolutePath);
+                    xlfFile = new FileInfo(TaskEnvironment.GetAbsolutePath(xlfPath));
+                    xlfDocument = XlfTask.LoadXlfDocument(xlfFile);
                 }
                 catch (FileNotFoundException)
                 {
@@ -46,7 +46,7 @@ public sealed class SortXlf : XlfTask
                 }
 
                 Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(xlfPath)));
-                xlfDocument.Save(xlfAbsolutePath);
+                xlfDocument.Save(xlfFile);
             }
         }
     }

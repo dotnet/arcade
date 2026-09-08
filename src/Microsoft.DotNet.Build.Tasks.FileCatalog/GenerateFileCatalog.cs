@@ -35,7 +35,7 @@ public class GenerateFileCatalog : Task, IMultiThreadableTask
             return false;
         }
 
-        AbsolutePath outputPath = TaskEnvironment.GetAbsolutePath(OutputPath);
+        FileInfo outputFile = new(TaskEnvironment.GetAbsolutePath(OutputPath));
 
         if (Files is null || Files.Length == 0)
         {
@@ -43,9 +43,9 @@ public class GenerateFileCatalog : Task, IMultiThreadableTask
 
             // Remove any stale catalog from a previous run so incremental builds don't
             // package a catalog describing files that are no longer present.
-            if (File.Exists(outputPath))
+            if (File.Exists(outputFile.FullName))
             {
-                File.Delete(outputPath);
+                File.Delete(outputFile.FullName);
             }
 
             return true;
@@ -62,23 +62,21 @@ public class GenerateFileCatalog : Task, IMultiThreadableTask
                 path = file.ItemSpec;
             }
 
-            AbsolutePath filePath = TaskEnvironment.GetAbsolutePath(path);
-            if (!File.Exists(filePath))
+            FileInfo inputFile = new(TaskEnvironment.GetAbsolutePath(path));
+            if (!File.Exists(inputFile.FullName))
             {
                 Log.LogError("File not found: '{0}'.", path);
                 return false;
             }
 
-            builder.AddFile(filePath);
+            builder.AddFile(inputFile);
         }
 
-        string? directory = Path.GetDirectoryName(outputPath);
-        if (!string.IsNullOrEmpty(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
+        // Create via DirectoryInfo rather than Directory.CreateDirectory(string) so no path
+        // string is re-resolved; both create all intermediate directories.
+        outputFile.Directory?.Create();
 
-        builder.WriteTo(outputPath);
+        builder.WriteTo(outputFile);
         Log.LogMessage(MessageImportance.High, "Generated catalog with {0} file(s): {1}", Files.Length, OutputPath);
         return !Log.HasLoggedErrors;
     }

@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Formats.Asn1;
 using System.IO;
 using System.Security.Cryptography;
-using Microsoft.Build.Framework;
 
 namespace Microsoft.DotNet.Build.Tasks.FileCatalog;
 
@@ -78,7 +77,7 @@ public sealed class CatalogBuilder
     }
 
     /// <summary>Adds a file by path.</summary>
-    public CatalogBuilder AddFile(AbsolutePath filePath, string? name = null)
+    public CatalogBuilder AddFile(FileInfo filePath, string? name = null)
         => Add(CatalogEntry.FromFile(filePath, name));
 
     /// <summary>Builds the DER-encoded .cat file bytes.</summary>
@@ -95,14 +94,14 @@ public sealed class CatalogBuilder
     }
 
     /// <summary>Builds and writes the catalog to <paramref name="path"/>.</summary>
-    public void WriteTo(AbsolutePath path)
+    public void WriteTo(FileInfo path)
     {
-        if (string.IsNullOrEmpty(path))
+        if (path is null)
         {
-            throw new ArgumentException("Path must not be null or empty.", nameof(path));
+            throw new ArgumentNullException(nameof(path));
         }
 
-        File.WriteAllBytes(path, Build());
+        File.WriteAllBytes(path.FullName, Build());
     }
 
     private List<Member> BuildSortedMembers()

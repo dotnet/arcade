@@ -44,7 +44,7 @@ public abstract class XlfTask : Task, IMultiThreadableTask
 
     protected abstract void ExecuteCore();
 
-    internal static TranslatableDocument LoadSourceDocument(AbsolutePath path, string format)
+    internal static TranslatableDocument LoadSourceDocument(FileInfo path, string format)
     {
         TranslatableDocument document;
 
@@ -72,7 +72,7 @@ public abstract class XlfTask : Task, IMultiThreadableTask
         {
             throw new BuildErrorException($"Unknown source file format '{format}'.")
             {
-                RelatedFile = path
+                RelatedFile = path.FullName
             };
         }
 
@@ -80,11 +80,11 @@ public abstract class XlfTask : Task, IMultiThreadableTask
         return document;
     }
 
-    internal static XlfDocument LoadXlfDocument(AbsolutePath path, string language = null, bool createIfNonExistent = false)
+    internal static XlfDocument LoadXlfDocument(FileInfo path, string language = null, bool createIfNonExistent = false)
     {
         XlfDocument document = new();
 
-        if (File.Exists(path))
+        if (File.Exists(path.FullName))
         {
             document.Load(path);
         }
@@ -95,7 +95,7 @@ public abstract class XlfTask : Task, IMultiThreadableTask
         }
         else
         {
-            throw new FileNotFoundException($"File not found: {path}", path);
+            throw new FileNotFoundException($"File not found: {path.FullName}", path.FullName);
         }
 
         return document;

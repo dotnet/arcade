@@ -70,21 +70,22 @@ public class GenerateFileFromTemplate : Task, IMultiThreadableTask
 
     public override bool Execute()
     {
-        // GetAbsolutePath does not canonicalize, and this output property was produced by
-        // Path.GetFullPath, which also resolved "." and ".." and normalized the forward slashes
-        // substituted just above into the platform separator.
-        AbsolutePath resolvedOutputPath = TaskEnvironment.GetAbsolutePath(OutputPath.Replace('\\', '/')).GetCanonicalForm();
-        ResolvedOutputPath = resolvedOutputPath;
+        // GetAbsolutePath deliberately does not canonicalize, but this output property was
+        // produced by Path.GetFullPath, which also resolved "." and ".." and turned the forward
+        // slashes substituted just above back into the platform separator. FileInfo.FullName
+        // canonicalizes the same way.
+        FileInfo outputFile = new(TaskEnvironment.GetAbsolutePath(OutputPath.Replace('\\', '/')));
+        ResolvedOutputPath = outputFile.FullName;
 
-        AbsolutePath templateFile = TaskEnvironment.GetAbsolutePath(TemplateFile);
-        if (!File.Exists(templateFile))
+        FileInfo templateFile = new(TaskEnvironment.GetAbsolutePath(TemplateFile));
+        if (!File.Exists(templateFile.FullName))
         {
             Log.LogError($"File {TemplateFile} does not exist");
             return false;
         }
 
         IDictionary<string, string> values = MSBuildListSplitter.GetNamedProperties(Properties, Log);
-        string template = File.ReadAllText(templateFile);
+        string template = File.ReadAllText(templateFile.FullName);
 
         string result = Replace(template, values);
 
@@ -92,26 +93,24 @@ public class GenerateFileFromTemplate : Task, IMultiThreadableTask
         // to determine whether the on-disk bytes would actually change.
         byte[] resultBytes = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false).GetBytes(result);
 
-        if (SkipUnchanged && FileContentsMatch(resolvedOutputPath, resultBytes))
+        if (SkipUnchanged && FileContentsMatch(outputFile, resultBytes))
         {
             Log.LogMessage(MessageImportance.Low, $"Skipping unchanged file {ResolvedOutputPath}");
             return !Log.HasLoggedErrors;
         }
 
-        string directory = Path.GetDirectoryName(resolvedOutputPath);
-        if (!string.IsNullOrEmpty(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
+        outputFile.Directory?.Create();
 
-        File.WriteAllBytes(resolvedOutputPath, resultBytes);
+        File.WriteAllBytes(outputFile.FullName, resultBytes);
 
         return !Log.HasLoggedErrors;
     }
 
-    private bool FileContentsMatch(AbsolutePath path, byte[] expectedBytes)
+    private static bool FileContentsMatch(FileInfo fileInfo, byte[] expectedBytes)
     {
-        var fileInfo = new FileInfo(path);
+        // The caller may have created this instance before anything touched the file on disk,
+        // and FileInfo caches Exists/Length from construction.
+        fileInfo.Refresh();
         if (!fileInfo.Exists || fileInfo.Length != expectedBytes.Length)
         {
             return false;

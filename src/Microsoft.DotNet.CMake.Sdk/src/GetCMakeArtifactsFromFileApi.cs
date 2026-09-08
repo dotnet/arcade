@@ -107,9 +107,9 @@ public class GetCMakeArtifactsFromFileApi : Task, IMultiThreadableTask
 
             // Normalize source directory for comparison
             // GetAbsolutePath does not canonicalize, but this value is string-compared against
-            // dirSource below, and Path.GetFullPath used to resolve the "." and ".." segments that
-            // CMake's file API routinely emits.
-            string normalizedSourceDir = TaskEnvironment.GetAbsolutePath(SourceDirectory).GetCanonicalForm().Value.Replace('\\', '/').TrimEnd('/');
+            // dirSource below, and Path.GetFullPath resolved the "." and ".." segments that
+            // CMake's file API routinely emits. DirectoryInfo.FullName canonicalizes the same way.
+            string normalizedSourceDir = new DirectoryInfo(TaskEnvironment.GetAbsolutePath(SourceDirectory)).FullName.Replace('\\', '/').TrimEnd('/');
 
             // Find the configuration using LINQ
             var config = codeModel.Configurations?.FirstOrDefault(c => 
@@ -138,7 +138,7 @@ public class GetCMakeArtifactsFromFileApi : Task, IMultiThreadableTask
                 if (!Path.IsPathRooted(dirSource))
                 {
                     dirSource = Path.Combine(sourceRoot, dirSource);
-                    dirSource = TaskEnvironment.GetAbsolutePath(dirSource).GetCanonicalForm().Value.Replace('\\', '/').TrimEnd('/');
+                    dirSource = new DirectoryInfo(TaskEnvironment.GetAbsolutePath(dirSource)).FullName.Replace('\\', '/').TrimEnd('/');
                 }
                 
                 return string.Equals(dirSource, normalizedSourceDir, StringComparison.OrdinalIgnoreCase);
@@ -193,8 +193,8 @@ public class GetCMakeArtifactsFromFileApi : Task, IMultiThreadableTask
                                 string fullPath = Path.Combine(CMakeOutputDir, artifact.Path);
                                 // Emitted as an item spec, and combining the output dir with a
                                 // CMake-relative artifact path routinely produces ".." segments
-                                // that Path.GetFullPath used to resolve.
-                                fullPath = TaskEnvironment.GetAbsolutePath(fullPath).GetCanonicalForm();
+                                // that Path.GetFullPath resolved. FileInfo.FullName does too.
+                                fullPath = new FileInfo(TaskEnvironment.GetAbsolutePath(fullPath)).FullName;
                                 
                                 var item = new TaskItem(fullPath);
                                 artifacts.Add(item);
