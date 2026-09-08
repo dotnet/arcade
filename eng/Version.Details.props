@@ -6,8 +6,8 @@ This file should be imported by eng/Versions.props
 <Project>
   <PropertyGroup>
     <!-- dotnet-arcade dependencies -->
-    <MicrosoftDotNetArcadeSdkPackageVersion>10.0.0-beta.26379.2</MicrosoftDotNetArcadeSdkPackageVersion>
-    <MicrosoftDotNetHelixSdkPackageVersion>10.0.0-beta.26379.2</MicrosoftDotNetHelixSdkPackageVersion>
+    <MicrosoftDotNetArcadeSdkPackageVersion>10.0.0-beta.26431.5</MicrosoftDotNetArcadeSdkPackageVersion>
+    <MicrosoftDotNetHelixSdkPackageVersion>10.0.0-beta.26431.5</MicrosoftDotNetHelixSdkPackageVersion>
     <!-- dotnet-arcade-services dependencies -->
     <MicrosoftDotNetDarcLibPackageVersion>1.1.0-beta.25424.1</MicrosoftDotNetDarcLibPackageVersion>
     <MicrosoftDotNetProductConstructionServiceClientPackageVersion>1.1.0-beta.25424.1</MicrosoftDotNetProductConstructionServiceClientPackageVersion>
@@ -38,7 +38,6 @@ This file should be imported by eng/Versions.props
     <MicrosoftExtensionsLoggingAbstractionsPackageVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsLoggingAbstractionsPackageVersion>
     <MicrosoftExtensionsLoggingConsolePackageVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsLoggingConsolePackageVersion>
     <SystemCollectionsImmutablePackageVersion>9.0.0-rc.2.24473.5</SystemCollectionsImmutablePackageVersion>
-    <SystemCompositionPackageVersion>9.0.0-rc.2.24473.5</SystemCompositionPackageVersion>
     <SystemFormatsAsn1PackageVersion>9.0.0-rc.2.24473.5</SystemFormatsAsn1PackageVersion>
     <SystemIOPackagingPackageVersion>9.0.0-rc.2.24473.5</SystemIOPackagingPackageVersion>
     <SystemReflectionMetadataPackageVersion>9.0.0-rc.2.24473.5</SystemReflectionMetadataPackageVersion>
@@ -57,7 +56,7 @@ This file should be imported by eng/Versions.props
     <!-- dotnet-templating dependencies -->
     <MicrosoftTemplateEngineAuthoringTasksPackageVersion>10.0.100-preview.4.25220.1</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
     <!-- dotnet-xharness dependencies -->
-    <MicrosoftDotNetXHarnessCLIPackageVersion>11.0.0-prerelease.26370.1</MicrosoftDotNetXHarnessCLIPackageVersion>
+    <MicrosoftDotNetXHarnessCLIPackageVersion>11.0.0-prerelease.26451.1</MicrosoftDotNetXHarnessCLIPackageVersion>
     <!-- JamesNK-Newtonsoft.Json dependencies -->
     <NewtonsoftJsonPackageVersion>13.0.3</NewtonsoftJsonPackageVersion>
     <!-- microsoft-ApplicationInsights-dotnet dependencies -->
@@ -98,7 +97,6 @@ This file should be imported by eng/Versions.props
     <MicrosoftExtensionsLoggingAbstractionsVersion>$(MicrosoftExtensionsLoggingAbstractionsPackageVersion)</MicrosoftExtensionsLoggingAbstractionsVersion>
     <MicrosoftExtensionsLoggingConsoleVersion>$(MicrosoftExtensionsLoggingConsolePackageVersion)</MicrosoftExtensionsLoggingConsoleVersion>
     <SystemCollectionsImmutableVersion>$(SystemCollectionsImmutablePackageVersion)</SystemCollectionsImmutableVersion>
-    <SystemCompositionVersion>$(SystemCompositionPackageVersion)</SystemCompositionVersion>
     <SystemFormatsAsn1Version>$(SystemFormatsAsn1PackageVersion)</SystemFormatsAsn1Version>
     <SystemIOPackagingVersion>$(SystemIOPackagingPackageVersion)</SystemIOPackagingVersion>
     <SystemReflectionMetadataVersion>$(SystemReflectionMetadataPackageVersion)</SystemReflectionMetadataVersion>
