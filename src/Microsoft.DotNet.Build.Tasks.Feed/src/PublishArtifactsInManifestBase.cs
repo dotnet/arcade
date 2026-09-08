@@ -364,7 +364,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
     /// <param name="feedConfig">Configuration of where the asset was published.</param>
     /// <param name="assetLocationType">Type of feed location that is being added.</param>
     /// <returns>True if that asset didn't have the informed location recorded already.</returns>
-    private bool TryAddAssetLocation(string assetId, string assetVersion, ReadOnlyDictionary<string, Asset> buildAssets, TargetFeedConfig feedConfig, LocationType assetLocationType)
+    protected virtual bool TryAddAssetLocation(string assetId, string assetVersion, ReadOnlyDictionary<string, Asset> buildAssets, TargetFeedConfig feedConfig, LocationType assetLocationType)
     {
         Asset assetRecord = string.IsNullOrEmpty(assetVersion) ? 
             LookupAsset(assetId, buildAssets) : 
@@ -1169,6 +1169,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
     protected async Task HandleBlobPublishingAsync(ReadOnlyDictionary<string, Asset> buildAssets, SemaphoreSlim clientThrottle = null)
     {
         List<Task> publishTasks = new List<Task>();
+        List<(TargetFeedConfig FeedConfig, HashSet<BlobArtifactModel> Blobs)> blobPublishMappings = new();
 
         // Just log a empty line for better visualization of the logs
         Log.LogMessage(MessageImportance.High, "\nBegin publishing of blobs: ");
@@ -1183,6 +1184,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                 foreach (var feedConfig in feedConfigsForCategory)
                 {
                     HashSet<BlobArtifactModel> filteredBlobs = FilterBlobs(blobs, feedConfig);
+                    blobPublishMappings.Add((feedConfig, filteredBlobs));
 
                     foreach (var blob in filteredBlobs)
                     {
@@ -1192,15 +1194,6 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                         Log.LogMessage(MessageImportance.High,
                             $"Blob {blob.Id} ({shippingString}) should go to {feedConfig.SafeTargetURL} ({isolatedString}{internalString})");
                     }
-
-                    var publisher = AssetPublisherFactory.CreateAssetPublisher(feedConfig, this);
-                    publishTasks.Add(Task.Run(async () =>
-                        await PublishAssetsAsync(
-                            publisher,
-                            filteredBlobs,
-                            buildAssets,
-                            feedConfig,
-                            clientThrottle)));
                 }
             }
             else
@@ -1209,10 +1202,60 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
             }
         }
 
+        foreach (var mappingsByUploadDestination in blobPublishMappings
+            .Where(mapping => mapping.FeedConfig.Type == FeedType.AzureStorageContainer)
+            .SelectMany(mapping => mapping.Blobs.Select(blob => (mapping.FeedConfig, Blob: blob)))
+            .GroupBy(mapping => new BlobUploadDestination(
+                mapping.FeedConfig.Type,
+                GetCanonicalTargetUrl(mapping.FeedConfig.TargetURL),
+                mapping.Blob.Id.Replace("\\", "/"))))
+        {
+            bool allowOverwrite = mappingsByUploadDestination.First().FeedConfig.AllowOverwrite;
+            if (mappingsByUploadDestination.Any(mapping => mapping.FeedConfig.AllowOverwrite != allowOverwrite))
+            {
+                Log.LogError($"Conflicting AllowOverwrite values were specified for blob '{mappingsByUploadDestination.Key.BlobPath}' at '{mappingsByUploadDestination.Key.TargetUrl}'.");
+                continue;
+            }
+
+            var firstMapping = mappingsByUploadDestination.First();
+            var blobsToPublish = mappingsByUploadDestination.Select(mapping => mapping.Blob).ToHashSet();
+            if (mappingsByUploadDestination.Count() > 1)
+            {
+                Log.LogMessage(MessageImportance.High,
+                    $"Collapsed {mappingsByUploadDestination.Count()} blob publish mappings to one upload for '{mappingsByUploadDestination.Key.BlobPath}' at '{mappingsByUploadDestination.Key.TargetUrl}'.");
+            }
+
+            var publisher = AssetPublisherFactory.CreateAssetPublisher(firstMapping.FeedConfig, this);
+            publishTasks.Add(Task.Run(async () =>
+                await PublishAssetsAsync(
+                    publisher,
+                    blobsToPublish,
+                    buildAssets,
+                    firstMapping.FeedConfig,
+                    clientThrottle)));
+        }
+
         await Task.WhenAll(publishTasks);
+
+        if (!Log.HasLoggedErrors)
+        {
+            foreach (var mapping in blobPublishMappings)
+            {
+                await CreateOrUpdateLatestLinksAsync(mapping.Blobs, mapping.FeedConfig);
+            }
+        }
 
         Log.LogMessage(MessageImportance.High, "\nCompleted publishing of blobs: ");
     }
+
+    private static string GetCanonicalTargetUrl(string targetUrl)
+    {
+        var targetUri = new Uri(targetUrl);
+        var targetUriBuilder = new UriBuilder(targetUri) { Query = string.Empty, Fragment = string.Empty };
+        return targetUriBuilder.Uri.AbsoluteUri.TrimEnd('/');
+    }
+
+    private readonly record struct BlobUploadDestination(FeedType FeedType, string TargetUrl, string BlobPath);
 
     /// <summary>
     ///     Filter the blobs by the feed config information
@@ -1751,6 +1794,10 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
             await PublishAssetsWithoutStreamingPublishingAsync(assetPublisher, blobAssets, assetToBARMapping, feedConfig);
         }
 
+    }
+
+    protected virtual async Task CreateOrUpdateLatestLinksAsync(HashSet<BlobArtifactModel> blobAssets, TargetFeedConfig feedConfig)
+    {
         if (feedConfig.Type == FeedType.AzureStorageContainer &&
             feedConfig.LatestLinkShortUrlPrefixes.Any())
         {
