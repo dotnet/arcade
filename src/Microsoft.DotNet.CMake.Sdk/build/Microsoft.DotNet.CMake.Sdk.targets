@@ -9,6 +9,7 @@
   <!-- TODO: Remove Architecture="*" on Runtime="NET" UsingTask declarations below when https://github.com/dotnet/msbuild/issues/13739 is fixed and a new msbuild is consumed with the fix. -->
   <UsingTask TaskName="Microsoft.DotNet.CMake.Sdk.CreateCMakeFileApiQuery" AssemblyFile="$(MicrosoftDotNetCMakeSdkTaskAssembly)" Runtime="NET" Architecture="*" />
   <UsingTask TaskName="Microsoft.DotNet.CMake.Sdk.GetCMakeArtifactsFromFileApi" AssemblyFile="$(MicrosoftDotNetCMakeSdkTaskAssembly)" Runtime="NET" Architecture="*" />
+  <UsingTask TaskName="Microsoft.DotNet.CMake.Sdk.ExecWithMutex" AssemblyFile="$(MicrosoftDotNetCMakeSdkTaskAssembly)" Runtime="NET" Architecture="*" />
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
@@ -198,7 +199,9 @@
 
   <Target Name="Configure"
     DependsOnTargets="GetConfigScript;CreateFileApiQuery">
-    <Exec WorkingDirectory="$(MSBuildProjectDirectory)" Command="
+    <ExecWithMutex WorkingDirectory="$(MSBuildProjectDirectory)"
+      MutexName="$(CMakeOutputDir)"
+      Command="
       $(CMakeCompilerSearchScript)
       $(CMakeConfigScript)" />
   </Target>
@@ -208,7 +211,9 @@
       <!-- Don't set IntermediateAssembly since this is not produced -->
       <IntermediateAssembly Remove="@(IntermediateAssembly)" />
     </ItemGroup>
-    <Exec WorkingDirectory="$(MSBuildProjectDirectory)" Command="
+    <ExecWithMutex WorkingDirectory="$(MSBuildProjectDirectory)"
+      MutexName="$(CMakeOutputDir)"
+      Command="
       $(CMakeCompilerSearchScript)
       $(CMakeBuildScript)" />
   </Target>
