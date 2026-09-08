@@ -32,21 +32,21 @@ public sealed class UpdateXlf : XlfTask
             string sourcePath = item.ItemSpec;
             string sourceDocumentPath = item.GetMetadataOrDefault(MetadataKey.SourceDocumentPath, item.ItemSpec);
             string sourceFormat = item.GetMetadataOrThrow(MetadataKey.XlfSourceFormat);
-            TranslatableDocument sourceDocument = XlfTask.LoadSourceDocument(new FileInfo(TaskEnvironment.GetAbsolutePath(sourcePath)), sourceFormat);
+            TranslatableDocument sourceDocument = XlfTask.LoadSourceDocument(TaskEnvironment.GetAbsolutePath(sourcePath), sourceFormat);
             string sourceDocumentId = XlfTask.GetSourceDocumentId(sourcePath);
 
             foreach (string language in Languages)
             {
                 string xlfPath = XlfTask.GetXlfPath(sourceDocumentPath, language);
-                FileInfo xlfFile = new(TaskEnvironment.GetAbsolutePath(xlfPath));
+                AbsolutePath absoluteXlfPath = TaskEnvironment.GetAbsolutePath(xlfPath);
                 XlfDocument xlfDocument;
 
                 try
                 {
-                    xlfDocument = XlfTask.LoadXlfDocument(xlfFile, language, createIfNonExistent: AllowModification);
+                    xlfDocument = XlfTask.LoadXlfDocument(absoluteXlfPath, language, createIfNonExistent: AllowModification);
                 }
                 // LoadXlfDocument reports the absolute path it was given, so compare against that.
-                catch (FileNotFoundException fileNotFoundEx) when (fileNotFoundEx.FileName == xlfFile.FullName)
+                catch (FileNotFoundException fileNotFoundEx) when (fileNotFoundEx.FileName == absoluteXlfPath.Value)
                 {
                     Release.Assert(!AllowModification);
                     throw new BuildErrorException($"'{xlfPath}' for '{sourcePath}' does not exist. {HowToUpdate}");
@@ -71,8 +71,8 @@ public sealed class UpdateXlf : XlfTask
                     throw new BuildErrorException($"'{xlfPath}' is out-of-date with '{sourcePath}'. {HowToUpdate}");
                 }
 
-                Directory.CreateDirectory(xlfFile.Directory.FullName);
-                xlfDocument.Save(xlfFile);
+                Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(absoluteXlfPath)));
+                xlfDocument.Save(new FileInfo(absoluteXlfPath));
             }
         }
     }

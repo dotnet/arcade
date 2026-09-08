@@ -21,9 +21,9 @@ public sealed class TranslateSource : XlfTask
         string language = XlfFile.GetMetadataOrThrow(MetadataKey.XlfLanguage);
         string translatedFullPath = XlfFile.GetMetadataOrThrow(MetadataKey.XlfTranslatedFullPath);
 
-        FileInfo sourceFile = new(TaskEnvironment.GetAbsolutePath(sourcePath));
-        TranslatableDocument sourceDocument = XlfTask.LoadSourceDocument(sourceFile, XlfFile.GetMetadata(MetadataKey.XlfSourceFormat));
-        XlfDocument xlfDocument = XlfTask.LoadXlfDocument(new FileInfo(TaskEnvironment.GetAbsolutePath(XlfFile.ItemSpec)));
+        AbsolutePath sourceAbsolutePath = TaskEnvironment.GetAbsolutePath(sourcePath);
+        TranslatableDocument sourceDocument = XlfTask.LoadSourceDocument(sourceAbsolutePath, XlfFile.GetMetadata(MetadataKey.XlfSourceFormat));
+        XlfDocument xlfDocument = XlfTask.LoadXlfDocument(TaskEnvironment.GetAbsolutePath(XlfFile.ItemSpec));
 
         bool validationFailed = false;
         xlfDocument.Validate(validationError =>
@@ -41,8 +41,8 @@ public sealed class TranslateSource : XlfTask
         Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(translatedFullPath)));
 
         // These paths are written into the translated document, and Path.GetFullPath canonicalized
-        // them before they were embedded. GetAbsolutePath does not, but FileInfo.FullName does.
-        sourceDocument.RewriteRelativePathsToAbsolute(sourceFile.FullName);
+        // them before they were embedded.
+        sourceDocument.RewriteRelativePathsToAbsolute(sourceAbsolutePath.GetCanonicalForm());
         sourceDocument.Save(new FileInfo(TaskEnvironment.GetAbsolutePath(translatedFullPath)));
     }
 }

@@ -40,7 +40,7 @@ public sealed class EnsureAllResourcesTranslated : XlfTask
 
                 try
                 {
-                    xlfDocument = XlfTask.LoadXlfDocument(new FileInfo(TaskEnvironment.GetAbsolutePath(xlfPath)));
+                    xlfDocument = XlfTask.LoadXlfDocument(TaskEnvironment.GetAbsolutePath(xlfPath));
                 }
                 catch (FileNotFoundException)
                 {
