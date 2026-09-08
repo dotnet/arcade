@@ -11,6 +11,15 @@
 # More information on the script_version:
 #   https://github.com/orgs/community/discussions/18601
 #   https://github.com/orgs/community/discussions/63863
+#
+# By default the source branch is the branch that triggered the calling workflow and the target
+# branch comes from the 'MergeToBranch' value of the matching merge flow configuration entry.
+# Callers that need to decide either branch at run time (for example to fan a single source branch
+# out to a target that is only known at run time) can pass 'merge_from_branch' and/or
+# 'merge_to_branch'. Both are independently optional; omitting both preserves the original
+# behaviour. A configuration entry keyed by the effective source branch is always required because
+# it carries the merge policy ('ExtraSwitches', 'ResetToTargetPaths'), but that entry may omit
+# 'MergeToBranch' when the caller supplies 'merge_to_branch'.
 
 on:
   workflow_call:
@@ -25,6 +34,16 @@ on:
         description: The path to the configuration file.
         required: false
         default: 'github-merge-flow.jsonc'
+      merge_from_branch:
+        type: string
+        required: false
+        description: Optional source branch to merge from. When empty, the branch that triggered the calling workflow is used. The effective source branch is also the key used to look up the merge flow configuration.
+        default: ''
+      merge_to_branch:
+        type: string
+        required: false
+        description: Optional target branch to merge into. When empty, the 'MergeToBranch' value of the matching merge flow configuration entry is used.
+        default: ''
       script_version:
         type: string
         required: false
@@ -61,19 +80,106 @@ jobs:
           $repoNameWithoutOwner = $repoName.Substring("${{ github.repository_owner }}".Length + 1)
           "repository_name=$repoNameWithoutOwner" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
+      - name: Resolve merge branches
+        id: resolve-branches
+        working-directory: ${{ github.workspace }}/repository
+        env:
+          INPUT_MERGE_FROM_BRANCH: ${{ inputs.merge_from_branch }}
+          INPUT_MERGE_TO_BRANCH: ${{ inputs.merge_to_branch }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          # Caller supplied branch names are only ever handed to git and to the merge scripts
+          # through environment variables, never interpolated into a script body. Keep the accepted
+          # shape deliberately narrow anyway so that nothing resembling a command line option, a
+          # path traversal or a shell metacharacter can reach those consumers.
+          function Test-BranchInput([string]$name, [string]$value) {
+            if ($value.Length -gt 255) {
+              throw "$name '$value' is longer than the 255 character limit."
+            }
+            if ($value.Contains('..')) {
+              throw "$name '$value' must not contain '..'."
+            }
+            if ($value -notmatch '^[A-Za-z0-9][A-Za-z0-9._\-]*(/[A-Za-z0-9][A-Za-z0-9._\-]*)*$') {
+              throw "$name '$value' is not an accepted branch name. Each segment must start with a letter or a digit and may only contain letters, digits, '.', '_' and '-', with '/' as the segment separator."
+            }
+
+            & git check-ref-format "refs/heads/$value"
+            if ($LASTEXITCODE -ne 0) {
+              throw "$name '$value' is not a valid git branch name."
+            }
+
+            & git rev-parse --verify --quiet "refs/remotes/origin/$value" > $null
+            if ($LASTEXITCODE -ne 0) {
+              & git ls-remote --exit-code --heads origin $value > $null
+              if ($LASTEXITCODE -ne 0) {
+                throw "$name '$value' does not exist on the origin remote."
+              }
+            }
+          }
+
+          $mergeFromBranch = "$env:INPUT_MERGE_FROM_BRANCH".Trim()
+          if ($mergeFromBranch) {
+            Test-BranchInput 'merge_from_branch' $mergeFromBranch
+            Write-Host "Merging from the caller supplied branch '$mergeFromBranch'."
+          }
+          else {
+            $mergeFromBranch = "$env:GITHUB_REF_NAME"
+            Write-Host "Merging from the triggering branch '$mergeFromBranch'."
+          }
+
+          $mergeToBranchOverride = "$env:INPUT_MERGE_TO_BRANCH".Trim()
+          if ($mergeToBranchOverride) {
+            Test-BranchInput 'merge_to_branch' $mergeToBranchOverride
+            Write-Host "Merging into the caller supplied branch '$mergeToBranchOverride'."
+          }
+
+          "mergeFromBranch=$mergeFromBranch" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "mergeToBranchOverride=$mergeToBranchOverride" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
       - name: Extract configuration values
         id: extract-configuration-values
-        run: ${{ github.workspace }}\arcade-repository\.github\workflows\scripts\read-configuration.ps1 -ConfigurationFileBranch ${{ inputs.configuration_file_branch }} -RepoName ${{ steps.fetch-repo-name.outputs.repository_name }} -RepoOwner ${{ github.repository_owner }} -MergeFromBranch $env:GITHUB_REF_NAME -ConfigurationFilePath ${{inputs.configuration_file_path}}
+        run: ${{ github.workspace }}\arcade-repository\.github\workflows\scripts\read-configuration.ps1 -ConfigurationFileBranch $env:CONFIGURATION_FILE_BRANCH -RepoName ${{ steps.fetch-repo-name.outputs.repository_name }} -RepoOwner ${{ github.repository_owner }} -MergeFromBranch $env:MERGE_FROM_BRANCH -ConfigurationFilePath $env:CONFIGURATION_FILE_PATH
         env: 
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+          MERGE_FROM_BRANCH: ${{ steps.resolve-branches.outputs.mergeFromBranch }}
+          CONFIGURATION_FILE_BRANCH: ${{ inputs.configuration_file_branch }}
+          CONFIGURATION_FILE_PATH: ${{ inputs.configuration_file_path }}
+
+      - name: Resolve merge target
+        id: resolve-merge-target
+        env:
+          MERGE_TO_BRANCH_OVERRIDE: ${{ steps.resolve-branches.outputs.mergeToBranchOverride }}
+          CONFIGURED_MERGE_TO_BRANCH: ${{ steps.extract-configuration-values.outputs.mergeToBranch }}
+          CONFIGURATION_FOUND: ${{ steps.extract-configuration-values.outputs.configurationFound }}
+          POLICY_FOUND: ${{ steps.extract-configuration-values.outputs.policyFound }}
+        run: |
+          # 'policyFound' means a configuration entry matched but may not carry a merge target. Only
+          # newer copies of read-configuration.ps1 emit it, and 'script_version' can point at an
+          # older copy that only emits 'configurationFound', so accept either.
+          $configurationFound = ("$env:CONFIGURATION_FOUND" -eq 'true') -or ("$env:POLICY_FOUND" -eq 'true')
+
+          $mergeToBranch = "$env:MERGE_TO_BRANCH_OVERRIDE"
+          if (-not $mergeToBranch) {
+            $mergeToBranch = "$env:CONFIGURED_MERGE_TO_BRANCH"
+          }
+
+          "configurationFound=$($configurationFound.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "mergeToBranch=$mergeToBranch" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
       - run: Write-Host "Configuration required for running merge flow was not found or was not valid."
-        if: steps.extract-configuration-values.outputs.configurationFound != 'true'
+        if: steps.resolve-merge-target.outputs.configurationFound != 'true'
         name: Read configuration status
 
-      - run: ${{ github.workspace }}\arcade-repository\.github\workflows\scripts\inter-branch-merge.ps1 -RepoName ${{ steps.fetch-repo-name.outputs.repository_name }} -RepoOwner ${{ github.repository_owner }} -MergeFromBranch $env:GITHUB_REF_NAME -MergeToBranch ${{ steps.extract-configuration-values.outputs.mergeToBranch }} -ResetToTargetPaths "${{ steps.extract-configuration-values.outputs.resetToTargetPaths }}" ${{ steps.extract-configuration-values.outputs.mergeSwitchArguments }}
-        if: steps.extract-configuration-values.outputs.configurationFound == 'true'
+      - run: Write-Host "No merge target branch was resolved. Add 'MergeToBranch' to the configuration entry or pass the 'merge_to_branch' input."
+        if: steps.resolve-merge-target.outputs.configurationFound == 'true' && steps.resolve-merge-target.outputs.mergeToBranch == ''
+        name: Merge target status
+
+      - run: ${{ github.workspace }}\arcade-repository\.github\workflows\scripts\inter-branch-merge.ps1 -RepoName ${{ steps.fetch-repo-name.outputs.repository_name }} -RepoOwner ${{ github.repository_owner }} -MergeFromBranch $env:MERGE_FROM_BRANCH -MergeToBranch $env:MERGE_TO_BRANCH -ResetToTargetPaths "${{ steps.extract-configuration-values.outputs.resetToTargetPaths }}" ${{ steps.extract-configuration-values.outputs.mergeSwitchArguments }}
+        if: steps.resolve-merge-target.outputs.configurationFound == 'true' && steps.resolve-merge-target.outputs.mergeToBranch != ''
         name: Merge branches
         working-directory: ${{ github.workspace }}/repository
         env: 
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MERGE_FROM_BRANCH: ${{ steps.resolve-branches.outputs.mergeFromBranch }}
+          MERGE_TO_BRANCH: ${{ steps.resolve-merge-target.outputs.mergeToBranch }}
