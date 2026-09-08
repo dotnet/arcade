@@ -27,12 +27,12 @@ Onboarding to OneLocBuild is a simple process:
   parameters:
     CreatePr: false
 ```
-Note: If you are running your PR builds and official builds off of the same definition and are on dnceng,
-you will want to conditionalize this step with the following:
+Note: If you are running your PR builds and official builds off of the same definition, conditionalize
+this step so OneLocBuild runs only in the supported `dnceng/internal` or `DevDiv/DevDiv` project:
 ```yaml
-- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+- ${{ if and(or(eq(variables['System.TeamProject'], 'internal'), eq(variables['System.TeamProject'], 'DevDiv')), notin(variables['Build.Reason'], 'PullRequest')) }}:
 ```
-To prevent OneLocBuild from running in the public project where it will fail.
+This also prevents OneLocBuild from running during pull request validation.
 
 3. Run the pipeline you want to use OneLocBuild on your test branch.
 4. Open a ticket with the localization team using
@@ -51,7 +51,7 @@ To prevent OneLocBuild from running in the public project where it will fail.
 Make sure to remove the `CreatePr: false` line from step 2. Additionally, if you added the YAML condition from step
 2, make sure that your new YAML condition now looks like:
 ```yaml
-- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+- ${{ if and(or(eq(variables['System.TeamProject'], 'internal'), eq(variables['System.TeamProject'], 'DevDiv')), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
 ```
 
 7. If using a mirrored repository (your code is mirrored to a trusted repository which your official build uses),
