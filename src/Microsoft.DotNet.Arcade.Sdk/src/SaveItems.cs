@@ -8,55 +8,54 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 
-namespace Microsoft.DotNet.Arcade.Sdk
+namespace Microsoft.DotNet.Arcade.Sdk;
+
+/// <summary>
+/// This task writes msbuild Items with their metadata to a props file.
+/// Useful to statically save a status of an Item that will be used later on by just importing the generated file.
+/// </summary>
+[MSBuildMultiThreadableTask]
+public class SaveItems : Task, IMultiThreadableTask
 {
-    /// <summary>
-    /// This task writes msbuild Items with their metadata to a props file.
-    /// Useful to statically save a status of an Item that will be used later on by just importing the generated file.
-    /// </summary>
-    [MSBuildMultiThreadableTask]
-    public class SaveItems : Task, IMultiThreadableTask
+    /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+    public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
+    [Required]
+    public string ItemName { get; set; }
+
+    [Required]
+    public ITaskItem[] Items { get; set; }
+
+    [Output]
+    [Required]
+    public string File { get; set; }
+
+    public override bool Execute()
     {
-        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
-        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+        var project = ProjectRootElement.Create();
 
-        [Required]
-        public string ItemName { get; set; }
-
-        [Required]
-        public ITaskItem[] Items { get; set; }
-
-        [Output]
-        [Required]
-        public string File { get; set; }
-
-        public override bool Execute()
+        foreach (var item in Items)
         {
-            var project = ProjectRootElement.Create();
+            var metadata = ((ITaskItem2)item).CloneCustomMetadataEscaped();
 
-            foreach (var item in Items)
+            if (!(metadata is IEnumerable<KeyValuePair<string, string>> metadataPairs))
             {
-                var metadata = ((ITaskItem2)item).CloneCustomMetadataEscaped();
-
-                if (!(metadata is IEnumerable<KeyValuePair<string, string>> metadataPairs))
-                {
-                    metadataPairs = metadata.Keys.OfType<string>().Select(key => new KeyValuePair<string, string>(key, metadata[key] as string));
-                }
-
-                project.AddItem(ItemName, item.ItemSpec, metadataPairs);
+                metadataPairs = metadata.Keys.OfType<string>().Select(key => new KeyValuePair<string, string>(key, metadata[key] as string));
             }
 
-            string outputPath = TaskEnvironment.GetAbsolutePath(File);
-            string path = Path.GetDirectoryName(outputPath);
-
-            if (!string.IsNullOrEmpty(path))
-            {
-                Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(path));
-            }
-
-            project.Save(outputPath);
-
-            return !Log.HasLoggedErrors;
+            project.AddItem(ItemName, item.ItemSpec, metadataPairs);
         }
+
+        string outputPath = TaskEnvironment.GetAbsolutePath(File);
+        string path = Path.GetDirectoryName(outputPath);
+
+        if (!string.IsNullOrEmpty(path))
+        {
+            Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(path));
+        }
+
+        project.Save(outputPath);
+
+        return !Log.HasLoggedErrors;
     }
 }

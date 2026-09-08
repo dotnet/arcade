@@ -7,45 +7,44 @@ using Azure.Identity;
 using Microsoft.DotNet.Build.CloudTestTasks;
 using Microsoft.Build.Framework;
 
-namespace Microsoft.DotNet.Build.Tasks.Feed
+namespace Microsoft.DotNet.Build.Tasks.Feed;
+
+/// <summary>
+/// Creates an Azure blob storage container with a unique name. If there is already a container named [ContainerName] will
+/// try creating a container [ContainerName]-1, [ContainerName]-2 and so on until the name is unique.
+/// The final name is saved in ContainerName.
+/// </summary>
+// Deliberately not marked multithreadable: the AccountKey is null path builds an
+// AzureCliCredential, which resolves and launches `az` from the ambient process environment
+// rather than the project's injected one. Migrating requires supplying credentials explicitly or
+// launching the CLI through TaskEnvironment.
+public class CreateNewAzureContainer : CreateAzureContainer
 {
-    /// <summary>
-    /// Creates an Azure blob storage container with a unique name. If there is already a container named [ContainerName] will
-    /// try creating a container [ContainerName]-1, [ContainerName]-2 and so on until the name is unique.
-    /// The final name is saved in ContainerName.
-    /// </summary>
-    // Deliberately not marked multithreadable: the AccountKey is null path builds an
-    // AzureCliCredential, which resolves and launches `az` from the ambient process environment
-    // rather than the project's injected one. Migrating requires supplying credentials explicitly or
-    // launching the CLI through TaskEnvironment.
-    public class CreateNewAzureContainer : CreateAzureContainer
+    public override async Task<AzureStorageUtils> GetBlobStorageUtilsAsync()
     {
-        public override async Task<AzureStorageUtils> GetBlobStorageUtilsAsync()
+        int version = 0;
+        string versionedContainerName = ContainerName;
+
+        AzureStorageUtils blobUtils;
+        bool needsUniqueName;
+        do
         {
-            int version = 0;
-            string versionedContainerName = ContainerName;
-
-            AzureStorageUtils blobUtils;
-            bool needsUniqueName;
-            do
+            blobUtils = AccountKey is null ?
+                new AzureStorageUtils(AccountName, new AzureCliCredential(), versionedContainerName) :
+                new AzureStorageUtils(AccountName, AccountKey, versionedContainerName);
+            if (await blobUtils.CheckIfContainerExistsAsync())
             {
-                blobUtils = AccountKey is null ?
-                    new AzureStorageUtils(AccountName, new AzureCliCredential(), versionedContainerName) :
-                    new AzureStorageUtils(AccountName, AccountKey, versionedContainerName);
-                if (await blobUtils.CheckIfContainerExistsAsync())
-                {
-                    versionedContainerName = $"{ContainerName}-{++version}";
-                    needsUniqueName = true;
-                }
-                else
-                {
-                    needsUniqueName = false;
-                    ContainerName = versionedContainerName;
-                }
+                versionedContainerName = $"{ContainerName}-{++version}";
+                needsUniqueName = true;
             }
-            while (needsUniqueName);
-
-            return blobUtils;
+            else
+            {
+                needsUniqueName = false;
+                ContainerName = versionedContainerName;
+            }
         }
+        while (needsUniqueName);
+
+        return blobUtils;
     }
 }

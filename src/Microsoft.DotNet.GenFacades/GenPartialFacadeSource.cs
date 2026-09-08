@@ -7,87 +7,86 @@ using Microsoft.DotNet.Build.Tasks;
 using System;
 using System.Linq;
 
-namespace Microsoft.DotNet.GenFacades
-{
-    // TODO: Not opted into multithreading. RoslynBuildTask.Execute subscribes every instance to the
-    // process-wide AssemblyLoadContext.Resolving event, so with differing RoslynAssembliesPath values
-    // one instance can satisfy another instance's resolution. The TaskEnvironment below is still used
-    // for path resolution. Tracked by https://github.com/dotnet/arcade/issues/17378.
-    //
-    // Implementing IMultiThreadableTask without the attribute is deliberate. Routing is decided by
-    // the attribute alone (TaskRouter.NeedsTaskHostInMultiThreadedMode); it cannot key off the
-    // interface, because ToolTask implements it and that would opt in every ToolTask-derived task in
-    // the ecosystem. The interface only causes TaskEnvironment to be injected. Do not remove it to
-    // "make this safe" - that would revert the path resolution below to the process current
-    // directory while leaving the task exactly as unsafe as it is now.
+namespace Microsoft.DotNet.GenFacades;
+
+// TODO: Not opted into multithreading. RoslynBuildTask.Execute subscribes every instance to the
+// process-wide AssemblyLoadContext.Resolving event, so with differing RoslynAssembliesPath values
+// one instance can satisfy another instance's resolution. The TaskEnvironment below is still used
+// for path resolution. Tracked by https://github.com/dotnet/arcade/issues/17378.
+//
+// Implementing IMultiThreadableTask without the attribute is deliberate. Routing is decided by
+// the attribute alone (TaskRouter.NeedsTaskHostInMultiThreadedMode); it cannot key off the
+// interface, because ToolTask implements it and that would opt in every ToolTask-derived task in
+// the ecosystem. The interface only causes TaskEnvironment to be injected. Do not remove it to
+// "make this safe" - that would revert the path resolution below to the process current
+// directory while leaving the task exactly as unsafe as it is now.
 #pragma warning disable MSBuildTask0013 // Interface without the attribute is deliberate; see the comment above.
-    public class GenPartialFacadeSource : RoslynBuildTask, IMultiThreadableTask
-    {
+public class GenPartialFacadeSource : RoslynBuildTask, IMultiThreadableTask
+{
 #pragma warning restore MSBuildTask0013
-        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
-        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+    /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+    public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
-        [Required]
-        public ITaskItem[] ReferencePaths { get; set; }
+    [Required]
+    public ITaskItem[] ReferencePaths { get; set; }
 
-        [Required]
-        public string ReferenceAssembly { get; set; }
+    [Required]
+    public string ReferenceAssembly { get; set; }
 
-        public ITaskItem[] CompileFiles { get; set; }
+    public ITaskItem[] CompileFiles { get; set; }
 
-        public string DefineConstants { get; set; }
+    public string DefineConstants { get; set; }
 
-        public string LangVersion { get; set; }
+    public string LangVersion { get; set; }
 
-        public bool IgnoreMissingTypes { get; set; }
+    public bool IgnoreMissingTypes { get; set; }
 
-        public string[] IgnoreMissingTypesList { get; set; }
+    public string[] IgnoreMissingTypesList { get; set; }
 
-        public string[] OmitTypes { get; set; }
+    public string[] OmitTypes { get; set; }
 
-        public ITaskItem[] SeedTypePreferences { get; set; }
+    public ITaskItem[] SeedTypePreferences { get; set; }
 
-        [Required]
-        public string OutputSourcePath { get; set; }
-        
-        public override bool ExecuteCore()
+    [Required]
+    public string OutputSourcePath { get; set; }
+    
+    public override bool ExecuteCore()
+    {
+        bool result = true;
+        try
         {
-            bool result = true;
-            try
-            {
-                AbsolutePath[] referencePaths = GetAbsolutePaths(ReferencePaths);
-                AbsolutePath referenceAssembly = TaskEnvironment.GetAbsolutePath(ReferenceAssembly);
-                AbsolutePath[] compileFiles = GetAbsolutePaths(CompileFiles);
-                AbsolutePath outputSourcePath = TaskEnvironment.GetAbsolutePath(OutputSourcePath);
+            AbsolutePath[] referencePaths = GetAbsolutePaths(ReferencePaths);
+            AbsolutePath referenceAssembly = TaskEnvironment.GetAbsolutePath(ReferenceAssembly);
+            AbsolutePath[] compileFiles = GetAbsolutePaths(CompileFiles);
+            AbsolutePath outputSourcePath = TaskEnvironment.GetAbsolutePath(OutputSourcePath);
 
-                result = GenPartialFacadeSourceGenerator.Execute(
-                    referencePaths,
-                    referenceAssembly,
-                    compileFiles,
-                    DefineConstants,
-                    LangVersion,
-                    outputSourcePath,
-                    Log,
-                    IgnoreMissingTypes,
-                    IgnoreMissingTypesList,
-                    OmitTypes,
-                    SeedTypePreferences);
-            }
-            catch (Exception e)
-            {
-                Log.LogErrorFromException(e, showStackTrace: false);
-            }
-
-            return result && !Log.HasLoggedErrors;
+            result = GenPartialFacadeSourceGenerator.Execute(
+                referencePaths,
+                referenceAssembly,
+                compileFiles,
+                DefineConstants,
+                LangVersion,
+                outputSourcePath,
+                Log,
+                IgnoreMissingTypes,
+                IgnoreMissingTypesList,
+                OmitTypes,
+                SeedTypePreferences);
+        }
+        catch (Exception e)
+        {
+            Log.LogErrorFromException(e, showStackTrace: false);
         }
 
-        private AbsolutePath[] GetAbsolutePaths(ITaskItem[] items)
+        return result && !Log.HasLoggedErrors;
+    }
+
+    private AbsolutePath[] GetAbsolutePaths(ITaskItem[] items)
+    {
+        return items?.Select(item =>
         {
-            return items?.Select(item =>
-            {
-                AbsolutePath itemSpecPath = TaskEnvironment.GetAbsolutePath(item.ItemSpec);
-                return itemSpecPath;
-            }).ToArray();
-        }
+            AbsolutePath itemSpecPath = TaskEnvironment.GetAbsolutePath(item.ItemSpec);
+            return itemSpecPath;
+        }).ToArray();
     }
 }

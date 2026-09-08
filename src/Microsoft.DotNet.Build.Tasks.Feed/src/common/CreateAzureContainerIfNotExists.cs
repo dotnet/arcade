@@ -6,32 +6,31 @@ using Azure.Identity;
 using Microsoft.DotNet.Build.CloudTestTasks;
 using Microsoft.Build.Framework;
 
-namespace Microsoft.DotNet.Build.Tasks.Feed
+namespace Microsoft.DotNet.Build.Tasks.Feed;
+
+// Deliberately not marked multithreadable: the AccountKey is null path builds an
+// AzureCliCredential, which resolves and launches `az` from the ambient process environment
+// rather than the project's injected one. Migrating requires supplying credentials explicitly or
+// launching the CLI through TaskEnvironment.
+public class CreateAzureContainerIfNotExists : CreateAzureContainer
 {
-    // Deliberately not marked multithreadable: the AccountKey is null path builds an
-    // AzureCliCredential, which resolves and launches `az` from the ambient process environment
-    // rather than the project's injected one. Migrating requires supplying credentials explicitly or
-    // launching the CLI through TaskEnvironment.
-    public class CreateAzureContainerIfNotExists : CreateAzureContainer
+    /// <summary>
+    /// When false, if the specified container already exists get a reference to it.
+    /// When true, if the specified container already exists, fail the task.
+    /// </summary>
+    public bool FailIfExists { get; set; }
+
+    public override async Task<AzureStorageUtils> GetBlobStorageUtilsAsync()
     {
-        /// <summary>
-        /// When false, if the specified container already exists get a reference to it.
-        /// When true, if the specified container already exists, fail the task.
-        /// </summary>
-        public bool FailIfExists { get; set; }
+        var blobUtils = AccountKey is null ?
+            new AzureStorageUtils(AccountName, new AzureCliCredential(), ContainerName) :
+            new AzureStorageUtils(AccountName, AccountKey, ContainerName);
 
-        public override async Task<AzureStorageUtils> GetBlobStorageUtilsAsync()
+        if (FailIfExists && await blobUtils.CheckIfContainerExistsAsync())
         {
-            var blobUtils = AccountKey is null ?
-                new AzureStorageUtils(AccountName, new AzureCliCredential(), ContainerName) :
-                new AzureStorageUtils(AccountName, AccountKey, ContainerName);
-
-            if (FailIfExists && await blobUtils.CheckIfContainerExistsAsync())
-            {
-                throw new System.InvalidOperationException($"Container {ContainerName} already exists in storage account {AccountName}.");
-            }
-
-            return blobUtils;
+            throw new System.InvalidOperationException($"Container {ContainerName} already exists in storage account {AccountName}.");
         }
+
+        return blobUtils;
     }
 }

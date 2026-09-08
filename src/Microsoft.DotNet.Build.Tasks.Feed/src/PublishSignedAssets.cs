@@ -13,117 +13,116 @@ using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
 
-namespace Microsoft.DotNet.Build.Tasks.Feed.src
-{
-    // TODO: Not opted into multithreading. PublishArtifactsInManifestBase resolves Azure credentials
-    // by reading AZURESUBSCRIPTION_*, SYSTEM_ACCESSTOKEN and workload-identity variables straight
-    // from the process environment. The TaskEnvironment below is still used for path resolution.
-    // Tracked by https://github.com/dotnet/arcade/issues/17378.
-    //
-    // Implementing IMultiThreadableTask without the attribute is deliberate. Routing is decided by
-    // the attribute alone (TaskRouter.NeedsTaskHostInMultiThreadedMode); it cannot key off the
-    // interface, because ToolTask implements it and that would opt in every ToolTask-derived task in
-    // the ecosystem. The interface only causes TaskEnvironment to be injected. Do not remove it to
-    // "make this safe" - that would revert the path resolution below to the process current
-    // directory while leaving the task exactly as unsafe as it is now.
+namespace Microsoft.DotNet.Build.Tasks.Feed.src;
+
+// TODO: Not opted into multithreading. PublishArtifactsInManifestBase resolves Azure credentials
+// by reading AZURESUBSCRIPTION_*, SYSTEM_ACCESSTOKEN and workload-identity variables straight
+// from the process environment. The TaskEnvironment below is still used for path resolution.
+// Tracked by https://github.com/dotnet/arcade/issues/17378.
+//
+// Implementing IMultiThreadableTask without the attribute is deliberate. Routing is decided by
+// the attribute alone (TaskRouter.NeedsTaskHostInMultiThreadedMode); it cannot key off the
+// interface, because ToolTask implements it and that would opt in every ToolTask-derived task in
+// the ecosystem. The interface only causes TaskEnvironment to be injected. Do not remove it to
+// "make this safe" - that would revert the path resolution below to the process current
+// directory while leaving the task exactly as unsafe as it is now.
 #pragma warning disable MSBuildTask0013 // Interface without the attribute is deliberate; see the comment above.
-    public class PublishSignedAssets : PublishArtifactsInManifestBase, IMultiThreadableTask
-    {
+public class PublishSignedAssets : PublishArtifactsInManifestBase, IMultiThreadableTask
+{
 #pragma warning restore MSBuildTask0013
-        private static readonly string AzureDevOpsScope = "499b84ac-1321-427f-aa17-267ca6975798/.default";
+    private static readonly string AzureDevOpsScope = "499b84ac-1321-427f-aa17-267ca6975798/.default";
 
-        /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
-        public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+    /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+    public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
-        /// <summary>
-        /// Required token to publishe packages to the feeds
-        /// </summary>
-        public string AzureDevOpsPersonalAccessToken { get; set; }
+    /// <summary>
+    /// Required token to publishe packages to the feeds
+    /// </summary>
+    public string AzureDevOpsPersonalAccessToken { get; set; }
 
-        /// <summary>
-        /// The name of the feed for "shipping" packages
-        /// </summary>
-        [Required]
-        public string ShippingFeedName { get; set; }
+    /// <summary>
+    /// The name of the feed for "shipping" packages
+    /// </summary>
+    [Required]
+    public string ShippingFeedName { get; set; }
 
-        /// <summary>
-        /// The name of the feed for the "nonshipping" packages
-        /// </summary>
-        [Required]
-        public string NonShippingFeedName { get; set; }
+    /// <summary>
+    /// The name of the feed for the "nonshipping" packages
+    /// </summary>
+    [Required]
+    public string NonShippingFeedName { get; set; }
 
-        /// <summary>
-        /// Folder which contains the "shipping" assets
-        /// </summary>
-        [Required]
-        public string ShippingAssetsFolder { get; set; }
+    /// <summary>
+    /// Folder which contains the "shipping" assets
+    /// </summary>
+    [Required]
+    public string ShippingAssetsFolder { get; set; }
 
-        /// <summary>
-        /// Folder which contains the "nonshipping" assets
-        /// </summary>
-        [Required]
-        public string NonShippingAssetsFolder { get; set; }
+    /// <summary>
+    /// Folder which contains the "nonshipping" assets
+    /// </summary>
+    [Required]
+    public string NonShippingAssetsFolder { get; set; }
 
-        public override bool Execute()
+    public override bool Execute()
+    {
+        return ExecuteAsync().GetAwaiter().GetResult();
+    }
+
+    public override async Task<bool> ExecuteAsync()
+    {
+        try
         {
-            return ExecuteAsync().GetAwaiter().GetResult();
+            if (string.IsNullOrEmpty(AzureDevOpsPersonalAccessToken))
+            {
+                AzureDevOpsPersonalAccessToken = (await new AzureCliCredential().GetTokenAsync(new TokenRequestContext(new[] { AzureDevOpsScope }))).Token;
+            }
+
+            // Push shipping packages
+            await PushPackagesToFeed(ShippingAssetsFolder, ShippingFeedName);
+
+            // Push nonshipping packages
+            await PushPackagesToFeed(NonShippingAssetsFolder, NonShippingFeedName);
+        }
+        catch (Exception e)
+        {
+            Log.LogErrorFromException(e, true);
         }
 
-        public override async Task<bool> ExecuteAsync()
-        {
-            try
+        return !Log.HasLoggedErrors;
+    }
+
+    private async Task PushPackagesToFeed(string assetsFolder, string feedUrl)
+    {
+        AbsolutePath packagesFolder = TaskEnvironment.GetAbsolutePath(Path.Combine(assetsFolder, "packages"));
+
+        TargetFeedConfig targetFeedConfig = new TargetFeedConfig(TargetFeedContentType.Package, feedUrl, FeedType.AzDoNugetFeed, AzureDevOpsPersonalAccessToken);
+        HashSet<PackageIdentity> packagesToPublish = new HashSet<PackageIdentity>(
+            Directory.GetFiles(packagesFolder).Select(packagePath =>
             {
-                if (string.IsNullOrEmpty(AzureDevOpsPersonalAccessToken))
+                using (BinaryReader reader = new BinaryReader(File.Open(new AbsolutePath(packagePath), FileMode.Open)))
                 {
-                    AzureDevOpsPersonalAccessToken = (await new AzureCliCredential().GetTokenAsync(new TokenRequestContext(new[] { AzureDevOpsScope }))).Token;
+                    PackageArchiveReader packageReader = new PackageArchiveReader(reader.BaseStream);
+                    return packageReader.NuspecReader.GetIdentity();
+                }
+            }));
+
+        await PushNugetPackagesAsync<PackageIdentity>(packagesToPublish, targetFeedConfig, 5,
+            async (feed, httpClient, package, feedAccount, feedVisibility, feedName) =>
+            {
+                string localPackagePath = Path.Combine(packagesFolder, $"{package.Id}.{package.Version}.nupkg");
+
+                if (!File.Exists(localPackagePath))
+                {
+                    Log.LogError($"Could not locate '{package.Id}.{package.Version}' at '{localPackagePath}'");
+                    return;
                 }
 
-                // Push shipping packages
-                await PushPackagesToFeed(ShippingAssetsFolder, ShippingFeedName);
+                await PushNugetPackageAsync(feed, httpClient, localPackagePath, package.Id, package.Version.ToString(), feedAccount, feedVisibility, feedName);
+            });
+    }
 
-                // Push nonshipping packages
-                await PushPackagesToFeed(NonShippingAssetsFolder, NonShippingFeedName);
-            }
-            catch (Exception e)
-            {
-                Log.LogErrorFromException(e, true);
-            }
-
-            return !Log.HasLoggedErrors;
-        }
-
-        private async Task PushPackagesToFeed(string assetsFolder, string feedUrl)
-        {
-            AbsolutePath packagesFolder = TaskEnvironment.GetAbsolutePath(Path.Combine(assetsFolder, "packages"));
-
-            TargetFeedConfig targetFeedConfig = new TargetFeedConfig(TargetFeedContentType.Package, feedUrl, FeedType.AzDoNugetFeed, AzureDevOpsPersonalAccessToken);
-            HashSet<PackageIdentity> packagesToPublish = new HashSet<PackageIdentity>(
-                Directory.GetFiles(packagesFolder).Select(packagePath =>
-                {
-                    using (BinaryReader reader = new BinaryReader(File.Open(new AbsolutePath(packagePath), FileMode.Open)))
-                    {
-                        PackageArchiveReader packageReader = new PackageArchiveReader(reader.BaseStream);
-                        return packageReader.NuspecReader.GetIdentity();
-                    }
-                }));
-
-            await PushNugetPackagesAsync<PackageIdentity>(packagesToPublish, targetFeedConfig, 5,
-                async (feed, httpClient, package, feedAccount, feedVisibility, feedName) =>
-                {
-                    string localPackagePath = Path.Combine(packagesFolder, $"{package.Id}.{package.Version}.nupkg");
-
-                    if (!File.Exists(localPackagePath))
-                    {
-                        Log.LogError($"Could not locate '{package.Id}.{package.Version}' at '{localPackagePath}'");
-                        return;
-                    }
-
-                    await PushNugetPackageAsync(feed, httpClient, localPackagePath, package.Id, package.Version.ToString(), feedAccount, feedVisibility, feedName);
-                });
-        }
-
-        public PublishSignedAssets() : base()
-        {
-        }
+    public PublishSignedAssets() : base()
+    {
     }
 }

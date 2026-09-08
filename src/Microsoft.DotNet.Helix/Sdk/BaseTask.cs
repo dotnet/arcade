@@ -3,9 +3,8 @@
 
 using Microsoft.Build.Utilities;
 
-namespace Microsoft.DotNet.Helix
+namespace Microsoft.DotNet.Helix;
+
+public abstract partial class BaseTask : Task
 {
-    public abstract partial class BaseTask : Task
-    {
-    }
 }

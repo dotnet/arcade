@@ -9,63 +9,62 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.DotNet.Build.Tasks.TargetFramework
+namespace Microsoft.DotNet.Build.Tasks.TargetFramework;
+
+/// <summary>
+/// This class uses NuGet's asset selection logic to choose the best TargetFramework given the list of supported TargetFrameworks.
+/// This behaves in a same way as NuGet selects lib files from a nuget package for a particular TargetFramework.
+/// </summary>
+internal class TargetFrameworkResolver
 {
-    /// <summary>
-    /// This class uses NuGet's asset selection logic to choose the best TargetFramework given the list of supported TargetFrameworks.
-    /// This behaves in a same way as NuGet selects lib files from a nuget package for a particular TargetFramework.
-    /// </summary>
-    internal class TargetFrameworkResolver
+    private static readonly ConcurrentDictionary<string, TargetFrameworkResolver> s_targetFrameworkResolverCache = new();
+    private readonly ManagedCodeConventions _conventions;
+    private readonly PatternSet _configStringPattern;
+    private readonly object _gate = new();
+
+    private TargetFrameworkResolver(string runtimeGraph)
     {
-        private static readonly ConcurrentDictionary<string, TargetFrameworkResolver> s_targetFrameworkResolverCache = new();
-        private readonly ManagedCodeConventions _conventions;
-        private readonly PatternSet _configStringPattern;
-        private readonly object _gate = new();
-
-        private TargetFrameworkResolver(string runtimeGraph)
-        {
-            _conventions = new ManagedCodeConventions(JsonRuntimeFormat.ReadRuntimeGraph(runtimeGraph));
-            _configStringPattern = new PatternSet(
-                _conventions.Properties,
-                groupPatterns: new PatternDefinition[]
-                {
-                    // In order to use Nuget's asset allocation, the input needs to be file paths and should contain a trailing slash.
-                    new PatternDefinition("{tfm}/"),
-                    new PatternDefinition("{tfm}-{rid}/")
-                },
-                pathPatterns: new PatternDefinition[]
-                {
-                    new PatternDefinition("{tfm}/"),
-                    new PatternDefinition("{tfm}-{rid}/")
-                });
-        }
-
-        public static TargetFrameworkResolver CreateOrGet(string runtimeGraph)
-        {
-            return s_targetFrameworkResolverCache.GetOrAdd(runtimeGraph, static graph => new TargetFrameworkResolver(graph));
-        }
-
-        public string? GetNearest(IEnumerable<string> frameworks, NuGetFramework framework)
-        {
-            // A single resolver instance is shared by every task that asks for the same runtime
-            // graph, and in MSBuild's multi-threaded mode those tasks run concurrently on the same
-            // node. NuGet's ManagedCodeConventions and PatternSet populate internal, non-concurrent
-            // caches while matching, so concurrent calls corrupt them. The work below is cheap
-            // compared to building the conventions (which parses the runtime graph), so serialize
-            // it rather than giving every thread its own resolver.
-            lock (_gate)
+        _conventions = new ManagedCodeConventions(JsonRuntimeFormat.ReadRuntimeGraph(runtimeGraph));
+        _configStringPattern = new PatternSet(
+            _conventions.Properties,
+            groupPatterns: new PatternDefinition[]
             {
-                NuGetFramework frameworkWithoutPlatform = NuGetFramework.Parse(framework.DotNetFrameworkName);
+                // In order to use Nuget's asset allocation, the input needs to be file paths and should contain a trailing slash.
+                new PatternDefinition("{tfm}/"),
+                new PatternDefinition("{tfm}-{rid}/")
+            },
+            pathPatterns: new PatternDefinition[]
+            {
+                new PatternDefinition("{tfm}/"),
+                new PatternDefinition("{tfm}-{rid}/")
+            });
+    }
 
-                ContentItemCollection contentCollection = new();
-                contentCollection.Load(frameworks.Select(f => f + '/').ToArray());
+    public static TargetFrameworkResolver CreateOrGet(string runtimeGraph)
+    {
+        return s_targetFrameworkResolverCache.GetOrAdd(runtimeGraph, static graph => new TargetFrameworkResolver(graph));
+    }
 
-                // The platform is expected to be passed-in lower-case but the SDK normalizes "windows" to "Windows" which is why it is lowered again.
-                SelectionCriteria criteria = _conventions.Criteria.ForFrameworkAndRuntime(frameworkWithoutPlatform, framework.Platform.ToLowerInvariant());
-                string? bestTargetFrameworkString = contentCollection.FindBestItemGroup(criteria, _configStringPattern)?.Items[0].Path;
+    public string? GetNearest(IEnumerable<string> frameworks, NuGetFramework framework)
+    {
+        // A single resolver instance is shared by every task that asks for the same runtime
+        // graph, and in MSBuild's multi-threaded mode those tasks run concurrently on the same
+        // node. NuGet's ManagedCodeConventions and PatternSet populate internal, non-concurrent
+        // caches while matching, so concurrent calls corrupt them. The work below is cheap
+        // compared to building the conventions (which parses the runtime graph), so serialize
+        // it rather than giving every thread its own resolver.
+        lock (_gate)
+        {
+            NuGetFramework frameworkWithoutPlatform = NuGetFramework.Parse(framework.DotNetFrameworkName);
 
-                return bestTargetFrameworkString?.Remove(bestTargetFrameworkString.Length - 1);
-            }
+            ContentItemCollection contentCollection = new();
+            contentCollection.Load(frameworks.Select(f => f + '/').ToArray());
+
+            // The platform is expected to be passed-in lower-case but the SDK normalizes "windows" to "Windows" which is why it is lowered again.
+            SelectionCriteria criteria = _conventions.Criteria.ForFrameworkAndRuntime(frameworkWithoutPlatform, framework.Platform.ToLowerInvariant());
+            string? bestTargetFrameworkString = contentCollection.FindBestItemGroup(criteria, _configStringPattern)?.Items[0].Path;
+
+            return bestTargetFrameworkString?.Remove(bestTargetFrameworkString.Length - 1);
         }
     }
 }
