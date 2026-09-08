@@ -12,13 +12,17 @@ references:
       name: helixkv
 
 keys:
-  # Retain the signing keys until both consumers are migrated to the
+  # Retain the signing keys until all consumers are migrated to the
   # github-app-secret private keys declared below.
   dotnet-monitor-release-app-key:
     type: RSA
     size: 2048
 
   oneloc-localization-app-key:
+    type: RSA
+    size: 2048
+
+  workload-versions-github-app-key:
     type: RSA
     size: 2048
 
@@ -31,6 +35,13 @@ secrets:
       hasOAuthSecret: false
 
   oneloc-localization-app:
+    type: github-app-secret
+    parameters:
+      hasPrivateKey: true
+      hasWebhookSecret: false
+      hasOAuthSecret: false
+
+  workload-versions-github-app:
     type: github-app-secret
     parameters:
       hasPrivateKey: true
