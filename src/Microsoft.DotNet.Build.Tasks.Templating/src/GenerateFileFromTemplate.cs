@@ -70,7 +70,10 @@ public class GenerateFileFromTemplate : Task, IMultiThreadableTask
 
     public override bool Execute()
     {
-        AbsolutePath resolvedOutputPath = TaskEnvironment.GetAbsolutePath(OutputPath.Replace('\\', '/'));
+        // GetAbsolutePath deliberately does not canonicalize, but this output property was
+        // produced by Path.GetFullPath, which also resolved "." and ".." and turned the forward
+        // slashes substituted just above back into the platform separator.
+        AbsolutePath resolvedOutputPath = TaskEnvironment.GetAbsolutePath(OutputPath.Replace('\\', '/')).GetCanonicalForm();
         ResolvedOutputPath = resolvedOutputPath;
 
         AbsolutePath templateFile = TaskEnvironment.GetAbsolutePath(TemplateFile);
@@ -106,7 +109,7 @@ public class GenerateFileFromTemplate : Task, IMultiThreadableTask
         return !Log.HasLoggedErrors;
     }
 
-    private bool FileContentsMatch(AbsolutePath path, byte[] expectedBytes)
+    private static bool FileContentsMatch(AbsolutePath path, byte[] expectedBytes)
     {
         var fileInfo = new FileInfo(path);
         if (!fileInfo.Exists || fileInfo.Length != expectedBytes.Length)

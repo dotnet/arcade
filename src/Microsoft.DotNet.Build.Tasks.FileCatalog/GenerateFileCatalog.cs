@@ -69,7 +69,7 @@ public class GenerateFileCatalog : Task, IMultiThreadableTask
                 return false;
             }
 
-            builder.AddFile(filePath);
+            builder.AddFile(new FileInfo(filePath));
         }
 
         string? directory = Path.GetDirectoryName(outputPath);
@@ -78,7 +78,7 @@ public class GenerateFileCatalog : Task, IMultiThreadableTask
             Directory.CreateDirectory(directory);
         }
 
-        builder.WriteTo(outputPath);
+        builder.WriteTo(new FileInfo(outputPath));
         Log.LogMessage(MessageImportance.High, "Generated catalog with {0} file(s): {1}", Files.Length, OutputPath);
         return !Log.HasLoggedErrors;
     }

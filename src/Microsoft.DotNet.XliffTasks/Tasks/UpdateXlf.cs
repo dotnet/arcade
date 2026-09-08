@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
@@ -20,7 +20,7 @@ public sealed class UpdateXlf : XlfTask
     public bool AllowModification { get; set; }
 
     private const string HowToUpdate =
-        "Run `dotnet build /t:UpdateXlf` to update .xlf files or set UpdateXlfOnBuild=true"
+        "Run `msbuild /t:UpdateXlf` to update .xlf files or set UpdateXlfOnBuild=true"
         + " to update them on every build, but note that it is strongly discouraged to set"
         + " UpdateXlfOnBuild=true in official/CI build environments as they should not"
         + " modify source code during the build.";
@@ -45,8 +45,9 @@ public sealed class UpdateXlf : XlfTask
                 {
                     xlfDocument = XlfTask.LoadXlfDocument(absoluteXlfPath, language, createIfNonExistent: AllowModification);
                 }
-                // LoadXlfDocument reports the absolute path it was given, so compare against that.
-                catch (FileNotFoundException fileNotFoundEx) when (fileNotFoundEx.FileName == absoluteXlfPath.Value)
+                // Document.Load opens the file through FileInfo.FullName, which canonicalizes it,
+                // so compare against the canonical form rather than the raw absolute path.
+                catch (FileNotFoundException fileNotFoundEx) when (fileNotFoundEx.FileName == absoluteXlfPath.GetCanonicalForm().Value)
                 {
                     Release.Assert(!AllowModification);
                     throw new BuildErrorException($"'{xlfPath}' for '{sourcePath}' does not exist. {HowToUpdate}");
@@ -71,8 +72,8 @@ public sealed class UpdateXlf : XlfTask
                     throw new BuildErrorException($"'{xlfPath}' is out-of-date with '{sourcePath}'. {HowToUpdate}");
                 }
 
-                Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(absoluteXlfPath)));
-                xlfDocument.Save(absoluteXlfPath);
+                Directory.CreateDirectory(Path.GetDirectoryName(absoluteXlfPath));
+                xlfDocument.Save(new FileInfo(absoluteXlfPath));
             }
         }
     }

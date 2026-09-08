@@ -1,7 +1,6 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.Build.Framework;
 using System;
 using System.IO;
 using System.Text;
@@ -27,9 +26,9 @@ internal abstract class Document
     /// <summary>
     /// Loads (or reloads) the document content from the given file path.
     /// </summary>
-    public void Load(AbsolutePath path)
+    public void Load(FileInfo path)
     {
-        using FileStream stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using FileStream stream = File.Open(path.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
         Load(stream);
     }
 
@@ -57,7 +56,7 @@ internal abstract class Document
     /// <summary>
     /// Saves the document's content to the given file path.
     /// </summary>
-    public void Save(AbsolutePath path)
+    public void Save(FileInfo path)
     {
         //On Windows:
         // Readers will prevent the file from being overwritten due to FileShare.Read.
@@ -68,7 +67,7 @@ internal abstract class Document
         // reading is happening, each reader will see file before or after overwrite, not in between
 
         EnsureContent();
-        AbsolutePath tempPath = new(Path.Combine(Path.GetDirectoryName(path), Path.GetRandomFileName()));
+        string tempPath = Path.Combine(path.Directory.FullName, Path.GetRandomFileName());
 
         using (FileStream stream = File.Open(tempPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
         {
@@ -77,17 +76,17 @@ internal abstract class Document
 
         ExponentialRetry.ExecuteWithRetryOnIOException(() =>
         {
-            if (File.Exists(path))
+            if (File.Exists(path.FullName))
             {
                 File.Replace(
                     sourceFileName: tempPath,
-                    destinationFileName: path,
+                    destinationFileName: path.FullName,
                     destinationBackupFileName: null,
                     ignoreMetadataErrors: true);
             }
             else
             {
-                File.Move(sourceFileName: tempPath, destFileName: path);
+                File.Move(sourceFileName: tempPath, destFileName: path.FullName);
             }
         }, maxRetryCount: 3);
     }

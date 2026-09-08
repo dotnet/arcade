@@ -76,7 +76,7 @@ public abstract class XlfTask : Task, IMultiThreadableTask
             };
         }
 
-        document.Load(path);
+        document.Load(new FileInfo(path));
         return document;
     }
 
@@ -86,7 +86,7 @@ public abstract class XlfTask : Task, IMultiThreadableTask
 
         if (File.Exists(path))
         {
-            document.Load(path);
+            document.Load(new FileInfo(path));
         }
         else if (createIfNonExistent)
         {

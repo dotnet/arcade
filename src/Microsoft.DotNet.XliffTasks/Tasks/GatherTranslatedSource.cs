@@ -110,7 +110,9 @@ public sealed class GatherTranslatedSource : XlfTask
         if (!string.IsNullOrEmpty(dependentUpon))
         {
             string sourceDirectory = Path.GetDirectoryName(xlf.GetMetadataOrThrow(MetadataKey.XlfSource));
-            dependentUpon = TaskEnvironment.GetAbsolutePath(Path.Combine(sourceDirectory, dependentUpon));
+            // Combining a directory with a relative DependentUpon routinely produces ".." segments
+            // that Path.GetFullPath used to resolve before this metadata was emitted.
+            dependentUpon = TaskEnvironment.GetAbsolutePath(Path.Combine(sourceDirectory, dependentUpon)).GetCanonicalForm();
             output.SetMetadata(MetadataKey.DependentUpon, dependentUpon);
         }
     }

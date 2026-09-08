@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
@@ -22,6 +22,7 @@ public sealed class TranslateSource : XlfTask
         string translatedFullPath = XlfFile.GetMetadataOrThrow(MetadataKey.XlfTranslatedFullPath);
 
         AbsolutePath sourceAbsolutePath = TaskEnvironment.GetAbsolutePath(sourcePath);
+        AbsolutePath translatedAbsolutePath = TaskEnvironment.GetAbsolutePath(translatedFullPath);
         TranslatableDocument sourceDocument = XlfTask.LoadSourceDocument(sourceAbsolutePath, XlfFile.GetMetadata(MetadataKey.XlfSourceFormat));
         XlfDocument xlfDocument = XlfTask.LoadXlfDocument(TaskEnvironment.GetAbsolutePath(XlfFile.ItemSpec));
 
@@ -38,9 +39,11 @@ public sealed class TranslateSource : XlfTask
 
         sourceDocument.Translate(translations);
 
-        Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(translatedFullPath)));
+        Directory.CreateDirectory(Path.GetDirectoryName(translatedAbsolutePath));
 
-        sourceDocument.RewriteRelativePathsToAbsolute(sourceAbsolutePath);
-        sourceDocument.Save(TaskEnvironment.GetAbsolutePath(translatedFullPath));
+        // These paths are written into the translated document, and Path.GetFullPath canonicalized
+        // them before they were embedded.
+        sourceDocument.RewriteRelativePathsToAbsolute(sourceAbsolutePath.GetCanonicalForm());
+        sourceDocument.Save(new FileInfo(translatedAbsolutePath));
     }
 }

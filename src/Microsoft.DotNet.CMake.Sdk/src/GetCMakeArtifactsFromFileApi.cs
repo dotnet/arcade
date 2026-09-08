@@ -106,7 +106,10 @@ public class GetCMakeArtifactsFromFileApi : Task, IMultiThreadableTask
             string sourceRoot = codeModel.Paths?.Source?.Replace('\\', '/').TrimEnd('/') ?? "";
 
             // Normalize source directory for comparison
-            string normalizedSourceDir = TaskEnvironment.GetAbsolutePath(SourceDirectory).Value.Replace('\\', '/').TrimEnd('/');
+            // GetAbsolutePath does not canonicalize, but this value is string-compared against
+            // dirSource below, and Path.GetFullPath used to resolve the "." and ".." segments that
+            // CMake's file API routinely emits.
+            string normalizedSourceDir = TaskEnvironment.GetAbsolutePath(SourceDirectory).GetCanonicalForm().Value.Replace('\\', '/').TrimEnd('/');
 
             // Find the configuration using LINQ
             var config = codeModel.Configurations?.FirstOrDefault(c => 
@@ -135,7 +138,7 @@ public class GetCMakeArtifactsFromFileApi : Task, IMultiThreadableTask
                 if (!Path.IsPathRooted(dirSource))
                 {
                     dirSource = Path.Combine(sourceRoot, dirSource);
-                    dirSource = TaskEnvironment.GetAbsolutePath(dirSource).Value.Replace('\\', '/').TrimEnd('/');
+                    dirSource = TaskEnvironment.GetAbsolutePath(dirSource).GetCanonicalForm().Value.Replace('\\', '/').TrimEnd('/');
                 }
                 
                 return string.Equals(dirSource, normalizedSourceDir, StringComparison.OrdinalIgnoreCase);
@@ -188,7 +191,10 @@ public class GetCMakeArtifactsFromFileApi : Task, IMultiThreadableTask
                             if (!string.IsNullOrEmpty(artifact.Path))
                             {
                                 string fullPath = Path.Combine(CMakeOutputDir, artifact.Path);
-                                fullPath = TaskEnvironment.GetAbsolutePath(fullPath);
+                                // Emitted as an item spec, and combining the output dir with a
+                                // CMake-relative artifact path routinely produces ".." segments
+                                // that Path.GetFullPath used to resolve.
+                                fullPath = TaskEnvironment.GetAbsolutePath(fullPath).GetCanonicalForm();
                                 
                                 var item = new TaskItem(fullPath);
                                 artifacts.Add(item);

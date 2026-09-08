@@ -97,10 +97,10 @@ public sealed class TransformTemplates : XlfTask
             {
                 // if not localizing anything, simply strip out the translation markers
                 UnstructuredDocument document = new();
-                document.Load(TaskEnvironment.GetAbsolutePath(templateItemFullPath));
+                document.Load(new FileInfo(TaskEnvironment.GetAbsolutePath(templateItemFullPath)));
                 Dictionary<string, string> defaultTranslation = document.Nodes.ToDictionary(node => node.Id, node => node.Source);
                 document.Translate(defaultTranslation);
-                document.Save(templateItemDestinationAbsolutePath);
+                document.Save(new FileInfo(templateItemDestinationAbsolutePath));
             }
             else
             {
