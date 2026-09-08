@@ -45,8 +45,9 @@ public sealed class UpdateXlf : XlfTask
                 {
                     xlfDocument = XlfTask.LoadXlfDocument(absoluteXlfPath, language, createIfNonExistent: AllowModification);
                 }
-                // LoadXlfDocument reports the absolute path it was given, so compare against that.
-                catch (FileNotFoundException fileNotFoundEx) when (fileNotFoundEx.FileName == absoluteXlfPath.Value)
+                // Document.Load opens the file through FileInfo.FullName, which canonicalizes it,
+                // so compare against the canonical form rather than the raw absolute path.
+                catch (FileNotFoundException fileNotFoundEx) when (fileNotFoundEx.FileName == absoluteXlfPath.GetCanonicalForm().Value)
                 {
                     Release.Assert(!AllowModification);
                     throw new BuildErrorException($"'{xlfPath}' for '{sourcePath}' does not exist. {HowToUpdate}");

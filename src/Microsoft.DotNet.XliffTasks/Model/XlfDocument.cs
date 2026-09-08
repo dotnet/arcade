@@ -312,10 +312,10 @@ internal sealed class XlfDocument : Document
     /// </summary>
     private static XmlSchemaSet CreateSchemaSet()
     {
-        System.IO.Stream xmlSchemaResourceStream = typeof(XlfDocument).Assembly.GetManifestResourceStream("XliffTasks.Model.xml.xsd");
-        XmlReader xmlSchemaReader = XmlReader.Create(xmlSchemaResourceStream);
-        System.IO.Stream xliffSchemaResourceStream = typeof(XlfDocument).Assembly.GetManifestResourceStream("XliffTasks.Model.xliff-core-1.2-transitional.xsd");
-        XmlReader xliffSchemaReader = XmlReader.Create(xliffSchemaResourceStream);
+        using System.IO.Stream xmlSchemaResourceStream = typeof(XlfDocument).Assembly.GetManifestResourceStream("XliffTasks.Model.xml.xsd");
+        using XmlReader xmlSchemaReader = XmlReader.Create(xmlSchemaResourceStream);
+        using System.IO.Stream xliffSchemaResourceStream = typeof(XlfDocument).Assembly.GetManifestResourceStream("XliffTasks.Model.xliff-core-1.2-transitional.xsd");
+        using XmlReader xliffSchemaReader = XmlReader.Create(xliffSchemaResourceStream);
 
         XmlSchemaSet schemas = new();
         schemas.Add(targetNamespace: null, xmlSchemaReader);
