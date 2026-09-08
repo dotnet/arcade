@@ -169,7 +169,9 @@ public class HelixApiAuthenticationTests
     [Fact]
     public async Task EntraCredentialReacquiresTokenAfterExpiration()
     {
-        var credential = new ShortLivedTokenCredential(TimeSpan.FromMilliseconds(200));
+        TimeSpan tokenLifetime = TimeSpan.FromMilliseconds(200);
+        TimeSpan expirationMargin = TimeSpan.FromMilliseconds(300);
+        var credential = new ShortLivedTokenCredential(tokenLifetime);
         using var httpClient = FakeHttpClient.WithResponses(
             new HttpResponseMessage(HttpStatusCode.OK),
             new HttpResponseMessage(HttpStatusCode.OK));
@@ -187,7 +189,7 @@ public class HelixApiAuthenticationTests
         await api.Pipeline.SendAsync(firstMessage, CancellationToken.None);
         Assert.True(firstMessage.Request.Headers.TryGetValue("Authorization", out string firstAuthorization));
 
-        await Task.Delay(TimeSpan.FromMilliseconds(500));
+        await Task.Delay(tokenLifetime + expirationMargin);
 
         using HttpMessage secondMessage = api.Pipeline.CreateMessage();
         secondMessage.Request.Method = RequestMethod.Get;
