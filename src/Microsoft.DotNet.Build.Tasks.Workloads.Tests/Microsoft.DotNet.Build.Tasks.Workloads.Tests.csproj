@@ -14,6 +14,8 @@
     <PackageReference Include="Microsoft.NET.Sdk.WorkloadManifestReader" />
     <PackageReference Include="Microsoft.WixToolset.Dtf.WindowsInstaller" />
     <PackageReference Include="Microsoft.WixToolset.Dtf.WindowsInstaller.Package" />
+    <!-- Pin the SWIX toolset used by workload tests independently of the Arcade SDK. -->
+    <PackageVersion Include="Microsoft.VisualStudioEng.MicroBuild.Plugins.SwixBuild" Version="1.1.922" />
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Plugins.SwixBuild" GeneratePathProperty="true" />
     <PackageReference Include="AwesomeAssertions" />
 
