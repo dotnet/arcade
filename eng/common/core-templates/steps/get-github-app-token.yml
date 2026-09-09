@@ -1,13 +1,10 @@
 # Mints a short-lived GitHub App installation access token by signing a JWT
-# with a private key stored in Azure Key Vault (RSA, RS256). The JWT is
-# exchanged with the GitHub API for a token scoped to a single installation.
+# with an RSA private key (RS256). The JWT is exchanged with the GitHub API
+# for a token scoped to a single installation.
 #
 # Requirements (per GitHub App you want to authenticate as):
-#   - A GitHub App with its private key uploaded into Key Vault as an RSA key
-#     (PEM converted to a key, NOT stored as a secret).
-#   - The Azure service connection passed via `azureSubscription` must be
-#     granted the `Key Vault Crypto User` role (or at minimum `Sign` action)
-#     on that key.
+#   - A GitHub App ID and PEM private key supplied by secret pipeline variables,
+#     or a legacy Key Vault RSA key and WIF service connection.
 #   - The App must be installed on the target organization/account
 #     (`installationOwner`) with the permissions/repositories you need.
 #
@@ -21,20 +18,39 @@ parameters:
 # `az keyvault key sign` on the App's signing key.
 - name: azureSubscription
   type: string
+  default: ''
 
 # Name of the Key Vault that holds the GitHub App's RSA signing key.
 - name: keyVaultName
   type: string
+  default: ''
 
 # Name of the RSA key inside the Key Vault (the App's private key).
 - name: keyName
   type: string
+  default: ''
 
 # The GitHub App's Client ID (the value to put in the `iss` JWT claim).
 # Prefer this over the numeric App ID; GitHub accepts either, but Client ID
 # is the documented form going forward.
 - name: appClientId
   type: string
+  default: ''
+
+# Secret pipeline values produced by Secret Manager's github-app-secret type.
+- name: appId
+  type: string
+  default: ''
+
+- name: appPrivateKey
+  type: string
+  default: ''
+
+# Use the Secret Manager App ID and PEM private key instead of legacy Key
+# Vault-key signing.
+- name: useSecretManagerValues
+  type: boolean
+  default: false
 
 # Login of the organization or user account whose installation we should
 # mint the token for (e.g. `dotnet`, `microsoft`).
@@ -61,19 +77,39 @@ parameters:
   default: Get GitHub App installation token
 
 steps:
-- task: AzureCLI@2
-  displayName: ${{ parameters.displayName }}
-  name: ${{ parameters.stepName }}
-  ${{ if ne(parameters.condition, '') }}:
-    condition: ${{ parameters.condition }}
-  inputs:
-    azureSubscription: ${{ parameters.azureSubscription }}
-    scriptType: pscore
-    scriptLocation: inlineScript
-    inlineScript: |
-      & "$(System.DefaultWorkingDirectory)/eng/common/Get-GitHubAppToken.ps1" `
-          -KeyVaultName '${{ parameters.keyVaultName }}' `
-          -KeyName '${{ parameters.keyName }}' `
-          -AppClientId '${{ parameters.appClientId }}' `
-          -InstallationOwner '${{ parameters.installationOwner }}' `
-          -OutputVariableName '${{ parameters.outputVariableName }}'
+- ${{ if eq(parameters.useSecretManagerValues, true) }}:
+  - task: PowerShell@2
+    displayName: ${{ parameters.displayName }}
+    name: ${{ parameters.stepName }}
+    ${{ if ne(parameters.condition, '') }}:
+      condition: ${{ parameters.condition }}
+    inputs:
+      targetType: filePath
+      filePath: $(System.DefaultWorkingDirectory)/eng/common/Get-GitHubAppToken.ps1
+      arguments: >-
+        -AppIdEnvironmentVariableName GITHUB_APP_ID
+        -PrivateKeyEnvironmentVariableName GITHUB_APP_PRIVATE_KEY
+        -InstallationOwner '${{ parameters.installationOwner }}'
+        -OutputVariableName '${{ parameters.outputVariableName }}'
+      pwsh: true
+    env:
+      GITHUB_APP_ID: ${{ parameters.appId }}
+      GITHUB_APP_PRIVATE_KEY: ${{ parameters.appPrivateKey }}
+
+- ${{ else }}:
+  - task: AzureCLI@2
+    displayName: ${{ parameters.displayName }}
+    name: ${{ parameters.stepName }}
+    ${{ if ne(parameters.condition, '') }}:
+      condition: ${{ parameters.condition }}
+    inputs:
+      azureSubscription: ${{ parameters.azureSubscription }}
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        & "$(System.DefaultWorkingDirectory)/eng/common/Get-GitHubAppToken.ps1" `
+            -KeyVaultName '${{ parameters.keyVaultName }}' `
+            -KeyName '${{ parameters.keyName }}' `
+            -AppClientId '${{ parameters.appClientId }}' `
+            -InstallationOwner '${{ parameters.installationOwner }}' `
+            -OutputVariableName '${{ parameters.outputVariableName }}'
