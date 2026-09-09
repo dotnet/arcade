@@ -1170,6 +1170,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
     {
         List<Task> publishTasks = new List<Task>();
         List<(TargetFeedConfig FeedConfig, HashSet<BlobArtifactModel> Blobs)> blobPublishMappings = new();
+        HashSet<BlobUploadDestination> invalidUploadDestinations = new();
 
         // Just log a empty line for better visualization of the logs
         Log.LogMessage(MessageImportance.High, "\nBegin publishing of blobs: ");
@@ -1202,6 +1203,18 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
             }
         }
 
+        foreach (var mapping in blobPublishMappings.Where(mapping => mapping.FeedConfig.Type != FeedType.AzureStorageContainer))
+        {
+            var publisher = AssetPublisherFactory.CreateAssetPublisher(mapping.FeedConfig, this);
+            publishTasks.Add(Task.Run(async () =>
+                await PublishAssetsAsync(
+                    publisher,
+                    mapping.Blobs,
+                    buildAssets,
+                    mapping.FeedConfig,
+                    clientThrottle)));
+        }
+
         foreach (var mappingsByUploadDestination in blobPublishMappings
             .Where(mapping => mapping.FeedConfig.Type == FeedType.AzureStorageContainer)
             .SelectMany(mapping => mapping.Blobs.Select(blob => (mapping.FeedConfig, Blob: blob)))
@@ -1210,38 +1223,60 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                 GetCanonicalTargetUrl(mapping.FeedConfig.TargetURL),
                 mapping.Blob.Id.Replace("\\", "/"))))
         {
-            bool allowOverwrite = mappingsByUploadDestination.First().FeedConfig.AllowOverwrite;
-            if (mappingsByUploadDestination.Any(mapping => mapping.FeedConfig.AllowOverwrite != allowOverwrite))
+            var mappings = mappingsByUploadDestination.ToList();
+            bool allowOverwrite = mappings[0].FeedConfig.AllowOverwrite;
+            if (mappings.Any(mapping => mapping.FeedConfig.AllowOverwrite != allowOverwrite))
             {
                 Log.LogError($"Conflicting AllowOverwrite values were specified for blob '{mappingsByUploadDestination.Key.BlobPath}' at '{mappingsByUploadDestination.Key.TargetUrl}'.");
+                invalidUploadDestinations.Add(mappingsByUploadDestination.Key);
                 continue;
             }
 
-            var firstMapping = mappingsByUploadDestination.First();
-            var blobsToPublish = mappingsByUploadDestination.Select(mapping => mapping.Blob).ToHashSet();
-            if (mappingsByUploadDestination.Count() > 1)
+            var uploadTargetUrls = mappings
+                .Select(mapping => GetUploadTargetUrlIdentity(mapping.FeedConfig.TargetURL))
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
+            if (uploadTargetUrls.Count > 1)
             {
-                Log.LogMessage(MessageImportance.High,
-                    $"Collapsed {mappingsByUploadDestination.Count()} blob publish mappings to one upload for '{mappingsByUploadDestination.Key.BlobPath}' at '{mappingsByUploadDestination.Key.TargetUrl}'.");
+                Log.LogError($"Conflicting target URLs were specified for blob '{mappingsByUploadDestination.Key.BlobPath}' at '{mappingsByUploadDestination.Key.TargetUrl}'.");
+                invalidUploadDestinations.Add(mappingsByUploadDestination.Key);
+                continue;
             }
 
-            var publisher = AssetPublisherFactory.CreateAssetPublisher(firstMapping.FeedConfig, this);
+            var selectedMapping = mappings
+                .OrderBy(mapping => mapping.FeedConfig.TargetURL, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(mapping => mapping.FeedConfig.TargetURL, StringComparer.Ordinal)
+                .First();
+            var blobsToPublish = mappings.Select(mapping => mapping.Blob).ToHashSet();
+            if (mappings.Count > 1)
+            {
+                Log.LogMessage(MessageImportance.High,
+                    $"Collapsed {mappings.Count} blob publish mappings to one upload for '{mappingsByUploadDestination.Key.BlobPath}' at '{mappingsByUploadDestination.Key.TargetUrl}'.");
+            }
+
+            var publisher = AssetPublisherFactory.CreateAssetPublisher(selectedMapping.FeedConfig, this);
             publishTasks.Add(Task.Run(async () =>
                 await PublishAssetsAsync(
                     publisher,
                     blobsToPublish,
                     buildAssets,
-                    firstMapping.FeedConfig,
+                    selectedMapping.FeedConfig,
                     clientThrottle)));
         }
 
         await Task.WhenAll(publishTasks);
 
-        if (!Log.HasLoggedErrors)
+        foreach (var mapping in blobPublishMappings)
         {
-            foreach (var mapping in blobPublishMappings)
+            var publishedBlobs = mapping.Blobs
+                .Where(blob => !invalidUploadDestinations.Contains(new BlobUploadDestination(
+                    mapping.FeedConfig.Type,
+                    GetCanonicalTargetUrl(mapping.FeedConfig.TargetURL),
+                    blob.Id.Replace("\\", "/"))))
+                .ToHashSet();
+            if (publishedBlobs.Count > 0)
             {
-                await CreateOrUpdateLatestLinksAsync(mapping.Blobs, mapping.FeedConfig);
+                await CreateOrUpdateLatestLinksAsync(publishedBlobs, mapping.FeedConfig);
             }
         }
 
@@ -1253,6 +1288,16 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         var targetUri = new Uri(targetUrl);
         var targetUriBuilder = new UriBuilder(targetUri) { Query = string.Empty, Fragment = string.Empty };
         return targetUriBuilder.Uri.AbsoluteUri.TrimEnd('/');
+    }
+
+    private static string GetUploadTargetUrlIdentity(string targetUrl)
+    {
+        var targetUriBuilder = new UriBuilder(targetUrl)
+        {
+            Fragment = string.Empty
+        };
+        targetUriBuilder.Path = targetUriBuilder.Path.TrimEnd('/');
+        return targetUriBuilder.Uri.AbsoluteUri;
     }
 
     private readonly record struct BlobUploadDestination(FeedType FeedType, string TargetUrl, string BlobPath);

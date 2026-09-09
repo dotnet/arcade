@@ -130,7 +130,13 @@ public class PublishArtifactsInManifestTests
             _publisher = publisher;
         }
 
-        public override IAssetPublisher CreateAssetPublisher(TargetFeedConfig feedConfig, PublishArtifactsInManifestBase task) => _publisher;
+        public List<TargetFeedConfig> FeedConfigs { get; } = new();
+
+        public override IAssetPublisher CreateAssetPublisher(TargetFeedConfig feedConfig, PublishArtifactsInManifestBase task)
+        {
+            FeedConfigs.Add(feedConfig);
+            return _publisher;
+        }
     }
 
     private sealed class TestableBlobPublishingTask : PublishArtifactsInManifestBase
@@ -248,6 +254,14 @@ public class PublishArtifactsInManifestTests
         IEnumerable<BlobArtifactModel> blobs,
         params TargetFeedConfig[] feedConfigs)
     {
+        return CreateBlobPublishingTask(new RecordingAssetPublisherFactory(publisher), blobs, feedConfigs);
+    }
+
+    private static (TestableBlobPublishingTask Task, string BlobDirectory) CreateBlobPublishingTask(
+        RecordingAssetPublisherFactory publisherFactory,
+        IEnumerable<BlobArtifactModel> blobs,
+        params TargetFeedConfig[] feedConfigs)
+    {
         string blobDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(blobDirectory);
         foreach (var blob in blobs)
@@ -255,7 +269,7 @@ public class PublishArtifactsInManifestTests
             File.WriteAllText(Path.Combine(blobDirectory, Path.GetFileName(blob.Id)), "test");
         }
 
-        var task = new TestableBlobPublishingTask(new RecordingAssetPublisherFactory(publisher))
+        var task = new TestableBlobPublishingTask(publisherFactory)
         {
             BlobAssetsBasePath = blobDirectory,
             BuildEngine = new MockBuildEngine(),
@@ -271,8 +285,8 @@ public class PublishArtifactsInManifestTests
     {
         var publisher = new RecordingAssetPublisher();
         var blob = CreateBlob("asset.zip");
-        var firstConfig = CreateBlobFeedConfig("https://storage.example.net/public?first", "dotnet/first");
-        var secondConfig = CreateBlobFeedConfig("https://storage.example.net/public?second", "dotnet/second");
+        var firstConfig = CreateBlobFeedConfig("https://storage.example.net/public", "dotnet/first");
+        var secondConfig = CreateBlobFeedConfig("https://storage.example.net/public", "dotnet/second");
         var (task, blobDirectory) = CreateBlobPublishingTask(publisher, [blob], firstConfig, secondConfig);
 
         try
@@ -282,6 +296,121 @@ public class PublishArtifactsInManifestTests
             publisher.PublishedBlobPaths.Should().ContainSingle().Which.Should().Be("asset.zip");
             task.LatestLinkRequests.Should().HaveCount(2);
             task.LatestLinkRequests.Select(request => request.FeedConfig).Should().BeEquivalentTo([firstConfig, secondConfig]);
+        }
+        finally
+        {
+            Directory.Delete(blobDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task HandleBlobPublishingAsyncSelectsUploadConfigDeterministically()
+    {
+        var publisher = new RecordingAssetPublisher();
+        var publisherFactory = new RecordingAssetPublisherFactory(publisher);
+        var blob = CreateBlob("asset.zip");
+        var configWithTrailingSlash = CreateBlobFeedConfig("https://storage.example.net/public/", "dotnet/first");
+        var configWithoutTrailingSlash = CreateBlobFeedConfig("https://storage.example.net/public", "dotnet/second");
+        var (task, blobDirectory) = CreateBlobPublishingTask(
+            publisherFactory,
+            [blob],
+            configWithTrailingSlash,
+            configWithoutTrailingSlash);
+
+        try
+        {
+            await task.PublishBlobsAsync();
+
+            publisher.PublishedBlobPaths.Should().ContainSingle();
+            publisherFactory.FeedConfigs.Should().ContainSingle()
+                .Which.TargetURL.Should().Be(configWithoutTrailingSlash.TargetURL);
+        }
+        finally
+        {
+            Directory.Delete(blobDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task HandleBlobPublishingAsyncRejectsConflictingTargetUrlQueries()
+    {
+        var publisher = new RecordingAssetPublisher();
+        var blob = CreateBlob("asset.zip");
+        var firstConfig = CreateBlobFeedConfig("https://storage.example.net/public?first", "dotnet/first");
+        var secondConfig = CreateBlobFeedConfig("https://storage.example.net/public?second", "dotnet/second");
+        var (task, blobDirectory) = CreateBlobPublishingTask(publisher, [blob], firstConfig, secondConfig);
+
+        try
+        {
+            await task.PublishBlobsAsync();
+
+            publisher.PublishedBlobPaths.Should().BeEmpty();
+            task.LatestLinkRequests.Should().BeEmpty();
+            task.Log.HasLoggedErrors.Should().BeTrue();
+        }
+        finally
+        {
+            Directory.Delete(blobDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task HandleBlobPublishingAsyncPreservesLinksForMappingsWithoutConflicts()
+    {
+        var publisher = new RecordingAssetPublisher();
+        var shippingBlob = CreateBlob("shipping.zip");
+        var nonShippingBlob = CreateBlob("nonshipping.zip", nonShipping: true);
+        var conflictingConfig = CreateBlobFeedConfig(
+            "https://storage.example.net/conflict",
+            "dotnet/conflict",
+            AssetSelection.ShippingOnly);
+        var conflictingOverwriteConfig = CreateBlobFeedConfig(
+            "https://storage.example.net/conflict",
+            "dotnet/conflict-overwrite",
+            AssetSelection.ShippingOnly,
+            allowOverwrite: true);
+        var validConfig = CreateBlobFeedConfig(
+            "https://storage.example.net/valid",
+            "dotnet/valid",
+            AssetSelection.NonShippingOnly);
+        var (task, blobDirectory) = CreateBlobPublishingTask(
+            publisher,
+            [shippingBlob, nonShippingBlob],
+            conflictingConfig,
+            conflictingOverwriteConfig,
+            validConfig);
+
+        try
+        {
+            await task.PublishBlobsAsync();
+
+            publisher.PublishedBlobPaths.Should().ContainSingle().Which.Should().Be(nonShippingBlob.Id);
+            task.LatestLinkRequests.Should().ContainSingle();
+            task.LatestLinkRequests[0].Blobs.Should().ContainSingle().Which.Should().Be(nonShippingBlob);
+            task.LatestLinkRequests[0].FeedConfig.Should().Be(validConfig);
+            task.Log.HasLoggedErrors.Should().BeTrue();
+        }
+        finally
+        {
+            Directory.Delete(blobDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task HandleBlobPublishingAsyncIgnoresUnrelatedLoggedErrorsWhenCreatingLinks()
+    {
+        var publisher = new RecordingAssetPublisher();
+        var blob = CreateBlob("asset.zip");
+        var config = CreateBlobFeedConfig("https://storage.example.net/public", "dotnet/first");
+        var (task, blobDirectory) = CreateBlobPublishingTask(publisher, [blob], config);
+        task.Log.LogError("Unrelated publishing error");
+
+        try
+        {
+            await task.PublishBlobsAsync();
+
+            publisher.PublishedBlobPaths.Should().ContainSingle();
+            task.LatestLinkRequests.Should().ContainSingle();
         }
         finally
         {
