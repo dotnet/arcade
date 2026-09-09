@@ -13,14 +13,6 @@ parameters:
   GitHubAppId: $(oneloc-localization-app-app-id)
   GitHubAppPrivateKey: $(oneloc-localization-app-app-private-key)
 
-  # Legacy Key Vault-key signing parameters are retained temporarily for
-  # callers that explicitly opt out of Secret Manager values.
-  UseGitHubAppSecretManagerValues: true
-  GitHubAppServiceConnection: ''
-  GitHubAppClientId: ''
-  GitHubAppKeyVaultName: ''
-  GitHubAppKeyName: ''
-
   SourcesDirectory: $(System.DefaultWorkingDirectory)
   CreatePr: true
   AutoCompletePr: false
@@ -102,16 +94,8 @@ jobs:
       - template: /eng/common/core-templates/steps/get-github-app-token.yml
         parameters:
           is1ESPipeline: ${{ parameters.is1ESPipeline }}
-          useSecretManagerValues: ${{ parameters.UseGitHubAppSecretManagerValues }}
           appId: ${{ parameters.GitHubAppId }}
           appPrivateKey: ${{ parameters.GitHubAppPrivateKey }}
-          ${{ if and(eq(variables['System.TeamProject'], 'DevDiv'), eq(parameters.GitHubAppServiceConnection, 'dnceng-oneloc-githubapp')) }}:
-            azureSubscription: 'devdiv-oneloc-githubapp'
-          ${{ else }}:
-            azureSubscription: ${{ parameters.GitHubAppServiceConnection }}
-          keyVaultName: ${{ parameters.GitHubAppKeyVaultName }}
-          keyName: ${{ parameters.GitHubAppKeyName }}
-          appClientId: ${{ parameters.GitHubAppClientId }}
           installationOwner: ${{ parameters.GitHubOrg }}
           outputVariableName: 'GitHubAppInstallationToken'
           condition: ${{ parameters.condition }}

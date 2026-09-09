@@ -3,8 +3,7 @@
 # API for a token scoped to a single installation.
 #
 # Requirements:
-#   - A GitHub App private key supplied through the environment, or a legacy
-#     Azure Key Vault RSA key accessible to the current Azure identity.
+#   - A GitHub App ID and PEM private key supplied through the environment.
 #   - The App must be installed on the target organization/account
 #     (`InstallationOwner`) with the permissions/repositories it needs.
 #
@@ -13,18 +12,6 @@
 
 [CmdletBinding()]
 param(
-    # Name of the Key Vault that holds the GitHub App's RSA signing key.
-    [Parameter(Mandatory = $false)]
-    [string] $KeyVaultName,
-
-    # Name of the RSA key inside the Key Vault (the App's private key).
-    [Parameter(Mandatory = $false)]
-    [string] $KeyName,
-
-    # The GitHub App's Client ID (the value to put in the `iss` JWT claim).
-    [Parameter(Mandatory = $false)]
-    [string] $AppClientId,
-
     # Login of the organization or user account whose installation we should
     # mint the token for (e.g. `dotnet`, `microsoft`).
     [Parameter(Mandatory = $true)]
@@ -36,9 +23,8 @@ param(
     [Parameter(Mandatory = $false)]
     [string] $OutputVariableName
 )
-
 $ErrorActionPreference = 'Stop'
-$PSNativeCommandUseErrorActionPreference = $true
+$ErrorActionPreference = 'Stop'
 
 . $PSScriptRoot\pipeline-logging-functions.ps1
 
@@ -46,30 +32,15 @@ function ConvertTo-Base64Url([byte[]] $bytes) {
     return [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
 }
 
-$usesSecretManagerValues =
-    -not [string]::IsNullOrWhiteSpace($env:GITHUB_APP_ID) -or
-    -not [string]::IsNullOrWhiteSpace($env:GITHUB_APP_PRIVATE_KEY)
-
-if ($usesSecretManagerValues) {
-    $appId = $env:GITHUB_APP_ID
-    $privateKey = $env:GITHUB_APP_PRIVATE_KEY
-    if ([string]::IsNullOrWhiteSpace($appId) -or [string]::IsNullOrWhiteSpace($privateKey)) {
-        Write-PipelineTelemetryError -Category 'Build' -Message "GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY must both be set when using Secret Manager values. Verify the pipeline's Key Vault-backed variable group includes both values."
-        exit 1
-    }
-    if ($appId -match '^\$\([^)]+\)$' -or $privateKey -match '^\$\([^)]+\)$') {
-        Write-PipelineTelemetryError -Category 'Build' -Message "The GitHub App ID or private key is an unresolved pipeline variable. Verify the pipeline includes and is authorized to use its Key Vault-backed variable group."
-        exit 1
-    }
+$appId = $env:GITHUB_APP_ID
+$privateKey = $env:GITHUB_APP_PRIVATE_KEY
+if ([string]::IsNullOrWhiteSpace($appId) -or [string]::IsNullOrWhiteSpace($privateKey)) {
+    Write-PipelineTelemetryError -Category 'Build' -Message "GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY must both be set. Verify the pipeline's Key Vault-backed variable group includes both github-app-secret values."
+    exit 1
 }
-else {
-    if ([string]::IsNullOrWhiteSpace($KeyVaultName) -or
-        [string]::IsNullOrWhiteSpace($KeyName) -or
-        [string]::IsNullOrWhiteSpace($AppClientId)) {
-        Write-PipelineTelemetryError -Category 'Build' -Message 'KeyVaultName, KeyName, and AppClientId are required when using legacy Key Vault signing.'
-        exit 1
-    }
-    $appId = $AppClientId
+if ($appId -match '^\$\([^)]+\)$' -or $privateKey -match '^\$\([^)]+\)$') {
+    Write-PipelineTelemetryError -Category 'Build' -Message "The GitHub App ID or private key is an unresolved pipeline variable. Verify the pipeline includes and is authorized to use its Key Vault-backed variable group."
+    exit 1
 }
 
 # Build JWT header and payload. Use [ordered] hashtables so JSON
@@ -97,56 +68,22 @@ finally {
     $sha256.Dispose()
 }
 
-if ($usesSecretManagerValues) {
-    Write-Host 'Signing JWT with the Secret Manager private key...'
-    $rsa = [System.Security.Cryptography.RSA]::Create()
-    try {
-        $rsa.ImportFromPem($privateKey)
-        $signatureBytes = $rsa.SignHash(
-            $digestBytes,
-            [System.Security.Cryptography.HashAlgorithmName]::SHA256,
-            [System.Security.Cryptography.RSASignaturePadding]::Pkcs1)
-        $signatureUrl = ConvertTo-Base64Url $signatureBytes
-    }
-    catch {
-        Write-PipelineTelemetryError -Category 'Build' -Message "Failed to sign the GitHub App JWT with the Secret Manager private key: $_"
-        exit 1
-    }
-    finally {
-        $rsa.Dispose()
-    }
+Write-Host 'Signing JWT with the Secret Manager private key...'
+$rsa = [System.Security.Cryptography.RSA]::Create()
+try {
+    $rsa.ImportFromPem($privateKey)
+    $signatureBytes = $rsa.SignHash(
+        $digestBytes,
+        [System.Security.Cryptography.HashAlgorithmName]::SHA256,
+        [System.Security.Cryptography.RSASignaturePadding]::Pkcs1)
+    $signatureUrl = ConvertTo-Base64Url $signatureBytes
 }
-else {
-    # Key Vault `sign` expects the digest (base64), not the raw bytes.
-    $digestBase64 = [Convert]::ToBase64String($digestBytes)
-    Write-Host "Signing JWT with key '$KeyName' in vault '$KeyVaultName'..."
-    $previousNativeCommandErrorPreference = $PSNativeCommandUseErrorActionPreference
-    try {
-        # Azure CLI can emit non-fatal Python warnings to stderr even when signing succeeds.
-        # Use the exit code to determine success for this invocation.
-        $PSNativeCommandUseErrorActionPreference = $false
-        $signatureBase64 = az keyvault key sign `
-            --vault-name $KeyVaultName `
-            --name $KeyName `
-            --algorithm RS256 `
-            --digest $digestBase64 `
-            --query signature `
-            --output tsv `
-            --only-show-errors
-        $signExitCode = $LASTEXITCODE
-    }
-    catch {
-        Write-PipelineTelemetryError -Category 'Build' -Message "Failed to sign the JWT via Key Vault (key '$KeyName', vault '$KeyVaultName'): $_. Verify the service connection identity has the 'Key Vault Crypto User' role (Sign action) on the key."
-        exit 1
-    }
-    finally {
-        $PSNativeCommandUseErrorActionPreference = $previousNativeCommandErrorPreference
-    }
-    if ($signExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($signatureBase64)) {
-        Write-PipelineTelemetryError -Category 'Build' -Message "'az keyvault key sign' exited with code $signExitCode for key '$KeyName' in vault '$KeyVaultName'. Verify the service connection identity has the 'Key Vault Crypto User' role (Sign action) on the key."
-        exit 1
-    }
-    $signatureUrl = $signatureBase64.Trim().TrimEnd('=').Replace('+', '-').Replace('/', '_')
+catch {
+    Write-PipelineTelemetryError -Category 'Build' -Message "Failed to sign the GitHub App JWT with the Secret Manager private key: $_"
+    exit 1
+}
+finally {
+    $rsa.Dispose()
 }
 $jwt = "$signingInput.$signatureUrl"
 

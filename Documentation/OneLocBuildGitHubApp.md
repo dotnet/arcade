@@ -89,7 +89,6 @@ The variable group must contain `oneloc-localization-app-app-id` and
 |:-:|:-:|-|
 | `GitHubAppId` | `$(oneloc-localization-app-app-id)` | Secret Manager-managed GitHub App ID from `OneLocBuildVariables`. |
 | `GitHubAppPrivateKey` | `$(oneloc-localization-app-app-private-key)` | Secret Manager-managed PEM private key from `OneLocBuildVariables`. |
-| `UseGitHubAppSecretManagerValues` | `true` | Set to `false` only during migration to use the legacy Key Vault-key parameters. |
 
 The token is minted for the installation on the `GitHubOrg` account (default `dotnet`), so make sure
 `GitHubOrg` (and `MirrorRepo`, if mirroring) point at the org/repo where the App is installed.

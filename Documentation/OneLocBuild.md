@@ -205,7 +205,6 @@ The parameters that can be passed to the template are as follows:
 | `CeapexServiceConnection` | `'dnceng-onelocbuild-ceapex'` | The project-scoped WIF service connection used to acquire a short-lived token for the Ceapex feeds. OneLocBuild supports only `dnceng/internal` and `DevDiv/DevDiv`; pipelines must be authorized to use the connection. |
 | `GitHubAppId` | `$(oneloc-localization-app-app-id)` | Secret Manager-managed GitHub App ID from `OneLocBuildVariables`. |
 | `GitHubAppPrivateKey` | `$(oneloc-localization-app-app-private-key)` | Secret Manager-managed PEM private key from `OneLocBuildVariables`. |
-| `UseGitHubAppSecretManagerValues` | `true` | Set to `false` only during migration to use the legacy Key Vault-key parameters. |
 | `condition` | `''` | Allows for conditionalizing the template's steps on build-time variables. |
 | `JobNameSuffix` | `''` | Allows for custom job name suffix. This is helpful for disambiguation in case of need for more then one OneLocBuild job run - e.g. as a way to set multiple package IDs. |
 
