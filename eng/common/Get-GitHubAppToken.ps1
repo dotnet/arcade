@@ -34,11 +34,11 @@ function ConvertTo-Base64Url([byte[]] $bytes) {
 $appId = $env:GITHUB_APP_ID
 $privateKey = $env:GITHUB_APP_PRIVATE_KEY
 if ([string]::IsNullOrWhiteSpace($appId) -or [string]::IsNullOrWhiteSpace($privateKey)) {
-    Write-PipelineTelemetryError -Category 'Build' -Message "GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY must both be set. Verify the pipeline's Key Vault-backed variable group includes both github-app-secret values."
+    Write-PipelineTelemetryError -Category 'Build' -Message "GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY must both be set. Verify both values are supplied as secret pipeline variables."
     exit 1
 }
 if ($appId -match '^\$\([^)]+\)$' -or $privateKey -match '^\$\([^)]+\)$') {
-    Write-PipelineTelemetryError -Category 'Build' -Message "The GitHub App ID or private key is an unresolved pipeline variable. Verify the pipeline includes and is authorized to use its Key Vault-backed variable group."
+    Write-PipelineTelemetryError -Category 'Build' -Message "The GitHub App ID or private key is an unresolved pipeline variable. Verify the pipeline resolves both secret variables before this task runs."
     exit 1
 }
 
@@ -67,7 +67,7 @@ finally {
     $sha256.Dispose()
 }
 
-Write-Host 'Signing JWT with the Secret Manager private key...'
+Write-Host 'Signing JWT with the GitHub App private key...'
 $rsa = [System.Security.Cryptography.RSA]::Create()
 try {
     $rsa.ImportFromPem($privateKey)
@@ -78,7 +78,7 @@ try {
     $signatureUrl = ConvertTo-Base64Url $signatureBytes
 }
 catch {
-    Write-PipelineTelemetryError -Category 'Build' -Message "Failed to sign the GitHub App JWT with the Secret Manager private key: $_"
+    Write-PipelineTelemetryError -Category 'Build' -Message "Failed to sign the GitHub App JWT with the supplied private key: $_"
     exit 1
 }
 finally {
