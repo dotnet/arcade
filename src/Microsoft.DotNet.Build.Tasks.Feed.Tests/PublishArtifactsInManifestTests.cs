@@ -304,6 +304,35 @@ public class PublishArtifactsInManifestTests
     }
 
     [Fact]
+    public async Task HandleBlobPublishingAsyncBatchesDeduplicatedBlobsByUploadConfiguration()
+    {
+        var publisher = new RecordingAssetPublisher();
+        var publisherFactory = new RecordingAssetPublisherFactory(publisher);
+        var firstBlob = CreateBlob("first.zip");
+        var secondBlob = CreateBlob("second.zip");
+        var firstConfig = CreateBlobFeedConfig("https://storage.example.net/public", "dotnet/first");
+        var secondConfig = CreateBlobFeedConfig("https://storage.example.net/public", "dotnet/second");
+        var (task, blobDirectory) = CreateBlobPublishingTask(
+            publisherFactory,
+            [firstBlob, secondBlob],
+            firstConfig,
+            secondConfig);
+
+        try
+        {
+            await task.PublishBlobsAsync();
+
+            publisher.PublishedBlobPaths.Should().BeEquivalentTo([firstBlob.Id, secondBlob.Id]);
+            publisherFactory.FeedConfigs.Should().ContainSingle();
+            task.LatestLinkRequests.Should().HaveCount(2);
+        }
+        finally
+        {
+            Directory.Delete(blobDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task HandleBlobPublishingAsyncSelectsUploadConfigDeterministically()
     {
         var publisher = new RecordingAssetPublisher();
@@ -422,17 +451,19 @@ public class PublishArtifactsInManifestTests
     public async Task HandleBlobPublishingAsyncDoesNotDeduplicateDifferentDestinationsOrBlobPaths()
     {
         var publisher = new RecordingAssetPublisher();
+        var publisherFactory = new RecordingAssetPublisherFactory(publisher);
         var firstBlob = CreateBlob("first.zip");
         var secondBlob = CreateBlob("second.zip");
         var firstConfig = CreateBlobFeedConfig("https://storage.example.net/first", "dotnet/first");
         var secondConfig = CreateBlobFeedConfig("https://storage.example.net/second", "dotnet/second");
-        var (task, blobDirectory) = CreateBlobPublishingTask(publisher, [firstBlob, secondBlob], firstConfig, secondConfig);
+        var (task, blobDirectory) = CreateBlobPublishingTask(publisherFactory, [firstBlob, secondBlob], firstConfig, secondConfig);
 
         try
         {
             await task.PublishBlobsAsync();
 
             publisher.PublishedBlobPaths.Should().HaveCount(4);
+            publisherFactory.FeedConfigs.Should().HaveCount(2);
         }
         finally
         {

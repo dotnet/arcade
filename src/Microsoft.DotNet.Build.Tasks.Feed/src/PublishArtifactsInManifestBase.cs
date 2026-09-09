@@ -1170,6 +1170,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
     {
         List<Task> publishTasks = new List<Task>();
         List<(TargetFeedConfig FeedConfig, HashSet<BlobArtifactModel> Blobs)> blobPublishMappings = new();
+        List<(TargetFeedConfig FeedConfig, BlobArtifactModel Blob)> azureBlobUploads = new();
         HashSet<BlobUploadDestination> invalidUploadDestinations = new();
 
         // Just log a empty line for better visualization of the logs
@@ -1206,13 +1207,12 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         foreach (var mapping in blobPublishMappings.Where(mapping => mapping.FeedConfig.Type != FeedType.AzureStorageContainer))
         {
             var publisher = AssetPublisherFactory.CreateAssetPublisher(mapping.FeedConfig, this);
-            publishTasks.Add(Task.Run(async () =>
-                await PublishAssetsAsync(
-                    publisher,
-                    mapping.Blobs,
-                    buildAssets,
-                    mapping.FeedConfig,
-                    clientThrottle)));
+            publishTasks.Add(PublishAssetsAsync(
+                publisher,
+                mapping.Blobs,
+                buildAssets,
+                mapping.FeedConfig,
+                clientThrottle));
         }
 
         foreach (var mappingsByUploadDestination in blobPublishMappings
@@ -1247,21 +1247,36 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                 .OrderBy(mapping => mapping.FeedConfig.TargetURL, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(mapping => mapping.FeedConfig.TargetURL, StringComparer.Ordinal)
                 .First();
-            var blobsToPublish = mappings.Select(mapping => mapping.Blob).ToHashSet();
             if (mappings.Count > 1)
             {
                 Log.LogMessage(MessageImportance.High,
                     $"Collapsed {mappings.Count} blob publish mappings to one upload for '{mappingsByUploadDestination.Key.BlobPath}' at '{mappingsByUploadDestination.Key.TargetUrl}'.");
             }
 
-            var publisher = AssetPublisherFactory.CreateAssetPublisher(selectedMapping.FeedConfig, this);
-            publishTasks.Add(Task.Run(async () =>
-                await PublishAssetsAsync(
-                    publisher,
-                    blobsToPublish,
-                    buildAssets,
-                    selectedMapping.FeedConfig,
-                    clientThrottle)));
+            azureBlobUploads.Add((selectedMapping.FeedConfig, selectedMapping.Blob));
+        }
+
+        foreach (var uploadBatch in azureBlobUploads.GroupBy(upload => new BlobUploadConfiguration(
+            upload.FeedConfig.Type,
+            GetUploadTargetUrlIdentity(upload.FeedConfig.TargetURL),
+            upload.FeedConfig.AllowOverwrite)))
+        {
+            var selectedFeedConfig = uploadBatch
+                .Select(upload => upload.FeedConfig)
+                .OrderBy(feedConfig => feedConfig.TargetURL, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(feedConfig => feedConfig.TargetURL, StringComparer.Ordinal)
+                .ThenBy(feedConfig => feedConfig.ContentType)
+                .ThenBy(feedConfig => feedConfig.AssetSelection)
+                .ThenBy(feedConfig => string.Join("\n", feedConfig.LatestLinkShortUrlPrefixes), StringComparer.Ordinal)
+                .First();
+            var blobsToPublish = uploadBatch.Select(upload => upload.Blob).ToHashSet();
+            var publisher = AssetPublisherFactory.CreateAssetPublisher(selectedFeedConfig, this);
+            publishTasks.Add(PublishAssetsAsync(
+                publisher,
+                blobsToPublish,
+                buildAssets,
+                selectedFeedConfig,
+                clientThrottle));
         }
 
         await Task.WhenAll(publishTasks);
@@ -1301,6 +1316,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
     }
 
     private readonly record struct BlobUploadDestination(FeedType FeedType, string TargetUrl, string BlobPath);
+    private readonly record struct BlobUploadConfiguration(FeedType FeedType, string TargetUrl, bool AllowOverwrite);
 
     /// <summary>
     ///     Filter the blobs by the feed config information
