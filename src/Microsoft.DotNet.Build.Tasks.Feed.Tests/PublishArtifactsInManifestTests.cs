@@ -146,7 +146,7 @@ public class PublishArtifactsInManifestTests
         {
         }
 
-        public List<(HashSet<BlobArtifactModel> Blobs, TargetFeedConfig FeedConfig)> LatestLinkRequests { get; } = new();
+        public List<(HashSet<string> BlobPaths, TargetFeedConfig FeedConfig)> LatestLinkRequests { get; } = new();
 
         public override Task<bool> ExecuteAsync() => throw new NotImplementedException();
 
@@ -154,9 +154,9 @@ public class PublishArtifactsInManifestTests
 
         protected override bool TryAddAssetLocation(string assetId, string assetVersion, ReadOnlyDictionary<string, ProductConstructionService.Client.Models.Asset> buildAssets, TargetFeedConfig feedConfig, LocationType assetLocationType) => true;
 
-        protected override Task CreateOrUpdateLatestLinksAsync(HashSet<BlobArtifactModel> blobAssets, TargetFeedConfig feedConfig)
+        protected override Task CreateOrUpdateLatestLinksAsync(HashSet<string> blobPaths, TargetFeedConfig feedConfig)
         {
-            LatestLinkRequests.Add((blobAssets, feedConfig));
+            LatestLinkRequests.Add((blobPaths, feedConfig));
             return Task.CompletedTask;
         }
     }
@@ -266,7 +266,7 @@ public class PublishArtifactsInManifestTests
         Directory.CreateDirectory(blobDirectory);
         foreach (var blob in blobs)
         {
-            File.WriteAllText(Path.Combine(blobDirectory, Path.GetFileName(blob.Id)), "test");
+            File.WriteAllText(Path.Combine(blobDirectory, Path.GetFileName(blob.Id.Replace('\\', '/'))), "test");
         }
 
         var task = new TestableBlobPublishingTask(publisherFactory)
@@ -415,7 +415,7 @@ public class PublishArtifactsInManifestTests
 
             publisher.PublishedBlobPaths.Should().ContainSingle().Which.Should().Be(nonShippingBlob.Id);
             task.LatestLinkRequests.Should().ContainSingle();
-            task.LatestLinkRequests[0].Blobs.Should().ContainSingle().Which.Should().Be(nonShippingBlob);
+            task.LatestLinkRequests[0].BlobPaths.Should().ContainSingle().Which.Should().Be(nonShippingBlob.Id);
             task.LatestLinkRequests[0].FeedConfig.Should().Be(validConfig);
             task.Log.HasLoggedErrors.Should().BeTrue();
         }
@@ -464,6 +464,30 @@ public class PublishArtifactsInManifestTests
 
             publisher.PublishedBlobPaths.Should().HaveCount(4);
             publisherFactory.FeedConfigs.Should().HaveCount(2);
+        }
+        finally
+        {
+            Directory.Delete(blobDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task HandleBlobPublishingAsyncNormalizesPublishedAndLatestLinkPaths()
+    {
+        var publisher = new RecordingAssetPublisher();
+        var blob = CreateBlob(@"nested\asset.zip");
+        var firstConfig = CreateBlobFeedConfig("https://storage.example.net/public", "dotnet/first");
+        var secondConfig = CreateBlobFeedConfig("https://storage.example.net/public", "dotnet/second");
+        var (task, blobDirectory) = CreateBlobPublishingTask(publisher, [blob], firstConfig, secondConfig);
+
+        try
+        {
+            await task.PublishBlobsAsync();
+
+            publisher.PublishedBlobPaths.Should().ContainSingle().Which.Should().Be("nested/asset.zip");
+            task.LatestLinkRequests.Should().HaveCount(2);
+            task.LatestLinkRequests.Should().OnlyContain(
+                request => request.BlobPaths.SetEquals(new[] { "nested/asset.zip" }));
         }
         finally
         {

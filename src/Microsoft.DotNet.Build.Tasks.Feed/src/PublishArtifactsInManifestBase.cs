@@ -1221,7 +1221,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
             .GroupBy(mapping => new BlobUploadDestination(
                 mapping.FeedConfig.Type,
                 GetCanonicalTargetUrl(mapping.FeedConfig.TargetURL),
-                mapping.Blob.Id.Replace("\\", "/"))))
+                NormalizeBlobPath(mapping.Blob.Id))))
         {
             var mappings = mappingsByUploadDestination.ToList();
             bool allowOverwrite = mappings[0].FeedConfig.AllowOverwrite;
@@ -1287,9 +1287,10 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                 .Where(blob => !invalidUploadDestinations.Contains(new BlobUploadDestination(
                     mapping.FeedConfig.Type,
                     GetCanonicalTargetUrl(mapping.FeedConfig.TargetURL),
-                    blob.Id.Replace("\\", "/"))))
-                .ToHashSet();
-            if (publishedBlobs.Count > 0)
+                    NormalizeBlobPath(blob.Id))))
+                .Select(blob => NormalizeBlobPath(blob.Id))
+                .ToHashSet(StringComparer.Ordinal);
+            if (publishedBlobs.Count != 0)
             {
                 await CreateOrUpdateLatestLinksAsync(publishedBlobs, mapping.FeedConfig);
             }
@@ -1314,6 +1315,8 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         targetUriBuilder.Path = targetUriBuilder.Path.TrimEnd('/');
         return targetUriBuilder.Uri.AbsoluteUri;
     }
+
+    private static string NormalizeBlobPath(string blobPath) => blobPath.Replace('\\', '/');
 
     private readonly record struct BlobUploadDestination(FeedType FeedType, string TargetUrl, string BlobPath);
     private readonly record struct BlobUploadConfiguration(FeedType FeedType, string TargetUrl, bool AllowOverwrite);
@@ -1857,7 +1860,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
 
     }
 
-    protected virtual async Task CreateOrUpdateLatestLinksAsync(HashSet<BlobArtifactModel> blobAssets, TargetFeedConfig feedConfig)
+    protected virtual async Task CreateOrUpdateLatestLinksAsync(HashSet<string> blobPaths, TargetFeedConfig feedConfig)
     {
         if (feedConfig.Type == FeedType.AzureStorageContainer &&
             feedConfig.LatestLinkShortUrlPrefixes.Any())
@@ -1887,7 +1890,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
             // The latest links should be updated only after the publishing is complete, to avoid
             // dead links in the interim.
             await LinkManager.CreateOrUpdateLatestLinksAsync(
-                blobAssets.Select(b => b.Id).ToHashSet(),
+                blobPaths,
                 feedConfig);
         }
     }
@@ -1913,7 +1916,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
             using (await SemaphoreLock.LockAsync(clientThrottle))
             {
                 string temporaryBlobDirectory = CreateTemporaryDirectory();
-                var targetBlobPath = asset.Id;
+                var targetBlobPath = NormalizeBlobPath(asset.Id);
                 var fileName = Path.GetFileName(targetBlobPath);
                 var localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
                 var blobArtifactName = BlobArtifactsArtifactName;
@@ -1954,7 +1957,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                         $"Successfully downloaded blob : {fileName} to {localBlobPath}");
 
                     TryAddAssetLocation(
-                        targetBlobPath,
+                        asset.Id,
                         assetVersion: null,
                         buildAssets,
                         feedConfig,
@@ -1994,7 +1997,8 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         var assets = assetsToPublish
             .Select(asset =>
             {
-                var fileName = Path.GetFileName(asset.Id);
+                var normalizedBlobPath = NormalizeBlobPath(asset.Id);
+                var fileName = Path.GetFileName(normalizedBlobPath);
                 var localBlobPath = Path.Combine(BlobAssetsBasePath, fileName);
 
                 if (!File.Exists(localBlobPath))
@@ -2003,7 +2007,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                     Log.LogError($"Could not locate '{asset} at '{localBlobPath}'");
                 }
 
-                return (localBlobPath, id: asset.Id);
+                return (localBlobPath, id: normalizedBlobPath);
             })
             .ToArray();
 
