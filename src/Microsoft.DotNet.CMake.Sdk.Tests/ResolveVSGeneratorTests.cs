@@ -76,4 +76,29 @@ public class ResolveVSGeneratorTests
                 "does not support the '$(VSGenerator)' generator",
                 StringComparison.Ordinal) == true);
     }
+
+    [Fact]
+    public void GeneratorSupportCheckUsesTheConfiguredCMakeCommandWrapper()
+    {
+        XElement help = GetCMakeHelpExec();
+
+        Assert.Equal("$(CMakeConfigureCommandWrapper) cmake --help", help.Attribute("Command")?.Value);
+    }
+
+    [Fact]
+    public void GeneratorSupportCheckIsSkippedInDesignTimeBuilds()
+    {
+        XElement help = GetCMakeHelpExec();
+
+        Assert.Contains(
+            "'$(DesignTimeBuild)' != 'true'",
+            help.Attribute("Condition")?.Value,
+            StringComparison.Ordinal);
+    }
+
+    private static XElement GetCMakeHelpExec() => Assert.Single(
+        ResolveVSGenerator.Descendants("Exec"),
+        element => element.Attribute("Command")?.Value.Contains(
+            "cmake --help",
+            StringComparison.Ordinal) == true);
 }

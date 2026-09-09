@@ -67,9 +67,12 @@
     <Error Condition="'$(VSGenerator)' == ''"
            Text="Unable to determine the correct CMake Generator for Visual Studio. The SDK may need to be updated to understand a new VS version. Unknown Visual Studio version $(_HighestCompatibleVSVersion)" />
 
-    <!-- Older CMake releases don't know about newer Visual Studio generators, so validate that the CMake we'll use supports the generator we resolved. -->
+    <!-- Older CMake releases don't know about newer Visual Studio generators, so validate that the CMake we'll use supports the generator we resolved.
+         Use the same command wrapper as the configure step so that we inspect the same cmake that will be used to configure the project.
+         Design-time builds never invoke cmake, so skip the extra process launch there. -->
     <Exec
-      Command="cmake --help"
+      Condition="'$(DesignTimeBuild)' != 'true'"
+      Command="$(CMakeConfigureCommandWrapper) cmake --help"
       EchoOff="true"
       ConsoleToMsBuild="true"
       StandardOutputImportance="Low"
@@ -83,7 +86,7 @@
     </PropertyGroup>
 
     <Error Condition="'$(_CMakeHelpExitCode)' == '0' and !$(_CMakeSupportedGenerators.Contains('$(VSGenerator)'))"
-           Text="The 'cmake' on the PATH does not support the '$(VSGenerator)' generator. Install a newer version of CMake or set the VSGeneratorVersionRange property to restrict the SDK to an older Visual Studio version." />
+           Text="The cmake used to configure this project does not support the '$(VSGenerator)' generator. Install a newer version of CMake or set the VSGeneratorVersionRange property to restrict the SDK to an older Visual Studio version." />
 
     <PropertyGroup>
       <CMakeGenerator>$(VSGenerator)</CMakeGenerator>
