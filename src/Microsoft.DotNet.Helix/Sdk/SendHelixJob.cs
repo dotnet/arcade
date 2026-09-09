@@ -558,6 +558,14 @@ public class SendHelixJob : HelixTask, IMultiThreadableTask
             }
         }
 
+        // GetMetadata returns an empty string for absent metadata, and GetAbsolutePath rejects that, so
+        // keep reporting a missing payload here instead of throwing.
+        if (string.IsNullOrEmpty(path))
+        {
+            Log.LogError(FailureCategory.Build, $"Correlation Payload '{path}' not found.");
+            return def;
+        }
+
         AbsolutePath payloadPath = TaskEnvironment.GetAbsolutePath(path);
         if (Directory.Exists(payloadPath))
         {

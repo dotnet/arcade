@@ -63,7 +63,8 @@ public class LocateDotNet : Task, IMultiThreadableTask
         var sdkVersion = match.Groups[1].Value;
 
         var fileName = (Path.DirectorySeparatorChar == '\\') ? "dotnet.exe" : "dotnet";
-        var dotNetDir = paths.Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(p => ResolvedFileExists(Path.Combine(p, fileName)));
+        // Split with RemoveEmptyEntries, so no entry is empty and GetAbsolutePath cannot reject one.
+        var dotNetDir = paths.Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(p => File.Exists(TaskEnvironment.GetAbsolutePath(Path.Combine(p, fileName))));
 
         if (dotNetDir == null || !Directory.Exists(TaskEnvironment.GetAbsolutePath(Path.Combine(dotNetDir, "sdk", sdkVersion))))
         {
@@ -81,23 +82,5 @@ public class LocateDotNet : Task, IMultiThreadableTask
         DotNetPath = Path.GetFullPath(TaskEnvironment.GetAbsolutePath(Path.Combine(dotNetDir, fileName)));
 #pragma warning restore MSBuildTask0002
         BuildEngine4.RegisterTaskObject(cacheKey, DotNetPath, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
-    }
-
-    /// <summary>
-    /// Probes for a file below a PATH entry. PATH entries are arbitrary user input and can be quoted or
-    /// otherwise unusable as a path; <see cref="TaskEnvironment.GetAbsolutePath"/> validates and throws for
-    /// those, whereas the plain <see cref="File.Exists"/> probe this replaced just returned false. Malformed
-    /// entries therefore have to stay skippable rather than fail the task.
-    /// </summary>
-    private bool ResolvedFileExists(string path)
-    {
-        try
-        {
-            return File.Exists(TaskEnvironment.GetAbsolutePath(path));
-        }
-        catch (ArgumentException)
-        {
-            return false;
-        }
     }
 }

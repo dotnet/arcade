@@ -118,7 +118,7 @@ public class DownloadFile : Task, ICancelableTask, IMultiThreadableTask
         {
             var filePath = uri.Substring(FileUriProtocol.Length);
 
-            // An empty path would make GetAbsolutePath throw, whereas the File.Exists probe it feeds
+            // GetAbsolutePath rejects a null or empty path, whereas the File.Exists probe it feeds
             // used to simply report the file as missing.
             if (!string.IsNullOrEmpty(filePath))
             {
