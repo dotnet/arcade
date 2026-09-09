@@ -79,7 +79,7 @@
         <AdditionalProperties>%(NativeProjectReferenceNormalized.AdditionalProperties)</AdditionalProperties>
       </_NativeProjectsToBuild>
       <_CMakeProjectsToBuild Include="%(CMakeProjectReferenceNormalized.Identity)">
-        <AdditionalProperties>CMakeBuildTarget=%(CMakeProjectReferenceNormalized.CMakeTargets);%(CMakeProjectReferenceNormalized.AdditionalProperties)</AdditionalProperties>
+        <AdditionalProperties>%(CMakeProjectReferenceNormalized.AdditionalProperties)</AdditionalProperties>
       </_CMakeProjectsToBuild>
     </ItemGroup>
 
@@ -91,7 +91,7 @@
              Properties="%(AdditionalProperties)"
              BuildInParallel="false" />
     <MSBuild Projects="@(_CMakeProjectsToBuild)"
-             Properties="%(AdditionalProperties)"
+             Properties="CMakeBuildTarget=$([MSBuild]::Escape('%(CMakeProjectReferenceNormalized.CMakeTargets)'));%(AdditionalProperties)"
              BuildInParallel="false" />
 
     <Message Text= "Full native project references are :%(NativeProjectReferenceNormalized.Identity)" />
@@ -106,7 +106,7 @@
     <MSBuild Projects="$(MSBuildProjectFile)"
              Targets="CopyNativeProjectBinariesFromFileApi"
              Properties="ReferencedCMakeProject=%(CMakeProjectReferenceNormalized.Identity);
-                         ReferencedCMakeTargets=%(CMakeProjectReferenceNormalized.CMakeTargets);
+                         ReferencedCMakeTargets=$([MSBuild]::Escape('%(CMakeProjectReferenceNormalized.CMakeTargets)'));
                          %(CMakeProjectReferenceNormalized.AdditionalProperties)"
              Condition="'@(CMakeProjectReference)' != ''" />
 

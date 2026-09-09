@@ -133,6 +133,18 @@ public class GetCMakeArtifactsFromFileApi : Task, IMultiThreadableTask
             if (!string.IsNullOrEmpty(CMakeTargets))
             {
                 var requestedTargets = CMakeTargets.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                var missingTargets = requestedTargets
+                    .Where(requestedTarget => !config.Targets.Any(target =>
+                        string.Equals(target.Name, requestedTarget, StringComparison.OrdinalIgnoreCase)))
+                    .ToArray();
+                if (missingTargets.Length > 0)
+                {
+                    Log.LogError(
+                        "The requested CMake target(s) were not found in the File API response: {0}.",
+                        string.Join(", ", missingTargets));
+                    return false;
+                }
+
                 targets = config.Targets.Where(t => requestedTargets.Contains(t.Name, StringComparer.OrdinalIgnoreCase));
                 Log.LogMessage(MessageImportance.Low, "Found {0} requested CMake target(s) for configuration '{1}'.", targets.Count(), Configuration);
             }
@@ -154,8 +166,8 @@ public class GetCMakeArtifactsFromFileApi : Task, IMultiThreadableTask
                     if (!Path.IsPathRooted(dirSource))
                     {
                         dirSource = Path.Combine(sourceRoot, dirSource);
-                        dirSource = TaskEnvironment.GetAbsolutePath(dirSource).GetCanonicalForm().Value.Replace('\\', '/').TrimEnd('/');
                     }
+                    dirSource = TaskEnvironment.GetAbsolutePath(dirSource).GetCanonicalForm().Value.Replace('\\', '/').TrimEnd('/');
 
                     return string.Equals(dirSource, normalizedSourceDir, StringComparison.OrdinalIgnoreCase);
                 });
