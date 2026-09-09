@@ -21,6 +21,7 @@ usage()
     echo "--ubuntu-repo <url> - optional, override the Ubuntu apt repository base URL."
     echo "--debian-repo <url> - optional, override the Debian apt repository base URL."
     echo "--alpine-repo <url> - optional, override the Alpine Linux repository base URL."
+    echo "--apk-static <path> - optional, use a local apk.static executable instead of downloading one."
     echo "--jobs N (or --use-jobs N) - optional, restrict to N jobs."
     exit 1
 }
@@ -150,6 +151,7 @@ __UseMirror=0
 __UbuntuRepoOverride=
 __DebianRepoOverride=
 __AlpineRepoOverride=
+__ApkStaticPath=
 
 __UnprocessedBuildArgs=
 while :; do
@@ -437,6 +439,14 @@ while :; do
             fi
             __AlpineRepoOverride="$1"
             ;;
+        --apk-static|-apk-static)
+            shift
+            if [[ "$#" -le 0 ]]; then
+                echo "ERROR: --apk-static requires a path argument."
+                usage
+            fi
+            __ApkStaticPath="$1"
+            ;;
         # Removed duplicate/invalid option handling block (was breaking case statement parsing).
         --use-jobs)
             shift
@@ -538,21 +548,29 @@ if [[ "$__CodeName" == "alpine" ]]; then
     arch="$(uname -m)"
     __AlpineRepo="${__AlpineRepoOverride:-https://dl-cdn.alpinelinux.org/alpine}"
 
-    ensureDownloadTool
+    if [[ -n "$__ApkStaticPath" ]]; then
+        if [[ ! -f "$__ApkStaticPath" ]]; then
+            >&2 echo "ERROR: apk.static was not found at '$__ApkStaticPath'."
+            exit 1
+        fi
+        cp "$__ApkStaticPath" "$__ApkToolsDir/apk.static"
+    else
+        ensureDownloadTool
 
-    if [[ "$__hasWget" == 1 ]]; then
-        wget -P "$__ApkToolsDir" "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v$__ApkToolsVersion/$arch/apk.static"
-    else
-        curl -SLO --create-dirs --output-dir "$__ApkToolsDir" "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v$__ApkToolsVersion/$arch/apk.static"
+        if [[ "$__hasWget" == 1 ]]; then
+            wget -P "$__ApkToolsDir" "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v$__ApkToolsVersion/$arch/apk.static"
+        else
+            curl -SLO --create-dirs --output-dir "$__ApkToolsDir" "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v$__ApkToolsVersion/$arch/apk.static"
+        fi
+        if [[ "$arch" == "x86_64" ]]; then
+          __ApkToolsSHA512SUM="53e57b49230da07ef44ee0765b9592580308c407a8d4da7125550957bb72cb59638e04f8892a18b584451c8d841d1c7cb0f0ab680cc323a3015776affaa3be33"
+        elif [[ "$arch" == "aarch64" ]]; then
+          __ApkToolsSHA512SUM="9e2b37ecb2b56c05dad23d379be84fd494c14bd730b620d0d576bda760588e1f2f59a7fcb2f2080577e0085f23a0ca8eadd993b4e61c2ab29549fdb71969afd0"
+        else
+          echo "WARNING: add missing hash for your host architecture. To find the value, use: 'find /tmp -name apk.static -exec sha512sum {} \;'"
+        fi
+        echo "$__ApkToolsSHA512SUM $__ApkToolsDir/apk.static" | sha512sum -c
     fi
-    if [[ "$arch" == "x86_64" ]]; then
-      __ApkToolsSHA512SUM="53e57b49230da07ef44ee0765b9592580308c407a8d4da7125550957bb72cb59638e04f8892a18b584451c8d841d1c7cb0f0ab680cc323a3015776affaa3be33"
-    elif [[ "$arch" == "aarch64" ]]; then
-      __ApkToolsSHA512SUM="9e2b37ecb2b56c05dad23d379be84fd494c14bd730b620d0d576bda760588e1f2f59a7fcb2f2080577e0085f23a0ca8eadd993b4e61c2ab29549fdb71969afd0"
-    else
-      echo "WARNING: add missing hash for your host architecture. To find the value, use: 'find /tmp -name apk.static -exec sha512sum {} \;'"
-    fi
-    echo "$__ApkToolsSHA512SUM $__ApkToolsDir/apk.static" | sha512sum -c
     chmod +x "$__ApkToolsDir/apk.static"
 
     if [[ "$__AlpineVersion" == "edge" ]]; then
