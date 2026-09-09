@@ -93,6 +93,17 @@ The variable group must contain `oneloc-localization-app-app-id` and
 The token is minted for the installation on the `GitHubOrg` account (default `dotnet`), so make sure
 `GitHubOrg` (and `MirrorRepo`, if mirroring) point at the org/repo where the App is installed.
 
+### Migrating from Key Vault RSA signing
+
+The Key Vault RSA signing path has been removed. OneLoc callers must remove
+`GitHubAppServiceConnection`, `GitHubAppClientId`, `GitHubAppKeyVaultName`, and
+`GitHubAppKeyName`; the default `GitHubAppId` and `GitHubAppPrivateKey` values use the
+Secret Manager projections from `OneLocBuildVariables`.
+
+Direct callers of `get-github-app-token.yml` must replace `azureSubscription`,
+`keyVaultName`, `keyName`, and `appClientId` with `appId` and `appPrivateKey`. There is no
+fallback to the legacy RSA key.
+
 ## Verifying it works
 
 1. Run your pipeline from a branch where the OneLocBuild job runs.
