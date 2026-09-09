@@ -24,7 +24,6 @@ param(
     [string] $OutputVariableName
 )
 $ErrorActionPreference = 'Stop'
-$ErrorActionPreference = 'Stop'
 
 . $PSScriptRoot\pipeline-logging-functions.ps1
 
