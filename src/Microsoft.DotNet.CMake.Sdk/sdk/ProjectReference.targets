@@ -60,8 +60,6 @@
     <ItemGroup>
       <CMakeProjectReferenceNormalized Include="@(CMakeProjectReference -> '%(FullPath)')"
                                        CMakeTargets="%(CMakeProjectReference.CMakeTargets)"
-                                       CMakeBuildTarget="%(CMakeProjectReference.CMakeTargets.Replace(';', ' '))"
-                                       EscapedCMakeTargets="%(CMakeProjectReference.CMakeTargets.Replace(';', '%3B'))"
                                        AdditionalProperties="%(CMakeProjectReference.AdditionalProperties)" />
     </ItemGroup>
 
@@ -81,7 +79,7 @@
         <AdditionalProperties>%(NativeProjectReferenceNormalized.AdditionalProperties)</AdditionalProperties>
       </_NativeProjectsToBuild>
       <_CMakeProjectsToBuild Include="%(CMakeProjectReferenceNormalized.Identity)">
-        <AdditionalProperties>CMakeBuildTarget=%(CMakeProjectReferenceNormalized.CMakeBuildTarget);%(CMakeProjectReferenceNormalized.AdditionalProperties)</AdditionalProperties>
+        <AdditionalProperties>CMakeBuildTarget=%(CMakeProjectReferenceNormalized.CMakeTargets);%(CMakeProjectReferenceNormalized.AdditionalProperties)</AdditionalProperties>
       </_CMakeProjectsToBuild>
     </ItemGroup>
 
@@ -108,7 +106,7 @@
     <MSBuild Projects="$(MSBuildProjectFile)"
              Targets="CopyNativeProjectBinariesFromFileApi"
              Properties="ReferencedCMakeProject=%(CMakeProjectReferenceNormalized.Identity);
-                         ReferencedCMakeTargets=%(CMakeProjectReferenceNormalized.EscapedCMakeTargets);
+                         ReferencedCMakeTargets=%(CMakeProjectReferenceNormalized.CMakeTargets);
                          %(CMakeProjectReferenceNormalized.AdditionalProperties)"
              Condition="'@(CMakeProjectReference)' != ''" />
 

@@ -183,10 +183,13 @@
       <CMakeBuildTarget Condition="'$(CMakeBuildTarget)' == ''">install</CMakeBuildTarget>
       <_CMakeParallelizationArgument Condition="'$(CMakeParallelization)' != ''">-g $(CMakeParallelization)</_CMakeParallelizationArgument>
     </PropertyGroup>
+    <ItemGroup>
+      <_CMakeBuildTargets Include="$(CMakeBuildTarget)" />
+    </ItemGroup>
 
     <PropertyGroup>
       <CMakeBuildScript>
-      cmake --build &quot;$(CMakeOutputDir)&quot; --target $(CMakeBuildTarget) $(_CMakeParallelizationArgument) --config $(Configuration) -- @(CMakeNativeToolArguments->'%(Identity)',' ')
+      cmake --build &quot;$(CMakeOutputDir)&quot; --target @(_CMakeBuildTargets->'%(Identity)',' ') $(_CMakeParallelizationArgument) --config $(Configuration) -- @(CMakeNativeToolArguments->'%(Identity)',' ')
       </CMakeBuildScript>
     </PropertyGroup>
   </Target>

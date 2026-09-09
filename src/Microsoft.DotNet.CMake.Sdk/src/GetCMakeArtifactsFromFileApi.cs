@@ -121,7 +121,7 @@ public class GetCMakeArtifactsFromFileApi : Task, IMultiThreadableTask
 
             Log.LogMessage(MessageImportance.Low, "Found configuration: {0}", Configuration);
 
-            if (config.Directories == null || config.Targets == null)
+            if (config.Targets == null || (string.IsNullOrEmpty(CMakeTargets) && config.Directories == null))
             {
                 Log.LogError("Configuration '{0}' has no directories or targets.", Configuration);
                 return false;
