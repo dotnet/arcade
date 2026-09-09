@@ -37,6 +37,13 @@ secrets:
       hasWebhookSecret: false
       hasOAuthSecret: false
 
+  workload-versions-github-app:
+    type: github-app-secret
+    parameters:
+      hasPrivateKey: true
+      hasWebhookSecret: false
+      hasOAuthSecret: false
+
   ddfuse-pr-review-dashboard-app:
     type: github-app-secret
     parameters:

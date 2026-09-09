@@ -101,9 +101,9 @@ public class CreateWixBuildWixpack : Task, IMultiThreadableTask
             {
                 // MSBuildTask0002: the temp root is only used as the parent of a freshly generated unique
                 // directory/file name, so it is never shared between concurrently running tasks.
-                #pragma warning disable MSBuildTask0002
+#pragma warning disable MSBuildTask0002
                 WixpackWorkingDir = Path.Combine(Path.GetTempPath(), "WixpackTemp", Guid.NewGuid().ToString().Split('-')[0]);
-                #pragma warning restore MSBuildTask0002
+#pragma warning restore MSBuildTask0002
             }
 
             _installerFilename = Path.GetFileName(InstallerFile);
@@ -215,9 +215,9 @@ public class CreateWixBuildWixpack : Task, IMultiThreadableTask
         // affected by some unintentional change, or a bug in preprocessor.
         // MSBuildTask0002: the temp root is only used as the parent of a freshly generated unique
         // directory/file name, so it is never shared between concurrently running tasks.
-        #pragma warning disable MSBuildTask0002
+#pragma warning disable MSBuildTask0002
         var tempFilePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        #pragma warning restore MSBuildTask0002
+#pragma warning restore MSBuildTask0002
         AbsolutePath tempFileAbsolutePath = TaskEnvironment.GetAbsolutePath(tempFilePath);
         File.Copy(includeFilePath, tempFileAbsolutePath, overwrite: true);
 
@@ -258,7 +258,7 @@ public class CreateWixBuildWixpack : Task, IMultiThreadableTask
         }
     }
 
-    private void RemoveAllXmlComments(AbsolutePath filePath)
+    private static void RemoveAllXmlComments(AbsolutePath filePath)
     {
         XDocument xmlDocument = XDocument.Load(filePath);
         xmlDocument.DescendantNodes()
