@@ -81,11 +81,17 @@ Useful parameters:
 - `continueOnError`: allow the pipeline to continue when the monitor job fails. Defaults to `false`.
 - `useFullyQualifiedTestName`: report fully qualified test names to Azure DevOps (see [Fully qualified test names](#fully-qualified-test-names)). Defaults to `false`.
 
+Implementation and semantic design documents are indexed at
+[JobMonitor/Design/README.md](../JobMonitor/Design/README.md).
+
 Behavior notes:
 
 - The reporter uses its own `SYSTEM_ACCESSTOKEN`, so it does not depend on the shorter-lived token from the job that originally submitted the Helix work.
 - If parseable xUnit, JUnit, or TRX result files are available, those are uploaded.
-- If no result files are found for a work item, no test results are uploaded for that work item; Helix work-item failures still affect the monitor job's final pass/fail status.
+- Result processing uses globally bounded work-item parallelism and streams XML
+  instead of loading complete result documents. Status polling remains
+  independent from result upload latency.
+- If a failed work item has no parseable test results, the monitor uploads a synthetic failed `<work item>.WorkItemExecution` result. Passed work items without results do not produce a synthetic result.
 - The reporter is safe to rerun because it checks for already-completed test runs and only processes new results.
 
 #### What changes for pipeline users when the monitor is on
