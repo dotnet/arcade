@@ -16,8 +16,15 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk;
 
-public class SendHelixJob : HelixTask
+// Deliberately not marked multithreadable: SendAsync reaches JobDefinition, which reads
+// BUILD_REPOSITORY_NAME, BUILD_SOURCEBRANCH, SYSTEM_TEAMPROJECT and BUILD_REASON straight from
+// Environment (JobSender/JobDefinition.cs:209-223,402-423). In a shared node those reads see
+// process-wide values rather than the project's, so a job could be tagged with another project's
+// source metadata. Migrating requires threading TaskEnvironment into JobDefinition.
+#pragma warning disable MSBuildTask0013 // Interface without the attribute is deliberate; see the comment above.
+public class SendHelixJob : HelixTask, IMultiThreadableTask
 {
+#pragma warning restore MSBuildTask0013
     public static class MetadataNames
     {
         public const string Identity = "Identity";
@@ -39,6 +46,9 @@ public class SendHelixJob : HelixTask
         public const string IncludeDirectoryName = "IncludeDirectoryName";
         public const string AsArchive = "AsArchive";
     }
+
+    /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+    public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
     /// <summary>
     ///   The 'type' value reported to Helix
@@ -307,7 +317,7 @@ public class SendHelixJob : HelixTask
     {
         string envName = FromAzdoVariableNameToEnvironmentVariableName(azdoVariableName);
 
-        var value = Environment.GetEnvironmentVariable(envName);
+        var value = TaskEnvironment.GetEnvironmentVariable(envName);
         if (string.IsNullOrEmpty(value))
         {
             return def;
@@ -548,7 +558,8 @@ public class SendHelixJob : HelixTask
             }
         }
 
-        if (Directory.Exists(path))
+        AbsolutePath payloadPath = TaskEnvironment.GetAbsolutePath(path);
+        if (Directory.Exists(payloadPath))
         {
             string includeDirectoryNameStr = correlationPayload.GetMetadata(MetadataNames.IncludeDirectoryName);
             if (!bool.TryParse(includeDirectoryNameStr, out bool includeDirectoryName))
@@ -560,11 +571,11 @@ public class SendHelixJob : HelixTask
                 MessageImportance.Low,
                 $"Adding Correlation Payload Directory '{path}', destination '{destination}'"
             );
-            return def.WithCorrelationPayloadDirectory(path, includeDirectoryName, destination);
+            return def.WithCorrelationPayloadDirectory(payloadPath, includeDirectoryName, destination);
 
         }
 
-        if (File.Exists(path))
+        if (File.Exists(payloadPath))
         {
             string asArchiveStr = correlationPayload.GetMetadata(MetadataNames.AsArchive);
             if (!bool.TryParse(asArchiveStr, out bool asArchive))
@@ -580,14 +591,14 @@ public class SendHelixJob : HelixTask
                     MessageImportance.Low,
                     $"Adding Correlation Payload Archive '{path}', destination '{destination}'"
                 );
-                return def.WithCorrelationPayloadArchive(path, destination);
+                return def.WithCorrelationPayloadArchive(payloadPath, destination);
             }
 
             Log.LogMessage(
                 MessageImportance.Low,
                 $"Adding Correlation Payload File '{path}', destination '{destination}'"
             );
-            return def.WithCorrelationPayloadFiles(path);
+            return def.WithCorrelationPayloadFiles(payloadPath);
         }
 
         Log.LogError(FailureCategory.Build, $"Correlation Payload '{path}' not found.");
