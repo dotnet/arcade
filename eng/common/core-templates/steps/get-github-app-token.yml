@@ -87,8 +87,6 @@ steps:
       targetType: filePath
       filePath: $(System.DefaultWorkingDirectory)/eng/common/Get-GitHubAppToken.ps1
       arguments: >-
-        -AppIdEnvironmentVariableName GITHUB_APP_ID
-        -PrivateKeyEnvironmentVariableName GITHUB_APP_PRIVATE_KEY
         -InstallationOwner '${{ parameters.installationOwner }}'
         -OutputVariableName '${{ parameters.outputVariableName }}'
       pwsh: true

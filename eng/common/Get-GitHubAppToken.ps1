@@ -25,15 +25,6 @@ param(
     [Parameter(Mandatory = $false)]
     [string] $AppClientId,
 
-    # Names of environment variables containing the Secret Manager App ID and
-    # PEM-encoded private key. Environment variables keep the values out of the
-    # process command line and task inputs.
-    [Parameter(Mandatory = $false)]
-    [string] $AppIdEnvironmentVariableName,
-
-    [Parameter(Mandatory = $false)]
-    [string] $PrivateKeyEnvironmentVariableName,
-
     # Login of the organization or user account whose installation we should
     # mint the token for (e.g. `dotnet`, `microsoft`).
     [Parameter(Mandatory = $true)]
@@ -56,20 +47,14 @@ function ConvertTo-Base64Url([byte[]] $bytes) {
 }
 
 $usesSecretManagerValues =
-    -not [string]::IsNullOrWhiteSpace($AppIdEnvironmentVariableName) -or
-    -not [string]::IsNullOrWhiteSpace($PrivateKeyEnvironmentVariableName)
+    -not [string]::IsNullOrWhiteSpace($env:GITHUB_APP_ID) -or
+    -not [string]::IsNullOrWhiteSpace($env:GITHUB_APP_PRIVATE_KEY)
 
 if ($usesSecretManagerValues) {
-    if ([string]::IsNullOrWhiteSpace($AppIdEnvironmentVariableName) -or
-        [string]::IsNullOrWhiteSpace($PrivateKeyEnvironmentVariableName)) {
-        Write-PipelineTelemetryError -Category 'Build' -Message 'Both AppIdEnvironmentVariableName and PrivateKeyEnvironmentVariableName are required when using Secret Manager values.'
-        exit 1
-    }
-
-    $appId = [Environment]::GetEnvironmentVariable($AppIdEnvironmentVariableName)
-    $privateKey = [Environment]::GetEnvironmentVariable($PrivateKeyEnvironmentVariableName)
+    $appId = $env:GITHUB_APP_ID
+    $privateKey = $env:GITHUB_APP_PRIVATE_KEY
     if ([string]::IsNullOrWhiteSpace($appId) -or [string]::IsNullOrWhiteSpace($privateKey)) {
-        Write-PipelineTelemetryError -Category 'Build' -Message "The GitHub App ID or private key environment variable is empty. Verify the pipeline's Key Vault-backed variable group includes both Secret Manager values."
+        Write-PipelineTelemetryError -Category 'Build' -Message "GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY must both be set when using Secret Manager values. Verify the pipeline's Key Vault-backed variable group includes both values."
         exit 1
     }
     if ($appId -match '^\$\([^)]+\)$' -or $privateKey -match '^\$\([^)]+\)$') {
