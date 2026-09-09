@@ -53,7 +53,7 @@ public abstract class CreateWixCommandPackageDropBase : Task, IMultiThreadableTa
     [Output]
     public string OutputFile { get; set; }
 
-    protected abstract void ProcessToolSpecificCommandLineParameters(string packageDropOutputFolder, StringBuilder commandString);
+    protected abstract void ProcessToolSpecificCommandLineParameters(AbsolutePath packageDropDir, StringBuilder commandString);
 
     protected void ProcessWixCommand(string packageDropOutputFolder, string toolExecutable, string originalCommand)
     {
