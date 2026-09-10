@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure.Core;
+using Microsoft.DotNet.ArcadeAzureIntegration;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Microsoft.DotNet.Helix.Client;
 using Microsoft.DotNet.Helix.Client.Models;
@@ -780,9 +782,7 @@ internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
             azureDevOps,
             metrics);
         var helix = new HelixService(
-            string.IsNullOrEmpty(options.HelixAccessToken)
-                ? ApiFactory.GetAnonymous(options.HelixBaseUri)
-                : ApiFactory.GetAuthenticated(options.HelixBaseUri, options.HelixAccessToken),
+            CreateHelixApi(options, CreateDefaultIdentityCredential),
             logger,
             metrics);
         return new ProductionDependencies(
@@ -792,6 +792,31 @@ internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
             helix,
             metrics);
     }
+
+    internal static IHelixApi CreateHelixApi(
+        JobMonitorOptions options,
+        Func<TokenCredential> entraCredentialFactory)
+    {
+        if (options.UseEntraAuthentication && !string.IsNullOrEmpty(options.HelixAccessToken))
+        {
+            throw new InvalidOperationException(
+                "Helix Entra authentication cannot be combined with HELIX_ACCESSTOKEN.");
+        }
+
+        if (options.UseEntraAuthentication)
+        {
+            return ApiFactory.GetAuthenticatedWithEntra(
+                options.HelixBaseUri,
+                entraCredentialFactory());
+        }
+
+        return string.IsNullOrEmpty(options.HelixAccessToken)
+            ? ApiFactory.GetAnonymous(options.HelixBaseUri)
+            : ApiFactory.GetAuthenticated(options.HelixBaseUri, options.HelixAccessToken);
+    }
+
+    private static TokenCredential CreateDefaultIdentityCredential()
+        => new DefaultIdentityTokenCredential();
 
     public void Dispose()
     {

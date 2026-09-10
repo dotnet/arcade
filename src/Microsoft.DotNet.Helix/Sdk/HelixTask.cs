@@ -5,7 +5,9 @@ using System;
 using System.Diagnostics;
 using System.Net;
 using System.Threading;
+using Azure.Core;
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.ArcadeAzureIntegration;
 using Microsoft.DotNet.Helix.Client;
 
 namespace Microsoft.DotNet.Helix.Sdk;
@@ -25,6 +27,11 @@ public abstract class HelixTask : BaseTask, ICancelableTask
     public string AccessToken { get; set; }
 
     /// <summary>
+    /// Use a refreshable Entra credential instead of anonymous or PAT authentication.
+    /// </summary>
+    public bool UseEntraAuthentication { get; set; }
+
+    /// <summary>
     ///   If <see langword="true"/>, fail when posting jobs to non-existent queues; If <see langword="false"/> allow it and print a warning.
     ///   Note if an MSBuild sequence starts and waits on jobs, and none are started, this will still fail.
     ///   Defined on HelixTask so the catch block around Execute() can know about it.
@@ -37,15 +44,54 @@ public abstract class HelixTask : BaseTask, ICancelableTask
 
     private IHelixApi GetHelixApi()
     {
+        if (UseEntraAuthentication && !string.IsNullOrEmpty(AccessToken))
+        {
+            throw new InvalidOperationException(
+                "Helix Entra authentication cannot be combined with HelixAccessToken.");
+        }
+
+        if (UseEntraAuthentication)
+        {
+            Log.LogMessage(MessageImportance.Low, "Authenticating to helix api using a refreshable Entra credential.");
+            return CreateHelixApi(BaseUri, AccessToken, UseEntraAuthentication, CreateDefaultIdentityCredential);
+        }
+
         if (string.IsNullOrEmpty(AccessToken))
         {
             Log.LogMessage(MessageImportance.Low, "No AccessToken provided, using anonymous access to helix api.");
-            return ApiFactory.GetAnonymous(BaseUri);
+        }
+        else
+        {
+            Log.LogMessage(MessageImportance.Low, "Authenticating to helix api using provided AccessToken");
         }
 
-        Log.LogMessage(MessageImportance.Low, "Authenticating to helix api using provided AccessToken");
-        return ApiFactory.GetAuthenticated(BaseUri, AccessToken);
+        return CreateHelixApi(BaseUri, AccessToken, UseEntraAuthentication, CreateDefaultIdentityCredential);
     }
+
+    internal static IHelixApi CreateHelixApi(
+        string baseUri,
+        string accessToken,
+        bool useEntraAuthentication,
+        Func<TokenCredential> entraCredentialFactory)
+    {
+        if (useEntraAuthentication && !string.IsNullOrEmpty(accessToken))
+        {
+            throw new InvalidOperationException(
+                "Helix Entra authentication cannot be combined with HelixAccessToken.");
+        }
+
+        if (useEntraAuthentication)
+        {
+            return ApiFactory.GetAuthenticatedWithEntra(baseUri, entraCredentialFactory());
+        }
+
+        return string.IsNullOrEmpty(accessToken)
+            ? ApiFactory.GetAnonymous(baseUri)
+            : ApiFactory.GetAuthenticated(baseUri, accessToken);
+    }
+
+    private static TokenCredential CreateDefaultIdentityCredential()
+        => new DefaultIdentityTokenCredential();
 
     public void Cancel()
     {
@@ -62,7 +108,11 @@ public abstract class HelixTask : BaseTask, ICancelableTask
         }
         catch (RestApiException ex) when (ex.Response.Status == (int)HttpStatusCode.Unauthorized)
         {
-            Log.LogError(FailureCategory.Build, "Helix operation returned 'Unauthorized'. Did you forget to set HelixAccessToken?");
+            Log.LogError(
+                FailureCategory.Build,
+                UseEntraAuthentication
+                    ? "Helix operation returned 'Unauthorized'. Verify that the configured Entra identity is authorized for Helix."
+                    : "Helix operation returned 'Unauthorized'. Did you forget to set HelixAccessToken?");
         }
         catch (RestApiException ex) when (ex.Response.Status == (int)HttpStatusCode.Forbidden)
         {

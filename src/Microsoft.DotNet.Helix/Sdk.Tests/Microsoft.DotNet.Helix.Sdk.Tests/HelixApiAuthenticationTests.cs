@@ -10,6 +10,8 @@ using Azure.Core;
 using Azure.Core.Pipeline;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Helix.Client;
+using Microsoft.DotNet.Helix.JobMonitor;
+using Microsoft.DotNet.Helix.Sdk;
 using Xunit;
 
 namespace Microsoft.DotNet.Helix.Sdk.Tests;
@@ -199,6 +201,72 @@ public class HelixApiAuthenticationTests
 
         Assert.Equal(2, credential.CallCount);
         Assert.NotEqual(firstAuthorization, secondAuthorization);
+    }
+
+    [Theory]
+    [InlineData(false, null, HelixApiAuthenticationMode.Anonymous)]
+    [InlineData(false, "legacy-token", HelixApiAuthenticationMode.PersonalAccessToken)]
+    [InlineData(true, null, HelixApiAuthenticationMode.EntraId)]
+    public void HelixTaskSelectsRequestedAuthenticationMode(
+        bool useEntraAuthentication,
+        string accessToken,
+        HelixApiAuthenticationMode expectedMode)
+    {
+        var api = Assert.IsType<HelixApi>(
+            HelixTask.CreateHelixApi(
+                "https://helix.dot.net/",
+                accessToken,
+                useEntraAuthentication,
+                () => new TestTokenCredential()));
+
+        Assert.Equal(expectedMode, api.Options.AuthenticationMode);
+    }
+
+    [Fact]
+    public void HelixTaskRejectsConflictingAuthenticationConfiguration()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            HelixTask.CreateHelixApi(
+                "https://helix.dot.net/",
+                "legacy-token",
+                useEntraAuthentication: true,
+                () => new TestTokenCredential()));
+    }
+
+    [Theory]
+    [InlineData(false, null, HelixApiAuthenticationMode.Anonymous)]
+    [InlineData(false, "legacy-token", HelixApiAuthenticationMode.PersonalAccessToken)]
+    [InlineData(true, null, HelixApiAuthenticationMode.EntraId)]
+    public void JobMonitorSelectsRequestedAuthenticationMode(
+        bool useEntraAuthentication,
+        string accessToken,
+        HelixApiAuthenticationMode expectedMode)
+    {
+        var options = new JobMonitorOptions
+        {
+            HelixBaseUri = "https://helix.dot.net/",
+            HelixAccessToken = accessToken,
+            UseEntraAuthentication = useEntraAuthentication,
+        };
+
+        var api = Assert.IsType<HelixApi>(
+            JobMonitorRunner.CreateHelixApi(options, () => new TestTokenCredential()));
+
+        Assert.Equal(expectedMode, api.Options.AuthenticationMode);
+    }
+
+    [Fact]
+    public void JobMonitorRejectsConflictingAuthenticationConfiguration()
+    {
+        var options = new JobMonitorOptions
+        {
+            HelixBaseUri = "https://helix.dot.net/",
+            HelixAccessToken = "legacy-token",
+            UseEntraAuthentication = true,
+        };
+
+        Assert.Throws<InvalidOperationException>(() =>
+            JobMonitorRunner.CreateHelixApi(options, () => new TestTokenCredential()));
     }
 
     private sealed class TestTokenCredential : TokenCredential
