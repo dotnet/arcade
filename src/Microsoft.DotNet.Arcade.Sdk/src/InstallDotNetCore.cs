@@ -93,14 +93,14 @@ public class InstallDotNetCore : Task, IMultiThreadableTask
                         {
                             if (string.IsNullOrEmpty(VersionsPropsPath))
                             {
-                                Log.LogError($"{nameof(VersionsPropsPath)} must be specified to resolve non-version runtime identifiers.");
+                                Log.LogError($"{nameof(VersionsPropsPath)} must be specified to resolve version identifiers.");
                                 return !Log.HasLoggedErrors;
                             }
 
                             AbsolutePath versionsPropsPath = TaskEnvironment.GetAbsolutePath(VersionsPropsPath);
                             if (!File.Exists(versionsPropsPath))
                             {
-                                Log.LogError($"Unable to find translation file {VersionsPropsPath}");
+                                Log.LogError($"Unable to find the properties file '{VersionsPropsPath}' used to resolve version identifiers.");
                                 return !Log.HasLoggedErrors;
                             }
 
