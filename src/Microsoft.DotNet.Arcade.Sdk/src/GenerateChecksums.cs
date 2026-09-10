@@ -35,6 +35,14 @@ public class GenerateChecksums : Task, IMultiThreadableTask
                     return !Log.HasLoggedErrors;
                 }
 
+                // GetAbsolutePath rejects an empty item spec, whereas the File.Exists probe it feeds
+                // used to simply report the file as missing.
+                if (string.IsNullOrEmpty(item.ItemSpec))
+                {
+                    Log.LogError($"The file '{item.ItemSpec}' does not exist.");
+                    return !Log.HasLoggedErrors;
+                }
+
                 AbsolutePath itemPath = TaskEnvironment.GetAbsolutePath(item.ItemSpec);
                 if (!File.Exists(itemPath))
                 {
