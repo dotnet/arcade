@@ -46,12 +46,12 @@ public class SaveItems : Task, IMultiThreadableTask
             project.AddItem(ItemName, item.ItemSpec, metadataPairs);
         }
 
-        string outputPath = TaskEnvironment.GetAbsolutePath(File);
+        AbsolutePath outputPath = TaskEnvironment.GetAbsolutePath(File);
         string path = Path.GetDirectoryName(outputPath);
 
         if (!string.IsNullOrEmpty(path))
         {
-            Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(path));
+            Directory.CreateDirectory(path);
         }
 
         project.Save(outputPath);

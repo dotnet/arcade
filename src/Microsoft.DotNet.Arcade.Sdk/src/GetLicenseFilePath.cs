@@ -44,8 +44,10 @@ public class GetLicenseFilePath : Task, IMultiThreadableTask
 
         options.AttributesToSkip |= FileAttributes.Directory;
 
+        AbsolutePath directory = TaskEnvironment.GetAbsolutePath(Directory);
+
         IEnumerable<string> enumerateFiles(string extension) =>
-            System.IO.Directory.EnumerateFileSystemEntries(TaskEnvironment.GetAbsolutePath(Directory), fileName + extension, options);
+            System.IO.Directory.EnumerateFileSystemEntries(directory, fileName + extension, options);
 
         var matches = 
             (from extension in new[] { ".txt", ".md", "" }

@@ -85,7 +85,7 @@ public sealed class ExtractNgenMethodList : Task, IMultiThreadableTask
             ? GetAssemblyMvid().ToString()
             : AssemblyTargetFramework;
         var outputFileName = $"{Path.GetFileNameWithoutExtension(AssemblyFilePath)}-{outputFileNameSuffix}.ngen.txt";
-        var outputFilePath = TaskEnvironment.GetAbsolutePath(Path.Combine(outputDirectory, outputFileName));
+        var outputFilePath = Path.Combine(outputDirectory, outputFileName);
         using (var outputFileStream = new StreamWriter(outputFilePath, append: false))
         {
             foreach (var item in items)

@@ -11,7 +11,8 @@ using Microsoft.Build.Framework;
 namespace Microsoft.DotNet.Helix.Sdk;
 
 /// <summary>
-/// MSBuild custom task to create HelixWorkItems for provided Android application packages.
+/// Shared base for the MSBuild custom tasks that create HelixWorkItems for XHarness
+/// application packages, both Android and Apple.
 /// </summary>
 public abstract class XHarnessTaskBase : MSBuildTaskBase, IMultiThreadableTask
 {

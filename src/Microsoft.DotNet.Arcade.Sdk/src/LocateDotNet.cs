@@ -37,6 +37,15 @@ public class LocateDotNet : Task, IMultiThreadableTask
         var lastWrite = File.GetLastWriteTimeUtc(globalJsonPath);
         var paths = TaskEnvironment.GetEnvironmentVariable("PATH");
 
+        // GetEnvironmentVariable is nullable, and under multithreaded execution it is a lookup in a
+        // per-project environment rather than the process block, so a missing PATH is more reachable
+        // than it used to be. Fail with a clear message instead of a NullReferenceException below.
+        if (string.IsNullOrEmpty(paths))
+        {
+            Log.LogError("Unable to locate dotnet because the PATH environment variable is not set.");
+            return;
+        }
+
         // The read/write pair below is not atomic, so under multithreaded execution two threads
         // can both miss and both compute the value. That is benign here: the computation is pure
         // and deterministic for a given (global.json, timestamp, PATH), so the loser of the race
@@ -63,6 +72,7 @@ public class LocateDotNet : Task, IMultiThreadableTask
         var sdkVersion = match.Groups[1].Value;
 
         var fileName = (Path.DirectorySeparatorChar == '\\') ? "dotnet.exe" : "dotnet";
+        // Split with RemoveEmptyEntries, so no entry is empty and GetAbsolutePath cannot reject one.
         var dotNetDir = paths.Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(p => File.Exists(TaskEnvironment.GetAbsolutePath(Path.Combine(p, fileName))));
 
         if (dotNetDir == null || !Directory.Exists(TaskEnvironment.GetAbsolutePath(Path.Combine(dotNetDir, "sdk", sdkVersion))))
@@ -71,7 +81,10 @@ public class LocateDotNet : Task, IMultiThreadableTask
             return;
         }
 
-        DotNetPath = TaskEnvironment.GetAbsolutePath(Path.Combine(dotNetDir, fileName));
+        // GetAbsolutePath absolutizes but does not canonicalize, so canonicalize explicitly to keep
+        // this [Output] in the same form the previous Path.GetFullPath produced. PATH entries
+        // routinely carry '..' segments and trailing separators.
+        DotNetPath = TaskEnvironment.GetAbsolutePath(Path.Combine(dotNetDir, fileName)).GetCanonicalForm();
         BuildEngine4.RegisterTaskObject(cacheKey, DotNetPath, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
     }
 }

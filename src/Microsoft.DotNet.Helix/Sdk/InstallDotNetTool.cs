@@ -175,10 +175,27 @@ public class InstallDotNetTool : MSBuildTaskBase, IMultiThreadableTask
 
         args.Add(Name);
 
-        // A bare "dotnet" is resolved through PATH by the process launcher and must stay
-        // unresolved; only an explicitly supplied path is made absolute.
-        var executable = string.IsNullOrEmpty(DotnetPath) ? "dotnet" : (string)TaskEnvironment.GetAbsolutePath(DotnetPath);
-        Log.LogMessage($"Executing {DotnetPath} {string.Join(" ", args)}");
+        // A bare executable name such as "dotnet" or "dotnet.exe" must stay unresolved so the
+        // process launcher can find it on PATH. RepoLayout.props deliberately produces that form
+        // when the repo-local .NET install is absent, and XHarnessRunner.targets forwards it here
+        // as DotnetPath. Only a value that actually carries a directory component is absolutized.
+        string executable;
+        if (string.IsNullOrEmpty(DotnetPath))
+        {
+            executable = "dotnet";
+        }
+        else if (string.IsNullOrEmpty(Path.GetDirectoryName(DotnetPath)))
+        {
+            executable = DotnetPath;
+        }
+        else
+        {
+            executable = TaskEnvironment.GetAbsolutePath(DotnetPath);
+        }
+
+        // Log the executable actually invoked. DotnetPath is empty in the common case, which made
+        // this line report a blank command.
+        Log.LogMessage($"Executing {executable} {string.Join(" ", args)}");
 
         ICommand command = commandFactory.Create(executable, args);
 

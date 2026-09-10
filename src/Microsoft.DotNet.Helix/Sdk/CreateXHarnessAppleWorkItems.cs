@@ -107,8 +107,13 @@ public class CreateXHarnessAppleWorkItems : XHarnessTaskBase
         // The app bundle path is documented as relative (see tools/xharness-runner/Readme.md), so it has to be
         // resolved against the project directory before it reaches IFileSystem/ZipArchiveManager, which use raw
         // File/Directory APIs and would otherwise bind to the shared node's current directory. Trim first so the
-        // trailing separator does not turn a bundle directory into a different resolved path.
-        appFolderPath = TaskEnvironment.GetAbsolutePath(appFolderPath);
+        // trailing separator does not turn a bundle directory into a different resolved path. That trim can also
+        // empty the string, and GetAbsolutePath rejects an empty path, so that case is left to
+        // ValidateAppBundlePath below, which reports it as a missing bundle instead of throwing.
+        if (!string.IsNullOrEmpty(appFolderPath))
+        {
+            appFolderPath = TaskEnvironment.GetAbsolutePath(appFolderPath);
+        }
 
         bool isAlreadyArchived = appFolderPath.EndsWith(".zip");
         if (isAlreadyArchived && workItemName.EndsWith(".app"))

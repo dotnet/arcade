@@ -32,8 +32,9 @@ public sealed class GenerateSourcePackageSourceLinkTargetsFile : Task, IMultiThr
 
     public override bool Execute()
     {
-        Directory.CreateDirectory(TaskEnvironment.GetAbsolutePath(Path.GetDirectoryName(OutputPath)));
-        File.WriteAllText(TaskEnvironment.GetAbsolutePath(OutputPath), GetOutputFileContent(), Encoding.UTF8);
+        AbsolutePath outputPath = TaskEnvironment.GetAbsolutePath(OutputPath);
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+        File.WriteAllText(outputPath, GetOutputFileContent(), Encoding.UTF8);
 
         return !Log.HasLoggedErrors;
     }

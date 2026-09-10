@@ -70,18 +70,21 @@ public class DownloadFile : Task, ICancelableTask, IMultiThreadableTask
             return true;
         }
 
-        if (string.IsNullOrWhiteSpace(Uri) && (Uris == null || Uris.Count() == 0)) {
+        if (string.IsNullOrWhiteSpace(Uri) && (Uris == null || Uris.Count() == 0))
+        {
             Log.LogError($"Invalid task parameter value: {nameof(Uri)} and {nameof(Uris)} are empty.");
             return false;
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
 
-        if (!string.IsNullOrWhiteSpace(Uri)) {
+        if (!string.IsNullOrWhiteSpace(Uri))
+        {
             return DownloadFromUriAsync(Uri, destinationPath).Result;
         }
 
-        if (Uris != null) {
+        if (Uris != null)
+        {
             foreach (var uriConfig in Uris)
             {
                 var uri = uriConfig.ItemSpec;
@@ -100,7 +103,8 @@ public class DownloadFile : Task, ICancelableTask, IMultiThreadableTask
                     uri = $"{uri}{decodedToken}";
                 }
 
-                if (DownloadFromUriAsync(uri, destinationPath).Result) {
+                if (DownloadFromUriAsync(uri, destinationPath).Result)
+                {
                     return true;
                 }
             }
@@ -113,20 +117,28 @@ public class DownloadFile : Task, ICancelableTask, IMultiThreadableTask
         return false;
     }
 
-    private async Tasks.Task<bool> DownloadFromUriAsync(string uri, AbsolutePath destinationPath) {
+    private async Tasks.Task<bool> DownloadFromUriAsync(string uri, AbsolutePath destinationPath)
+    {
         if (uri.StartsWith(FileUriProtocol, StringComparison.Ordinal))
         {
             var filePath = uri.Substring(FileUriProtocol.Length);
-            AbsolutePath sourcePath = TaskEnvironment.GetAbsolutePath(filePath);
 
-            if (File.Exists(sourcePath)) {
-                Log.LogMessage($"Copying '{filePath}' to '{DestinationPath}'");
-                File.Copy(sourcePath, destinationPath, overwrite: true);
-                return true;
-            } else {
-                Log.LogMessage($"'{filePath}' does not exist.");
-                return false;
+            // GetAbsolutePath rejects a null or empty path, whereas the File.Exists probe it feeds
+            // used to simply report the file as missing.
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                AbsolutePath sourcePath = TaskEnvironment.GetAbsolutePath(filePath);
+
+                if (File.Exists(sourcePath))
+                {
+                    Log.LogMessage($"Copying '{filePath}' to '{DestinationPath}'");
+                    File.Copy(sourcePath, destinationPath, overwrite: true);
+                    return true;
+                }
             }
+
+            Log.LogMessage($"'{filePath}' does not exist.");
+            return false;
         }
 
         Log.LogMessage($"Downloading '{uri}' to '{DestinationPath}'");
