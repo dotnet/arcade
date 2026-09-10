@@ -52,14 +52,14 @@ public class InstallDotNetCore : Task, IMultiThreadableTask
         AbsolutePath globalJsonPath = TaskEnvironment.GetAbsolutePath(GlobalJsonPath);
         if (!File.Exists(globalJsonPath))
         {
-            Log.LogWarning($"Unable to find global.json file '{globalJsonPath}' exiting");
+            Log.LogWarning($"Unable to find global.json file '{GlobalJsonPath}' exiting");
             return true;
         }
 
         AbsolutePath dotNetInstallScript = TaskEnvironment.GetAbsolutePath(DotNetInstallScript);
         if (!File.Exists(dotNetInstallScript))
         {
-            Log.LogError($"Unable to find dotnet install script '{dotNetInstallScript}' exiting");
+            Log.LogError($"Unable to find dotnet install script '{DotNetInstallScript}' exiting");
             return !Log.HasLoggedErrors;
         }
 
@@ -93,14 +93,14 @@ public class InstallDotNetCore : Task, IMultiThreadableTask
                         {
                             if (string.IsNullOrEmpty(VersionsPropsPath))
                             {
-                                Log.LogError($"Unable to find translation file {VersionsPropsPath}");
+                                Log.LogError($"{nameof(VersionsPropsPath)} must be specified to resolve non-version runtime identifiers.");
                                 return !Log.HasLoggedErrors;
                             }
 
                             AbsolutePath versionsPropsPath = TaskEnvironment.GetAbsolutePath(VersionsPropsPath);
                             if (!File.Exists(versionsPropsPath))
                             {
-                                Log.LogError($"Unable to find translation file {versionsPropsPath}");
+                                Log.LogError($"Unable to find translation file {VersionsPropsPath}");
                                 return !Log.HasLoggedErrors;
                             }
 
@@ -308,7 +308,7 @@ public class InstallDotNetCore : Task, IMultiThreadableTask
         AbsolutePath runtimeDirectory = TaskEnvironment.GetAbsolutePath(runtimePath);
         if (Directory.Exists(runtimeDirectory))
         {
-            Log.LogMessage(MessageImportance.Normal, $"  Runtime toolset '{runtime}/{architecture} v{version}' already installed in directory '{runtimeDirectory}'.");
+            Log.LogMessage(MessageImportance.Normal, $"  Runtime toolset '{runtime}/{architecture} v{version}' already installed in directory '{runtimePath}'.");
             return true;
         }
 

@@ -178,7 +178,10 @@ public class InstallDotNetTool : MSBuildTaskBase, IMultiThreadableTask
         // A bare "dotnet" is resolved through PATH by the process launcher and must stay
         // unresolved; only an explicitly supplied path is made absolute.
         var executable = string.IsNullOrEmpty(DotnetPath) ? "dotnet" : (string)TaskEnvironment.GetAbsolutePath(DotnetPath);
-        Log.LogMessage($"Executing {DotnetPath} {string.Join(" ", args)}");
+
+        // Log the executable actually invoked. DotnetPath is empty in the common case, which made
+        // this line report a blank command.
+        Log.LogMessage($"Executing {executable} {string.Join(" ", args)}");
 
         ICommand command = commandFactory.Create(executable, args);
 
