@@ -539,11 +539,13 @@ if [[ "$__CodeName" == "alpine" ]]; then
     __AlpineRepo="${__AlpineRepoOverride:-https://dl-cdn.alpinelinux.org/alpine}"
 
     ensureDownloadTool
+    __ApkToolsPackage="$__ApkToolsDir/apk-tools-static.apk"
+    __ApkToolsUrl="$__AlpineRepo/v3.20/main/$arch/apk-tools-static-$__ApkToolsVersion.apk"
 
     if [[ "$__hasWget" == 1 ]]; then
-        wget -O "$__ApkToolsDir/apk-tools-static.apk" "$__AlpineRepo/v3.20/main/$arch/apk-tools-static-$__ApkToolsVersion.apk"
+        wget -O "$__ApkToolsPackage" "$__ApkToolsUrl"
     else
-        curl -fSL -o "$__ApkToolsDir/apk-tools-static.apk" "$__AlpineRepo/v3.20/main/$arch/apk-tools-static-$__ApkToolsVersion.apk"
+        curl -fSL -o "$__ApkToolsPackage" "$__ApkToolsUrl"
     fi
 
     if [[ "$arch" == "x86_64" ]]; then
@@ -551,10 +553,12 @@ if [[ "$__CodeName" == "alpine" ]]; then
     elif [[ "$arch" == "aarch64" ]]; then
         __ApkToolsSHA512SUM="61f9a636c5ac4e96e7a3f69fd65e60fc57b3ec8b23619c4df86f59b89e71d1309b3e406388945bdf0dd9168dac22df376943a70ff3efa179e5687e586f825fb0"
     else
-        echo "WARNING: add missing hash for your host architecture. To find the value, use: 'find /tmp -name apk-tools-static.apk -exec sha512sum {} \;'"
+        >&2 echo "ERROR: Unsupported apk-tools-static host architecture '$arch'."
+        exit 1
     fi
-    echo "$__ApkToolsSHA512SUM $__ApkToolsDir/apk-tools-static.apk" | sha512sum -c
-    tar -xzf "$__ApkToolsDir/apk-tools-static.apk" -C "$__ApkToolsDir" --strip-components=1 sbin/apk.static
+    echo "$__ApkToolsSHA512SUM $__ApkToolsPackage" | sha512sum -c
+    tar -xzf "$__ApkToolsPackage" -C "$__ApkToolsDir" --strip-components=1 sbin/apk.static
+    rm "$__ApkToolsPackage"
     chmod +x "$__ApkToolsDir/apk.static"
 
     if [[ "$__AlpineVersion" == "edge" ]]; then
