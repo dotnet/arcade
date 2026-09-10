@@ -200,6 +200,39 @@ public class InstallDotNetToolTests
     }
 
     /// <summary>
+    /// RepoLayout.props clears DotNetRoot when the repo-local .NET install is absent, which leaves
+    /// DotNetTool as a bare "dotnet"/"dotnet.exe" for the launcher to resolve through PATH.
+    /// XHarnessRunner.targets forwards that value as DotnetPath, so it must not be absolutized.
+    /// </summary>
+    [Fact]
+    public void BareExecutableNameIsNotResolvedToAPath()
+    {
+        // Setup
+        _fileSystemMock
+            .Setup(x => x.DirectoryExists(It.IsAny<string>()))
+            .Returns(false);
+
+        _commandMock
+            .Setup(x => x.Execute())
+            .Returns(new CommandResult(new ProcessStartInfo(), 0, "Tool installed", null));
+
+        var collection = CreateMockServiceCollection();
+        _task.ConfigureServices(collection);
+        _task.DotnetPath = _dotnetPath = "dotnet.exe";
+
+        // Act
+        using var provider = collection.BuildServiceProvider();
+        _task.InvokeExecute(provider).Should().BeTrue();
+
+        // Verify
+        _commandFactoryMock.Verify(
+            x => x.Create(
+                It.Is<string>(dotnet => dotnet == "dotnet.exe"),
+                It.IsAny<IEnumerable<string>>()),
+            Times.Once);
+    }
+
+    /// <summary>
     /// This test spawns 2 real threads that use real Mutex.
     /// First thread (installation task), calls the `dotnet tool install` command.
     /// Second thread (skip task), waits for the first thread to finish and then verifies the existence of the tool.
