@@ -70,18 +70,21 @@ public class DownloadFile : Task, ICancelableTask, IMultiThreadableTask
             return true;
         }
 
-        if (string.IsNullOrWhiteSpace(Uri) && (Uris == null || Uris.Count() == 0)) {
+        if (string.IsNullOrWhiteSpace(Uri) && (Uris == null || Uris.Count() == 0))
+        {
             Log.LogError($"Invalid task parameter value: {nameof(Uri)} and {nameof(Uris)} are empty.");
             return false;
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
 
-        if (!string.IsNullOrWhiteSpace(Uri)) {
+        if (!string.IsNullOrWhiteSpace(Uri))
+        {
             return DownloadFromUriAsync(Uri, destinationPath).Result;
         }
 
-        if (Uris != null) {
+        if (Uris != null)
+        {
             foreach (var uriConfig in Uris)
             {
                 var uri = uriConfig.ItemSpec;
