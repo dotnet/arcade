@@ -152,6 +152,10 @@ jobs:
   - checkout: self
     fetchDepth: 1
 
+  - ${{ if and(eq(parameters.useEntraAuthentication, true), eq(parameters.azureSubscription, '')) }}:
+    - pwsh: throw "azureSubscription must be set when useEntraAuthentication is true."
+      displayName: Validate Helix Entra authentication
+
   - ${{ if eq(parameters.useEntraAuthentication, true) }}:
     - task: AzureCLI@2
       displayName: Initialize Helix Entra authentication
