@@ -19,7 +19,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests;
 
 public class InstallDotNetToolTests
 {
-    private const string InstallPath = @"C:\dotnet_tools";
+    // Must be absolute on every host: the task now resolves DestinationPath, and a Windows-style
+    // literal like "C:\dotnet_tools" is a relative path on Unix, which would get prefixed with the
+    // project directory and no longer match the expectations below.
+    private static readonly string InstallPath = Path.Combine(Path.GetTempPath(), "dotnet_tools");
     private const string ToolName = "Microsoft.DotNet.Arcade.FakeTool";
     private const string ToolVersion = "1.0.0-prerelease.21108.1";
     private static readonly string s_installedPath = Path.Combine(InstallPath, ToolName, ToolVersion);
@@ -182,7 +185,7 @@ public class InstallDotNetToolTests
         var collection = CreateMockServiceCollection();
         _task.ConfigureServices(collection);
         _task.Source = "https://dev.azure.com/some/feed";
-        _task.DotnetPath = _dotnetPath = @"D:\dotnet\dotnet.exe";
+        _task.DotnetPath = _dotnetPath = Path.Combine(Path.GetTempPath(), "dotnet", "dotnet.exe");
         _task.TargetArchitecture = "arm64";
         _task.TargetFramework = "net6.0";
 
