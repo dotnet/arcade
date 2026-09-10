@@ -72,15 +72,10 @@ public class LocateDotNet : Task, IMultiThreadableTask
             return;
         }
 
-        // GetAbsolutePath only anchors a relative path against the project directory, it does not
-        // normalize it, so Path.GetFullPath is still required to keep this [Output] canonical for
-        // consumers exactly as it was before. PATH entries routinely contain '..' segments and
-        // trailing separators. The analyzer cannot distinguish canonicalizing an already-resolved
-        // path from using GetFullPath to absolutize a relative one, and AbsolutePath.GetCanonicalForm()
-        // is internal to MSBuild, so the suppression is the only way to retain the normalization.
-#pragma warning disable MSBuildTask0002 // Canonicalizing an already-resolved AbsolutePath, not absolutizing.
-        DotNetPath = Path.GetFullPath(TaskEnvironment.GetAbsolutePath(Path.Combine(dotNetDir, fileName)));
-#pragma warning restore MSBuildTask0002
+        // GetAbsolutePath absolutizes but does not canonicalize, so canonicalize explicitly to keep
+        // this [Output] in the same form the previous Path.GetFullPath produced. PATH entries
+        // routinely carry '..' segments and trailing separators.
+        DotNetPath = TaskEnvironment.GetAbsolutePath(Path.Combine(dotNetDir, fileName)).GetCanonicalForm();
         BuildEngine4.RegisterTaskObject(cacheKey, DotNetPath, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
     }
 }
