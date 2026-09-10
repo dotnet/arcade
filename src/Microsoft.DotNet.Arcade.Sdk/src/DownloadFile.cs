@@ -100,7 +100,8 @@ public class DownloadFile : Task, ICancelableTask, IMultiThreadableTask
                     uri = $"{uri}{decodedToken}";
                 }
 
-                if (DownloadFromUriAsync(uri, destinationPath).Result) {
+                if (DownloadFromUriAsync(uri, destinationPath).Result)
+                {
                     return true;
                 }
             }
@@ -113,7 +114,8 @@ public class DownloadFile : Task, ICancelableTask, IMultiThreadableTask
         return false;
     }
 
-    private async Tasks.Task<bool> DownloadFromUriAsync(string uri, AbsolutePath destinationPath) {
+    private async Tasks.Task<bool> DownloadFromUriAsync(string uri, AbsolutePath destinationPath)
+    {
         if (uri.StartsWith(FileUriProtocol, StringComparison.Ordinal))
         {
             var filePath = uri.Substring(FileUriProtocol.Length);
@@ -124,7 +126,8 @@ public class DownloadFile : Task, ICancelableTask, IMultiThreadableTask
             {
                 AbsolutePath sourcePath = TaskEnvironment.GetAbsolutePath(filePath);
 
-                if (File.Exists(sourcePath)) {
+                if (File.Exists(sourcePath))
+                {
                     Log.LogMessage($"Copying '{filePath}' to '{DestinationPath}'");
                     File.Copy(sourcePath, destinationPath, overwrite: true);
                     return true;
