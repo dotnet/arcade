@@ -37,6 +37,15 @@ public class LocateDotNet : Task, IMultiThreadableTask
         var lastWrite = File.GetLastWriteTimeUtc(globalJsonPath);
         var paths = TaskEnvironment.GetEnvironmentVariable("PATH");
 
+        // GetEnvironmentVariable is nullable, and under multithreaded execution it is a lookup in a
+        // per-project environment rather than the process block, so a missing PATH is more reachable
+        // than it used to be. Fail with a clear message instead of a NullReferenceException below.
+        if (string.IsNullOrEmpty(paths))
+        {
+            Log.LogError("Unable to locate dotnet because the PATH environment variable is not set.");
+            return;
+        }
+
         // The read/write pair below is not atomic, so under multithreaded execution two threads
         // can both miss and both compute the value. That is benign here: the computation is pure
         // and deterministic for a given (global.json, timestamp, PATH), so the loser of the race
