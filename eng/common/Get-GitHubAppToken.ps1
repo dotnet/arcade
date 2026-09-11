@@ -46,32 +46,47 @@ function ConvertTo-Base64Url([byte[]] $bytes) {
     return [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
 }
 
+$previousNativeCommandErrorPreference = $PSNativeCommandUseErrorActionPreference
+try {
+    # Azure CLI can emit non-fatal Python warnings to stderr.
+    $PSNativeCommandUseErrorActionPreference = $false
+    $keyVaultAccessToken = az account get-access-token `
+        --resource https://vault.azure.net `
+        --query accessToken `
+        --output tsv `
+        --only-show-errors
+    $tokenExitCode = $LASTEXITCODE
+}
+catch {
+    Write-PipelineTelemetryError -Category 'Build' -Message "Failed to acquire an Azure Key Vault access token: $_"
+    exit 1
+}
+finally {
+    $PSNativeCommandUseErrorActionPreference = $previousNativeCommandErrorPreference
+}
+if ($tokenExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($keyVaultAccessToken)) {
+    Write-PipelineTelemetryError -Category 'Build' -Message "'az account get-access-token' exited with code $tokenExitCode while acquiring an Azure Key Vault access token."
+    exit 1
+}
+
 function Get-KeyVaultSecret([string] $SecretName) {
-    $previousNativeCommandErrorPreference = $PSNativeCommandUseErrorActionPreference
+    $escapedSecretName = [Uri]::EscapeDataString($SecretName)
+    $secretUri = "https://$KeyVaultName.vault.azure.net/secrets/$escapedSecretName`?api-version=7.4"
     try {
-        # Azure CLI can emit non-fatal Python warnings to stderr.
-        $PSNativeCommandUseErrorActionPreference = $false
-        $value = az keyvault secret show `
-            --vault-name $KeyVaultName `
-            --name $SecretName `
-            --query value `
-            --output tsv `
-            --only-show-errors
-        $getExitCode = $LASTEXITCODE
+        $response = Invoke-RestMethod `
+            -Uri $secretUri `
+            -Headers @{ Authorization = "Bearer $keyVaultAccessToken" } `
+            -Method Get
     }
     catch {
-        Write-PipelineTelemetryError -Category 'Build' -Message "Failed to read secret '$SecretName' from vault '$KeyVaultName': $_. Verify the service connection has 'Key Vault Secrets User' access to this secret."
+        Write-PipelineTelemetryError -Category 'Build' -Message "Failed to read secret '$SecretName' from vault '$KeyVaultName': $_. Verify the secret exists and the service connection has 'Key Vault Secrets User' access to it."
         exit 1
     }
-    finally {
-        $PSNativeCommandUseErrorActionPreference = $previousNativeCommandErrorPreference
-    }
-    if ($getExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($value)) {
-        Write-PipelineTelemetryError -Category 'Build' -Message "'az keyvault secret show' exited with code $getExitCode for secret '$SecretName' in vault '$KeyVaultName'. Verify the secret exists and the service connection has 'Key Vault Secrets User' access to it."
+    if ([string]::IsNullOrWhiteSpace($response.value)) {
+        Write-PipelineTelemetryError -Category 'Build' -Message "Secret '$SecretName' in vault '$KeyVaultName' is empty."
         exit 1
     }
-    # Native command output is an array when the PEM contains line breaks.
-    return [string]::Join("`n", @($value))
+    return [string] $response.value
 }
 
 Write-Host "Reading GitHub App credentials from vault '$KeyVaultName'..."
