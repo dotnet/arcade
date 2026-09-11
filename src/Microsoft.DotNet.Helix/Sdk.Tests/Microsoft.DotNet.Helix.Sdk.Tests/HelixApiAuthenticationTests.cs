@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Immutable;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -10,6 +11,7 @@ using Azure.Core;
 using Azure.Core.Pipeline;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Helix.Client;
+using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor;
 using Microsoft.DotNet.Helix.Sdk;
 using Xunit;
@@ -221,6 +223,26 @@ public class HelixApiAuthenticationTests
                 () => ApiFactory.GetAuthenticatedWithEntra(new TestTokenCredential())));
 
         Assert.Equal(expectedMode, api.Options.AuthenticationMode);
+    }
+
+    [Theory]
+    [InlineData(false, null, "https://storage/results.trx")]
+    [InlineData(false, "legacy-token", "https://storage/results.trx?access_token=legacy-token")]
+    [InlineData(true, null, "https://storage/results.trx")]
+    [InlineData(true, "legacy-token", "https://storage/results.trx")]
+    public void UploadedFileLinksOnlyContainTokenInPatMode(
+        bool useEntraAuthentication,
+        string accessToken,
+        string expectedLink)
+    {
+        var files = ImmutableList.Create(new UploadedFile("results.trx", "https://storage/results.trx"));
+
+        IImmutableList<UploadedFile> result = GetHelixWorkItems.AddAccessTokenToFileLinks(
+            files,
+            accessToken,
+            useEntraAuthentication);
+
+        Assert.Equal(expectedLink, Assert.Single(result).Link);
     }
 
     [Theory]
