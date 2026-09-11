@@ -52,8 +52,8 @@ parameters:
   type: string
   default: https://helix.dot.net/
 
-# Helix API access token forwarded via HELIX_ACCESSTOKEN. Ignored with a warning
-# when useEntraAuthentication is true.
+# Helix API access token forwarded via HELIX_ACCESSTOKEN. Not forwarded when
+# useEntraAuthentication is true.
 - name: helixAccessToken
   type: string
   default: ''
@@ -308,7 +308,8 @@ jobs:
     displayName: Monitor Helix Jobs
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-      HELIX_ACCESSTOKEN: ${{ parameters.helixAccessToken }}
+      ${{ if eq(parameters.useEntraAuthentication, false) }}:
+        HELIX_ACCESSTOKEN: ${{ parameters.helixAccessToken }}
       ${{ if eq(parameters.useEntraAuthentication, true) }}:
         AZURESUBSCRIPTION_CLIENT_ID: $(HelixEntraClientId)
         AZURESUBSCRIPTION_TENANT_ID: $(HelixEntraTenantId)
