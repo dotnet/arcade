@@ -16,12 +16,12 @@ namespace Microsoft.DotNet.GenFacades;
 public class GenPartialFacadeSourceGenerator
 {
     public static bool Execute(
-        string[] seeds,
-        string contractAssembly,
-        string[] compileFiles,
+        AbsolutePath[] seeds,
+        AbsolutePath contractAssembly,
+        AbsolutePath[] compileFiles,
         string defineConstants,
         string langVersion,
-        string outputSourcePath,
+        AbsolutePath outputSourcePath,
         TaskLoggingHelper logger,
         bool ignoreMissingTypes = false,
         string[] ignoreMissingTypesList = null,
@@ -32,9 +32,12 @@ public class GenPartialFacadeSourceGenerator
 
         IEnumerable<string> referenceTypes = GetPublicVisibleTypes(contractAssembly, includeTypeForwards: true);
 
-        // Normalizing and Removing Relative Segments from the seed paths.
-        string[] distinctSeeds = seeds.Select(seed => Path.GetFullPath(seed)).Distinct().ToArray();
-        string[] seedNames = distinctSeeds.Select(seed => Path.GetFileName(seed)).ToArray();
+        // Normalizing and Removing Relative Segments from the seed paths. GetAbsolutePath only
+        // anchors, so the canonical form is what makes Distinct below collapse two spellings of
+        // the same seed; otherwise the duplicate-name check underneath reports them as two
+        // different versions of one assembly.
+        AbsolutePath[] distinctSeeds = seeds.Select(seed => seed.GetCanonicalForm()).Distinct().ToArray();
+        string[] seedNames = distinctSeeds.Select(seed => Path.GetFileName(seed.Value)).ToArray();
 
         if (distinctSeeds.Count() != seedNames.Distinct(StringComparer.InvariantCultureIgnoreCase).Count())
         {
@@ -92,7 +95,7 @@ public class GenPartialFacadeSourceGenerator
         return dictionary;
     }
 
-    private static IEnumerable<string> GetPublicVisibleTypes(string assembly, bool includeTypeForwards = false)
+    private static IEnumerable<string> GetPublicVisibleTypes(AbsolutePath assembly, bool includeTypeForwards = false)
     {
         using (var peReader = new PEReader(new FileStream(assembly, FileMode.Open, FileAccess.Read, FileShare.Delete | FileShare.Read)))
         {
@@ -139,15 +142,15 @@ public class GenPartialFacadeSourceGenerator
         return (typeDefination.Attributes & TypeAttributes.Public) != 0;
     }
 
-    private static IReadOnlyDictionary<string, IList<string>> GenerateTypeTable(IEnumerable<string> seedAssemblies)
+    private static IReadOnlyDictionary<string, IList<string>> GenerateTypeTable(IEnumerable<AbsolutePath> seedAssemblies)
     {
         var typeTable = new Dictionary<string, IList<string>>();
-        foreach(string assembly in seedAssemblies)
+        foreach(AbsolutePath assembly in seedAssemblies)
         {                
             IEnumerable<string> types = GetPublicVisibleTypes(assembly);
             foreach (string type in types)
             {
-                AddTypeToTable(typeTable, type, Path.GetFileName(assembly));
+                AddTypeToTable(typeTable, type, Path.GetFileName(assembly.Value));
             }
         }
         return typeTable;
