@@ -3,7 +3,9 @@
 # API for a token scoped to a single installation.
 #
 # Requirements:
-#   - A GitHub App ID and PEM private key supplied through the environment.
+#   - A GitHub App ID and PEM private key stored as Azure Key Vault secrets.
+#   - The federated Azure service connection running this script must have
+#     `Get` access to those two secrets.
 #   - The App must be installed on the target organization/account
 #     (`InstallationOwner`) with the permissions/repositories it needs.
 #
@@ -12,6 +14,18 @@
 
 [CmdletBinding()]
 param(
+    # Name of the Key Vault holding the GitHub App credentials.
+    [Parameter(Mandatory = $true)]
+    [string] $KeyVaultName,
+
+    # Secret Manager projection containing the GitHub App ID.
+    [Parameter(Mandatory = $true)]
+    [string] $AppIdSecretName,
+
+    # Secret Manager projection containing the PEM private key.
+    [Parameter(Mandatory = $true)]
+    [string] $AppPrivateKeySecretName,
+
     # Login of the organization or user account whose installation we should
     # mint the token for (e.g. `dotnet`, `microsoft`).
     [Parameter(Mandatory = $true)]
@@ -24,6 +38,7 @@ param(
     [string] $OutputVariableName
 )
 $ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
 
 . $PSScriptRoot\pipeline-logging-functions.ps1
 
@@ -31,16 +46,37 @@ function ConvertTo-Base64Url([byte[]] $bytes) {
     return [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
 }
 
-$appId = $env:GITHUB_APP_ID
-$privateKey = $env:GITHUB_APP_PRIVATE_KEY
-if ([string]::IsNullOrWhiteSpace($appId) -or [string]::IsNullOrWhiteSpace($privateKey)) {
-    Write-PipelineTelemetryError -Category 'Build' -Message "GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY must both be set. Verify both values are supplied as secret pipeline variables."
-    exit 1
+function Get-KeyVaultSecret([string] $SecretName) {
+    $previousNativeCommandErrorPreference = $PSNativeCommandUseErrorActionPreference
+    try {
+        # Azure CLI can emit non-fatal Python warnings to stderr.
+        $PSNativeCommandUseErrorActionPreference = $false
+        $value = az keyvault secret show `
+            --vault-name $KeyVaultName `
+            --name $SecretName `
+            --query value `
+            --output tsv `
+            --only-show-errors
+        $getExitCode = $LASTEXITCODE
+    }
+    catch {
+        Write-PipelineTelemetryError -Category 'Build' -Message "Failed to read secret '$SecretName' from vault '$KeyVaultName': $_. Verify the service connection has 'Key Vault Secrets User' access to this secret."
+        exit 1
+    }
+    finally {
+        $PSNativeCommandUseErrorActionPreference = $previousNativeCommandErrorPreference
+    }
+    if ($getExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($value)) {
+        Write-PipelineTelemetryError -Category 'Build' -Message "'az keyvault secret show' exited with code $getExitCode for secret '$SecretName' in vault '$KeyVaultName'. Verify the secret exists and the service connection has 'Key Vault Secrets User' access to it."
+        exit 1
+    }
+    # Native command output is an array when the PEM contains line breaks.
+    return [string]::Join("`n", @($value))
 }
-if ($appId -match '^\$\([^)]+\)$' -or $privateKey -match '^\$\([^)]+\)$') {
-    Write-PipelineTelemetryError -Category 'Build' -Message "The GitHub App ID or private key is an unresolved pipeline variable. Verify the pipeline resolves both secret variables before this task runs."
-    exit 1
-}
+
+Write-Host "Reading GitHub App credentials from vault '$KeyVaultName'..."
+$appId = Get-KeyVaultSecret $AppIdSecretName
+$privateKey = Get-KeyVaultSecret $AppPrivateKeySecretName
 
 # Build JWT header and payload. Use [ordered] hashtables so JSON
 # serialization is deterministic.

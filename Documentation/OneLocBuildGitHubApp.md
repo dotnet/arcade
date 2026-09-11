@@ -36,10 +36,11 @@ If App token minting or authentication fails, the job fails; there is no stored-
    specific repository must be selected in that installation.** The App can only open a PR against a
    repository it is installed on. This is what actually grants the App permission to your repo.
 2. **Your pipeline must run in `dnceng/internal` or `DevDiv/DevDiv` and be authorized to use its
-   project's Key Vault-backed `OneLocBuildVariables` variable group.** The shared OneLoc job
-   imports the group automatically.
+   project's GitHub App WIF service connection.** The shared OneLoc job uses that identity to read
+   only the two required Secret Manager projections from Key Vault.
 
-The .NET Engineering Services team manages the App credentials and variable groups.
+The .NET Engineering Services team manages the App credentials, Key Vault permissions, and
+service connections.
 
 ### Step 1 — Request that your repository be added to the App installation
 
@@ -74,23 +75,26 @@ OneLocBuild template call. For example:
       LclPackageId: 'LCL-JUNO-PROD-YOURREPO'
 ```
 
-The project-specific variable group supplies the App ID and private key:
+The project-specific WIF service connection reads the App ID and private key directly from
+EngKeyVault:
 
-| Azure DevOps project | Variable group |
+| Azure DevOps project | Service connection |
 |---|---|
-| `dnceng/internal` | `OneLocBuildVariables` (103) |
-| `DevDiv/DevDiv` | `OneLocBuildVariables` (343) |
+| `dnceng/internal` | `dnceng-oneloc-githubapp` |
+| `DevDiv/DevDiv` | `devdiv-oneloc-githubapp` |
 
-The variable group must contain `oneloc-localization-app-app-id` and
-`oneloc-localization-app-app-private-key`. The shared OneLoc job imports the group automatically,
-but each pipeline must be authorized to use it.
+Each identity has `Key Vault Secrets User` access scoped to only
+`oneloc-localization-app-app-id` and `oneloc-localization-app-app-private-key`. Each pipeline must
+be authorized to use its project's service connection.
 
 ### GitHub App parameters
 
 | **Parameter** | **Default** | **Notes** |
 |:-:|:-:|-|
-| `GitHubAppId` | `$(oneloc-localization-app-app-id)` | Secret Manager-managed GitHub App ID from `OneLocBuildVariables`. |
-| `GitHubAppPrivateKey` | `$(oneloc-localization-app-app-private-key)` | Secret Manager-managed PEM private key from `OneLocBuildVariables`. |
+| `GitHubAppServiceConnection` | `dnceng-oneloc-githubapp` | WIF service connection used to read the App credentials. DevDiv automatically selects `devdiv-oneloc-githubapp` when this default is unchanged. |
+| `GitHubAppKeyVaultName` | `EngKeyVault` | Key Vault containing the Secret Manager projections. |
+| `GitHubAppIdSecretName` | `oneloc-localization-app-app-id` | Secret containing the GitHub App ID. |
+| `GitHubAppPrivateKeySecretName` | `oneloc-localization-app-app-private-key` | Secret containing the PEM private key. |
 
 The token is minted for the installation on the `GitHubOrg` account (default `dotnet`), so make sure
 `GitHubOrg` (and `MirrorRepo`, if mirroring) point at the org/repo where the App is installed.
@@ -98,12 +102,12 @@ The token is minted for the installation on the `GitHubOrg` account (default `do
 ### Migrating from Key Vault RSA signing
 
 The Key Vault RSA signing path has been removed. OneLoc callers must remove
-`GitHubAppServiceConnection`, `GitHubAppClientId`, `GitHubAppKeyVaultName`, and
-`GitHubAppKeyName`; the default `GitHubAppId` and `GitHubAppPrivateKey` values use the
-Secret Manager projections from `OneLocBuildVariables`.
+`GitHubAppClientId` and `GitHubAppKeyName`. `GitHubAppServiceConnection` and
+`GitHubAppKeyVaultName` now identify the least-privilege path used to read the Secret Manager
+projections. The shared defaults are sufficient for standard callers.
 
-Direct callers of `get-github-app-token.yml` must replace `azureSubscription`,
-`keyVaultName`, `keyName`, and `appClientId` with `appId` and `appPrivateKey`. There is no
+Direct callers of `get-github-app-token.yml` keep `azureSubscription` and `keyVaultName`, remove
+`keyName` and `appClientId`, and add `appIdSecretName` and `appPrivateKeySecretName`. There is no
 fallback to the legacy RSA key.
 
 ## Verifying it works
@@ -117,8 +121,9 @@ fallback to the legacy RSA key.
 ## Troubleshooting
 
 - **The App-token step is skipped.** The App path activates when `RepoType` is `gitHub`.
-- **The App ID or private key is empty.** Confirm the pipeline is authorized to use its project's
-  `OneLocBuildVariables` group and that the group maps both Secret Manager values.
+- **The App ID or private key cannot be read.** Confirm the pipeline is authorized to use its
+  project's GitHub App service connection and that its identity has `Key Vault Secrets User`
+  access to both configured secrets.
 - **`404`/`Not Found` when requesting the installation token.** The App is not installed on the
   `GitHubOrg` account, or your repository was not selected in the installation. Complete Step 1.
 - **PR fails to open on your repo.** Ensure the App has `Contents` and `Pull requests` (read &
