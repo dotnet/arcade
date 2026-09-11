@@ -1281,6 +1281,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
 
         await Task.WhenAll(publishTasks);
 
+        var latestLinkTasks = new List<Task>();
         foreach (var mapping in blobPublishMappings)
         {
             var publishedBlobs = mapping.Blobs
@@ -1292,9 +1293,10 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                 .ToHashSet(StringComparer.Ordinal);
             if (publishedBlobs.Count != 0)
             {
-                await CreateOrUpdateLatestLinksAsync(publishedBlobs, mapping.FeedConfig);
+                latestLinkTasks.Add(CreateOrUpdateLatestLinksAsync(publishedBlobs, mapping.FeedConfig));
             }
         }
+        await Task.WhenAll(latestLinkTasks);
 
         Log.LogMessage(MessageImportance.High, "\nCompleted publishing of blobs: ");
     }

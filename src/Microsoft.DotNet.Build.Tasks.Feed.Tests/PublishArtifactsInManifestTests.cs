@@ -148,6 +148,8 @@ public class PublishArtifactsInManifestTests
 
         public List<(HashSet<string> BlobPaths, TargetFeedConfig FeedConfig)> LatestLinkRequests { get; } = new();
 
+        public int? FailingLatestLinkRequestNumber { get; set; }
+
         public override Task<bool> ExecuteAsync() => throw new NotImplementedException();
 
         public Task PublishBlobsAsync() => HandleBlobPublishingAsync(ReadOnlyDictionary<string, ProductConstructionService.Client.Models.Asset>.Empty);
@@ -157,7 +159,9 @@ public class PublishArtifactsInManifestTests
         protected override Task CreateOrUpdateLatestLinksAsync(HashSet<string> blobPaths, TargetFeedConfig feedConfig)
         {
             LatestLinkRequests.Add((blobPaths, feedConfig));
-            return Task.CompletedTask;
+            return LatestLinkRequests.Count == FailingLatestLinkRequestNumber
+                ? Task.FromException(new InvalidOperationException("Latest-link update failed."))
+                : Task.CompletedTask;
         }
     }
 
@@ -440,6 +444,33 @@ public class PublishArtifactsInManifestTests
 
             publisher.PublishedBlobPaths.Should().ContainSingle();
             task.LatestLinkRequests.Should().ContainSingle();
+        }
+        finally
+        {
+            Directory.Delete(blobDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task HandleBlobPublishingAsyncAttemptsAllLatestLinkMappingsWhenOneFails()
+    {
+        var publisher = new RecordingAssetPublisher();
+        var blob = CreateBlob("asset.zip");
+        var firstConfig = CreateBlobFeedConfig("https://storage.example.net/public", "dotnet/first");
+        var secondConfig = CreateBlobFeedConfig("https://storage.example.net/public", "dotnet/second");
+        var (task, blobDirectory) = CreateBlobPublishingTask(publisher, [blob], firstConfig, secondConfig);
+        task.FailingLatestLinkRequestNumber = 1;
+
+        try
+        {
+            Func<Task> publish = task.PublishBlobsAsync;
+
+            await publish.Should().ThrowAsync<InvalidOperationException>()
+                .WithMessage("Latest-link update failed.");
+
+            publisher.PublishedBlobPaths.Should().ContainSingle();
+            task.LatestLinkRequests.Select(request => request.FeedConfig)
+                .Should().BeEquivalentTo([firstConfig, secondConfig]);
         }
         finally
         {
