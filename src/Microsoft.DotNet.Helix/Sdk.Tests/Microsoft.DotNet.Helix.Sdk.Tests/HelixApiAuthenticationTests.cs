@@ -270,6 +270,21 @@ public class HelixApiAuthenticationTests
         Assert.Equal(expectedMode, api.Options.AuthenticationMode);
     }
 
+    [Theory]
+    [InlineData(false, null, false)]
+    [InlineData(false, "legacy-token", true)]
+    [InlineData(true, null, true)]
+    [InlineData(true, "legacy-token", true)]
+    public void CancellationRecognizesConfiguredAuthentication(
+        bool useEntraAuthentication,
+        string accessToken,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            CancelHelixJobs.CanUseAuthenticatedCancellation(useEntraAuthentication, accessToken));
+    }
+
     private sealed class TestTokenCredential : TokenCredential
     {
         public override AccessToken GetToken(
