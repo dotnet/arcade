@@ -42,6 +42,11 @@ $PSNativeCommandUseErrorActionPreference = $true
 
 . $PSScriptRoot\pipeline-logging-functions.ps1
 
+if ($KeyVaultName -notmatch '^[A-Za-z][A-Za-z0-9-]{1,22}[A-Za-z0-9]$' -or $KeyVaultName.Contains('--')) {
+    Write-PipelineTelemetryError -Category 'Build' -Message "KeyVaultName '$KeyVaultName' is not a valid Azure Key Vault name."
+    exit 1
+}
+
 function ConvertTo-Base64Url([byte[]] $bytes) {
     return [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
 }

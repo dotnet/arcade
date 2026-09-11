@@ -101,14 +101,19 @@ The token is minted for the installation on the `GitHubOrg` account (default `do
 
 ### Migrating from Key Vault RSA signing
 
-The Key Vault RSA signing path has been removed. OneLoc callers must remove
-`GitHubAppClientId` and `GitHubAppKeyName`. `GitHubAppServiceConnection` and
-`GitHubAppKeyVaultName` now identify the least-privilege path used to read the Secret Manager
-projections. The shared defaults are sufficient for standard callers.
+The Key Vault RSA signing path and pipeline-variable credential path have both been removed.
 
-Direct callers of `get-github-app-token.yml` keep `azureSubscription` and `keyVaultName`, remove
-`keyName` and `appClientId`, and add `appIdSecretName` and `appPrivateKeySecretName`. There is no
-fallback to the legacy RSA key.
+OneLoc job callers using `GitHubAppId` and `GitHubAppPrivateKey` must remove those parameters.
+Callers from the older RSA interface must remove `GitHubAppClientId` and `GitHubAppKeyName`;
+`GitHubAppServiceConnection` and `GitHubAppKeyVaultName` retain their meanings. Standard callers
+need no replacement parameters because the four service-connection and secret-name defaults apply
+automatically.
+
+Direct callers of `get-github-app-token.yml` using `appId` and `appPrivateKey` must replace those
+parameters with `azureSubscription`, `keyVaultName`, `appIdSecretName`, and
+`appPrivateKeySecretName`. Direct callers from the older RSA interface keep `azureSubscription`
+and `keyVaultName`, remove `keyName` and `appClientId`, and add the two secret-name parameters.
+There is no fallback to the legacy RSA key.
 
 ## Verifying it works
 
