@@ -208,6 +208,9 @@ The parameters that can be passed to the template are as follows:
 | `condition` | `''` | Allows for conditionalizing the template's steps on build-time variables. |
 | `JobNameSuffix` | `''` | Allows for custom job name suffix. This is helpful for disambiguation in case of need for more then one OneLocBuild job run - e.g. as a way to set multiple package IDs. |
 
+GitHub OneLoc pipelines must be authorized to use the project-local `OneLocBuildVariables`
+variable group. The shared OneLoc job imports the group automatically when `RepoType` is `gitHub`.
+
 The previous Key Vault RSA signing parameters have been removed. See
 [Authenticating OneLocBuild's GitHub check-in with the GitHub App](OneLocBuildGitHubApp.md#migrating-from-key-vault-rsa-signing)
 for the required parameter migration.

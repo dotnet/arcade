@@ -39,7 +39,8 @@ jobs:
   displayName: OneLocBuild${{ parameters.JobNameSuffix }}
 
   variables:
-    - group: OneLocBuildVariables
+    - ${{ if eq(parameters.RepoType, 'gitHub') }}:
+      - group: OneLocBuildVariables
     - name: _GenerateLocProjectArguments
       value: -SourcesDirectory ${{ parameters.SourcesDirectory }}
         -LanguageSet "${{ parameters.LanguageSet }}"
