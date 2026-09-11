@@ -9,6 +9,13 @@
     <PackageTags>Arcade Build Tool Signing</PackageTags>
     <DevelopmentDependency>false</DevelopmentDependency>
     <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <!-- MSBuildTask0005 reports the file system APIs reached from SignToolTask through
+         BatchSignUtil/ZipData/Configuration/VerifySignatures. That helper chain is exactly why the
+         task is not yet marked [MSBuildMultiThreadableTask] (see SignToolTask.cs), so it keeps
+         running in the out-of-proc task host and those calls stay correct. No task in this project
+         is opted in, so nothing here is currently in scope for the rule. Suppressed until the
+         helpers take AbsolutePath, tracked by https://github.com/dotnet/arcade/issues/17378. -->
+    <NoWarn>$(NoWarn);MSBuildTask0005</NoWarn>
     <!-- Copy assemblies into lib folder so they can be used as a development dependency -->
     <BuildTaskTargetFolder>lib</BuildTaskTargetFolder>
     <!-- Signing is not supported in source-only builds -->
