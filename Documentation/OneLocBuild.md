@@ -203,10 +203,15 @@ The parameters that can be passed to the template are as follows:
 | `LclSource` | `LclFilesInRepo` | This passes the `LclSource` input to the OneLocBuild task as described in [its documentation](https://dev.azure.com/ceapex/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). For most repos, this should be set to `LclFilesfromPackage`. |
 | `LclPackageId` | `''` | When `LclSource` is set to `LclFilesfromPackage`, this passes in the package ID as described in the [OneLocBuild task documentation](https://dev.azure.com/ceapex/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=scenario-2%3A-lcl-files-from-a-package). |
 | `CeapexServiceConnection` | `'dnceng-onelocbuild-ceapex'` | The project-scoped WIF service connection used to acquire a short-lived token for the Ceapex feeds. OneLocBuild supports only `dnceng/internal` and `DevDiv/DevDiv`; pipelines must be authorized to use the connection. |
-| `GitHubAppId` | `$(oneloc-localization-app-app-id)` | Secret Manager-managed GitHub App ID from `OneLocBuildVariables`. |
-| `GitHubAppPrivateKey` | `$(oneloc-localization-app-app-private-key)` | Secret Manager-managed PEM private key from `OneLocBuildVariables`. |
+| `GitHubAppServiceConnection` | `'dnceng-oneloc-githubapp'` | Project-scoped WIF service connection used to read the App credentials from Key Vault. DevDiv automatically uses `devdiv-oneloc-githubapp` when this default is unchanged. |
+| `GitHubAppKeyVaultName` | `'EngKeyVault'` | Key Vault containing the Secret Manager-managed GitHub App credentials. |
+| `GitHubAppIdSecretName` | `'oneloc-localization-app-app-id'` | Secret Manager projection containing the GitHub App ID. |
+| `GitHubAppPrivateKeySecretName` | `'oneloc-localization-app-app-private-key'` | Secret Manager projection containing the PEM private key. |
 | `condition` | `''` | Allows for conditionalizing the template's steps on build-time variables. |
 | `JobNameSuffix` | `''` | Allows for custom job name suffix. This is helpful for disambiguation in case of need for more then one OneLocBuild job run - e.g. as a way to set multiple package IDs. |
+
+GitHub OneLoc pipelines must be authorized to use their project's GitHub App WIF service
+connection. The service connection has read access only to the two required Key Vault secrets.
 
 The previous Key Vault RSA signing parameters have been removed. See
 [Authenticating OneLocBuild's GitHub check-in with the GitHub App](OneLocBuildGitHubApp.md#migrating-from-key-vault-rsa-signing)
