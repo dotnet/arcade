@@ -13,7 +13,7 @@ using System.Reflection.PortableExecutable;
 
 namespace Microsoft.DotNet.GenFacades;
 
-public class GenPartialFacadeSourceGenerator
+internal class GenPartialFacadeSourceGenerator
 {
     public static bool Execute(
         AbsolutePath[] seeds,
