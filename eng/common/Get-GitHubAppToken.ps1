@@ -3,7 +3,9 @@
 # API for a token scoped to a single installation.
 #
 # Requirements:
-#   - A GitHub App ID and PEM private key supplied through the environment.
+#   - A GitHub App ID and PEM private key stored as Azure Key Vault secrets.
+#   - The federated Azure service connection running this script must have
+#     `Get` access to those two secrets.
 #   - The App must be installed on the target organization/account
 #     (`InstallationOwner`) with the permissions/repositories it needs.
 #
@@ -12,6 +14,18 @@
 
 [CmdletBinding()]
 param(
+    # Name of the Key Vault holding the GitHub App credentials.
+    [Parameter(Mandatory = $true)]
+    [string] $KeyVaultName,
+
+    # Secret Manager projection containing the GitHub App ID.
+    [Parameter(Mandatory = $true)]
+    [string] $AppIdSecretName,
+
+    # Secret Manager projection containing the PEM private key.
+    [Parameter(Mandatory = $true)]
+    [string] $AppPrivateKeySecretName,
+
     # Login of the organization or user account whose installation we should
     # mint the token for (e.g. `dotnet`, `microsoft`).
     [Parameter(Mandatory = $true)]
@@ -24,23 +38,67 @@ param(
     [string] $OutputVariableName
 )
 $ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
 
 . $PSScriptRoot\pipeline-logging-functions.ps1
+
+if ($KeyVaultName -notmatch '^[A-Za-z][A-Za-z0-9-]{1,22}[A-Za-z0-9]$' -or $KeyVaultName.Contains('--')) {
+    Write-PipelineTelemetryError -Category 'Build' -Message "KeyVaultName '$KeyVaultName' is not a valid Azure Key Vault name."
+    exit 1
+}
 
 function ConvertTo-Base64Url([byte[]] $bytes) {
     return [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
 }
 
-$appId = $env:GITHUB_APP_ID
-$privateKey = $env:GITHUB_APP_PRIVATE_KEY
-if ([string]::IsNullOrWhiteSpace($appId) -or [string]::IsNullOrWhiteSpace($privateKey)) {
-    Write-PipelineTelemetryError -Category 'Build' -Message "GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY must both be set. Verify both values are supplied as secret pipeline variables."
+$previousNativeCommandErrorPreference = $PSNativeCommandUseErrorActionPreference
+try {
+    # Azure CLI can emit non-fatal Python warnings to stderr.
+    $PSNativeCommandUseErrorActionPreference = $false
+    $keyVaultAccessToken = az account get-access-token `
+        --resource https://vault.azure.net `
+        --query accessToken `
+        --output tsv `
+        --only-show-errors
+    $tokenExitCode = $LASTEXITCODE
+}
+catch {
+    Write-PipelineTelemetryError -Category 'Build' -Message "Failed to acquire an Azure Key Vault access token: $_"
     exit 1
 }
-if ($appId -match '^\$\([^)]+\)$' -or $privateKey -match '^\$\([^)]+\)$') {
-    Write-PipelineTelemetryError -Category 'Build' -Message "The GitHub App ID or private key is an unresolved pipeline variable. Verify the pipeline resolves both secret variables before this task runs."
+finally {
+    $PSNativeCommandUseErrorActionPreference = $previousNativeCommandErrorPreference
+}
+if ($tokenExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($keyVaultAccessToken)) {
+    Write-PipelineTelemetryError -Category 'Build' -Message "'az account get-access-token' exited with code $tokenExitCode while acquiring an Azure Key Vault access token."
     exit 1
 }
+
+function Get-KeyVaultSecret([string] $SecretName) {
+    # Use the data-plane REST API because `az keyvault secret show` can fail
+    # with Errno 22 on hosted Windows agents when reading these projections.
+    $escapedSecretName = [Uri]::EscapeDataString($SecretName)
+    $secretUri = "https://$KeyVaultName.vault.azure.net/secrets/$escapedSecretName`?api-version=7.4"
+    try {
+        $response = Invoke-RestMethod `
+            -Uri $secretUri `
+            -Headers @{ Authorization = "Bearer $keyVaultAccessToken" } `
+            -Method Get
+    }
+    catch {
+        Write-PipelineTelemetryError -Category 'Build' -Message "Failed to read secret '$SecretName' from vault '$KeyVaultName': $_. Verify the secret exists and the service connection has 'Key Vault Secrets User' access to it."
+        exit 1
+    }
+    if ([string]::IsNullOrWhiteSpace($response.value)) {
+        Write-PipelineTelemetryError -Category 'Build' -Message "Secret '$SecretName' in vault '$KeyVaultName' is empty."
+        exit 1
+    }
+    return [string] $response.value
+}
+
+Write-Host "Reading GitHub App credentials from vault '$KeyVaultName'..."
+$appId = Get-KeyVaultSecret $AppIdSecretName
+$privateKey = Get-KeyVaultSecret $AppPrivateKeySecretName
 
 # Build JWT header and payload. Use [ordered] hashtables so JSON
 # serialization is deterministic.

@@ -3,7 +3,9 @@
 # for a token scoped to a single installation.
 #
 # Requirements (per GitHub App you want to authenticate as):
-#   - A GitHub App ID and PEM private key supplied by secret pipeline variables.
+#   - A GitHub App ID and PEM private key stored as Azure Key Vault secrets.
+#   - The Azure service connection passed via `azureSubscription` must have
+#     `Get` access to those two secrets.
 #   - The App must be installed on the target organization/account
 #     (`installationOwner`) with the permissions/repositories you need.
 #
@@ -13,11 +15,18 @@
 # enterprise classic-PAT lifetime policy.
 
 parameters:
-# Secret pipeline values produced by Secret Manager's github-app-secret type.
-- name: appId
+# Azure DevOps service connection (federated) that can read the App credentials.
+- name: azureSubscription
   type: string
 
-- name: appPrivateKey
+# Name of the Key Vault holding Secret Manager's github-app-secret projections.
+- name: keyVaultName
+  type: string
+
+- name: appIdSecretName
+  type: string
+
+- name: appPrivateKeySecretName
   type: string
 
 # Login of the organization or user account whose installation we should
@@ -45,18 +54,19 @@ parameters:
   default: Get GitHub App installation token
 
 steps:
-- task: PowerShell@2
+- task: AzureCLI@2
   displayName: ${{ parameters.displayName }}
   name: ${{ parameters.stepName }}
   ${{ if ne(parameters.condition, '') }}:
     condition: ${{ parameters.condition }}
   inputs:
-    targetType: filePath
-    filePath: $(System.DefaultWorkingDirectory)/eng/common/Get-GitHubAppToken.ps1
-    arguments: >-
-      -InstallationOwner '${{ parameters.installationOwner }}'
-      -OutputVariableName '${{ parameters.outputVariableName }}'
-    pwsh: true
-  env:
-    GITHUB_APP_ID: ${{ parameters.appId }}
-    GITHUB_APP_PRIVATE_KEY: ${{ parameters.appPrivateKey }}
+    azureSubscription: ${{ parameters.azureSubscription }}
+    scriptType: pscore
+    scriptLocation: inlineScript
+    inlineScript: |
+      & "$(System.DefaultWorkingDirectory)/eng/common/Get-GitHubAppToken.ps1" `
+          -KeyVaultName '${{ parameters.keyVaultName }}' `
+          -AppIdSecretName '${{ parameters.appIdSecretName }}' `
+          -AppPrivateKeySecretName '${{ parameters.appPrivateKeySecretName }}' `
+          -InstallationOwner '${{ parameters.installationOwner }}' `
+          -OutputVariableName '${{ parameters.outputVariableName }}'
