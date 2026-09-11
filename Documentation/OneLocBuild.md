@@ -27,12 +27,12 @@ Onboarding to OneLocBuild is a simple process:
   parameters:
     CreatePr: false
 ```
-Note: If you are running your PR builds and official builds off of the same definition, conditionalize
-this step so OneLocBuild runs only in the supported `dnceng/internal` or `DevDiv/DevDiv` project:
+Note: If you are running your PR builds and official builds off of the same definition and are on dnceng,
+you will want to conditionalize this step with the following:
 ```yaml
-- ${{ if and(or(eq(variables['System.TeamProject'], 'internal'), eq(variables['System.TeamProject'], 'DevDiv')), notin(variables['Build.Reason'], 'PullRequest')) }}:
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
 ```
-This also prevents OneLocBuild from running during pull request validation.
+To prevent OneLocBuild from running in the public project where it will fail.
 
 3. Run the pipeline you want to use OneLocBuild on your test branch.
 4. Open a ticket with the localization team using
@@ -51,7 +51,7 @@ This also prevents OneLocBuild from running during pull request validation.
 Make sure to remove the `CreatePr: false` line from step 2. Additionally, if you added the YAML condition from step
 2, make sure that your new YAML condition now looks like:
 ```yaml
-- ${{ if and(or(eq(variables['System.TeamProject'], 'internal'), eq(variables['System.TeamProject'], 'DevDiv')), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
 ```
 
 7. If using a mirrored repository (your code is mirrored to a trusted repository which your official build uses),
@@ -177,7 +177,7 @@ The most basic structure for calling the OneLocBuild template is:
 
 ```yaml
 jobs:
-- ${{ if and(or(eq(variables['System.TeamProject'], 'internal'), eq(variables['System.TeamProject'], 'DevDiv')), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
   - template: /eng/common/templates/job/onelocbuild.yml
     parameters:
       LclSource: lclFilesfromPackage
@@ -203,12 +203,14 @@ The parameters that can be passed to the template are as follows:
 | `LclSource` | `LclFilesInRepo` | This passes the `LclSource` input to the OneLocBuild task as described in [its documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). For most repos, this should be set to `LclFilesfromPackage`. |
 | `LclPackageId` | `''` | When `LclSource` is set to `LclFilesfromPackage`, this passes in the package ID as described in the [OneLocBuild task documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=scenario-2%3A-lcl-files-from-a-package). |
 | `CeapexServiceConnection` | `'dnceng-onelocbuild-ceapex'` | The project-scoped WIF service connection used to acquire a short-lived token for the Ceapex feeds. OneLocBuild supports only `dnceng/internal` and `DevDiv/DevDiv`; pipelines must be authorized to use the connection. |
-| `GitHubAppServiceConnection` | `'dnceng-oneloc-githubapp'` | The dnceng/internal WIF service connection used to sign the App JWT. When the value remains the default, Arcade automatically uses `devdiv-oneloc-githubapp` in `DevDiv/DevDiv`. |
-| `GitHubAppClientId` | `'Iv23lijBU8x3gc9lDOc9'` | The GitHub App's Client ID. |
-| `GitHubAppKeyVaultName` | `'EngKeyVault'` | Key Vault holding the App's RSA signing key. |
-| `GitHubAppKeyName` | `'oneloc-localization-app-key'` | Name of the App's RSA signing key in the Key Vault. |
+| `GitHubAppId` | `$(oneloc-localization-app-app-id)` | Secret Manager-managed GitHub App ID from `OneLocBuildVariables`. |
+| `GitHubAppPrivateKey` | `$(oneloc-localization-app-app-private-key)` | Secret Manager-managed PEM private key from `OneLocBuildVariables`. |
 | `condition` | `''` | Allows for conditionalizing the template's steps on build-time variables. |
 | `JobNameSuffix` | `''` | Allows for custom job name suffix. This is helpful for disambiguation in case of need for more then one OneLocBuild job run - e.g. as a way to set multiple package IDs. |
+
+The previous Key Vault RSA signing parameters have been removed. See
+[Authenticating OneLocBuild's GitHub check-in with the GitHub App](OneLocBuildGitHubApp.md#migrating-from-key-vault-rsa-signing)
+for the required parameter migration.
 
 It is recommended that you set `LclSource` and `LclPackageId` as shown in the example above.
 

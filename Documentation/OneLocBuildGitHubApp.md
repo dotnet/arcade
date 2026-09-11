@@ -23,8 +23,8 @@ whenever `RepoType` is `gitHub`. OneLocBuild supports the **`dnceng/internal`** 
 **`DevDiv/DevDiv`** Azure DevOps projects.
 
 When those hold, the job runs [`get-github-app-token.yml`](/eng/common/core-templates/steps/get-github-app-token.yml),
-which signs a JWT with the App's RSA key in Key Vault, exchanges it for an installation token, and
-passes that token to the OneLocBuild task via `gitHubPatVariable`.
+which signs a JWT with the Secret Manager-managed App private key, exchanges it for an installation
+token, and passes that token to the OneLocBuild task via `gitHubPatVariable`.
 
 If App token minting or authentication fails, the job fails; there is no stored-PAT fallback.
 
@@ -35,16 +35,15 @@ If App token minting or authentication fails, the job fails; there is no stored-
 1. **The App must be installed on the GitHub org/account that owns your target repo, and your
    specific repository must be selected in that installation.** The App can only open a PR against a
    repository it is installed on. This is what actually grants the App permission to your repo.
-2. **Your pipeline must run in `dnceng/internal` or `DevDiv/DevDiv` and be authorized to use that
-   project's App service connection.**
+2. **Your pipeline must run in `dnceng/internal` or `DevDiv/DevDiv` and include its project's
+   Key Vault-backed `OneLocBuildVariables` variable group.**
 
-The .NET Engineering Services team manages the App signing key and the project-scoped service
-connections. Contact the First Responders to authorize an intended pipeline.
+The .NET Engineering Services team manages the App credentials and variable groups.
 
 ### Step 1 — Request that your repository be added to the App installation
 
-The App installation and the backing `dnceng/internal` service connection / Key Vault key are
-managed by the .NET Engineering Services (dnceng) team. To have your repo added:
+The App installation and backing Secret Manager values are managed by the .NET Engineering
+Services (dnceng) team. To have your repo added:
 
 1. Identify the **GitHub org** and **repository** your OneLoc check-in PR targets. For most repos
    this is the value of the `GitHubOrg` parameter (default `dotnet`) and your repo name. If you use
@@ -74,27 +73,36 @@ OneLocBuild template call. For example:
       LclPackageId: 'LCL-JUNO-PROD-YOURREPO'
 ```
 
-Arcade automatically selects the project-scoped service connection:
+The project-specific variable group supplies the App ID and private key:
 
-| Azure DevOps project | Service connection |
+| Azure DevOps project | Variable group |
 |---|---|
-| `dnceng/internal` | `dnceng-oneloc-githubapp` |
-| `DevDiv/DevDiv` | `devdiv-oneloc-githubapp` |
+| `dnceng/internal` | `OneLocBuildVariables` (103) |
+| `DevDiv/DevDiv` | `OneLocBuildVariables` (343) |
 
-The App client ID, Key Vault, and key name are also centralized in the Arcade template. A pipeline
-still needs one-time authorization to use its project's connection.
+The variable group must contain `oneloc-localization-app-app-id` and
+`oneloc-localization-app-app-private-key`, and the pipeline must be authorized to use the group.
 
 ### GitHub App parameters
 
 | **Parameter** | **Default** | **Notes** |
 |:-:|:-:|-|
-| `GitHubAppServiceConnection` | `'dnceng-oneloc-githubapp'` | The Azure DevOps **WIF service connection** used by `dnceng/internal`. When the value remains the default, Arcade selects `devdiv-oneloc-githubapp` automatically in `DevDiv/DevDiv`. |
-| `GitHubAppClientId` | `'Iv23lijBU8x3gc9lDOc9'` | The GitHub App's **Client ID** (used as the JWT `iss` claim). |
-| `GitHubAppKeyVaultName` | `'EngKeyVault'` | The Key Vault holding the App's RSA signing key. |
-| `GitHubAppKeyName` | `'oneloc-localization-app-key'` | The name of the RSA key inside that Key Vault (the App's private key). |
+| `GitHubAppId` | `$(oneloc-localization-app-app-id)` | Secret Manager-managed GitHub App ID from `OneLocBuildVariables`. |
+| `GitHubAppPrivateKey` | `$(oneloc-localization-app-app-private-key)` | Secret Manager-managed PEM private key from `OneLocBuildVariables`. |
 
 The token is minted for the installation on the `GitHubOrg` account (default `dotnet`), so make sure
 `GitHubOrg` (and `MirrorRepo`, if mirroring) point at the org/repo where the App is installed.
+
+### Migrating from Key Vault RSA signing
+
+The Key Vault RSA signing path has been removed. OneLoc callers must remove
+`GitHubAppServiceConnection`, `GitHubAppClientId`, `GitHubAppKeyVaultName`, and
+`GitHubAppKeyName`; the default `GitHubAppId` and `GitHubAppPrivateKey` values use the
+Secret Manager projections from `OneLocBuildVariables`.
+
+Direct callers of `get-github-app-token.yml` must replace `azureSubscription`,
+`keyVaultName`, `keyName`, and `appClientId` with `appId` and `appPrivateKey`. There is no
+fallback to the legacy RSA key.
 
 ## Verifying it works
 
@@ -107,11 +115,8 @@ The token is minted for the installation on the `GitHubOrg` account (default `do
 ## Troubleshooting
 
 - **The App-token step is skipped.** The App path activates when `RepoType` is `gitHub`.
-- **The pipeline pauses for service-connection authorization.** Authorize the pipeline to use
-  `dnceng-oneloc-githubapp` in `dnceng/internal` or `devdiv-oneloc-githubapp` in `DevDiv/DevDiv`.
-- **Token minting fails with a Key Vault authorization error.** The service connection identity
-  needs the `Key Vault Crypto User` role (or at least the `Sign` action) on the App's key. Contact
-  First Responders.
+- **The App ID or private key is empty.** Confirm the pipeline includes and is authorized to use
+  its project's `OneLocBuildVariables` group, and that the group maps both Secret Manager values.
 - **`404`/`Not Found` when requesting the installation token.** The App is not installed on the
   `GitHubOrg` account, or your repository was not selected in the installation. Complete Step 1.
 - **PR fails to open on your repo.** Ensure the App has `Contents` and `Pull requests` (read &
