@@ -5,9 +5,10 @@ using System;
 using System.Diagnostics;
 using System.Net;
 using System.Threading;
-using Azure.Core;
 using Microsoft.Build.Framework;
+#if !DOTNET_BUILD_SOURCE_ONLY
 using Microsoft.DotNet.ArcadeAzureIntegration;
+#endif
 using Microsoft.DotNet.Helix.Client;
 
 namespace Microsoft.DotNet.Helix.Sdk;
@@ -53,7 +54,11 @@ public abstract class HelixTask : BaseTask, ICancelableTask
         if (UseEntraAuthentication)
         {
             Log.LogMessage(MessageImportance.Low, "Authenticating to helix api using a refreshable Entra credential.");
-            return CreateHelixApi(BaseUri, AccessToken, UseEntraAuthentication, CreateDefaultIdentityCredential);
+            return CreateHelixApi(
+                BaseUri,
+                AccessToken,
+                UseEntraAuthentication,
+                () => CreateEntraHelixApi(BaseUri));
         }
 
         if (string.IsNullOrEmpty(AccessToken))
@@ -65,14 +70,14 @@ public abstract class HelixTask : BaseTask, ICancelableTask
             Log.LogMessage(MessageImportance.Low, "Authenticating to helix api using provided AccessToken");
         }
 
-        return CreateHelixApi(BaseUri, AccessToken, UseEntraAuthentication, CreateDefaultIdentityCredential);
+        return CreateHelixApi(BaseUri, AccessToken, UseEntraAuthentication, entraApiFactory: null);
     }
 
     internal static IHelixApi CreateHelixApi(
         string baseUri,
         string accessToken,
         bool useEntraAuthentication,
-        Func<TokenCredential> entraCredentialFactory)
+        Func<IHelixApi> entraApiFactory)
     {
         if (useEntraAuthentication && !string.IsNullOrEmpty(accessToken))
         {
@@ -82,7 +87,7 @@ public abstract class HelixTask : BaseTask, ICancelableTask
 
         if (useEntraAuthentication)
         {
-            return ApiFactory.GetAuthenticatedWithEntra(baseUri, entraCredentialFactory());
+            return entraApiFactory();
         }
 
         return string.IsNullOrEmpty(accessToken)
@@ -90,8 +95,17 @@ public abstract class HelixTask : BaseTask, ICancelableTask
             : ApiFactory.GetAuthenticated(baseUri, accessToken);
     }
 
-    private static TokenCredential CreateDefaultIdentityCredential()
-        => new DefaultIdentityTokenCredential();
+    private static IHelixApi CreateEntraHelixApi(string baseUri)
+    {
+#if DOTNET_BUILD_SOURCE_ONLY
+        throw new PlatformNotSupportedException(
+            "Helix Entra authentication is not available in source-build.");
+#else
+        return ApiFactory.GetAuthenticatedWithEntra(
+            baseUri,
+            new DefaultIdentityTokenCredential());
+#endif
+    }
 
     public void Cancel()
     {

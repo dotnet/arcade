@@ -217,7 +217,7 @@ public class HelixApiAuthenticationTests
                 "https://helix.dot.net/",
                 accessToken,
                 useEntraAuthentication,
-                () => new TestTokenCredential()));
+                () => ApiFactory.GetAuthenticatedWithEntra(new TestTokenCredential())));
 
         Assert.Equal(expectedMode, api.Options.AuthenticationMode);
     }
@@ -230,7 +230,7 @@ public class HelixApiAuthenticationTests
                 "https://helix.dot.net/",
                 "legacy-token",
                 useEntraAuthentication: true,
-                () => new TestTokenCredential()));
+                () => ApiFactory.GetAuthenticatedWithEntra(new TestTokenCredential())));
     }
 
     [Theory]
@@ -250,7 +250,9 @@ public class HelixApiAuthenticationTests
         };
 
         var api = Assert.IsType<HelixApi>(
-            JobMonitorRunner.CreateHelixApi(options, () => new TestTokenCredential()));
+            JobMonitorRunner.CreateHelixApi(
+                options,
+                () => ApiFactory.GetAuthenticatedWithEntra(new TestTokenCredential())));
 
         Assert.Equal(expectedMode, api.Options.AuthenticationMode);
     }
@@ -266,7 +268,9 @@ public class HelixApiAuthenticationTests
         };
 
         Assert.Throws<InvalidOperationException>(() =>
-            JobMonitorRunner.CreateHelixApi(options, () => new TestTokenCredential()));
+            JobMonitorRunner.CreateHelixApi(
+                options,
+                () => ApiFactory.GetAuthenticatedWithEntra(new TestTokenCredential())));
     }
 
     private sealed class TestTokenCredential : TokenCredential
