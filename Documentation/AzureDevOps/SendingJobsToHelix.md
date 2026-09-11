@@ -63,7 +63,7 @@ Please note that authorized jobs *cannot* be submitted to queues with `IsInterna
 
 #### Entra ID authentication
 
-Set `HelixUseEntraAuthentication` to `true` and pass an Azure service connection authorized for Helix through `HelixAzureSubscription`. The template initializes refreshable credentials for the SDK tasks and, when enabled, the standalone Helix Job Monitor. No separate job-level Entra switch is required.
+Set `HelixUseEntraAuthentication` to `true` and pass an Azure service connection authorized for Helix through `HelixAzureSubscription`. These parameters configure the `send-to-helix.yml` steps template and the SDK tasks that submit jobs.
 
 When Entra authentication is enabled, the template does not forward `HelixAccessToken` to the Helix processes. If a legacy token is still injected by a variable group, explicit Entra opt-in takes precedence and the task ignores the token with a warning.
 
@@ -74,6 +74,20 @@ steps:
   parameters:
     HelixUseEntraAuthentication: true
     HelixAzureSubscription: <Azure service connection ID authorized for Helix>
+    # other parameters here
+```
+
+If the pipeline also uses the standalone Helix Job Monitor, configure its
+separate job template with `useEntraAuthentication` and `azureSubscription`.
+Enabling Entra authentication on `send-to-helix.yml` does not automatically
+configure the monitor job.
+
+```yaml
+jobs:
+- template: /eng/common/templates/job/helix-job-monitor.yml
+  parameters:
+    useEntraAuthentication: true
+    azureSubscription: <Azure service connection ID authorized for Helix>
     # other parameters here
 ```
 
