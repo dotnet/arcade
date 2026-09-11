@@ -112,6 +112,10 @@ fallback to the legacy RSA key.
 
 ## Verifying it works
 
+Changes to the GitHub App credential retrieval path must pass a protected internal canary before
+merge. Public pull-request builds intentionally cannot access the WIF service connection or App
+private key, so syntax and unit checks alone do not validate this boundary.
+
 1. Run your pipeline from a branch where the OneLocBuild job runs.
 2. In the build, confirm the **`Get GitHub App installation token`** step runs and succeeds before
    the `OneLocBuild` task.

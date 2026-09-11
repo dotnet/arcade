@@ -70,6 +70,8 @@ if ($tokenExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($keyVaultAccessToken))
 }
 
 function Get-KeyVaultSecret([string] $SecretName) {
+    # Use the data-plane REST API because `az keyvault secret show` can fail
+    # with Errno 22 on hosted Windows agents when reading these projections.
     $escapedSecretName = [Uri]::EscapeDataString($SecretName)
     $secretUri = "https://$KeyVaultName.vault.azure.net/secrets/$escapedSecretName`?api-version=7.4"
     try {
