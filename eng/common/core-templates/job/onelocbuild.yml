@@ -8,11 +8,10 @@ parameters:
   # Project-scoped WIF service connection for Ceapex feed authentication.
   CeapexServiceConnection: 'dnceng-onelocbuild-ceapex'
 
-  # GitHub App authentication for the OneLoc check-in PR.
-  GitHubAppServiceConnection: 'dnceng-oneloc-githubapp'
-  GitHubAppClientId: 'Iv23lijBU8x3gc9lDOc9'
-  GitHubAppKeyVaultName: 'EngKeyVault'
-  GitHubAppKeyName: 'oneloc-localization-app-key'
+  # GitHub App authentication for the OneLoc check-in PR. These values come
+  # from the Key Vault-backed OneLocBuildVariables variable group.
+  GitHubAppId: $(oneloc-localization-app-app-id)
+  GitHubAppPrivateKey: $(oneloc-localization-app-app-private-key)
 
   SourcesDirectory: $(System.DefaultWorkingDirectory)
   CreatePr: true
@@ -95,13 +94,8 @@ jobs:
       - template: /eng/common/core-templates/steps/get-github-app-token.yml
         parameters:
           is1ESPipeline: ${{ parameters.is1ESPipeline }}
-          ${{ if and(eq(variables['System.TeamProject'], 'DevDiv'), eq(parameters.GitHubAppServiceConnection, 'dnceng-oneloc-githubapp')) }}:
-            azureSubscription: 'devdiv-oneloc-githubapp'
-          ${{ else }}:
-            azureSubscription: ${{ parameters.GitHubAppServiceConnection }}
-          keyVaultName: ${{ parameters.GitHubAppKeyVaultName }}
-          keyName: ${{ parameters.GitHubAppKeyName }}
-          appClientId: ${{ parameters.GitHubAppClientId }}
+          appId: ${{ parameters.GitHubAppId }}
+          appPrivateKey: ${{ parameters.GitHubAppPrivateKey }}
           installationOwner: ${{ parameters.GitHubOrg }}
           outputVariableName: 'GitHubAppInstallationToken'
           condition: ${{ parameters.condition }}
