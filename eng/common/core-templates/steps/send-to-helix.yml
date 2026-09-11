@@ -4,7 +4,7 @@ parameters:
   HelixType: 'tests/default/'            # required -- Helix telemetry which identifies what type of data this is; should include "test" for clarity and must end in '/'
   HelixBuild: $(Build.BuildNumber)       # required -- the build number Helix will use to identify this -- automatically set to the AzDO build number
   HelixTargetQueues: ''                  # required -- semicolon-delimited list of Helix queues to test on; see https://helix.dot.net/ for a list of queues
-  HelixAccessToken: ''                   # optional -- legacy access token to make Helix API requests; cannot be combined with HelixUseEntraAuthentication
+  HelixAccessToken: ''                   # optional -- legacy access token; ignored with a warning when HelixUseEntraAuthentication is true
   HelixUseEntraAuthentication: false     # optional -- use refreshable Entra authentication instead of a PAT or anonymous access
   HelixAzureSubscription: ''             # required when HelixUseEntraAuthentication is true -- Azure service connection ID authorized for Helix
   HelixProjectPath: 'eng/common/helixpublish.proj'  # optional -- path to the project file to build relative to BUILD_SOURCESDIRECTORY

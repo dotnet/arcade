@@ -52,7 +52,8 @@ parameters:
   type: string
   default: https://helix.dot.net/
 
-# Helix API access token forwarded to the tool via the HELIX_ACCESSTOKEN environment variable.
+# Helix API access token forwarded via HELIX_ACCESSTOKEN. Ignored with a warning
+# when useEntraAuthentication is true.
 - name: helixAccessToken
   type: string
   default: ''

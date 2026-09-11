@@ -782,6 +782,12 @@ internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
             options.UseFullyQualifiedTestName,
             azureDevOps,
             metrics);
+        if (options.UseEntraAuthentication && !string.IsNullOrEmpty(options.HelixAccessToken))
+        {
+            logger.LogWarning(
+                "{Prefix}HELIX_ACCESSTOKEN is set but ignored because Entra authentication is enabled.",
+                AzdoWarningPrefix);
+        }
         var helix = new HelixService(
             CreateHelixApi(options, () => CreateEntraHelixApi(options.HelixBaseUri)),
             logger,
@@ -798,12 +804,6 @@ internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
         JobMonitorOptions options,
         Func<IHelixApi> entraApiFactory)
     {
-        if (options.UseEntraAuthentication && !string.IsNullOrEmpty(options.HelixAccessToken))
-        {
-            throw new InvalidOperationException(
-                "Helix Entra authentication cannot be combined with HELIX_ACCESSTOKEN.");
-        }
-
         if (options.UseEntraAuthentication)
         {
             return entraApiFactory();

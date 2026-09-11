@@ -207,6 +207,7 @@ public class HelixApiAuthenticationTests
     [InlineData(false, null, HelixApiAuthenticationMode.Anonymous)]
     [InlineData(false, "legacy-token", HelixApiAuthenticationMode.PersonalAccessToken)]
     [InlineData(true, null, HelixApiAuthenticationMode.EntraId)]
+    [InlineData(true, "legacy-token", HelixApiAuthenticationMode.EntraId)]
     public void HelixTaskSelectsRequestedAuthenticationMode(
         bool useEntraAuthentication,
         string accessToken,
@@ -222,21 +223,11 @@ public class HelixApiAuthenticationTests
         Assert.Equal(expectedMode, api.Options.AuthenticationMode);
     }
 
-    [Fact]
-    public void HelixTaskRejectsConflictingAuthenticationConfiguration()
-    {
-        Assert.Throws<InvalidOperationException>(() =>
-            HelixTask.CreateHelixApi(
-                "https://helix.dot.net/",
-                "legacy-token",
-                useEntraAuthentication: true,
-                () => ApiFactory.GetAuthenticatedWithEntra(new TestTokenCredential())));
-    }
-
     [Theory]
     [InlineData(false, null, HelixApiAuthenticationMode.Anonymous)]
     [InlineData(false, "legacy-token", HelixApiAuthenticationMode.PersonalAccessToken)]
     [InlineData(true, null, HelixApiAuthenticationMode.EntraId)]
+    [InlineData(true, "legacy-token", HelixApiAuthenticationMode.EntraId)]
     public void JobMonitorSelectsRequestedAuthenticationMode(
         bool useEntraAuthentication,
         string accessToken,
@@ -255,22 +246,6 @@ public class HelixApiAuthenticationTests
                 () => ApiFactory.GetAuthenticatedWithEntra(new TestTokenCredential())));
 
         Assert.Equal(expectedMode, api.Options.AuthenticationMode);
-    }
-
-    [Fact]
-    public void JobMonitorRejectsConflictingAuthenticationConfiguration()
-    {
-        var options = new JobMonitorOptions
-        {
-            HelixBaseUri = "https://helix.dot.net/",
-            HelixAccessToken = "legacy-token",
-            UseEntraAuthentication = true,
-        };
-
-        Assert.Throws<InvalidOperationException>(() =>
-            JobMonitorRunner.CreateHelixApi(
-                options,
-                () => ApiFactory.GetAuthenticatedWithEntra(new TestTokenCredential())));
     }
 
     private sealed class TestTokenCredential : TokenCredential

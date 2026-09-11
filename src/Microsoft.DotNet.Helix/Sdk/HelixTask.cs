@@ -47,8 +47,8 @@ public abstract class HelixTask : BaseTask, ICancelableTask
     {
         if (UseEntraAuthentication && !string.IsNullOrEmpty(AccessToken))
         {
-            throw new InvalidOperationException(
-                "Helix Entra authentication cannot be combined with HelixAccessToken.");
+            Log.LogWarning(
+                "HelixAccessToken is set but ignored because HelixUseEntraAuthentication is enabled.");
         }
 
         if (UseEntraAuthentication)
@@ -79,12 +79,6 @@ public abstract class HelixTask : BaseTask, ICancelableTask
         bool useEntraAuthentication,
         Func<IHelixApi> entraApiFactory)
     {
-        if (useEntraAuthentication && !string.IsNullOrEmpty(accessToken))
-        {
-            throw new InvalidOperationException(
-                "Helix Entra authentication cannot be combined with HelixAccessToken.");
-        }
-
         if (useEntraAuthentication)
         {
             return entraApiFactory();

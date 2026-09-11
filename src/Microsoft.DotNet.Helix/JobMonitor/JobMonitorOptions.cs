@@ -316,12 +316,6 @@ public sealed class JobMonitorOptions
         BuildId = RequireValue(BuildId, "build-id", "BUILD_BUILDID");
         SystemAccessToken = RequireValue(SystemAccessToken, "access-token", "SYSTEM_ACCESSTOKEN");
 
-        if (UseEntraAuthentication && !string.IsNullOrEmpty(HelixAccessToken))
-        {
-            throw new InvalidOperationException(
-                "Helix Entra authentication cannot be combined with HELIX_ACCESSTOKEN.");
-        }
-
         if (string.IsNullOrWhiteSpace(RepositoryName))
         {
             throw new InvalidOperationException("A repository identifier must be provided either by argument or pipeline environment.");
