@@ -90,7 +90,7 @@ public class PublishArtifactsInManifestTests
         }
     }
 
-    private sealed class RecordingAssetPublisher : IAssetPublisher
+    private sealed class RecordingAssetPublisher : IAssetPublisher, IAssetPublisherWithResult
     {
         private readonly TaskCompletionSource _started;
         private readonly Task _completion;
@@ -103,20 +103,36 @@ public class PublishArtifactsInManifestTests
 
         public List<string> PublishedBlobPaths { get; } = new();
 
+        public HashSet<string> FailedBlobPaths { get; } = new(StringComparer.Ordinal);
+
+        public HashSet<string> FaultedBlobPaths { get; } = new(StringComparer.Ordinal);
+
         public LocationType LocationType => LocationType.Container;
 
         public async Task PublishAssetAsync(string file, string blobPath, PushOptions options, SemaphoreSlim clientThrottle = null)
+        {
+            await PublishAssetWithResultAsync(file, blobPath, options, clientThrottle);
+        }
+
+        public async Task<bool> PublishAssetWithResultAsync(string file, string blobPath, PushOptions options, SemaphoreSlim clientThrottle = null)
         {
             lock (PublishedBlobPaths)
             {
                 PublishedBlobPaths.Add(blobPath);
             }
 
-            _started?.SetResult();
+            _started?.TrySetResult();
             if (_completion != null)
             {
                 await _completion;
             }
+
+            if (FaultedBlobPaths.Contains(blobPath))
+            {
+                throw new InvalidOperationException("Blob upload faulted.");
+            }
+
+            return !FailedBlobPaths.Contains(blobPath);
         }
     }
 
@@ -471,6 +487,69 @@ public class PublishArtifactsInManifestTests
             publisher.PublishedBlobPaths.Should().ContainSingle();
             task.LatestLinkRequests.Select(request => request.FeedConfig)
                 .Should().BeEquivalentTo([firstConfig, secondConfig]);
+        }
+        finally
+        {
+            Directory.Delete(blobDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task HandleBlobPublishingAsyncCreatesLatestLinksOnlyForSuccessfulUploads()
+    {
+        var publisher = new RecordingAssetPublisher();
+        publisher.FailedBlobPaths.Add("first.zip");
+        var firstBlob = CreateBlob("first.zip");
+        var secondBlob = CreateBlob("second.zip");
+        var config = CreateBlobFeedConfig("https://storage.example.net/public", "dotnet/first");
+        var (task, blobDirectory) = CreateBlobPublishingTask(publisher, [firstBlob, secondBlob], config);
+
+        try
+        {
+            await task.PublishBlobsAsync();
+
+            publisher.PublishedBlobPaths.Should().BeEquivalentTo([firstBlob.Id, secondBlob.Id]);
+            task.LatestLinkRequests.Should().ContainSingle();
+            task.LatestLinkRequests[0].BlobPaths.Should().ContainSingle().Which.Should().Be(secondBlob.Id);
+        }
+        finally
+        {
+            Directory.Delete(blobDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task HandleBlobPublishingAsyncCreatesLinksForSuccessfulDestinationsWhenAnotherUploadFaults()
+    {
+        var publisher = new RecordingAssetPublisher();
+        publisher.FaultedBlobPaths.Add("shipping.zip");
+        var shippingBlob = CreateBlob("shipping.zip");
+        var nonShippingBlob = CreateBlob("nonshipping.zip", nonShipping: true);
+        var faultedConfig = CreateBlobFeedConfig(
+            "https://storage.example.net/faulted",
+            "dotnet/faulted",
+            AssetSelection.ShippingOnly);
+        var successfulConfig = CreateBlobFeedConfig(
+            "https://storage.example.net/successful",
+            "dotnet/successful",
+            AssetSelection.NonShippingOnly);
+        var (task, blobDirectory) = CreateBlobPublishingTask(
+            publisher,
+            [shippingBlob, nonShippingBlob],
+            faultedConfig,
+            successfulConfig);
+
+        try
+        {
+            Func<Task> publish = task.PublishBlobsAsync;
+
+            await publish.Should().ThrowAsync<InvalidOperationException>()
+                .WithMessage("Blob upload faulted.");
+
+            publisher.PublishedBlobPaths.Should().BeEquivalentTo([shippingBlob.Id, nonShippingBlob.Id]);
+            task.LatestLinkRequests.Should().ContainSingle();
+            task.LatestLinkRequests[0].FeedConfig.Should().Be(successfulConfig);
+            task.LatestLinkRequests[0].BlobPaths.Should().ContainSingle().Which.Should().Be(nonShippingBlob.Id);
         }
         finally
         {
