@@ -35,8 +35,9 @@ If App token minting or authentication fails, the job fails; there is no stored-
 1. **The App must be installed on the GitHub org/account that owns your target repo, and your
    specific repository must be selected in that installation.** The App can only open a PR against a
    repository it is installed on. This is what actually grants the App permission to your repo.
-2. **Your pipeline must run in `dnceng/internal` or `DevDiv/DevDiv` and include its project's
-   Key Vault-backed `OneLocBuildVariables` variable group.**
+2. **Your pipeline must run in `dnceng/internal` or `DevDiv/DevDiv` and be authorized to use its
+   project's Key Vault-backed `OneLocBuildVariables` variable group.** The shared OneLoc job
+   imports the group automatically.
 
 The .NET Engineering Services team manages the App credentials and variable groups.
 
@@ -81,7 +82,8 @@ The project-specific variable group supplies the App ID and private key:
 | `DevDiv/DevDiv` | `OneLocBuildVariables` (343) |
 
 The variable group must contain `oneloc-localization-app-app-id` and
-`oneloc-localization-app-app-private-key`, and the pipeline must be authorized to use the group.
+`oneloc-localization-app-app-private-key`. The shared OneLoc job imports the group automatically,
+but each pipeline must be authorized to use it.
 
 ### GitHub App parameters
 
@@ -115,8 +117,8 @@ fallback to the legacy RSA key.
 ## Troubleshooting
 
 - **The App-token step is skipped.** The App path activates when `RepoType` is `gitHub`.
-- **The App ID or private key is empty.** Confirm the pipeline includes and is authorized to use
-  its project's `OneLocBuildVariables` group, and that the group maps both Secret Manager values.
+- **The App ID or private key is empty.** Confirm the pipeline is authorized to use its project's
+  `OneLocBuildVariables` group and that the group maps both Secret Manager values.
 - **`404`/`Not Found` when requesting the installation token.** The App is not installed on the
   `GitHubOrg` account, or your repository was not selected in the installation. Complete Step 1.
 - **PR fails to open on your repo.** Ensure the App has `Contents` and `Pull requests` (read &

@@ -39,6 +39,7 @@ jobs:
   displayName: OneLocBuild${{ parameters.JobNameSuffix }}
 
   variables:
+    - group: OneLocBuildVariables
     - name: _GenerateLocProjectArguments
       value: -SourcesDirectory ${{ parameters.SourcesDirectory }}
         -LanguageSet "${{ parameters.LanguageSet }}"
