@@ -84,7 +84,7 @@ configure the monitor job.
 
 ```yaml
 jobs:
-- template: /eng/common/templates/job/helix-job-monitor.yml
+- template: /eng/common/core-templates/job/helix-job-monitor.yml
   parameters:
     useEntraAuthentication: true
     azureSubscription: <Azure service connection ID authorized for Helix>
