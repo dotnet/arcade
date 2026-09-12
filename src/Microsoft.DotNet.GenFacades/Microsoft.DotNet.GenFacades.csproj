@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\Common\Internal\AbsolutePathExtensions.cs" Link="Internal\AbsolutePathExtensions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Build.Tasks.Core" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
