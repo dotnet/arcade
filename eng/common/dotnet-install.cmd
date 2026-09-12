@@ -1,2 +1,2 @@
 @echo off
-powershell -ExecutionPolicy ByPass -NoProfile -command "& """%~dp0dotnet-install.ps1""" %*"
+powershell -ExecutionPolicy ByPass -NoProfile -File "%~dp0dotnet-install.ps1" %*
