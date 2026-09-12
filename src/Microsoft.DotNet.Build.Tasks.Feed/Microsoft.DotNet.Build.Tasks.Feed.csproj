@@ -44,6 +44,7 @@
  
   <ItemGroup>
     <Compile Include="..\Common\Internal\EnumExtensions.cs" />
+    <InternalsVisibleTo Include="Microsoft.DotNet.Build.Tasks.Feed.Tests" />
   </ItemGroup>
 
   <!-- Most tasks are not supported on source-build. Add only those that we need. -->

@@ -14,3 +14,7 @@ public interface IAssetPublisher
     Task PublishAssetAsync(string file, string blobPath, PushOptions options, SemaphoreSlim clientThrottle = null);
 }
 
+internal interface IAssetPublisherWithResult
+{
+    System.Threading.Tasks.Task<bool> PublishAssetWithResultAsync(string file, string blobPath, PushOptions options, SemaphoreSlim clientThrottle = null);
+}
