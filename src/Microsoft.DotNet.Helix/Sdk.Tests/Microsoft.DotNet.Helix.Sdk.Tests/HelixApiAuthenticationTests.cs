@@ -164,6 +164,33 @@ public class HelixApiAuthenticationTests
     }
 
     [Fact]
+    public async Task ExplicitEntraOptionsUseBearerPolicyWithProductionScope()
+    {
+        var credential = new TestTokenCredential();
+        using var httpClient = FakeHttpClient.WithResponses(
+            new HttpResponseMessage(HttpStatusCode.OK));
+        var options = new HelixApiOptions(
+            new Uri("https://helix.dot.net/"),
+            credential,
+            new[] { HelixApiOptions.ProductionScope })
+        {
+            Transport = new HttpClientTransport(httpClient),
+        };
+        var api = new HelixApi(options);
+
+        using HttpMessage message = api.Pipeline.CreateMessage();
+        message.Request.Method = RequestMethod.Get;
+        message.Request.Uri.Reset(options.BaseUri);
+        await api.Pipeline.SendAsync(message, CancellationToken.None);
+
+        Assert.Equal(HelixApiAuthenticationMode.EntraId, options.AuthenticationMode);
+        Assert.Equal(new[] { HelixApiOptions.ProductionScope }, options.TokenScopes);
+        Assert.Equal(new[] { HelixApiOptions.ProductionScope }, credential.RequestedScopes);
+        Assert.True(message.Request.Headers.TryGetValue("Authorization", out string authorization));
+        Assert.Equal("Bearer test-token", authorization);
+    }
+
+    [Fact]
     public void EntraFactoryRequiresCredential()
     {
         Assert.Throws<ArgumentNullException>(() =>
