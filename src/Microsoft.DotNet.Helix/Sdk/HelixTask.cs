@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using Microsoft.Build.Framework;
-#if !DOTNET_BUILD_SOURCE_ONLY
+#if !DOTNET_BUILD_SOURCE_ONLY && !NET472_OR_GREATER
 using Microsoft.DotNet.ArcadeAzureIntegration;
 #endif
 using Microsoft.DotNet.Helix.Client;
@@ -94,6 +94,9 @@ public abstract class HelixTask : BaseTask, ICancelableTask
 #if DOTNET_BUILD_SOURCE_ONLY
         throw new PlatformNotSupportedException(
             "Helix Entra authentication is not available in source-build.");
+#elif NET472_OR_GREATER
+        throw new PlatformNotSupportedException(
+            "Helix Entra authentication is not available on .NET Framework.");
 #else
         return ApiFactory.GetAuthenticatedWithEntra(
             baseUri,
