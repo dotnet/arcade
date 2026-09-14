@@ -16,6 +16,8 @@
 
     <PropertyGroup>
       <HelixResultsDestinationDir Condition="'$(HelixResultsDestinationDir)' == '' AND '$(BUILD_SOURCESDIRECTORY)' != ''">$([MSBuild]::NormalizeDirectory($(BUILD_SOURCESDIRECTORY), 'artifacts', 'helixresults'))</HelixResultsDestinationDir>
+      <_DownloadFromResultsContainerBaseUri Condition="'$(HelixBaseUri)' == ''">https://helix.dot.net/</_DownloadFromResultsContainerBaseUri>
+      <_DownloadFromResultsContainerBaseUri Condition="'$(HelixBaseUri)' != ''">$(HelixBaseUri)</_DownloadFromResultsContainerBaseUri>
 
       <_shouldDownloadResults>false</_shouldDownloadResults>
       <_shouldDownloadResults Condition="'@(_workItemsWithDownloadMetadata)' != '' AND '$(HelixResultsDestinationDir)' != ''">true</_shouldDownloadResults>
@@ -26,7 +28,7 @@
         AccessToken="$(HelixAccessToken)"
         UseEntraAuthentication="$(HelixUseEntraAuthentication)"
         EntraScope="$(HelixEntraScope)"
-        BaseUri="$(HelixBaseUri)"
+        BaseUri="$(_DownloadFromResultsContainerBaseUri)"
         WorkItems="@(_workItemsWithDownloadMetadata)"
         OutputDirectory="$(HelixResultsDestinationDir)"
         MetadataToWrite="@(HelixDownloadResultsMetadata)"

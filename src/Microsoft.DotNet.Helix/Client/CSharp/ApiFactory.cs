@@ -27,7 +27,10 @@ public static class ApiFactory
     /// </summary>
     public static IHelixApi GetAuthenticatedWithEntra(TokenCredential credential)
     {
-        return new HelixApi(new HelixApiOptions(ValidateEntraCredential(credential)));
+        return new HelixApi(new HelixApiOptions(
+            new Uri("https://helix.dot.net/"),
+            ValidateEntraCredential(credential),
+            new[] { HelixApiOptions.ProductionScope }));
     }
 
     /// <summary>
@@ -62,7 +65,11 @@ public static class ApiFactory
     /// </summary>
     public static IHelixApi GetAuthenticatedWithEntra(string baseUri, TokenCredential credential)
     {
-        return new HelixApi(new HelixApiOptions(new Uri(baseUri), ValidateEntraCredential(credential)));
+        var uri = new Uri(baseUri);
+        return new HelixApi(new HelixApiOptions(
+            uri,
+            ValidateEntraCredential(credential),
+            new[] { HelixApiOptions.GetDefaultScope(uri) }));
     }
 
     /// <summary>

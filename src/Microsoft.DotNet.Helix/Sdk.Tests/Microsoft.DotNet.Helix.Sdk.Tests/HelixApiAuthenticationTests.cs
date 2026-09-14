@@ -39,53 +39,111 @@ public class HelixApiAuthenticationTests
     }
 
     [Fact]
-    public void ProductionCredentialUsesProductionScope()
+    public void ExplicitProductionCredentialUsesProductionScope()
     {
-        var options = new HelixApiOptions(new TestTokenCredential());
+        var options = new HelixApiOptions(
+            new Uri("https://helix.dot.net/"),
+            new TestTokenCredential(),
+            new[] { HelixApiOptions.ProductionScope });
 
         Assert.Equal(HelixApiAuthenticationMode.EntraId, options.AuthenticationMode);
         Assert.Equal(new[] { HelixApiOptions.ProductionScope }, options.TokenScopes);
     }
 
     [Fact]
-    public void StagingCredentialUsesStagingScope()
+    public void ExplicitStagingCredentialUsesStagingScope()
     {
         var options = new HelixApiOptions(
             new Uri("https://helix.int-dot.net/"),
-            new TestTokenCredential());
+            new TestTokenCredential(),
+            new[] { HelixApiOptions.StagingScope });
 
         Assert.Equal(HelixApiAuthenticationMode.EntraId, options.AuthenticationMode);
         Assert.Equal(new[] { HelixApiOptions.StagingScope }, options.TokenScopes);
     }
 
-    [Fact]
-    public void CustomHostRequiresExplicitScope()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("https://helix.dot.net/")]
+    [InlineData("http://localhost:5001/")]
+    public async Task LegacyCredentialPreservesTokenAuthentication(string baseUri)
     {
-        var exception = Assert.Throws<ArgumentException>(() =>
-            new HelixApiOptions(new Uri("https://localhost:5001/"), new TestTokenCredential()));
+        var credential = new TestTokenCredential();
+        using var httpClient = FakeHttpClient.WithResponses(
+            new HttpResponseMessage(HttpStatusCode.OK));
+        var options = baseUri == null
+            ? new HelixApiOptions(credential)
+            : new HelixApiOptions(new Uri(baseUri), credential);
+        options.Transport = new HttpClientTransport(httpClient);
+        var api = new HelixApi(options);
 
-        Assert.Contains("explicit scopes", exception.Message);
+        using HttpMessage message = api.Pipeline.CreateMessage();
+        message.Request.Method = RequestMethod.Get;
+        message.Request.Uri.Reset(options.BaseUri);
+        await api.Pipeline.SendAsync(message, CancellationToken.None);
+
+        Assert.Equal(HelixApiAuthenticationMode.PersonalAccessToken, options.AuthenticationMode);
+        Assert.Empty(options.TokenScopes);
+        Assert.Equal(1, credential.CallCount);
+        Assert.Empty(credential.RequestedScopes);
+        Assert.True(message.Request.Headers.TryGetValue("Authorization", out string authorization));
+        Assert.Equal("token test-token", authorization);
+    }
+
+    [Fact]
+    public async Task ExplicitEntraCredentialUsesBearerAuthentication()
+    {
+        var credential = new TestTokenCredential();
+        using var httpClient = FakeHttpClient.WithResponses(
+            new HttpResponseMessage(HttpStatusCode.OK));
+        var options = new HelixApiOptions(
+            new Uri("https://helix.dot.net/"),
+            credential,
+            new[] { HelixApiOptions.ProductionScope })
+        {
+            Transport = new HttpClientTransport(httpClient),
+        };
+        var api = new HelixApi(options);
+
+        using HttpMessage message = api.Pipeline.CreateMessage();
+        message.Request.Method = RequestMethod.Get;
+        message.Request.Uri.Reset(options.BaseUri);
+        await api.Pipeline.SendAsync(message, CancellationToken.None);
+
+        Assert.Equal(HelixApiAuthenticationMode.EntraId, options.AuthenticationMode);
+        Assert.Equal(1, credential.CallCount);
+        Assert.Equal(new[] { HelixApiOptions.ProductionScope }, credential.RequestedScopes);
+        Assert.True(message.Request.Headers.TryGetValue("Authorization", out string authorization));
+        Assert.Equal("Bearer test-token", authorization);
     }
 
     [Fact]
     public void EntraCredentialRequiresBaseUri()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            new HelixApiOptions(null, new TestTokenCredential()));
+            new HelixApiOptions(
+                null,
+                new TestTokenCredential(),
+                new[] { HelixApiOptions.ProductionScope }));
     }
 
     [Fact]
     public void EntraCredentialRequiresAbsoluteBaseUri()
     {
         Assert.Throws<ArgumentException>(() =>
-            new HelixApiOptions(new Uri("relative", UriKind.Relative), new TestTokenCredential()));
+            new HelixApiOptions(
+                new Uri("relative", UriKind.Relative),
+                new TestTokenCredential(),
+                new[] { HelixApiOptions.ProductionScope }));
     }
 
     [Fact]
     public void EntraCredentialRequiresHttpsBaseUri()
     {
         var defaultScopeException = Assert.Throws<ArgumentException>(() =>
-            new HelixApiOptions(new Uri("http://helix.dot.net/"), new TestTokenCredential()));
+            ApiFactory.GetAuthenticatedWithEntra(
+                "http://helix.dot.net/",
+                new TestTokenCredential()));
         var explicitScopeException = Assert.Throws<ArgumentException>(() =>
             new HelixApiOptions(
                 new Uri("http://localhost:5001/"),
@@ -152,6 +210,29 @@ public class HelixApiAuthenticationTests
     }
 
     [Fact]
+    public void EntraFactoryUsesStagingScope()
+    {
+        var api = Assert.IsType<HelixApi>(
+            ApiFactory.GetAuthenticatedWithEntra(
+                "https://helix.int-dot.net/",
+                new TestTokenCredential()));
+
+        Assert.Equal(HelixApiAuthenticationMode.EntraId, api.Options.AuthenticationMode);
+        Assert.Equal(new[] { HelixApiOptions.StagingScope }, api.Options.TokenScopes);
+    }
+
+    [Fact]
+    public void EntraFactoryRequiresExplicitScopeForCustomHost()
+    {
+        var exception = Assert.Throws<ArgumentException>(() =>
+            ApiFactory.GetAuthenticatedWithEntra(
+                "https://localhost:5001/",
+                new TestTokenCredential()));
+
+        Assert.Contains("explicit scopes", exception.Message);
+    }
+
+    [Fact]
     public void EntraFactoryRequiresCredential()
     {
         Assert.Throws<ArgumentNullException>(() =>
@@ -196,7 +277,8 @@ public class HelixApiAuthenticationTests
             new HttpResponseMessage(HttpStatusCode.OK));
         var options = new HelixApiOptions(
             new Uri("https://helix.dot.net/"),
-            credential)
+            credential,
+            new[] { HelixApiOptions.ProductionScope })
         {
             Transport = new HttpClientTransport(httpClient),
         };
@@ -324,10 +406,16 @@ public class HelixApiAuthenticationTests
 
     private sealed class TestTokenCredential : TokenCredential
     {
+        public int CallCount { get; private set; }
+
+        public ImmutableArray<string> RequestedScopes { get; private set; } = ImmutableArray<string>.Empty;
+
         public override AccessToken GetToken(
             TokenRequestContext requestContext,
             CancellationToken cancellationToken)
         {
+            CallCount++;
+            RequestedScopes = requestContext.Scopes.ToImmutableArray();
             return new AccessToken("test-token", DateTimeOffset.UtcNow.AddMinutes(30));
         }
 
