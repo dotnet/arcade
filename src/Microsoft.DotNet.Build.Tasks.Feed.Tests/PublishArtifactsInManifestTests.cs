@@ -558,6 +558,33 @@ public class PublishArtifactsInManifestTests
     }
 
     [Fact]
+    public async Task HandleBlobPublishingAsyncCreatesLinksForSuccessfulBlobsWhenAnotherUploadInBatchFaults()
+    {
+        var publisher = new RecordingAssetPublisher();
+        publisher.FaultedBlobPaths.Add("first.zip");
+        var firstBlob = CreateBlob("first.zip");
+        var secondBlob = CreateBlob("second.zip");
+        var config = CreateBlobFeedConfig("https://storage.example.net/public", "dotnet/first");
+        var (task, blobDirectory) = CreateBlobPublishingTask(publisher, [firstBlob, secondBlob], config);
+
+        try
+        {
+            Func<Task> publish = task.PublishBlobsAsync;
+
+            await publish.Should().ThrowAsync<InvalidOperationException>()
+                .WithMessage("Blob upload faulted.");
+
+            publisher.PublishedBlobPaths.Should().BeEquivalentTo([firstBlob.Id, secondBlob.Id]);
+            task.LatestLinkRequests.Should().ContainSingle();
+            task.LatestLinkRequests[0].BlobPaths.Should().ContainSingle().Which.Should().Be(secondBlob.Id);
+        }
+        finally
+        {
+            Directory.Delete(blobDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task HandleBlobPublishingAsyncDoesNotDeduplicateDifferentDestinationsOrBlobPaths()
     {
         var publisher = new RecordingAssetPublisher();

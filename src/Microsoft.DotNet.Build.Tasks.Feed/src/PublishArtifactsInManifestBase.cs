@@ -1172,7 +1172,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         List<Task> publishTasks = new List<Task>();
         List<(TargetFeedConfig FeedConfig, HashSet<BlobArtifactModel> Blobs)> blobPublishMappings = new();
         List<(TargetFeedConfig FeedConfig, BlobArtifactModel Blob)> azureBlobUploads = new();
-        List<(TargetFeedConfig FeedConfig, Task<HashSet<string>> PublishTask)> azureBlobPublishTasks = new();
+        var successfulUploadDestinations = new ConcurrentDictionary<BlobUploadDestination, byte>();
 
         // Just log a empty line for better visualization of the logs
         Log.LogMessage(MessageImportance.High, "\nBegin publishing of blobs: ");
@@ -1275,35 +1275,22 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                 blobsToPublish,
                 buildAssets,
                 selectedFeedConfig,
-                clientThrottle);
+                clientThrottle,
+                blobPath => successfulUploadDestinations.TryAdd(new BlobUploadDestination(
+                    selectedFeedConfig.Type,
+                    GetCanonicalTargetUrl(selectedFeedConfig.TargetURL),
+                    blobPath), 0));
             publishTasks.Add(publishTask);
-            azureBlobPublishTasks.Add((selectedFeedConfig, publishTask));
         }
 
         List<Exception> publishingExceptions = await AwaitAllAndCollectExceptionsAsync(publishTasks);
 
-        var successfulUploadDestinations = new HashSet<BlobUploadDestination>();
-        foreach (var upload in azureBlobPublishTasks)
-        {
-            if (upload.PublishTask.Status != TaskStatus.RanToCompletion)
-            {
-                continue;
-            }
-
-            foreach (string blobPath in await upload.PublishTask)
-            {
-                successfulUploadDestinations.Add(new BlobUploadDestination(
-                    upload.FeedConfig.Type,
-                    GetCanonicalTargetUrl(upload.FeedConfig.TargetURL),
-                    blobPath));
-            }
-        }
         var latestLinkTasks = new List<Task>();
         foreach (var mapping in blobPublishMappings.Where(mapping =>
             mapping.FeedConfig.Type == FeedType.AzureStorageContainer))
         {
             var publishedBlobs = mapping.Blobs
-                .Where(blob => successfulUploadDestinations.Contains(new BlobUploadDestination(
+                .Where(blob => successfulUploadDestinations.ContainsKey(new BlobUploadDestination(
                     mapping.FeedConfig.Type,
                     GetCanonicalTargetUrl(mapping.FeedConfig.TargetURL),
                     NormalizeBlobPath(blob.Id))))
@@ -1896,14 +1883,26 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
     private async Task<HashSet<string>> PublishAssetsAsync(IAssetPublisher assetPublisher, HashSet<BlobArtifactModel> blobAssets,
         ReadOnlyDictionary<string, Asset> assetToBARMapping,
         TargetFeedConfig feedConfig,
-        SemaphoreSlim clientThrottle)
+        SemaphoreSlim clientThrottle,
+        Action<string> onAssetPublished = null)
     {
         if (UseStreamingPublishing)
         {
-            return await PublishAssetsUsingStreamingPublishingAsync(assetPublisher, blobAssets, assetToBARMapping, feedConfig, clientThrottle);
+            return await PublishAssetsUsingStreamingPublishingAsync(
+                assetPublisher,
+                blobAssets,
+                assetToBARMapping,
+                feedConfig,
+                clientThrottle,
+                onAssetPublished);
         }
 
-        return await PublishAssetsWithoutStreamingPublishingAsync(assetPublisher, blobAssets, assetToBARMapping, feedConfig);
+        return await PublishAssetsWithoutStreamingPublishingAsync(
+            assetPublisher,
+            blobAssets,
+            assetToBARMapping,
+            feedConfig,
+            onAssetPublished);
     }
 
     protected virtual async Task CreateOrUpdateLatestLinksAsync(HashSet<string> blobPaths, TargetFeedConfig feedConfig)
@@ -1946,7 +1945,8 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         HashSet<BlobArtifactModel> assetsToPublish,
         ReadOnlyDictionary<string, Asset> buildAssets,
         TargetFeedConfig feedConfig,
-        SemaphoreSlim clientThrottle)
+        SemaphoreSlim clientThrottle,
+        Action<string> onAssetPublished)
     {
         var publishedBlobPaths = new ConcurrentBag<string>();
 
@@ -2019,6 +2019,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                         assetPublisher.LocationType);
 
                     publishedBlobPaths.Add(targetBlobPath);
+                    onAssetPublished?.Invoke(targetBlobPath);
                 }
 
                 DeleteTemporaryDirectory(temporaryBlobDirectory);
@@ -2040,7 +2041,8 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         IAssetPublisher assetPublisher,
         HashSet<BlobArtifactModel> assetsToPublish,
         ReadOnlyDictionary<string, Asset> assetNameToBARAssetMapping,
-        TargetFeedConfig feedConfig)
+        TargetFeedConfig feedConfig,
+        Action<string> onAssetPublished)
     {
         bool failed = false;
         var assets = assetsToPublish
@@ -2072,22 +2074,39 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         };
 
         using var clientThrottle = new SemaphoreSlim(MaxClients, MaxClients);
-        bool[] publishResults = await Task.WhenAll(assets.Select(asset =>
-            Task.Run(async () => await PublishAssetAndGetResultAsync(
-                assetPublisher,
-                asset.LocalBlobPath,
-                asset.Id,
-                pushOptions,
-                clientThrottle))));
-        var publishedBlobPaths = new HashSet<string>(StringComparer.Ordinal);
-        for (int i = 0; i < assets.Length; i++)
+        var publishResults = await Task.WhenAll(assets.Select(async asset =>
         {
-            if (!publishResults[i])
+            try
+            {
+                bool published = await Task.Run(async () => await PublishAssetAndGetResultAsync(
+                    assetPublisher,
+                    asset.LocalBlobPath,
+                    asset.Id,
+                    pushOptions,
+                    clientThrottle));
+                return (Asset: asset, Published: published, Exception: (Exception)null);
+            }
+            catch (Exception exception)
+            {
+                return (Asset: asset, Published: false, Exception: exception);
+            }
+        }));
+
+        var publishedBlobPaths = new HashSet<string>(StringComparer.Ordinal);
+        var publishingExceptions = new List<Exception>();
+        foreach (var result in publishResults)
+        {
+            if (result.Exception != null)
+            {
+                publishingExceptions.Add(result.Exception);
+                continue;
+            }
+            if (!result.Published)
             {
                 continue;
             }
 
-            var asset = assets[i];
+            var asset = result.Asset;
             TryAddAssetLocation(
                 asset.Asset.Id,
                 assetVersion: null,
@@ -2095,6 +2114,16 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                 feedConfig,
                 LocationType.Container);
             publishedBlobPaths.Add(asset.Id);
+            onAssetPublished?.Invoke(asset.Id);
+        }
+
+        if (publishingExceptions.Count == 1)
+        {
+            ExceptionDispatchInfo.Capture(publishingExceptions[0]).Throw();
+        }
+        if (publishingExceptions.Count > 1)
+        {
+            throw new AggregateException("Multiple blob publishing operations failed.", publishingExceptions);
         }
 
         return publishedBlobPaths;
