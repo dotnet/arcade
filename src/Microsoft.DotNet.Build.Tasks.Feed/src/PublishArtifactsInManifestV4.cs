@@ -192,7 +192,7 @@ public class PublishArtifactsInManifestV4 : PublishArtifactsInManifestBase
 
             using var clientThrottle = new SemaphoreSlim(MaxClients, MaxClients);
 
-            await Task.WhenAll(new Task[]
+            await AwaitPublishingAndPersistAssetLocationsAsync(client, new Task[]
             {
                 Task.Run(async () => await HandlePackagePublishingAsync(buildAssets, clientThrottle)),
                 Task.Run(async () => await HandleBlobPublishingAsync(buildAssets, clientThrottle)),
@@ -204,8 +204,6 @@ public class PublishArtifactsInManifestV4 : PublishArtifactsInManifestBase
                     PublishSpecialClrFiles,
                     clientThrottle))
             });
-
-            await PersistPendingAssetLocationAsync(client);
         }
         catch (Exception e)
         {

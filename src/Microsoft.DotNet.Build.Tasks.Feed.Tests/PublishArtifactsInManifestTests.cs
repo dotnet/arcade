@@ -157,6 +157,8 @@ public class PublishArtifactsInManifestTests
 
     private sealed class TestableBlobPublishingTask : PublishArtifactsInManifestBase
     {
+        private readonly List<string> _assetLocations = new();
+
         public TestableBlobPublishingTask(AssetPublisherFactory assetPublisherFactory)
             : base(assetPublisherFactory)
         {
@@ -166,11 +168,33 @@ public class PublishArtifactsInManifestTests
 
         public int? FailingLatestLinkRequestNumber { get; set; }
 
+        public List<string> PersistedAssetLocations { get; } = new();
+
         public override Task<bool> ExecuteAsync() => throw new NotImplementedException();
 
         public Task PublishBlobsAsync() => HandleBlobPublishingAsync(ReadOnlyDictionary<string, ProductConstructionService.Client.Models.Asset>.Empty);
 
-        protected override bool TryAddAssetLocation(string assetId, string assetVersion, ReadOnlyDictionary<string, ProductConstructionService.Client.Models.Asset> buildAssets, TargetFeedConfig feedConfig, LocationType assetLocationType) => true;
+        public Task PublishBlobsAndPersistAsync() => AwaitPublishingAndPersistAssetLocationsAsync(
+            client: null,
+            [HandleBlobPublishingAsync(ReadOnlyDictionary<string, ProductConstructionService.Client.Models.Asset>.Empty)]);
+
+        public override Task DownloadFileAsync(HttpClient client, string artifactName, string fileName, string path)
+        {
+            File.WriteAllText(path, "test");
+            return Task.CompletedTask;
+        }
+
+        protected override bool TryAddAssetLocation(string assetId, string assetVersion, ReadOnlyDictionary<string, ProductConstructionService.Client.Models.Asset> buildAssets, TargetFeedConfig feedConfig, LocationType assetLocationType)
+        {
+            _assetLocations.Add(assetId);
+            return true;
+        }
+
+        protected override Task PersistPendingAssetLocationAsync(ProductConstructionService.Client.IProductConstructionServiceApi client)
+        {
+            PersistedAssetLocations.AddRange(_assetLocations);
+            return Task.CompletedTask;
+        }
 
         protected override Task CreateOrUpdateLatestLinksAsync(HashSet<string> blobPaths, TargetFeedConfig feedConfig)
         {
@@ -292,6 +316,9 @@ public class PublishArtifactsInManifestTests
         var task = new TestableBlobPublishingTask(publisherFactory)
         {
             BlobAssetsBasePath = blobDirectory,
+            ArtifactsBasePath = blobDirectory,
+            AzdoApiToken = "token",
+            BuildModel = new BuildModel(new BuildIdentity()),
             BuildEngine = new MockBuildEngine(),
             NonStreamingPublishingMaxClients = 1
         };
@@ -479,7 +506,7 @@ public class PublishArtifactsInManifestTests
 
         try
         {
-            Func<Task> publish = task.PublishBlobsAsync;
+            Func<Task> publish = task.PublishBlobsAndPersistAsync;
 
             await publish.Should().ThrowAsync<InvalidOperationException>()
                 .WithMessage("Latest-link update failed.");
@@ -487,6 +514,7 @@ public class PublishArtifactsInManifestTests
             publisher.PublishedBlobPaths.Should().ContainSingle();
             task.LatestLinkRequests.Select(request => request.FeedConfig)
                 .Should().BeEquivalentTo([firstConfig, secondConfig]);
+            task.PersistedAssetLocations.Should().ContainSingle().Which.Should().Be(blob.Id);
         }
         finally
         {
@@ -541,7 +569,7 @@ public class PublishArtifactsInManifestTests
 
         try
         {
-            Func<Task> publish = task.PublishBlobsAsync;
+            Func<Task> publish = task.PublishBlobsAndPersistAsync;
 
             await publish.Should().ThrowAsync<InvalidOperationException>()
                 .WithMessage("Blob upload faulted.");
@@ -550,6 +578,7 @@ public class PublishArtifactsInManifestTests
             task.LatestLinkRequests.Should().ContainSingle();
             task.LatestLinkRequests[0].FeedConfig.Should().Be(successfulConfig);
             task.LatestLinkRequests[0].BlobPaths.Should().ContainSingle().Which.Should().Be(nonShippingBlob.Id);
+            task.PersistedAssetLocations.Should().ContainSingle().Which.Should().Be(nonShippingBlob.Id);
         }
         finally
         {
@@ -569,10 +598,60 @@ public class PublishArtifactsInManifestTests
 
         try
         {
-            Func<Task> publish = task.PublishBlobsAsync;
+            Func<Task> publish = task.PublishBlobsAndPersistAsync;
 
             await publish.Should().ThrowAsync<InvalidOperationException>()
                 .WithMessage("Blob upload faulted.");
+
+            publisher.PublishedBlobPaths.Should().BeEquivalentTo([firstBlob.Id, secondBlob.Id]);
+            task.LatestLinkRequests.Should().ContainSingle();
+            task.LatestLinkRequests[0].BlobPaths.Should().ContainSingle().Which.Should().Be(secondBlob.Id);
+            task.PersistedAssetLocations.Should().ContainSingle().Which.Should().Be(secondBlob.Id);
+        }
+        finally
+        {
+            Directory.Delete(blobDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task HandleBlobPublishingAsyncMissingFileDoesNotSuppressAvailableBlob()
+    {
+        var publisher = new RecordingAssetPublisher();
+        var missingBlob = CreateBlob("missing.zip");
+        var availableBlob = CreateBlob("available.zip");
+        var config = CreateBlobFeedConfig("https://storage.example.net/public", "dotnet/first");
+        var (task, blobDirectory) = CreateBlobPublishingTask(publisher, [missingBlob, availableBlob], config);
+        File.Delete(Path.Combine(blobDirectory, missingBlob.Id));
+
+        try
+        {
+            await task.PublishBlobsAsync();
+
+            publisher.PublishedBlobPaths.Should().ContainSingle().Which.Should().Be(availableBlob.Id);
+            task.LatestLinkRequests.Should().ContainSingle();
+            task.LatestLinkRequests[0].BlobPaths.Should().ContainSingle().Which.Should().Be(availableBlob.Id);
+        }
+        finally
+        {
+            Directory.Delete(blobDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task HandleBlobPublishingAsyncStreamingCreatesLinksOnlyForSuccessfulUploads()
+    {
+        var publisher = new RecordingAssetPublisher();
+        publisher.FailedBlobPaths.Add("first.zip");
+        var firstBlob = CreateBlob("first.zip");
+        var secondBlob = CreateBlob("second.zip");
+        var config = CreateBlobFeedConfig("https://storage.example.net/public", "dotnet/first");
+        var (task, blobDirectory) = CreateBlobPublishingTask(publisher, [firstBlob, secondBlob], config);
+        task.UseStreamingPublishing = true;
+
+        try
+        {
+            await task.PublishBlobsAsync();
 
             publisher.PublishedBlobPaths.Should().BeEquivalentTo([firstBlob.Id, secondBlob.Id]);
             task.LatestLinkRequests.Should().ContainSingle();

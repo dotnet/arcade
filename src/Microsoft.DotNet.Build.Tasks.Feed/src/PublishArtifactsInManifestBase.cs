@@ -385,7 +385,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
     ///   Persist in BAR all pending associations of Asset -> AssetLocation stored in `NewAssetLocations`.
     /// </summary>
     /// <param name="client">Maestro++ API client</param>
-    protected async Task PersistPendingAssetLocationAsync(IProductConstructionServiceApi client)
+    protected virtual async Task PersistPendingAssetLocationAsync(IProductConstructionServiceApi client)
     {
         Log.LogMessage(MessageImportance.High, "\nPersisting new locations of assets in the Build Asset Registry.");
 
@@ -397,6 +397,30 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         await client.Assets.BulkAddLocationsAsync(updates);
 
         Log.LogMessage(MessageImportance.High, "\nCompleted persisting of new asset locations...");
+    }
+
+    protected async Task AwaitPublishingAndPersistAssetLocationsAsync(
+        IProductConstructionServiceApi client,
+        IEnumerable<Task> publishingTasks)
+    {
+        List<Exception> publishingExceptions = await AwaitAllAndCollectExceptionsAsync(publishingTasks);
+        try
+        {
+            await PersistPendingAssetLocationAsync(client);
+        }
+        catch (Exception exception)
+        {
+            publishingExceptions.Add(exception);
+        }
+
+        if (publishingExceptions.Count == 1)
+        {
+            ExceptionDispatchInfo.Capture(publishingExceptions[0]).Throw();
+        }
+        if (publishingExceptions.Count > 1)
+        {
+            throw new AggregateException("Multiple publishing operations failed.", publishingExceptions);
+        }
     }
 
     /// <summary>
@@ -1041,7 +1065,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
     /// <param name="containerId">ContainerId where the packageArtifact and BlobArtifacts are stored</param>
     /// <param name="fileName">Name the file we are trying to download</param>
     /// <param name="path">Path where the file is being downloaded</param>
-    public async Task DownloadFileAsync(
+    public virtual async Task DownloadFileAsync(
         HttpClient client,
         string artifactName,
         string fileName,
@@ -2044,7 +2068,6 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         TargetFeedConfig feedConfig,
         Action<string> onAssetPublished)
     {
-        bool failed = false;
         var assets = assetsToPublish
             .Select(asset =>
             {
@@ -2054,18 +2077,13 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
 
                 if (!File.Exists(localBlobPath))
                 {
-                    failed = true;
                     Log.LogError($"Could not locate '{asset} at '{localBlobPath}'");
                 }
 
                 return (Asset: asset, LocalBlobPath: localBlobPath, Id: normalizedBlobPath);
             })
+            .Where(asset => File.Exists(asset.LocalBlobPath))
             .ToArray();
-
-        if (failed)
-        {
-            return new HashSet<string>(StringComparer.Ordinal);
-        }
 
         var pushOptions = new PushOptions
         {
