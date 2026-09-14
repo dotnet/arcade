@@ -113,6 +113,13 @@ partial class HelixApiOptions
             throw new ArgumentException("The Helix API base URI must be absolute.", nameof(baseUri));
         }
 
+        if (!baseUri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                "The Helix API base URI must use HTTPS for Entra authentication.",
+                nameof(baseUri));
+        }
+
         return baseUri;
     }
 }

@@ -82,6 +82,21 @@ public class HelixApiAuthenticationTests
     }
 
     [Fact]
+    public void EntraCredentialRequiresHttpsBaseUri()
+    {
+        var defaultScopeException = Assert.Throws<ArgumentException>(() =>
+            new HelixApiOptions(new Uri("http://helix.dot.net/"), new TestTokenCredential()));
+        var explicitScopeException = Assert.Throws<ArgumentException>(() =>
+            new HelixApiOptions(
+                new Uri("http://localhost:5001/"),
+                new TestTokenCredential(),
+                new[] { "api://custom-helix/.default" }));
+
+        Assert.Contains("HTTPS", defaultScopeException.Message);
+        Assert.Contains("HTTPS", explicitScopeException.Message);
+    }
+
+    [Fact]
     public void CustomHostUsesExplicitScope()
     {
         const string scope = "api://custom-helix/.default";
