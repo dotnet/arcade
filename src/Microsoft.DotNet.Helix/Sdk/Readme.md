@@ -29,13 +29,15 @@ Versions of the package can be found by browsing the feed at https://dev.azure.c
 
 The examples can all be run with `dotnet msbuild`. Internal queues (usually any queue not ending in `.Open`) require either:
 
-- `HelixUseEntraAuthentication=true` with an available `DefaultAzureCredential`, or
+- `HelixUseEntraAuthentication=true` with an Azure Pipelines service connection or another available Azure credential, or
 - the legacy `HelixAccessToken` environment variable or MSBuild property.
 
 When Entra authentication is explicitly enabled, any legacy access token still
 injected by an existing variable group is ignored with a warning. Entra
-authentication supports Azure Pipelines service connections, managed identity,
-and Azure CLI credentials and refreshes access tokens based on their expiry.
+authentication uses `AzurePipelinesCredential` when the service-connection
+environment is available, then falls back to `DefaultAzureCredential` for
+managed identity and local Azure CLI scenarios. Tokens are refreshed based on
+their expiry.
 
 You will also need to set the following environment variables before building:
 

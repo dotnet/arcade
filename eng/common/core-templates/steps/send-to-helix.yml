@@ -40,7 +40,7 @@ steps:
 
   - ${{ if eq(parameters.HelixUseEntraAuthentication, true) }}:
     - task: AzureCLI@2
-      displayName: Initialize Helix Entra authentication
+      displayName: Read Helix Entra service connection
       inputs:
         azureSubscription: ${{ parameters.HelixAzureSubscription }}
         addSpnToEnvironment: true
@@ -51,6 +51,8 @@ steps:
             throw "The Helix Azure service connection did not provide a service principal or tenant ID."
           }
 
+          # The SDK uses these values with System.AccessToken and System.OidcRequestUri
+          # to construct AzurePipelinesCredential in the subsequent MSBuild process.
           Write-Host "##vso[task.setvariable variable=HelixEntraClientId]$env:servicePrincipalId"
           Write-Host "##vso[task.setvariable variable=HelixEntraTenantId]$env:tenantId"
       condition: ${{ parameters.condition }}

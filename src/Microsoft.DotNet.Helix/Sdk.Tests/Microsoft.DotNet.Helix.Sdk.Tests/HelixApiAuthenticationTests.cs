@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core;
 using Azure.Core.Pipeline;
+using Azure.Identity;
 using Microsoft.DotNet.Arcade.Test.Common;
 using Microsoft.DotNet.Helix.Client;
 using Microsoft.DotNet.Helix.Client.Models;
@@ -222,6 +223,46 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     () => ApiFactory.GetAuthenticatedWithEntra(new TestTokenCredential())));
 
             Assert.Equal(expectedMode, api.Options.AuthenticationMode);
+        }
+
+        [Fact]
+        public void CompleteAzurePipelinesEnvironmentUsesAzurePipelinesCredential()
+        {
+            TokenCredential credential = HelixTask.CreateEntraTokenCredential(
+                "system-access-token",
+                "client-id",
+                "tenant-id",
+                "service-connection-id",
+                "https://dev.azure.com/example/_apis/distributedtask/hubs/build/plans/plan/jobs/job/oidctoken",
+                () => throw new InvalidOperationException("Fallback credential should not be created."));
+
+            Assert.IsType<AzurePipelinesCredential>(credential);
+        }
+
+        [Theory]
+        [InlineData(null, "client-id", "tenant-id", "service-connection-id", "oidc-uri")]
+        [InlineData("system-access-token", null, "tenant-id", "service-connection-id", "oidc-uri")]
+        [InlineData("system-access-token", "client-id", null, "service-connection-id", "oidc-uri")]
+        [InlineData("system-access-token", "client-id", "tenant-id", null, "oidc-uri")]
+        [InlineData("system-access-token", "client-id", "tenant-id", "service-connection-id", null)]
+        public void IncompleteAzurePipelinesEnvironmentUsesFallbackCredential(
+            string systemAccessToken,
+            string clientId,
+            string tenantId,
+            string serviceConnectionId,
+            string oidcRequestUri)
+        {
+            var fallbackCredential = new TestTokenCredential();
+
+            TokenCredential credential = HelixTask.CreateEntraTokenCredential(
+                systemAccessToken,
+                clientId,
+                tenantId,
+                serviceConnectionId,
+                oidcRequestUri,
+                () => fallbackCredential);
+
+            Assert.Same(fallbackCredential, credential);
         }
 
         [Theory]

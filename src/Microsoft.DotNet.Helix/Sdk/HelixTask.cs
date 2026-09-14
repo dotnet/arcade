@@ -7,6 +7,7 @@ using System.Net;
 using System.Threading;
 using Microsoft.Build.Framework;
 #if !DOTNET_BUILD_SOURCE_ONLY
+using Azure.Core;
 using Azure.Identity;
 #endif
 using Microsoft.DotNet.Helix.Client;
@@ -97,9 +98,46 @@ namespace Microsoft.DotNet.Helix.Sdk
 #else
             return ApiFactory.GetAuthenticatedWithEntra(
                 baseUri,
-                new DefaultAzureCredential());
+                CreateEntraTokenCredential());
 #endif
         }
+
+#if !DOTNET_BUILD_SOURCE_ONLY
+        private static TokenCredential CreateEntraTokenCredential()
+        {
+            return CreateEntraTokenCredential(
+                Environment.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN"),
+                Environment.GetEnvironmentVariable("AZURESUBSCRIPTION_CLIENT_ID"),
+                Environment.GetEnvironmentVariable("AZURESUBSCRIPTION_TENANT_ID"),
+                Environment.GetEnvironmentVariable("AZURESUBSCRIPTION_SERVICE_CONNECTION_ID"),
+                Environment.GetEnvironmentVariable("SYSTEM_OIDCREQUESTURI"),
+                () => new DefaultAzureCredential());
+        }
+
+        internal static TokenCredential CreateEntraTokenCredential(
+            string systemAccessToken,
+            string clientId,
+            string tenantId,
+            string serviceConnectionId,
+            string oidcRequestUri,
+            Func<TokenCredential> fallbackCredentialFactory)
+        {
+            if (!string.IsNullOrEmpty(systemAccessToken) &&
+                !string.IsNullOrEmpty(clientId) &&
+                !string.IsNullOrEmpty(tenantId) &&
+                !string.IsNullOrEmpty(serviceConnectionId) &&
+                !string.IsNullOrEmpty(oidcRequestUri))
+            {
+                return new AzurePipelinesCredential(
+                    tenantId,
+                    clientId,
+                    serviceConnectionId,
+                    systemAccessToken);
+            }
+
+            return fallbackCredentialFactory();
+        }
+#endif
 
         public void Cancel()
         {

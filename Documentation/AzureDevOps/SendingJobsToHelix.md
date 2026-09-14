@@ -67,6 +67,11 @@ Set `HelixUseEntraAuthentication` to `true` and pass an Azure service connection
 
 When Entra authentication is enabled, the template does not forward `HelixAccessToken` to the Helix processes. If a legacy token is still injected by a variable group, explicit Entra opt-in takes precedence and the task ignores the token with a warning.
 
+The template passes the service connection identifiers to the SDK, which uses
+them with Azure Pipelines' system access token and OIDC endpoint to create an
+`AzurePipelinesCredential`. This allows the SDK to request fresh tokens without
+depending on Azure CLI state from an earlier pipeline task.
+
 ```yaml
 steps:
 - template: /eng/common/templates/steps/send-to-helix.yml
