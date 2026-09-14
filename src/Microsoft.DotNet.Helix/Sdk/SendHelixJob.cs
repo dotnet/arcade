@@ -165,6 +165,9 @@ public class SendHelixJob : HelixTask, IMultiThreadableTask
 
     private CommandPayload _commandPayload;
 
+    internal Func<IHelixApi, IJobDefinitionWithType> JobDefinitionFactory { get; set; }
+        = api => api.Job.Define();
+
     protected override async Task ExecuteCore(CancellationToken cancellationToken)
     {
         string creatorValidationError = GetCreatorValidationError(
@@ -185,7 +188,7 @@ public class SendHelixJob : HelixTask, IMultiThreadableTask
         {
             var currentHelixApi = HelixApi;
 
-            IJobDefinition def = currentHelixApi.Job.Define()
+            IJobDefinition def = JobDefinitionFactory(currentHelixApi)
                 .WithType(Type)
                 .WithTargetQueue(TargetQueue)
                 .WithMaxRetryCount(MaxRetryCount);

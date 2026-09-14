@@ -26,4 +26,13 @@
     <ProjectReference Include="..\..\JobMonitor\Microsoft.DotNet.Helix.JobMonitor.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\..\..\..\eng\common\core-templates\steps\send-to-helix.yml"
+             Link="TemplateAssets\send-to-helix.yml"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\..\..\eng\common\core-templates\job\helix-job-monitor.yml"
+             Link="TemplateAssets\helix-job-monitor.yml"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

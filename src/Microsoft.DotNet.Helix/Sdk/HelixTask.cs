@@ -43,6 +43,8 @@ public abstract class HelixTask : BaseTask, ICancelableTask
 
     protected IHelixApi AnonymousApi { get; private set; }
 
+    internal Func<string, IHelixApi> EntraHelixApiFactory { get; set; } = CreateEntraHelixApi;
+
     private IHelixApi GetHelixApi()
     {
         if (UseEntraAuthentication && !string.IsNullOrEmpty(AccessToken))
@@ -58,7 +60,7 @@ public abstract class HelixTask : BaseTask, ICancelableTask
                 BaseUri,
                 AccessToken,
                 UseEntraAuthentication,
-                () => CreateEntraHelixApi(BaseUri));
+                () => EntraHelixApiFactory(BaseUri));
         }
 
         if (string.IsNullOrEmpty(AccessToken))
