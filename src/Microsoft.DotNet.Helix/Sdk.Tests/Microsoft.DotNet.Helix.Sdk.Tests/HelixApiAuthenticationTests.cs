@@ -2,14 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Immutable;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core;
 using Azure.Core.Pipeline;
-using Microsoft.Arcade.Test.Common;
+using Microsoft.DotNet.Arcade.Test.Common;
 using Microsoft.DotNet.Helix.Client;
+using Microsoft.DotNet.Helix.Client.Models;
+using Microsoft.DotNet.Helix.Sdk;
 using Xunit;
 
 namespace Microsoft.DotNet.Helix.Sdk.Tests
@@ -199,6 +202,61 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.Equal(2, credential.CallCount);
             Assert.NotEqual(firstAuthorization, secondAuthorization);
+        }
+
+        [Theory]
+        [InlineData(false, null, HelixApiAuthenticationMode.Anonymous)]
+        [InlineData(false, "legacy-token", HelixApiAuthenticationMode.PersonalAccessToken)]
+        [InlineData(true, null, HelixApiAuthenticationMode.EntraId)]
+        [InlineData(true, "legacy-token", HelixApiAuthenticationMode.EntraId)]
+        public void HelixTaskSelectsRequestedAuthenticationMode(
+            bool useEntraAuthentication,
+            string accessToken,
+            HelixApiAuthenticationMode expectedMode)
+        {
+            var api = Assert.IsType<HelixApi>(
+                HelixTask.CreateHelixApi(
+                    "https://helix.dot.net/",
+                    accessToken,
+                    useEntraAuthentication,
+                    () => ApiFactory.GetAuthenticatedWithEntra(new TestTokenCredential())));
+
+            Assert.Equal(expectedMode, api.Options.AuthenticationMode);
+        }
+
+        [Theory]
+        [InlineData(false, null, "https://storage/results.trx")]
+        [InlineData(false, "legacy-token", "https://storage/results.trx?access_token=legacy-token")]
+        [InlineData(true, null, "https://storage/results.trx")]
+        [InlineData(true, "legacy-token", "https://storage/results.trx")]
+        public void UploadedFileLinksOnlyContainTokenInPatMode(
+            bool useEntraAuthentication,
+            string accessToken,
+            string expectedLink)
+        {
+            var files = ImmutableList.Create(new UploadedFile("results.trx", "https://storage/results.trx"));
+
+            IImmutableList<UploadedFile> result = GetHelixWorkItems.AddAccessTokenToFileLinks(
+                files,
+                accessToken,
+                useEntraAuthentication);
+
+            Assert.Equal(expectedLink, Assert.Single(result).Link);
+        }
+
+        [Theory]
+        [InlineData(false, null, false)]
+        [InlineData(false, "legacy-token", true)]
+        [InlineData(true, null, true)]
+        [InlineData(true, "legacy-token", true)]
+        public void CancellationRecognizesConfiguredAuthentication(
+            bool useEntraAuthentication,
+            string accessToken,
+            bool expected)
+        {
+            Assert.Equal(
+                expected,
+                CancelHelixJobs.CanUseAuthenticatedCancellation(useEntraAuthentication, accessToken));
         }
 
         private sealed class TestTokenCredential : TokenCredential
