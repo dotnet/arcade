@@ -57,20 +57,14 @@ partial class HelixApiOptions
         {
             AuthenticationMode = HelixApiAuthenticationMode.Anonymous;
         }
-        else if (Credentials is HelixApiTokenCredential)
+        else if (TokenScopes.Count == 0)
         {
             AuthenticationMode = HelixApiAuthenticationMode.PersonalAccessToken;
-            TokenScopes = Array.Empty<string>();
             AddPolicy(new HelixApiTokenAuthenticationPolicy(Credentials), HttpPipelinePosition.PerCall);
         }
         else
         {
             AuthenticationMode = HelixApiAuthenticationMode.EntraId;
-            if (TokenScopes.Count == 0)
-            {
-                TokenScopes = Array.AsReadOnly(new[] { GetDefaultScope(BaseUri) });
-            }
-
             AddPolicy(
                 new BearerTokenAuthenticationPolicy(Credentials, TokenScopes.ToArray()),
                 HttpPipelinePosition.PerRetry);
@@ -81,7 +75,7 @@ partial class HelixApiOptions
         Retry.MaxRetries = DefaultMaxRetryCount;
     }
 
-    private static string GetDefaultScope(Uri baseUri)
+    internal static string GetDefaultScope(Uri baseUri)
     {
         baseUri = ValidateBaseUri(baseUri);
 

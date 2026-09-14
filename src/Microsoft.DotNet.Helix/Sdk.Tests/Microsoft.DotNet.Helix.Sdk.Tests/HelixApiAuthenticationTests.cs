@@ -39,46 +39,73 @@ public class HelixApiAuthenticationTests
     }
 
     [Fact]
-    public void ProductionCredentialUsesProductionScope()
+    public void ExplicitProductionCredentialUsesProductionScope()
     {
-        var options = new HelixApiOptions(new TestTokenCredential());
+        var options = new HelixApiOptions(
+            new Uri("https://helix.dot.net/"),
+            new TestTokenCredential(),
+            new[] { HelixApiOptions.ProductionScope });
 
         Assert.Equal(HelixApiAuthenticationMode.EntraId, options.AuthenticationMode);
         Assert.Equal(new[] { HelixApiOptions.ProductionScope }, options.TokenScopes);
     }
 
     [Fact]
-    public void StagingCredentialUsesStagingScope()
+    public void ExplicitStagingCredentialUsesStagingScope()
     {
         var options = new HelixApiOptions(
             new Uri("https://helix.int-dot.net/"),
-            new TestTokenCredential());
+            new TestTokenCredential(),
+            new[] { HelixApiOptions.StagingScope });
 
         Assert.Equal(HelixApiAuthenticationMode.EntraId, options.AuthenticationMode);
         Assert.Equal(new[] { HelixApiOptions.StagingScope }, options.TokenScopes);
     }
 
     [Fact]
-    public void CustomHostRequiresExplicitScope()
+    public async Task LegacyCredentialPreservesTokenAuthenticationForCustomHost()
     {
-        var exception = Assert.Throws<ArgumentException>(() =>
-            new HelixApiOptions(new Uri("https://localhost:5001/"), new TestTokenCredential()));
+        var credential = new TestTokenCredential();
+        using var httpClient = FakeHttpClient.WithResponses(
+            new HttpResponseMessage(HttpStatusCode.OK));
+        var options = new HelixApiOptions(
+            new Uri("https://localhost:5001/"),
+            credential)
+        {
+            Transport = new HttpClientTransport(httpClient),
+        };
+        var api = new HelixApi(options);
 
-        Assert.Contains("explicit scopes", exception.Message);
+        using HttpMessage message = api.Pipeline.CreateMessage();
+        message.Request.Method = RequestMethod.Get;
+        message.Request.Uri.Reset(options.BaseUri);
+        await api.Pipeline.SendAsync(message, CancellationToken.None);
+
+        Assert.Equal(HelixApiAuthenticationMode.PersonalAccessToken, options.AuthenticationMode);
+        Assert.Empty(options.TokenScopes);
+        Assert.Empty(credential.RequestedScopes);
+        Assert.True(message.Request.Headers.TryGetValue("Authorization", out string authorization));
+        Assert.Equal("token test-token", authorization);
     }
 
     [Fact]
     public void EntraCredentialRequiresBaseUri()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            new HelixApiOptions(null, new TestTokenCredential()));
+            new HelixApiOptions(
+                null,
+                new TestTokenCredential(),
+                new[] { HelixApiOptions.ProductionScope }));
     }
 
     [Fact]
     public void EntraCredentialRequiresAbsoluteBaseUri()
     {
         Assert.Throws<ArgumentException>(() =>
-            new HelixApiOptions(new Uri("relative", UriKind.Relative), new TestTokenCredential()));
+            new HelixApiOptions(
+                new Uri("relative", UriKind.Relative),
+                new TestTokenCredential(),
+                new[] { HelixApiOptions.ProductionScope }));
     }
 
     [Fact]
@@ -181,7 +208,8 @@ public class HelixApiAuthenticationTests
             new HttpResponseMessage(HttpStatusCode.OK));
         var options = new HelixApiOptions(
             new Uri("https://helix.dot.net/"),
-            credential)
+            credential,
+            new[] { HelixApiOptions.ProductionScope })
         {
             Transport = new HttpClientTransport(httpClient),
         };
@@ -287,10 +315,13 @@ public class HelixApiAuthenticationTests
 
     private sealed class TestTokenCredential : TokenCredential
     {
+        public ImmutableArray<string> RequestedScopes { get; private set; } = ImmutableArray<string>.Empty;
+
         public override AccessToken GetToken(
             TokenRequestContext requestContext,
             CancellationToken cancellationToken)
         {
+            RequestedScopes = requestContext.Scopes.ToImmutableArray();
             return new AccessToken("test-token", DateTimeOffset.UtcNow.AddMinutes(30));
         }
 
