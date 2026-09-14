@@ -36,6 +36,8 @@ When Entra authentication is explicitly enabled, any legacy access token still
 injected by an existing variable group is ignored with a warning. Entra
 authentication supports Azure Pipelines workload identity, managed identity,
 and Azure CLI credentials and refreshes access tokens based on their expiry.
+The SDK infers the scope for the production and staging Helix hosts. Set
+`HelixEntraScope` when `HelixBaseUri` identifies another HTTPS host.
 
 You will also need to set the following environment variables before building:
 
@@ -87,6 +89,7 @@ Useful parameters:
 - `helixBaseUri`: base URI for the Helix service. Defaults to `https://helix.dot.net/`.
 - `helixAccessToken`: optional token for authenticated Helix access on internal builds; ignored with a warning when `useEntraAuthentication` is enabled.
 - `useEntraAuthentication`: use a refreshable Entra credential for authenticated Helix access.
+- `helixEntraScope`: explicit Entra scope required when `helixBaseUri` identifies a custom host.
 - `azureSubscription`: Azure service connection ID authorized for Helix; required when `useEntraAuthentication` is enabled.
 - `pollingIntervalSeconds`: how often the job monitor checks for new completed jobs.
 - `timeoutInMinutes`: overall timeout for the job monitor.

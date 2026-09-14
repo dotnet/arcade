@@ -33,6 +33,11 @@ public abstract class HelixTask : BaseTask, ICancelableTask
     public bool UseEntraAuthentication { get; set; }
 
     /// <summary>
+    /// The explicit Entra scope to request for a custom Helix API host.
+    /// </summary>
+    public string EntraScope { get; set; }
+
+    /// <summary>
     ///   If <see langword="true"/>, fail when posting jobs to non-existent queues; If <see langword="false"/> allow it and print a warning.
     ///   Note if an MSBuild sequence starts and waits on jobs, and none are started, this will still fail.
     ///   Defined on HelixTask so the catch block around Execute() can know about it.
@@ -58,7 +63,7 @@ public abstract class HelixTask : BaseTask, ICancelableTask
                 BaseUri,
                 AccessToken,
                 UseEntraAuthentication,
-                () => CreateEntraHelixApi(BaseUri));
+                () => CreateEntraHelixApi(BaseUri, EntraScope));
         }
 
         if (string.IsNullOrEmpty(AccessToken))
@@ -89,7 +94,7 @@ public abstract class HelixTask : BaseTask, ICancelableTask
             : ApiFactory.GetAuthenticated(baseUri, accessToken);
     }
 
-    private static IHelixApi CreateEntraHelixApi(string baseUri)
+    internal static IHelixApi CreateEntraHelixApi(string baseUri, string entraScope)
     {
 #if DOTNET_BUILD_SOURCE_ONLY
         throw new PlatformNotSupportedException(
@@ -98,9 +103,10 @@ public abstract class HelixTask : BaseTask, ICancelableTask
         throw new PlatformNotSupportedException(
             "Helix Entra authentication is not available on .NET Framework.");
 #else
-        return ApiFactory.GetAuthenticatedWithEntra(
-            baseUri,
-            new DefaultIdentityTokenCredential());
+        var credential = new DefaultIdentityTokenCredential();
+        return string.IsNullOrWhiteSpace(entraScope)
+            ? ApiFactory.GetAuthenticatedWithEntra(baseUri, credential)
+            : ApiFactory.GetAuthenticatedWithEntra(baseUri, credential, entraScope);
 #endif
     }
 

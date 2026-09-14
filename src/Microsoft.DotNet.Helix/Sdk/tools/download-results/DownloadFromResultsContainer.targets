@@ -25,6 +25,8 @@
         Condition="$(_shouldDownloadResults)"
         AccessToken="$(HelixAccessToken)"
         UseEntraAuthentication="$(HelixUseEntraAuthentication)"
+        EntraScope="$(HelixEntraScope)"
+        BaseUri="$(HelixBaseUri)"
         WorkItems="@(_workItemsWithDownloadMetadata)"
         OutputDirectory="$(HelixResultsDestinationDir)"
         MetadataToWrite="@(HelixDownloadResultsMetadata)"

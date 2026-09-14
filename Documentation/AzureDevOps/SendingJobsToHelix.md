@@ -67,6 +67,10 @@ Set `HelixUseEntraAuthentication` to `true` and pass an Azure service connection
 
 When Entra authentication is enabled, the template does not forward `HelixAccessToken` to the Helix processes. If a legacy token is still injected by a variable group, explicit Entra opt-in takes precedence and the task ignores the token with a warning.
 
+The production and staging Entra scopes are inferred for `https://helix.dot.net/`
+and `https://helix.int-dot.net/`. When `HelixBaseUri` targets another HTTPS
+host, set its scope through `HelixEntraScope`.
+
 ```yaml
 steps:
 - template: /eng/common/templates/steps/send-to-helix.yml
@@ -74,11 +78,13 @@ steps:
   parameters:
     HelixUseEntraAuthentication: true
     HelixAzureSubscription: <Azure service connection ID authorized for Helix>
+    # HelixEntraScope: <required for a custom HelixBaseUri host>
     # other parameters here
 ```
 
 If the pipeline also uses the standalone Helix Job Monitor, configure its
 separate job template with `useEntraAuthentication` and `azureSubscription`.
+For a custom `helixBaseUri`, also pass the same scope through `helixEntraScope`.
 Enabling Entra authentication on `send-to-helix.yml` does not automatically
 configure the monitor job.
 
@@ -88,6 +94,7 @@ jobs:
   parameters:
     useEntraAuthentication: true
     azureSubscription: <Azure service connection ID authorized for Helix>
+    # helixEntraScope: <required for a custom helixBaseUri host>
     # other parameters here
 ```
 

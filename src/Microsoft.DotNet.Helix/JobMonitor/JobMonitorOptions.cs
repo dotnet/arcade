@@ -17,6 +17,8 @@ public sealed class JobMonitorOptions
 
     public bool UseEntraAuthentication { get; set; }
 
+    public string HelixEntraScope { get; set; }
+
     /// <summary>
     /// Azure DevOps build token
     /// </summary>
@@ -146,6 +148,11 @@ public sealed class JobMonitorOptions
             DefaultValueFactory = _ => ParseBoolean(Environment.GetEnvironmentVariable("HELIX_USE_ENTRA_AUTHENTICATION"))
         };
 
+        Option<string> helixEntraScopeOption = new("--helix-entra-scope")
+        {
+            Description = "Explicit Entra scope for a custom Helix API host. Production and staging scopes are inferred when omitted."
+        };
+
         Option<int> pollingIntervalSecondsOption = new("--polling-interval-seconds")
         {
             Description = "Polling interval in seconds.",
@@ -232,6 +239,7 @@ public sealed class JobMonitorOptions
         rootCommand.Options.Add(teamProjectOption);
         rootCommand.Options.Add(helixBaseUriOption);
         rootCommand.Options.Add(useEntraAuthenticationOption);
+        rootCommand.Options.Add(helixEntraScopeOption);
         rootCommand.Options.Add(pollingIntervalSecondsOption);
         rootCommand.Options.Add(maximumWaitMinutesOption);
         rootCommand.Options.Add(jobMonitorNameOption);
@@ -259,6 +267,7 @@ public sealed class JobMonitorOptions
                 TeamProject = parseResult.GetValue(teamProjectOption),
                 HelixBaseUri = parseResult.GetValue(helixBaseUriOption),
                 UseEntraAuthentication = parseResult.GetValue(useEntraAuthenticationOption),
+                HelixEntraScope = parseResult.GetValue(helixEntraScopeOption),
                 PollingIntervalSeconds = parseResult.GetValue(pollingIntervalSecondsOption),
                 MaximumWaitMinutes = parseResult.GetValue(maximumWaitMinutesOption),
                 JobMonitorName = parseResult.GetValue(jobMonitorNameOption),

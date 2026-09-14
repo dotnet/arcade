@@ -240,6 +240,17 @@ public class HelixApiAuthenticationTests
         Assert.Equal(expectedMode, api.Options.AuthenticationMode);
     }
 
+    [Fact]
+    public void HelixTaskUsesExplicitScopeForCustomHost()
+    {
+        const string scope = "api://custom-helix/.default";
+
+        var api = Assert.IsType<HelixApi>(
+            HelixTask.CreateEntraHelixApi("https://custom.helix.example/", scope));
+
+        Assert.Equal(new[] { scope }, api.Options.TokenScopes);
+    }
+
     [Theory]
     [InlineData(false, null, "https://storage/results.trx")]
     [InlineData(false, "legacy-token", "https://storage/results.trx?access_token=legacy-token")]
@@ -283,6 +294,17 @@ public class HelixApiAuthenticationTests
                 () => ApiFactory.GetAuthenticatedWithEntra(new TestTokenCredential())));
 
         Assert.Equal(expectedMode, api.Options.AuthenticationMode);
+    }
+
+    [Fact]
+    public void JobMonitorUsesExplicitScopeForCustomHost()
+    {
+        const string scope = "api://custom-helix/.default";
+
+        var api = Assert.IsType<HelixApi>(
+            JobMonitorRunner.CreateEntraHelixApi("https://custom.helix.example/", scope));
+
+        Assert.Equal(new[] { scope }, api.Options.TokenScopes);
     }
 
     [Theory]

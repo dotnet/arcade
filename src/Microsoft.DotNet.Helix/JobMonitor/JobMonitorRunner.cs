@@ -789,7 +789,7 @@ internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
                 AzdoWarningPrefix);
         }
         var helix = new HelixService(
-            CreateHelixApi(options, () => CreateEntraHelixApi(options.HelixBaseUri)),
+            CreateHelixApi(options, () => CreateEntraHelixApi(options.HelixBaseUri, options.HelixEntraScope)),
             logger,
             metrics);
         return new ProductionDependencies(
@@ -814,15 +814,16 @@ internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
             : ApiFactory.GetAuthenticated(options.HelixBaseUri, options.HelixAccessToken);
     }
 
-    private static IHelixApi CreateEntraHelixApi(string baseUri)
+    internal static IHelixApi CreateEntraHelixApi(string baseUri, string entraScope)
     {
 #if DOTNET_BUILD_SOURCE_ONLY
         throw new PlatformNotSupportedException(
             "Helix Entra authentication is not available in source-build.");
 #else
-        return ApiFactory.GetAuthenticatedWithEntra(
-            baseUri,
-            new DefaultIdentityTokenCredential());
+        var credential = new DefaultIdentityTokenCredential();
+        return string.IsNullOrWhiteSpace(entraScope)
+            ? ApiFactory.GetAuthenticatedWithEntra(baseUri, credential)
+            : ApiFactory.GetAuthenticatedWithEntra(baseUri, credential, entraScope);
 #endif
     }
 
