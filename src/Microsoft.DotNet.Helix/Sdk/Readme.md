@@ -36,8 +36,9 @@ When Entra authentication is explicitly enabled, any legacy access token still
 injected by an existing variable group is ignored with a warning. Entra
 authentication supports Azure Pipelines workload identity, managed identity,
 and Azure CLI credentials and refreshes access tokens based on their expiry.
-Entra authentication requires .NET Core MSBuild; the .NET Framework task
-assembly continues to support legacy access-token and anonymous authentication.
+Entra authentication requires .NET Core MSBuild and is unavailable in
+source-only builds. The .NET Framework task assembly and source-only builds
+continue to support legacy access-token and anonymous authentication.
 
 You will also need to set the following environment variables before building:
 

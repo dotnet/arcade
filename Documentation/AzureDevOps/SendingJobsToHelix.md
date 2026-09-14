@@ -67,7 +67,7 @@ Set `HelixUseEntraAuthentication` to `true` and pass an Azure service connection
 
 When Entra authentication is enabled, the template does not forward `HelixAccessToken` to the Helix processes. If a legacy token is still injected by a variable group, explicit Entra opt-in takes precedence and the task ignores the token with a warning.
 
-Entra authentication requires .NET Core MSBuild. The .NET Framework task assembly continues to support legacy access-token and anonymous authentication.
+Entra authentication requires .NET Core MSBuild and is unavailable in source-only builds. The .NET Framework task assembly and source-only builds continue to support legacy access-token and anonymous authentication.
 
 ```yaml
 steps:

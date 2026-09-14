@@ -25,4 +25,13 @@
     <ProjectReference Include="..\..\Sdk\Microsoft.DotNet.Helix.Sdk.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="$(RepoRoot)tests\UnitTests.proj"
+          Link="testassets\HelixAuthentication\UnitTests.proj"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(RepoRoot)tests\XHarness.Tests.Common.props"
+          Link="testassets\HelixAuthentication\XHarness.Tests.Common.props"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
