@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         public HelixApiOptions(Uri baseUri, TokenCredential credentials, IEnumerable<string> scopes)
         {
-            BaseUri = ValidateBaseUri(baseUri);
+            BaseUri = ValidateAuthenticatedBaseUri(baseUri);
             Credentials = credentials ?? throw new ArgumentNullException(nameof(credentials));
             if (credentials is HelixApiTokenCredential)
             {
@@ -50,6 +50,11 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void InitializeOptions()
         {
+            if (Credentials != null)
+            {
+                ValidateAuthenticatedBaseUri(BaseUri);
+            }
+
             if (Credentials == null)
             {
                 AuthenticationMode = HelixApiAuthenticationMode.Anonymous;
@@ -108,6 +113,20 @@ namespace Microsoft.DotNet.Helix.Client
             if (!baseUri.IsAbsoluteUri)
             {
                 throw new ArgumentException("The Helix API base URI must be absolute.", nameof(baseUri));
+            }
+
+            return baseUri;
+        }
+
+        private static Uri ValidateAuthenticatedBaseUri(Uri baseUri)
+        {
+            baseUri = ValidateBaseUri(baseUri);
+
+            if (!baseUri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException(
+                    "The Helix API base URI must use HTTPS when credentials are provided.",
+                    nameof(baseUri));
             }
 
             return baseUri;

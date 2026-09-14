@@ -125,6 +125,51 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
+        public void CredentialBasedOptionsRejectHttpBaseUri()
+        {
+            var baseUri = new Uri("http://localhost:5001/");
+
+            var patException = Assert.Throws<ArgumentException>(() =>
+                new HelixApiOptions(baseUri, new HelixApiTokenCredential("legacy-token")));
+            var entraException = Assert.Throws<ArgumentException>(() =>
+                new HelixApiOptions(
+                    baseUri,
+                    new TestTokenCredential(),
+                    new[] { "api://custom-helix/.default" }));
+
+            Assert.Contains("HTTPS", patException.Message);
+            Assert.Contains("HTTPS", entraException.Message);
+        }
+
+        [Fact]
+        public void CredentialBasedOptionsAcceptHttpsBaseUri()
+        {
+            var baseUri = new Uri("https://localhost:5001/");
+
+            var patOptions = new HelixApiOptions(
+                baseUri,
+                new HelixApiTokenCredential("legacy-token"));
+            var entraOptions = new HelixApiOptions(
+                baseUri,
+                new TestTokenCredential(),
+                new[] { "api://custom-helix/.default" });
+
+            Assert.Equal(HelixApiAuthenticationMode.PersonalAccessToken, patOptions.AuthenticationMode);
+            Assert.Equal(HelixApiAuthenticationMode.EntraId, entraOptions.AuthenticationMode);
+        }
+
+        [Fact]
+        public void AnonymousOptionsAllowHttpBaseUri()
+        {
+            var baseUri = new Uri("http://localhost:5001/");
+
+            var options = new HelixApiOptions(baseUri);
+
+            Assert.Equal(HelixApiAuthenticationMode.Anonymous, options.AuthenticationMode);
+            Assert.Equal(baseUri, options.BaseUri);
+        }
+
+        [Fact]
         public void EntraFactoryUsesProductionScope()
         {
             var api = Assert.IsType<HelixApi>(
