@@ -954,19 +954,19 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         // Must set automatic decompression when dealing with build artifacts. Not required for pipeline artifacts.
         handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
-        var client = new HttpClient(handler);
-        client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
-
         // Trim so a whitespace-only token (e.g. from MSBuild metadata) is treated as "no token"
         // and cleanly falls back to Entra auth instead of throwing in CreateAzdoAuthHeader.
         string effectiveToken = (tokenOverride ?? AzdoApiToken)?.Trim();
         if (!string.IsNullOrEmpty(effectiveToken))
         {
+            var client = new HttpClient(handler);
+            client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
             client.DefaultRequestHeaders.Authorization = CreateAzdoAuthHeader(effectiveToken);
+            return client;
         }
         else
         {
-            // No token provided; acquire an Entra token via DefaultIdentityTokenCredential.
+            // No token provided; acquire an Entra token via DefaultIdentityTokenCredential with dynamic per-request refresh.
             // This supports AzurePipelinesCredential (from AzureCLI@2), ManagedIdentity, WorkloadIdentity, and AzureCLI
             try
             {
@@ -975,16 +975,25 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                     {
                         ManagedIdentityClientId = ManagedIdentityClientId
                     });
-                var tokenRequestContext = new global::Azure.Core.TokenRequestContext(new[] { "499b84ac-1321-427f-aa17-267ca6975798/.default" });
-                var accessToken = credential.GetToken(tokenRequestContext, CancellationToken.None);
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
+                var tokenRequestContext = new global::Azure.Core.TokenRequestContext(TokenCredentialAuthenticationHandler.AzureDevOpsScopes);
+                // Validate that a token can be acquired up front before passing the client to the caller
+                credential.GetToken(tokenRequestContext, CancellationToken.None);
+
+                var authHandler = new TokenCredentialAuthenticationHandler(
+                    credential,
+                    TokenCredentialAuthenticationHandler.AzureDevOpsScopes,
+                    handler);
+
+                var client = new HttpClient(authHandler);
+                client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
+                return client;
             }
             catch (Exception e)
             {
                 // Token acquisition failed before the client is handed to the caller's `using`,
-                // so dispose it here to avoid leaking the underlying handler/sockets on repeated
+                // so dispose the handler here to avoid leaking the underlying handler/sockets on repeated
                 // failures (e.g. a misconfigured service connection).
-                client.Dispose();
+                handler.Dispose();
                 throw new InvalidOperationException(
                     "Failed to acquire an Entra token for Azure DevOps. Provide a token (e.g. 'AzdoApiToken' for artifact " +
                     "download or 'AzureDevOpsFeedsKey' for feed publishing), or run under an AzureCLI@2 task with " +
@@ -992,8 +1001,6 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                     "can obtain a token.", e);
             }
         }
-
-        return client;
     }
 
     /// <summary>
@@ -1088,12 +1095,18 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
             catch (Exception ex)
             {
                 mostRecentlyCaughtException = ex;
+                Log.LogMessage(MessageImportance.Low, $"Attempt {attempt + 1} to download '{uri}' to '{path}' failed: {ex.Message}");
                 return false;
             }
         }).ConfigureAwait(false);
 
         if (!success)
         {
+            Log.LogError($"Failed to download '{path}' after {RetryHandler.MaxAttempts} attempts from '{uri}'. Last error: {mostRecentlyCaughtException?.Message}");
+            if (mostRecentlyCaughtException != null)
+            {
+                Log.LogErrorFromException(mostRecentlyCaughtException, showStackTrace: false);
+            }
             throw new Exception(
                 $"Failed to download '{path}' after {RetryHandler.MaxAttempts} attempts. See inner exception for details.",
                 mostRecentlyCaughtException);
@@ -1153,12 +1166,18 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
             catch (Exception toStore) when (toStore is HttpRequestException || toStore is TaskCanceledException)
             {
                 mostRecentlyCaughtException = toStore;
+                Log.LogMessage(MessageImportance.Low, $"Attempt {attempt + 1} to query build artifacts from '{uri}' failed: {toStore.Message}");
                 return false;
             }
         }).ConfigureAwait(false);
 
         if (!success)
         {
+            Log.LogError($"Failed to construct download URL helper for '{artifactName}' after {RetryHandler.MaxAttempts} attempts. Last error: {mostRecentlyCaughtException?.Message}");
+            if (mostRecentlyCaughtException != null)
+            {
+                Log.LogErrorFromException(mostRecentlyCaughtException, showStackTrace: false);
+            }
             throw new Exception(
                 $"Failed to construct download URL helper after {RetryHandler.MaxAttempts} attempts.  See inner exception for details, {mostRecentlyCaughtException}");
         }
