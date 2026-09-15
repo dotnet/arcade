@@ -1095,18 +1095,12 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
             catch (Exception ex)
             {
                 mostRecentlyCaughtException = ex;
-                Log.LogMessage(MessageImportance.Low, $"Attempt {attempt + 1} to download '{uri}' to '{path}' failed: {ex.Message}");
                 return false;
             }
         }).ConfigureAwait(false);
 
         if (!success)
         {
-            Log.LogError($"Failed to download '{path}' after {RetryHandler.MaxAttempts} attempts from '{uri}'. Last error: {mostRecentlyCaughtException?.Message}");
-            if (mostRecentlyCaughtException != null)
-            {
-                Log.LogErrorFromException(mostRecentlyCaughtException, showStackTrace: false);
-            }
             throw new Exception(
                 $"Failed to download '{path}' after {RetryHandler.MaxAttempts} attempts. See inner exception for details.",
                 mostRecentlyCaughtException);
@@ -1166,18 +1160,12 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
             catch (Exception toStore) when (toStore is HttpRequestException || toStore is TaskCanceledException)
             {
                 mostRecentlyCaughtException = toStore;
-                Log.LogMessage(MessageImportance.Low, $"Attempt {attempt + 1} to query build artifacts from '{uri}' failed: {toStore.Message}");
                 return false;
             }
         }).ConfigureAwait(false);
 
         if (!success)
         {
-            Log.LogError($"Failed to construct download URL helper for '{artifactName}' after {RetryHandler.MaxAttempts} attempts. Last error: {mostRecentlyCaughtException?.Message}");
-            if (mostRecentlyCaughtException != null)
-            {
-                Log.LogErrorFromException(mostRecentlyCaughtException, showStackTrace: false);
-            }
             throw new Exception(
                 $"Failed to construct download URL helper after {RetryHandler.MaxAttempts} attempts.  See inner exception for details, {mostRecentlyCaughtException}");
         }
