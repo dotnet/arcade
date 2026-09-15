@@ -57,9 +57,29 @@ steps:
 
 ### Internal builds
 
-In the dev.azure.com/dnceng/internal project, you can use the `DotNet-HelixApi-Access` variable group to provide this secret to your build and then specify the `HelixApiAccessToken` secret for the `HelixAccessToken` parameter.
+Internal builds can authenticate with Entra ID through an Azure service connection or with a legacy Helix access token.
 
 Please note that authorized jobs *cannot* be submitted to queues with `IsInternalOnly` set to false. To determine this value for a particular queue, see the list of available queues [here](https://helix.dot.net/api/2018-03-14/info/queues).
+
+#### Entra ID authentication
+
+Set `HelixUseEntraAuthentication` to `true` and pass an Azure service connection authorized for Helix through `HelixAzureSubscription`. These parameters configure the `send-to-helix.yml` steps template and the SDK tasks that submit jobs.
+
+When Entra authentication is enabled, the template does not forward `HelixAccessToken` to the Helix processes. If a legacy token is still injected by a variable group, explicit Entra opt-in takes precedence and the task ignores the token with a warning.
+
+```yaml
+steps:
+- template: /eng/common/templates/steps/send-to-helix.yml
+  displayName: Send to Helix
+  parameters:
+    HelixUseEntraAuthentication: true
+    HelixAzureSubscription: <Azure service connection ID authorized for Helix>
+    # other parameters here
+```
+
+#### Legacy access-token authentication
+
+In the dev.azure.com/dnceng/internal project, you can use the `DotNet-HelixApi-Access` variable group to provide this secret to your build and then specify the `HelixApiAccessToken` secret for the `HelixAccessToken` parameter.
 
 Example:
 
@@ -155,4 +175,3 @@ As surfaced by the Helix API and backing Kusto (Azure Data Explorer) database, h
 - InfraRetry – Work item completed as expected, but on the 2nd-Nth attempt; this can be a requested-by-the-workitem retry, machine being rebooted or deleted during execution, or any number of random Azure components being flaky.  Typically ignoreable for test runs.
 - PassOnRetry – Special legacy retry functionality which is purposefully obsoleted as it does not play well with Azure DevOps test reporting (reporting the same facts twice causes issues)
 - Timeout – Work Item did not complete within its specified timeout and was forcibly killed.  Corresponds to exit code -3 (made up value since the process never exited)
-

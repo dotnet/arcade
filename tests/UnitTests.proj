@@ -62,19 +62,19 @@
     <AzurePipelinesExpectedTestFailure Include="XunitReportingTests.ExerciseXunitCharacterFilteringFailurePath"/>
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
+  <ItemGroup Condition=" '$(HelixAccessToken)' != '' Or '$(HelixUseEntraAuthentication)' == 'true' ">
     <HelixTargetQueue Include="(Centos.7.Amd64)Ubuntu.2204.Amd64.svc@mcr.microsoft.com/dotnet-buildtools/prereqs:centos-7-mlnet-helix"/>
     <HelixTargetQueue Include="Windows.10.Amd64"/>
     <HelixTargetQueue Include="(Debian.11.Amd64)ubuntu.2204.amd64@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-11-helix-amd64"/>
   </ItemGroup>
 
-  <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
+  <PropertyGroup Condition=" '$(HelixAccessToken)' == '' And '$(HelixUseEntraAuthentication)' != 'true' ">
     <IsExternal>true</IsExternal>
     <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
     <Creator Condition=" '$(Creator)' == ''">anon</Creator>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
+  <ItemGroup Condition=" '$(HelixAccessToken)' == '' And '$(HelixUseEntraAuthentication)' != 'true' ">
     <HelixTargetQueue Include="(Centos.7.Amd64.Open)Ubuntu.2204.Amd64.Open.svc@mcr.microsoft.com/dotnet-buildtools/prereqs:centos-7-mlnet-helix"/>
     <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
     <HelixTargetQueue Include="(Debian.11.Amd64.Open)ubuntu.2204.amd64.open@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-11-helix-amd64"/>

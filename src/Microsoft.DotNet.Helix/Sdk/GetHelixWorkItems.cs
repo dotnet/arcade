@@ -94,13 +94,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     // Do this serially with a delay because total failure can hit throttling
                     var files = await HelixApi.WorkItem.ListFilesAsync(wi, jobName, cancellationToken).ConfigureAwait(false);
 
-                    if (!string.IsNullOrEmpty(AccessToken))
-                    {
-                        // Add AccessToken to all file links because the api requires auth if we submitted the job with auth
-                        files = files
-                                .Select(file => new UploadedFile(file.Name, file.Link + "?access_token=" + AccessToken))
-                                .ToImmutableList();
-                    }
+                    files = AddAccessTokenToFileLinks(files, AccessToken, UseEntraAuthentication);
 
                     metadata["UploadedFiles"] = JsonConvert.SerializeObject(files);
                 }
@@ -114,6 +108,22 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             return workItems;
+        }
+
+        internal static IImmutableList<UploadedFile> AddAccessTokenToFileLinks(
+            IImmutableList<UploadedFile> files,
+            string accessToken,
+            bool useEntraAuthentication)
+        {
+            if (useEntraAuthentication || string.IsNullOrEmpty(accessToken))
+            {
+                return files;
+            }
+
+            // PAT-authenticated jobs require the token on uploaded-file links.
+            return files
+                .Select(file => new UploadedFile(file.Name, file.Link + "?access_token=" + accessToken))
+                .ToImmutableList();
         }
     }
 }
