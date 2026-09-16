@@ -15,251 +15,250 @@ using Moq;
 using Xunit;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
+namespace Microsoft.DotNet.Build.Tasks.Feed.Tests;
+
+public class AzureStorageAssetPublisherTests
 {
-    public class AzureStorageAssetPublisherTests
+    [Theory]
+    [InlineData(409, "BlobAlreadyExists")]
+    [InlineData(409, "BlobImmutableDueToLegalHold")]
+    [InlineData(412, "ConditionNotMet")]
+    public async Task IdenticalBlobCreatedConcurrentlyIsAccepted(int status, string errorCode)
     {
-        [Theory]
-        [InlineData(409, "BlobAlreadyExists")]
-        [InlineData(409, "BlobImmutableDueToLegalHold")]
-        [InlineData(412, "ConditionNotMet")]
-        public async Task IdenticalBlobCreatedConcurrentlyIsAccepted(int status, string errorCode)
+        string file = Path.GetTempFileName();
+
+        try
         {
-            string file = Path.GetTempFileName();
+            await File.WriteAllTextAsync(file, "asset contents");
+            byte[] contentHash = MD5.HashData(await File.ReadAllBytesAsync(file));
+            var blobClient = new Mock<BlobClient>();
+            blobClient
+                .SetupGet(client => client.Uri)
+                .Returns(new Uri("https://example.blob.core.windows.net/assets/test.bin"));
 
-            try
-            {
-                await File.WriteAllTextAsync(file, "asset contents");
-                byte[] contentHash = MD5.HashData(await File.ReadAllBytesAsync(file));
-                var blobClient = new Mock<BlobClient>();
-                blobClient
-                    .SetupGet(client => client.Uri)
-                    .Returns(new Uri("https://example.blob.core.windows.net/assets/test.bin"));
-
-                blobClient
-                    .Setup(client => client.ExistsAsync(It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(Response.FromValue(false, Mock.Of<Response>()));
-                blobClient
-                    .Setup(client => client.UploadAsync(
-                        file,
-                        It.Is<BlobUploadOptions>(uploadOptions =>
-                            uploadOptions.Conditions.IfNoneMatch == ETag.All),
-                        It.IsAny<CancellationToken>()))
-                    .ThrowsAsync(new RequestFailedException(
-                        status,
-                        "The blob was created concurrently.",
-                        errorCode,
-                        null));
-                blobClient
-                    .Setup(client => client.GetPropertiesAsync(
-                        It.IsAny<BlobRequestConditions>(),
-                        It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(Response.FromValue(
-                        BlobsModelFactory.BlobProperties(contentHash: contentHash),
-                        Mock.Of<Response>()));
-
-                var buildEngine = new MockBuildEngine();
-                var task = new StubTask { BuildEngine = buildEngine };
-                var publisher = new TestAzureStorageAssetPublisher(
-                    new TaskLoggingHelper(task),
-                    blobClient.Object);
-
-                await publisher.PublishAssetAsync(
+            blobClient
+                .Setup(client => client.ExistsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Response.FromValue(false, Mock.Of<Response>()));
+            blobClient
+                .Setup(client => client.UploadAsync(
                     file,
-                    "test.bin",
-                    new PushOptions
-                    {
-                        AllowOverwrite = false,
-                        PassIfExistingItemIdentical = true
-                    });
+                    It.Is<BlobUploadOptions>(uploadOptions =>
+                        uploadOptions.Conditions.IfNoneMatch == ETag.All),
+                    It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new RequestFailedException(
+                    status,
+                    "The blob was created concurrently.",
+                    errorCode,
+                    null));
+            blobClient
+                .Setup(client => client.GetPropertiesAsync(
+                    It.IsAny<BlobRequestConditions>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Response.FromValue(
+                    BlobsModelFactory.BlobProperties(contentHash: contentHash),
+                    Mock.Of<Response>()));
 
-                Assert.Empty(buildEngine.BuildErrorEvents);
-                blobClient.VerifyAll();
-            }
-            finally
-            {
-                File.Delete(file);
-            }
+            var buildEngine = new MockBuildEngine();
+            var task = new StubTask { BuildEngine = buildEngine };
+            var publisher = new TestAzureStorageAssetPublisher(
+                new TaskLoggingHelper(task),
+                blobClient.Object);
+
+            await publisher.PublishAssetAsync(
+                file,
+                "test.bin",
+                new PushOptions
+                {
+                    AllowOverwrite = false,
+                    PassIfExistingItemIdentical = true
+                });
+
+            Assert.Empty(buildEngine.BuildErrorEvents);
+            blobClient.VerifyAll();
         }
-
-        [Fact]
-        public async Task DifferentBlobCreatedConcurrentlyIsRejected()
+        finally
         {
-            string file = Path.GetTempFileName();
+            File.Delete(file);
+        }
+    }
 
-            try
-            {
-                await File.WriteAllTextAsync(file, "asset contents");
-                var blobClient = new Mock<BlobClient>();
-                blobClient
-                    .SetupGet(client => client.Uri)
-                    .Returns(new Uri("https://example.blob.core.windows.net/assets/test.bin"));
+    [Fact]
+    public async Task DifferentBlobCreatedConcurrentlyIsRejected()
+    {
+        string file = Path.GetTempFileName();
 
-                blobClient
-                    .Setup(client => client.ExistsAsync(It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(Response.FromValue(false, Mock.Of<Response>()));
-                blobClient
-                    .Setup(client => client.UploadAsync(
-                        file,
-                        It.IsAny<BlobUploadOptions>(),
-                        It.IsAny<CancellationToken>()))
-                    .ThrowsAsync(new RequestFailedException(
-                        412,
-                        "The condition specified using HTTP conditional headers is not met.",
-                        "ConditionNotMet",
-                        null));
-                blobClient
-                    .Setup(client => client.GetPropertiesAsync(
-                        It.IsAny<BlobRequestConditions>(),
-                        It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(Response.FromValue(
-                        BlobsModelFactory.BlobProperties(contentHash: new byte[16]),
-                        Mock.Of<Response>()));
+        try
+        {
+            await File.WriteAllTextAsync(file, "asset contents");
+            var blobClient = new Mock<BlobClient>();
+            blobClient
+                .SetupGet(client => client.Uri)
+                .Returns(new Uri("https://example.blob.core.windows.net/assets/test.bin"));
 
-                var buildEngine = new MockBuildEngine();
-                var task = new StubTask { BuildEngine = buildEngine };
-                var publisher = new TestAzureStorageAssetPublisher(
-                    new TaskLoggingHelper(task),
-                    blobClient.Object);
-
-                await publisher.PublishAssetAsync(
+            blobClient
+                .Setup(client => client.ExistsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Response.FromValue(false, Mock.Of<Response>()));
+            blobClient
+                .Setup(client => client.UploadAsync(
                     file,
-                    "test.bin",
-                    new PushOptions
-                    {
-                        AllowOverwrite = false,
-                        PassIfExistingItemIdentical = true
-                    });
+                    It.IsAny<BlobUploadOptions>(),
+                    It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new RequestFailedException(
+                    412,
+                    "The condition specified using HTTP conditional headers is not met.",
+                    "ConditionNotMet",
+                    null));
+            blobClient
+                .Setup(client => client.GetPropertiesAsync(
+                    It.IsAny<BlobRequestConditions>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Response.FromValue(
+                    BlobsModelFactory.BlobProperties(contentHash: new byte[16]),
+                    Mock.Of<Response>()));
 
-                Assert.Single(buildEngine.BuildErrorEvents);
-                Assert.Contains("already exists with different contents", buildEngine.BuildErrorEvents[0].Message);
-                blobClient.VerifyAll();
-            }
-            finally
-            {
-                File.Delete(file);
-            }
+            var buildEngine = new MockBuildEngine();
+            var task = new StubTask { BuildEngine = buildEngine };
+            var publisher = new TestAzureStorageAssetPublisher(
+                new TaskLoggingHelper(task),
+                blobClient.Object);
+
+            await publisher.PublishAssetAsync(
+                file,
+                "test.bin",
+                new PushOptions
+                {
+                    AllowOverwrite = false,
+                    PassIfExistingItemIdentical = true
+                });
+
+            Assert.Single(buildEngine.BuildErrorEvents);
+            Assert.Contains("already exists with different contents", buildEngine.BuildErrorEvents[0].Message);
+            blobClient.VerifyAll();
         }
-
-        [Fact]
-        public async Task ConcurrentBlobInspectionFailureIsLogged()
+        finally
         {
-            string file = Path.GetTempFileName();
+            File.Delete(file);
+        }
+    }
 
-            try
-            {
-                var blobClient = new Mock<BlobClient>();
-                blobClient
-                    .SetupGet(client => client.Uri)
-                    .Returns(new Uri("https://example.blob.core.windows.net/assets/test.bin"));
+    [Fact]
+    public async Task ConcurrentBlobInspectionFailureIsLogged()
+    {
+        string file = Path.GetTempFileName();
 
-                blobClient
-                    .Setup(client => client.ExistsAsync(It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(Response.FromValue(false, Mock.Of<Response>()));
-                blobClient
-                    .Setup(client => client.UploadAsync(
-                        file,
-                        It.IsAny<BlobUploadOptions>(),
-                        It.IsAny<CancellationToken>()))
-                    .ThrowsAsync(new RequestFailedException(
-                        412,
-                        "The condition specified using HTTP conditional headers is not met.",
-                        "ConditionNotMet",
-                        null));
-                blobClient
-                    .Setup(client => client.GetPropertiesAsync(
-                        It.IsAny<BlobRequestConditions>(),
-                        It.IsAny<CancellationToken>()))
-                    .ThrowsAsync(new RequestFailedException(
-                        503,
-                        "The service is temporarily unavailable."));
+        try
+        {
+            var blobClient = new Mock<BlobClient>();
+            blobClient
+                .SetupGet(client => client.Uri)
+                .Returns(new Uri("https://example.blob.core.windows.net/assets/test.bin"));
 
-                var buildEngine = new MockBuildEngine();
-                var task = new StubTask { BuildEngine = buildEngine };
-                var publisher = new TestAzureStorageAssetPublisher(
-                    new TaskLoggingHelper(task),
-                    blobClient.Object);
-
-                await publisher.PublishAssetAsync(
+            blobClient
+                .Setup(client => client.ExistsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Response.FromValue(false, Mock.Of<Response>()));
+            blobClient
+                .Setup(client => client.UploadAsync(
                     file,
-                    "test.bin",
-                    new PushOptions
-                    {
-                        AllowOverwrite = false,
-                        PassIfExistingItemIdentical = true
-                    });
+                    It.IsAny<BlobUploadOptions>(),
+                    It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new RequestFailedException(
+                    412,
+                    "The condition specified using HTTP conditional headers is not met.",
+                    "ConditionNotMet",
+                    null));
+            blobClient
+                .Setup(client => client.GetPropertiesAsync(
+                    It.IsAny<BlobRequestConditions>(),
+                    It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new RequestFailedException(
+                    503,
+                    "The service is temporarily unavailable."));
 
-                Assert.Single(buildEngine.BuildErrorEvents);
-                Assert.Contains("Unexpected exception publishing file", buildEngine.BuildErrorEvents[0].Message);
-                Assert.Contains("The service is temporarily unavailable", buildEngine.BuildErrorEvents[0].Message);
-                blobClient.VerifyAll();
-            }
-            finally
-            {
-                File.Delete(file);
-            }
+            var buildEngine = new MockBuildEngine();
+            var task = new StubTask { BuildEngine = buildEngine };
+            var publisher = new TestAzureStorageAssetPublisher(
+                new TaskLoggingHelper(task),
+                blobClient.Object);
+
+            await publisher.PublishAssetAsync(
+                file,
+                "test.bin",
+                new PushOptions
+                {
+                    AllowOverwrite = false,
+                    PassIfExistingItemIdentical = true
+                });
+
+            Assert.Single(buildEngine.BuildErrorEvents);
+            Assert.Contains("Unexpected exception publishing file", buildEngine.BuildErrorEvents[0].Message);
+            Assert.Contains("The service is temporarily unavailable", buildEngine.BuildErrorEvents[0].Message);
+            blobClient.VerifyAll();
         }
-
-        [Fact]
-        public async Task ExistingBlobInspectionFailureIsLogged()
+        finally
         {
-            string file = Path.GetTempFileName();
-
-            try
-            {
-                var blobClient = new Mock<BlobClient>();
-                blobClient
-                    .SetupGet(client => client.Uri)
-                    .Returns(new Uri("https://example.blob.core.windows.net/assets/test.bin"));
-
-                blobClient
-                    .Setup(client => client.ExistsAsync(It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(Response.FromValue(true, Mock.Of<Response>()));
-                blobClient
-                    .Setup(client => client.GetPropertiesAsync(
-                        It.IsAny<BlobRequestConditions>(),
-                        It.IsAny<CancellationToken>()))
-                    .ThrowsAsync(new RequestFailedException(
-                        503,
-                        "The service is temporarily unavailable."));
-
-                var buildEngine = new MockBuildEngine();
-                var task = new StubTask { BuildEngine = buildEngine };
-                var publisher = new TestAzureStorageAssetPublisher(
-                    new TaskLoggingHelper(task),
-                    blobClient.Object);
-
-                await publisher.PublishAssetAsync(
-                    file,
-                    "test.bin",
-                    new PushOptions
-                    {
-                        AllowOverwrite = false,
-                        PassIfExistingItemIdentical = true
-                    });
-
-                Assert.Single(buildEngine.BuildErrorEvents);
-                Assert.Contains("Unexpected exception publishing file", buildEngine.BuildErrorEvents[0].Message);
-                Assert.Contains("The service is temporarily unavailable", buildEngine.BuildErrorEvents[0].Message);
-                blobClient.VerifyAll();
-            }
-            finally
-            {
-                File.Delete(file);
-            }
+            File.Delete(file);
         }
+    }
 
-        private sealed class TestAzureStorageAssetPublisher : AzureStorageAssetPublisher
+    [Fact]
+    public async Task ExistingBlobInspectionFailureIsLogged()
+    {
+        string file = Path.GetTempFileName();
+
+        try
         {
-            private readonly BlobClient _blobClient;
+            var blobClient = new Mock<BlobClient>();
+            blobClient
+                .SetupGet(client => client.Uri)
+                .Returns(new Uri("https://example.blob.core.windows.net/assets/test.bin"));
 
-            public TestAzureStorageAssetPublisher(TaskLoggingHelper log, BlobClient blobClient)
-                : base(log)
-            {
-                _blobClient = blobClient;
-            }
+            blobClient
+                .Setup(client => client.ExistsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Response.FromValue(true, Mock.Of<Response>()));
+            blobClient
+                .Setup(client => client.GetPropertiesAsync(
+                    It.IsAny<BlobRequestConditions>(),
+                    It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new RequestFailedException(
+                    503,
+                    "The service is temporarily unavailable."));
 
-            public override BlobClient CreateBlobClient(string blobPath) => _blobClient;
+            var buildEngine = new MockBuildEngine();
+            var task = new StubTask { BuildEngine = buildEngine };
+            var publisher = new TestAzureStorageAssetPublisher(
+                new TaskLoggingHelper(task),
+                blobClient.Object);
+
+            await publisher.PublishAssetAsync(
+                file,
+                "test.bin",
+                new PushOptions
+                {
+                    AllowOverwrite = false,
+                    PassIfExistingItemIdentical = true
+                });
+
+            Assert.Single(buildEngine.BuildErrorEvents);
+            Assert.Contains("Unexpected exception publishing file", buildEngine.BuildErrorEvents[0].Message);
+            Assert.Contains("The service is temporarily unavailable", buildEngine.BuildErrorEvents[0].Message);
+            blobClient.VerifyAll();
         }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    private sealed class TestAzureStorageAssetPublisher : AzureStorageAssetPublisher
+    {
+        private readonly BlobClient _blobClient;
+
+        public TestAzureStorageAssetPublisher(TaskLoggingHelper log, BlobClient blobClient)
+            : base(log)
+        {
+            _blobClient = blobClient;
+        }
+
+        public override BlobClient CreateBlobClient(string blobPath) => _blobClient;
     }
 }

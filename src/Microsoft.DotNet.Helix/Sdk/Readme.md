@@ -27,7 +27,17 @@ Versions of the package can be found by browsing the feed at https://dev.azure.c
 
 ### Developing Helix SDK
 
-The examples can all be run with `dotnet msbuild` and will require an environment variable or MSBuildProperty `HelixAccessToken` set if a queue with a value of IsInternalOnly=true (usually any not ending in '.Open') is selected for `HelixTargetQueues`. You will also need to set the following environment variables before building:
+The examples can all be run with `dotnet msbuild`. Internal queues (usually any queue not ending in `.Open`) require either:
+
+- `HelixUseEntraAuthentication=true` with an available `DefaultIdentityTokenCredential`, or
+- the legacy `HelixAccessToken` environment variable or MSBuild property.
+
+When Entra authentication is explicitly enabled, any legacy access token still
+injected by an existing variable group is ignored with a warning. Entra
+authentication supports Azure Pipelines workload identity, managed identity,
+and Azure CLI credentials and refreshes access tokens based on their expiry.
+
+You will also need to set the following environment variables before building:
 
 ```
 BUILD_SOURCEBRANCH
@@ -75,7 +85,9 @@ jobs:
 Useful parameters:
 
 - `helixBaseUri`: base URI for the Helix service. Defaults to `https://helix.dot.net/`.
-- `helixAccessToken`: optional token for authenticated Helix access on internal builds.
+- `helixAccessToken`: optional token for authenticated Helix access on internal builds; ignored with a warning when `useEntraAuthentication` is enabled.
+- `useEntraAuthentication`: use a refreshable Entra credential for authenticated Helix access.
+- `azureSubscription`: Azure service connection ID authorized for Helix; required when `useEntraAuthentication` is enabled.
 - `pollingIntervalSeconds`: how often the job monitor checks for new completed jobs.
 - `timeoutInMinutes`: overall timeout for the job monitor.
 - `continueOnError`: allow the pipeline to continue when the monitor job fails. Defaults to `false`.
@@ -91,7 +103,7 @@ Behavior notes:
 - Result processing uses globally bounded work-item parallelism and streams XML
   instead of loading complete result documents. Status polling remains
   independent from result upload latency.
-- If no result files are found for a work item, no test results are uploaded for that work item; Helix work-item failures still affect the monitor job's final pass/fail status.
+- If a failed work item has no parseable test results, the monitor uploads a synthetic failed `<work item>.WorkItemExecution` result. Passed work items without results do not produce a synthetic result.
 - The reporter is safe to rerun because it checks for already-completed test runs and only processes new results.
 
 #### What changes for pipeline users when the monitor is on

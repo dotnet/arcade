@@ -11,78 +11,77 @@ using Microsoft.DotNet.Build.CloudTestTasks;
 using Microsoft.DotNet.ProductConstructionService.Client.Models;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.DotNet.Build.Tasks.Feed
+namespace Microsoft.DotNet.Build.Tasks.Feed;
+
+public abstract class AzureStorageAssetPublisher : IAssetPublisher
 {
-    public abstract class AzureStorageAssetPublisher : IAssetPublisher
+    private readonly TaskLoggingHelper _log;
+
+    protected AzureStorageAssetPublisher(TaskLoggingHelper log)
     {
-        private readonly TaskLoggingHelper _log;
+        _log = log;
+    }
 
-        protected AzureStorageAssetPublisher(TaskLoggingHelper log)
+    public LocationType LocationType => LocationType.Container;
+
+    public abstract BlobClient CreateBlobClient(string blobPath);
+
+    public async Task PublishAssetAsync(string file, string blobPath, PushOptions options, SemaphoreSlim clientThrottle = null)
+    {
+        using (await SemaphoreLock.LockAsync(clientThrottle))
         {
-            _log = log;
-        }
+            blobPath = blobPath.Replace("\\", "/");
+            var blobClient = CreateBlobClient(blobPath);
 
-        public LocationType LocationType => LocationType.Container;
-
-        public abstract BlobClient CreateBlobClient(string blobPath);
-
-        public async Task PublishAssetAsync(string file, string blobPath, PushOptions options, SemaphoreSlim clientThrottle = null)
-        {
-            using (await SemaphoreLock.LockAsync(clientThrottle))
+            try
             {
-                blobPath = blobPath.Replace("\\", "/");
-                var blobClient = CreateBlobClient(blobPath);
+                if (!options.AllowOverwrite && await blobClient.ExistsAsync())
+                {
+                    await HandleExistingBlobAsync(blobClient, file, options);
+                    return;
+                }
+
+                _log.LogMessage($"Uploading '{file}' to '{blobClient.Uri}'");
 
                 try
                 {
-                    if (!options.AllowOverwrite && await blobClient.ExistsAsync())
+                    BlobUploadOptions blobUploadOptions = new()
                     {
-                        await HandleExistingBlobAsync(blobClient, file, options);
-                        return;
-                    }
-
-                    _log.LogMessage($"Uploading '{file}' to '{blobClient.Uri}'");
-
-                    try
-                    {
-                        BlobUploadOptions blobUploadOptions = new()
-                        {
-                            HttpHeaders = AzureStorageUtils.GetBlobHeadersByExtension(file),
-                            Conditions = options.AllowOverwrite
-                                ? null
-                                : new BlobRequestConditions { IfNoneMatch = ETag.All }
-                        };
-                        await blobClient.UploadAsync(file, blobUploadOptions);
-                    }
-                    catch (RequestFailedException e) when (
-                        !options.AllowOverwrite &&
-                        (e.Status == 412 ||
-                         e.ErrorCode == "BlobAlreadyExists" ||
-                         e.ErrorCode == "BlobImmutableDueToLegalHold"))
-                    {
-                        await HandleExistingBlobAsync(blobClient, file, options);
-                    }
+                        HttpHeaders = AzureStorageUtils.GetBlobHeadersByExtension(file),
+                        Conditions = options.AllowOverwrite
+                            ? null
+                            : new BlobRequestConditions { IfNoneMatch = ETag.All }
+                    };
+                    await blobClient.UploadAsync(file, blobUploadOptions);
                 }
-                catch (Exception e)
+                catch (RequestFailedException e) when (
+                    !options.AllowOverwrite &&
+                    (e.Status == 412 ||
+                     e.ErrorCode == "BlobAlreadyExists" ||
+                     e.ErrorCode == "BlobImmutableDueToLegalHold"))
                 {
-                    _log.LogError($"Unexpected exception publishing file {file} to {blobClient.Uri}: {e.Message}");
+                    await HandleExistingBlobAsync(blobClient, file, options);
                 }
             }
-        }
-
-        private async Task HandleExistingBlobAsync(BlobClient blobClient, string file, PushOptions options)
-        {
-            if (options.PassIfExistingItemIdentical)
+            catch (Exception e)
             {
-                if (!await blobClient.IsFileIdenticalToBlobAsync(file))
-                {
-                    _log.LogError($"Asset '{file}' already exists with different contents at '{blobClient.Uri}'");
-                }
+                _log.LogError($"Unexpected exception publishing file {file} to {blobClient.Uri}: {e.Message}");
+            }
+        }
+    }
 
-                return;
+    private async Task HandleExistingBlobAsync(BlobClient blobClient, string file, PushOptions options)
+    {
+        if (options.PassIfExistingItemIdentical)
+        {
+            if (!await blobClient.IsFileIdenticalToBlobAsync(file))
+            {
+                _log.LogError($"Asset '{file}' already exists with different contents at '{blobClient.Uri}'");
             }
 
-            _log.LogError($"Asset '{file}' already exists at '{blobClient.Uri}'");
+            return;
         }
+
+        _log.LogError($"Asset '{file}' already exists at '{blobClient.Uri}'");
     }
 }

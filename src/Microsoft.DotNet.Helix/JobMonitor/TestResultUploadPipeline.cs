@@ -19,6 +19,8 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
     private readonly ILogger _logger;
     private readonly JobMonitorOptions _options;
     private readonly IAzureDevOpsService _azdo;
+    private readonly ITestResultProcessor _resultProcessor;
+    private readonly IAzureDevOpsResultPublisher _resultPublisher;
     private readonly IHelixService _helix;
     private readonly MonitorState _state;
     private readonly JobMonitorMetrics _metrics;
@@ -35,6 +37,8 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         ILogger logger,
         JobMonitorOptions options,
         IAzureDevOpsService azdo,
+        ITestResultProcessor resultProcessor,
+        IAzureDevOpsResultPublisher resultPublisher,
         IHelixService helix,
         MonitorState state,
         JobMonitorMetrics metrics)
@@ -42,6 +46,8 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         _logger = logger;
         _options = options;
         _azdo = azdo;
+        _resultProcessor = resultProcessor;
+        _resultPublisher = resultPublisher;
         _helix = helix;
         _state = state;
         _metrics = metrics;
@@ -91,7 +97,7 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
             return false;
         }
 
-        IReadOnlyList<string> newWorkItems = session.AddWorkItems(
+        IReadOnlyList<PendingWorkItem> newWorkItems = session.AddWorkItems(
             workItems.Where(static workItem => workItem.ExitCode.HasValue),
             isJobComplete);
         if (newWorkItems.Count == 0 && !session.IsReadyToFinalize)
@@ -197,10 +203,10 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         JobUploadSession session = request.Session;
         _state.MarkHelixJobUploadInProgress(session.Job.JobName);
 
-        foreach (string workItemName in request.WorkItemNames)
+        foreach (PendingWorkItem workItem in request.WorkItems)
         {
             await _workItems.EnqueueAsync(
-                new WorkItemUploadRequest(session, workItemName, request.DiscoveryPoll),
+            new WorkItemUploadRequest(session, workItem.Name, workItem.IsFailed, request.DiscoveryPoll),
                 cancellationToken);
         }
 
@@ -238,20 +244,59 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
                     downloadStartedAt);
             }
 
-            int testRunId = await session.GetOrCreateTestRunAsync(
-                () => CreateTestRunAsync(session.Job.TestRunName, cancellationToken));
-
-            TestResultUploadSummary summary =
-                await _azdo.UploadTestResultsAsync(testRunId, downloaded, cancellationToken);
-
-            session.RecordSuccess(
+            PreparedTestResults prepared =
+                await _resultProcessor.PrepareAsync(downloaded, cancellationToken);
+            if (request.IsFailed && prepared.Results.Count == 0)
+            {
+                prepared = new PreparedTestResults(
+                    [new AggregatedResult(
+                        AggregationType.Single,
+                        $"{request.WorkItemName}.WorkItemExecution",
+                        durationSeconds: 60,
+                        result: "Failed",
+                        failureMessage: "The Helix Work Item failed. Often this is due to a test crash. Please see the 'Artifacts' tab above for additional logs.")],
+                    AllPassed: false);
+            }
+            session.RecordObserved(
                 request.WorkItemName,
                 downloaded.TestResultFiles.Count,
-                summary);
+                prepared.AllPassed);
             if (_options.FailWorkItemsWithFailedTests)
             {
-                _state.ObserveTestResult(session.Job.JobName, request.WorkItemName, summary);
+                _state.ObserveTestResult(
+                    session.Job.JobName,
+                    request.WorkItemName,
+                    prepared.AllPassed);
             }
+
+            int testRunId;
+            try
+            {
+                testRunId = await session.GetOrCreateTestRunAsync(
+                    () => CreateTestRunAsync(session.Job.TestRunName, cancellationToken));
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                if (session.RecordTestRunCreationFailure())
+                {
+                    LogUploadFailure(
+                        ex,
+                        $"create a test run for job '{session.Job.DisplayName}'. "
+                        + "Test results were observed but could not be published");
+                }
+                return;
+            }
+
+            long uploadedCount = await _resultPublisher.PublishAsync(
+                testRunId,
+                downloaded,
+                prepared,
+                cancellationToken);
+            session.RecordPublished(uploadedCount);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -406,12 +451,15 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
 
     private sealed record JobUploadRequest(
         JobUploadSession Session,
-        IReadOnlyList<string> WorkItemNames,
+        IReadOnlyList<PendingWorkItem> WorkItems,
         int DiscoveryPoll);
+
+    private sealed record PendingWorkItem(string Name, bool IsFailed);
 
     private sealed record WorkItemUploadRequest(
         JobUploadSession Session,
         string WorkItemName,
+        bool IsFailed,
         int DiscoveryPoll);
 
     private sealed class JobUploadSession
@@ -425,6 +473,7 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         private int _finalizerQueued;
         private int _finalized;
         private int _failed;
+        private int _testRunCreationFailureReported;
         private long _resultFileCount;
         private long _uploadedResultCount;
 
@@ -490,14 +539,13 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
             }
         }
 
-        public void RecordSuccess(
+        public void RecordObserved(
             string workItemName,
             int resultFileCount,
-            TestResultUploadSummary summary)
+            bool allPassed)
         {
             Interlocked.Add(ref _resultFileCount, resultFileCount);
-            Interlocked.Add(ref _uploadedResultCount, summary.UploadedCount);
-            if (!summary.AllPassed)
+            if (!allPassed)
             {
                 lock (_sync)
                 {
@@ -506,20 +554,29 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
             }
         }
 
+        public void RecordPublished(long uploadedResultCount)
+            => Interlocked.Add(ref _uploadedResultCount, uploadedResultCount);
+
         public void RecordFailure() => Interlocked.Exchange(ref _failed, 1);
 
-        public IReadOnlyList<string> AddWorkItems(
+        public bool RecordTestRunCreationFailure()
+        {
+            Interlocked.Exchange(ref _failed, 1);
+            return Interlocked.Exchange(ref _testRunCreationFailureReported, 1) == 0;
+        }
+
+        public IReadOnlyList<PendingWorkItem> AddWorkItems(
             IEnumerable<WorkItemSummary> workItems,
             bool isJobComplete)
         {
             lock (_sync)
             {
-                var added = new List<string>();
+                var added = new List<PendingWorkItem>();
                 foreach (WorkItemSummary workItem in workItems)
                 {
                     if (_workItems.Add(workItem.Name))
                     {
-                        added.Add(workItem.Name);
+                        added.Add(new PendingWorkItem(workItem.Name, workItem.IsFailed));
                         _pendingWorkItems++;
                     }
                 }
