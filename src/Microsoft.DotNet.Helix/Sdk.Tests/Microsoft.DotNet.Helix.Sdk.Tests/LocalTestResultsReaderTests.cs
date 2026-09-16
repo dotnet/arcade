@@ -151,11 +151,11 @@ public class LocalTestResultsReaderTests
         string xmlDirectory = Path.Combine(tempDirectory, "xml-item");
         Directory.CreateDirectory(packedDirectory);
         Directory.CreateDirectory(xmlDirectory);
-        string originalDirectory = Environment.CurrentDirectory;
 
         try
         {
-            Environment.CurrentDirectory = packedDirectory;
+            // Paths are passed explicitly; the test must never mutate the process current
+            // directory, which is global state shared with tests running in parallel.
             string filePath = Path.Combine(xmlDirectory, "testResults.xml");
 
             File.WriteAllText(
@@ -178,7 +178,6 @@ public class LocalTestResultsReaderTests
         }
         finally
         {
-            Environment.CurrentDirectory = originalDirectory;
             Directory.Delete(tempDirectory, recursive: true);
         }
     }
