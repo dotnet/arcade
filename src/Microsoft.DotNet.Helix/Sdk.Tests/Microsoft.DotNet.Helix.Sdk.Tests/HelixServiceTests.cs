@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure.Core.Pipeline;
 using Microsoft.Arcade.Common;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Helix.Client;
@@ -202,6 +203,29 @@ public class HelixServiceTests
         await CreateService(api.Api.Object).CancelJobAsync("job-to-cancel", cts.Token);
 
         api.Job.Verify(j => j.CancelAsync("job-to-cancel", null, cts.Token), Times.Once);
+    }
+
+    [Fact]
+    public async Task CancelJobAsync_PreservesNonJsonErrorResponse()
+    {
+        using var httpClient = FakeHttpClient.WithResponses(
+            new HttpResponseMessage(HttpStatusCode.InternalServerError)
+            {
+                Content = new StringContent("Internal Server Error"),
+            });
+        var options = new HelixApiOptions
+        {
+            Transport = new HttpClientTransport(httpClient),
+        };
+        options.Retry.MaxRetries = 0;
+        var api = new HelixApi(options);
+
+        RestApiException<ApiError> exception = await Assert.ThrowsAsync<RestApiException<ApiError>>(
+            () => api.Job.CancelAsync("job-to-cancel"));
+
+        Assert.Null(exception.Body);
+        Assert.Contains("500", exception.Message);
+        Assert.Contains("Internal Server Error", exception.Message);
     }
 
     [Fact]

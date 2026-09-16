@@ -645,11 +645,20 @@ internal partial class Job : IServiceOperations<HelixApi>, IJob
             }
         }
 
+        Models.ApiError body = null;
+        try
+        {
+            body = Client.Deserialize<Models.ApiError>(content);
+        }
+        catch (Newtonsoft.Json.JsonException)
+        {
+        }
+
         var ex = new RestApiException<Models.ApiError>(
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            body
             );
         HandleFailedCancelRequest(ex);
         HandleFailedRequest(ex);
