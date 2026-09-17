@@ -24,8 +24,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed;
 ///     The intended use of this task is to push artifacts described in
 ///     a build manifest to package feeds.
 /// </summary>
-public class PublishArtifactsInManifest : MSBuildTaskBase
+/// <remarks>
+/// TODO: Not opted into multithreading. This task delegates to PublishArtifactsInManifestV3/V4,
+/// whose shared base resolves Azure credentials from the process environment. The TaskEnvironment
+/// below is still used for path resolution.
+/// Tracked by https://github.com/dotnet/arcade/issues/17378.
+///
+/// Implementing IMultiThreadableTask without the attribute is deliberate. Routing is decided by
+/// the attribute alone (TaskRouter.NeedsTaskHostInMultiThreadedMode); it cannot key off the
+/// interface, because ToolTask implements it and that would opt in every ToolTask-derived task in
+/// the ecosystem. The interface only causes TaskEnvironment to be injected. Do not remove it to
+/// "make this safe" - that would revert the path resolution below to the process current
+/// directory while leaving the task exactly as unsafe as it is now.
+/// </remarks>
+#pragma warning disable MSBuildTask0013 // Interface without the attribute is deliberate; see the comment above.
+public class PublishArtifactsInManifest : MSBuildTaskBase, IMultiThreadableTask
 {
+#pragma warning restore MSBuildTask0013
+    /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+    public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
     /// <summary>
     /// Comma separated list of Maestro++ Channel IDs to which the build should
     /// be assigned to once the assets are published.
@@ -264,7 +282,10 @@ public class PublishArtifactsInManifest : MSBuildTaskBase
         {
             var httpClient = provider.GetRequiredService<HttpClient>();
             var logger = new MSBuildLogger<BranchClassificationService>(provider.GetRequiredService<TaskLoggingHelper>());
-            return new BranchClassificationService(httpClient, logger, AzdoApiToken);
+            var token = string.IsNullOrEmpty(AzdoApiToken)
+                ? TaskEnvironment.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN")
+                : AzdoApiToken;
+            return new BranchClassificationService(httpClient, logger, token);
         });
         
         collection.TryAddSingleton<HttpClient>();
@@ -383,7 +404,7 @@ public class PublishArtifactsInManifest : MSBuildTaskBase
             SkipSafetyChecks = this.SkipSafetyChecks,
             AkaMSClientId = this.AkaMSClientId,
             AkaMSClientCertificate = !string.IsNullOrEmpty(AkaMSClientCertificate) ?
-                X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(File.ReadAllText(AkaMSClientCertificate)), password: null) : null,
+                X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(File.ReadAllText(TaskEnvironment.GetAbsolutePath(AkaMSClientCertificate))), password: null) : null,
             AkaMSCreatedBy = this.AkaMSCreatedBy,
             AkaMSGroupOwner = this.AkaMSGroupOwner,
             AkaMsOwners = this.AkaMsOwners,
@@ -429,7 +450,7 @@ public class PublishArtifactsInManifest : MSBuildTaskBase
             SkipSafetyChecks = this.SkipSafetyChecks,
             AkaMSClientId = this.AkaMSClientId,
             AkaMSClientCertificate = !string.IsNullOrEmpty(AkaMSClientCertificate) ?
-                X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(File.ReadAllText(AkaMSClientCertificate)), password: null) : null,
+                X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(File.ReadAllText(TaskEnvironment.GetAbsolutePath(AkaMSClientCertificate))), password: null) : null,
             AkaMSCreatedBy = this.AkaMSCreatedBy,
             AkaMSGroupOwner = this.AkaMSGroupOwner,
             AkaMsOwners = this.AkaMsOwners,

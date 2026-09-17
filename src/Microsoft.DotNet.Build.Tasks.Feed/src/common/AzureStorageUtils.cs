@@ -136,7 +136,7 @@ public class AzureStorageUtils
         }
     }
 
-    public async Task<bool> IsFileIdenticalToBlobAsync(string localFileFullPath, string blobPath) =>
+    public async Task<bool> IsFileIdenticalToBlobAsync(AbsolutePath localFileFullPath, string blobPath) =>
         await GetBlob(blobPath).IsFileIdenticalToBlobAsync(localFileFullPath);
 
     public async Task<string> CreateContainerAsync(PublicAccessType publicAccess)

@@ -19,8 +19,15 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.GenAPI;
 
-public class GenAPITask : Task
+// Deliberately not marked multithreadable: HostEnvironment resolves the raw LibPath and
+// Assembly values below through Environment.ExpandEnvironmentVariables plus Directory.Exists/
+// File.Exists (Microsoft.Cci.Extensions/HostEnvironment.cs:719-740), so relative inputs and
+// per-project variables would bind to process-wide state in a shared node. Migrating requires
+// expanding and resolving those paths through TaskEnvironment before they enter HostEnvironment.
+#pragma warning disable MSBuildTask0013 // Interface without the attribute is deliberate; see the comment above.
+public class GenAPITask : Task, IMultiThreadableTask
 {
+#pragma warning restore MSBuildTask0013
     private const string InternalsVisibleTypeName = "System.Runtime.CompilerServices.InternalsVisibleToAttribute";
     private const string DefaultFileHeader =
             "//------------------------------------------------------------------------------\r\n" +
@@ -36,6 +43,9 @@ public class GenAPITask : Task
     private WriterType _writerType;
     private SyntaxWriterType _syntaxWriterType;
     private DocIdKinds _docIdKinds = Cci.Writers.DocIdKinds.All;
+
+    /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+    public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
     /// <summary>
     /// Path for an specific assembly or a directory to get all assemblies.
@@ -197,7 +207,7 @@ public class GenAPITask : Task
         }
 
         string headerText = GetHeaderText(HeaderFile, _writerType, _syntaxWriterType);
-        bool loopPerAssembly = Directory.Exists(OutputPath);
+        bool loopPerAssembly = !string.IsNullOrEmpty(OutputPath) && Directory.Exists(TaskEnvironment.GetAbsolutePath(OutputPath));
 
         if (loopPerAssembly)
         {
@@ -260,11 +270,11 @@ public class GenAPITask : Task
         return !Log.HasLoggedErrors;
     }
 
-    private static string GetHeaderText(string headerFile, WriterType writerType, SyntaxWriterType syntaxWriterType)
+    private string GetHeaderText(string headerFile, WriterType writerType, SyntaxWriterType syntaxWriterType)
     {
         if (!string.IsNullOrEmpty(headerFile))
         {
-            return File.ReadAllText(headerFile);
+            return File.ReadAllText(TaskEnvironment.GetAbsolutePath(headerFile));
         }
 
         string defaultHeader = string.Empty;
@@ -286,12 +296,14 @@ public class GenAPITask : Task
         if (string.IsNullOrWhiteSpace(outFilePath))
             return new LogTextWriter(Log);
 
-        if (Directory.Exists(outFilePath) && !string.IsNullOrEmpty(filename))
+        AbsolutePath outputPath = TaskEnvironment.GetAbsolutePath(outFilePath);
+
+        if (Directory.Exists(outputPath) && !string.IsNullOrEmpty(filename))
         {
-            return File.CreateText(Path.Combine(outFilePath, filename));
+            return File.CreateText(TaskEnvironment.GetAbsolutePath(Path.Combine(outFilePath, filename)));
         }
 
-        return File.CreateText(outFilePath);
+        return File.CreateText(outputPath);
     }
 
     /// <summary>

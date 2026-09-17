@@ -111,7 +111,7 @@ sealed class BlobFeedAction
                 {
                     if (options.PassIfExistingItemIdentical)
                     {
-                        if (!await blobUtils.IsFileIdenticalToBlobAsync(item.ItemSpec, relativeBlobPath))
+                        if (!await blobUtils.IsFileIdenticalToBlobAsync(new AbsolutePath(item.GetMetadata("FullPath")), relativeBlobPath))
                         {
                             Log.LogError(
                                 $"Item '{item}' already exists with different contents " +

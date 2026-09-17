@@ -9,6 +9,13 @@
     <PackageTags>Arcade Build Tool Installer Workloads</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
     <NoWarn>$(NoWarn);NU5127</NoWarn>
+    <!-- MSBuildTask0005 reports the file system APIs reached from CreateVisualStudioWorkload through
+         the MSI/SWIX generation helpers. That helper chain is exactly why the task is not yet marked
+         [MSBuildMultiThreadableTask] (see CreateVisualStudioWorkload.wix.cs), so it keeps running in
+         the out-of-proc task host and those calls stay correct. No task in this project is opted in,
+         so nothing here is currently in scope for the rule. Suppressed until the helpers take
+         AbsolutePath, tracked by https://github.com/dotnet/arcade/issues/17378. -->
+    <NoWarn>$(NoWarn);MSBuildTask0005</NoWarn>
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
 
     <!--
