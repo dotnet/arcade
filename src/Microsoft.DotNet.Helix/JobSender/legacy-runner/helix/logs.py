@@ -12,16 +12,27 @@ compatibility modules.
 import logging
 import os
 import sys
+import time
 import uuid
 
 
-_FORMAT = "%(asctime)sZ %(levelname)-7s %(module)s(%(lineno)d) %(funcName)s %(message)s"
+_FORMAT = "%(asctime)s %(levelname)-7s %(module)s(%(lineno)d) %(funcName)s %(message)s"
 _HANDLER_MARKER = "_helix_legacy_runner_compat"
+
+
+class _UtcFormatter(logging.Formatter):
+    """Formats timestamps as UTC, matching the legacy helix.logs formatter."""
+
+    def formatTime(self, record, datefmt=None):
+        created = time.gmtime(record.created)
+        return "{}.{:03d}Z".format(
+            time.strftime("%Y-%m-%dT%H:%M:%S", created), int(record.msecs)
+        )
 
 
 def _add_handler(handler):
     handler.setLevel(logging.INFO)
-    handler.setFormatter(logging.Formatter(_FORMAT))
+    handler.setFormatter(_UtcFormatter(_FORMAT))
     setattr(handler, _HANDLER_MARKER, True)
     logging.getLogger().addHandler(handler)
 
@@ -48,7 +59,16 @@ def get_logger(*args, **kwargs):
 
 def set_logfile(path):
     _configure()
-    _add_handler(logging.FileHandler(path))
+
+    directory = os.path.dirname(path)
+    try:
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+        _add_handler(logging.FileHandler(path))
+    except OSError:
+        # An unwritable log destination must not stop the work item from
+        # running or from staging its results.
+        logging.getLogger().warning("Unable to log to %s", path, exc_info=True)
 
 
 def register_auto_upload(settings, credential=None):

@@ -26,6 +26,60 @@ COMPATIBILITY_ROOT = (
 )
 RUNNER_PATH = pathlib.Path(__file__).parent / "LegacyRunner" / "scriptrunner.py"
 
+# Helix work items export HELIX_* variables, including live result-container SAS
+# tokens. Child processes started here must not inherit them: on a legacy queue
+# the installed `helix` package wins over this shim, and an inherited token would
+# make a test upload to a real results container.
+_INHERITED_ENVIRONMENT_NAMES = (
+    "COMSPEC",
+    "DYLD_LIBRARY_PATH",
+    "HOME",
+    "LANG",
+    "LC_ALL",
+    "LD_LIBRARY_PATH",
+    "PATH",
+    "PATHEXT",
+    "SYSTEMROOT",
+    "TEMP",
+    "TMP",
+    "TMPDIR",
+    "USERPROFILE",
+    "WINDIR",
+)
+
+
+def child_environment(**overrides):
+    environment = {
+        name: value
+        for name, value in os.environ.items()
+        if name in _INHERITED_ENVIRONMENT_NAMES
+    }
+    environment["PYTHONPATH"] = str(COMPATIBILITY_ROOT.parent)
+    environment["PYTHONDONTWRITEBYTECODE"] = "1"
+    environment.update(overrides)
+    return environment
+
+
+def resolve_child_helix_logs():
+    """Return the helix.logs file a child process actually imports.
+
+    A regular `helix` package installed on the machine wins over this
+    namespace-package shim even when the shim comes first on PYTHONPATH. That
+    precedence is intentional so legacy queues keep their installed package.
+    """
+    result = subprocess.run(
+        [sys.executable, "-c", "import helix.logs; print(helix.logs.__file__)"],
+        env=child_environment(),
+        cwd=str(RUNNER_PATH.parent),
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode != 0 or not result.stdout.strip():
+        return None
+
+    return pathlib.Path(result.stdout.strip())
+
 
 def load_module(name):
     if name == "helix.azure_storage":
@@ -49,6 +103,18 @@ class LegacyRunnerCompatTests(unittest.TestCase):
         self.addCleanup(self._temporary_directory.cleanup)
         self._old_upload_root = os.environ.get("HELIX_WORKITEM_UPLOAD_ROOT")
         os.environ["HELIX_WORKITEM_UPLOAD_ROOT"] = self._temporary_directory.name
+
+    def skip_when_installed_helix_wins(self):
+        imported = resolve_child_helix_logs()
+        if imported is None:
+            self.fail("A child process could not import helix.logs from the compatibility shim.")
+
+        if imported.resolve() != (COMPATIBILITY_ROOT / "logs.py").resolve():
+            self.skipTest(
+                "An installed legacy 'helix' package at {} takes precedence over the "
+                "compatibility shim. That is the intended behavior on legacy Helix "
+                "queues, so the shim's runner behavior cannot be exercised here.".format(imported)
+            )
 
     def tearDown(self):
         root_logger = logging.getLogger()
@@ -96,8 +162,7 @@ class LegacyRunnerCompatTests(unittest.TestCase):
         self.assertIn("compatibility message", log_path.read_text())
 
     def test_legacy_script_runner_import_surface(self):
-        environment = os.environ.copy()
-        environment["PYTHONPATH"] = str(COMPATIBILITY_ROOT.parent)
+        self.skip_when_installed_helix_wins()
 
         result = subprocess.run(
             [
@@ -110,7 +175,8 @@ class LegacyRunnerCompatTests(unittest.TestCase):
                     "from helix_test_execution import HelixTestExecution"
                 ),
             ],
-            env=environment,
+            env=child_environment(),
+            cwd=str(RUNNER_PATH.parent),
             capture_output=True,
             text=True,
         )
@@ -118,6 +184,8 @@ class LegacyRunnerCompatTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_appcompat_script_runner_stages_results_and_logs(self):
+        self.skip_when_installed_helix_wins()
+
         with tempfile.TemporaryDirectory() as work_root:
             work_root = pathlib.Path(work_root)
             payload = work_root / "payload"
@@ -144,19 +212,15 @@ class LegacyRunnerCompatTests(unittest.TestCase):
                 )
                 script.chmod(script.stat().st_mode | 0o100)
 
-            environment = os.environ.copy()
-            environment.update(
-                {
-                    "PYTHONPATH": str(COMPATIBILITY_ROOT.parent),
-                    "HELIX_WORKITEM_PAYLOAD": str(payload),
-                    "HELIX_CORRELATION_PAYLOAD": str(correlation),
-                    "HELIX_WORKITEM_ROOT": str(execution),
-                    "HELIX_WORKITEM_UPLOAD_ROOT": self._temporary_directory.name,
-                    "HELIX_LOG_ROOT": str(log_root),
-                    "HELIX_CORRELATION_ID": "compat-correlation",
-                    "HELIX_WORKITEM_ID": "compat-workitem",
-                    "HELIX_WORKITEM_FRIENDLYNAME": "AppCompat",
-                }
+            environment = child_environment(
+                HELIX_WORKITEM_PAYLOAD=str(payload),
+                HELIX_CORRELATION_PAYLOAD=str(correlation),
+                HELIX_WORKITEM_ROOT=str(execution),
+                HELIX_WORKITEM_UPLOAD_ROOT=self._temporary_directory.name,
+                HELIX_LOG_ROOT=str(log_root),
+                HELIX_CORRELATION_ID="compat-correlation",
+                HELIX_WORKITEM_ID="compat-workitem",
+                HELIX_WORKITEM_FRIENDLYNAME="AppCompat",
             )
 
             result = subprocess.run(
@@ -166,7 +230,7 @@ class LegacyRunnerCompatTests(unittest.TestCase):
                 text=True,
             )
 
-            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             staged_result = pathlib.Path(self._temporary_directory.name) / "TestResults.zip"
             self.assertEqual(staged_result.read_text(), "test-results")
             staged_log = (
