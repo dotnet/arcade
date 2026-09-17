@@ -174,7 +174,7 @@ internal partial class Job : IServiceOperations<HelixApi>, IJob
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedNewRequest(ex);
         HandleFailedRequest(ex);
@@ -278,7 +278,7 @@ internal partial class Job : IServiceOperations<HelixApi>, IJob
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedListRequest(ex);
         HandleFailedRequest(ex);
@@ -353,7 +353,7 @@ internal partial class Job : IServiceOperations<HelixApi>, IJob
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedResultsRequest(ex);
         HandleFailedRequest(ex);
@@ -428,7 +428,7 @@ internal partial class Job : IServiceOperations<HelixApi>, IJob
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedPassFailRequest(ex);
         HandleFailedRequest(ex);
@@ -503,7 +503,7 @@ internal partial class Job : IServiceOperations<HelixApi>, IJob
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedSummaryRequest(ex);
         HandleFailedRequest(ex);
@@ -578,7 +578,7 @@ internal partial class Job : IServiceOperations<HelixApi>, IJob
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedDetailsRequest(ex);
         HandleFailedRequest(ex);
@@ -645,20 +645,11 @@ internal partial class Job : IServiceOperations<HelixApi>, IJob
             }
         }
 
-        Models.ApiError body = null;
-        try
-        {
-            body = Client.Deserialize<Models.ApiError>(content);
-        }
-        catch (Newtonsoft.Json.JsonException)
-        {
-        }
-
         var ex = new RestApiException<Models.ApiError>(
             req,
             res,
             content,
-            body
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedCancelRequest(ex);
         HandleFailedRequest(ex);
@@ -724,7 +715,7 @@ internal partial class Job : IServiceOperations<HelixApi>, IJob
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedWaitRequest(ex);
         HandleFailedRequest(ex);

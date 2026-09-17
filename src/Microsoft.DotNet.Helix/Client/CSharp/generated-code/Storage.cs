@@ -111,7 +111,7 @@ internal partial class Storage : IServiceOperations<HelixApi>, IStorage
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedListRequest(ex);
         HandleFailedRequest(ex);
@@ -197,7 +197,7 @@ internal partial class Storage : IServiceOperations<HelixApi>, IStorage
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedNewRequest(ex);
         HandleFailedRequest(ex);
@@ -283,7 +283,7 @@ internal partial class Storage : IServiceOperations<HelixApi>, IStorage
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedExtendExpirationRequest(ex);
         HandleFailedRequest(ex);

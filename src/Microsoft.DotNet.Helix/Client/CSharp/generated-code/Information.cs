@@ -117,7 +117,7 @@ internal partial class Information : IServiceOperations<HelixApi>, IInformation
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedQueueInfoRequest(ex);
         HandleFailedRequest(ex);
@@ -191,7 +191,7 @@ internal partial class Information : IServiceOperations<HelixApi>, IInformation
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedQueueInfoListRequest(ex);
         HandleFailedRequest(ex);
@@ -260,7 +260,7 @@ internal partial class Information : IServiceOperations<HelixApi>, IInformation
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedDeployed1esImagesInfoListRequest(ex);
         HandleFailedRequest(ex);

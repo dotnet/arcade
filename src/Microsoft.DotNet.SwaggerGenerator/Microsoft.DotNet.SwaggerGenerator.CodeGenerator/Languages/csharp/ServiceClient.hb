@@ -209,6 +209,23 @@ public partial class {{pascalCase Name}} : I{{pascalCase Name}}
         return JsonConvert.DeserializeObject<T>(value, SerializerSettings);
     }
 
+    public T DeserializeOrDefault<T>(string value)
+    {
+        if (value == null)
+        {
+            return default;
+        }
+
+        try
+        {
+            return Deserialize<T>(value);
+        }
+        catch (JsonException)
+        {
+            return default;
+        }
+    }
+
     public virtual ValueTask<Response> SendAsync(Request request, CancellationToken cancellationToken)
     {
         return Pipeline.SendRequestAsync(request, cancellationToken);

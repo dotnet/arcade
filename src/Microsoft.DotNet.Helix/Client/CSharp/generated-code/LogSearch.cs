@@ -130,7 +130,7 @@ internal partial class LogSearch : IServiceOperations<HelixApi>, ILogSearch
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedDoBuildSearchRequest(ex);
         HandleFailedRequest(ex);
@@ -220,7 +220,7 @@ internal partial class LogSearch : IServiceOperations<HelixApi>, ILogSearch
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedDoTestLogSearchRequest(ex);
         HandleFailedRequest(ex);

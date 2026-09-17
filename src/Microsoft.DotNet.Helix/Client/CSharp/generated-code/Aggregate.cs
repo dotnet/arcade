@@ -260,7 +260,7 @@ internal partial class Aggregate : IServiceOperations<HelixApi>, IAggregate
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedAnalysisSummaryRequest(ex);
         HandleFailedRequest(ex);
@@ -355,7 +355,7 @@ internal partial class Aggregate : IServiceOperations<HelixApi>, IAggregate
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedBuildHistoryRequest(ex);
         HandleFailedRequest(ex);
@@ -460,7 +460,7 @@ internal partial class Aggregate : IServiceOperations<HelixApi>, IAggregate
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedBuildRequest(ex);
         HandleFailedRequest(ex);
@@ -577,7 +577,7 @@ internal partial class Aggregate : IServiceOperations<HelixApi>, IAggregate
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedJobSummaryRequest(ex);
         HandleFailedRequest(ex);
@@ -689,7 +689,7 @@ internal partial class Aggregate : IServiceOperations<HelixApi>, IAggregate
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedWorkItemSummaryRequest(ex);
         HandleFailedRequest(ex);
@@ -831,7 +831,7 @@ internal partial class Aggregate : IServiceOperations<HelixApi>, IAggregate
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedAnalysisDetailRequest(ex);
         HandleFailedRequest(ex);
@@ -930,7 +930,7 @@ internal partial class Aggregate : IServiceOperations<HelixApi>, IAggregate
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedPropertiesRequest(ex);
         HandleFailedRequest(ex);
@@ -1005,7 +1005,7 @@ internal partial class Aggregate : IServiceOperations<HelixApi>, IAggregate
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedInvestigation_ContinueRequest(ex);
         HandleFailedRequest(ex);
@@ -1127,7 +1127,7 @@ internal partial class Aggregate : IServiceOperations<HelixApi>, IAggregate
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedInvestigationRequest(ex);
         HandleFailedRequest(ex);
@@ -1247,7 +1247,7 @@ internal partial class Aggregate : IServiceOperations<HelixApi>, IAggregate
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedHistoryRequest(ex);
         HandleFailedRequest(ex);
@@ -1328,7 +1328,7 @@ internal partial class Aggregate : IServiceOperations<HelixApi>, IAggregate
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedMultiSourceRequest(ex);
         HandleFailedRequest(ex);

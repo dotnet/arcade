@@ -141,7 +141,7 @@ internal partial class WorkItem : IServiceOperations<HelixApi>, IWorkItem
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedGetFileRequest(ex);
         HandleFailedRequest(ex);
@@ -227,7 +227,7 @@ internal partial class WorkItem : IServiceOperations<HelixApi>, IWorkItem
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedListFilesRequest(ex);
         HandleFailedRequest(ex);
@@ -303,7 +303,7 @@ internal partial class WorkItem : IServiceOperations<HelixApi>, IWorkItem
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedConsoleLogRequest(ex);
         HandleFailedRequest(ex);
@@ -378,7 +378,7 @@ internal partial class WorkItem : IServiceOperations<HelixApi>, IWorkItem
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedListRequest(ex);
         HandleFailedRequest(ex);
@@ -459,7 +459,7 @@ internal partial class WorkItem : IServiceOperations<HelixApi>, IWorkItem
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedDetailsRequest(ex);
         HandleFailedRequest(ex);

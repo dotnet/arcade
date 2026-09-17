@@ -241,7 +241,7 @@ internal partial class {{pascalCase Name}} : IServiceOperations<{{clientName nul
             res,
             content
             {{~#if ErrorType}},
-            Client.Deserialize<{{typeRef ErrorType}}>(content)
+            Client.DeserializeOrDefault<{{typeRef ErrorType}}>(content)
             {{/if~}});
         HandleFailed{{Name}}Request(ex);
         HandleFailedRequest(ex);

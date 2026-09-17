@@ -112,7 +112,7 @@ internal partial class ScaleSets : IServiceOperations<HelixApi>, IScaleSets
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedGetDetailedVMScalingHistoryRequest(ex);
         HandleFailedRequest(ex);
@@ -186,7 +186,7 @@ internal partial class ScaleSets : IServiceOperations<HelixApi>, IScaleSets
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedGetAggregatedVMScalingHistoryRequest(ex);
         HandleFailedRequest(ex);

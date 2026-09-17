@@ -143,7 +143,7 @@ internal partial class Analysis : IServiceOperations<HelixApi>, IAnalysis
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedSetReasonRequest(ex);
         HandleFailedRequest(ex);
@@ -244,7 +244,7 @@ internal partial class Analysis : IServiceOperations<HelixApi>, IAnalysis
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedGetDetailsRequest(ex);
         HandleFailedRequest(ex);

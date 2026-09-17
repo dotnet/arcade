@@ -119,7 +119,7 @@ internal partial class Machine : IServiceOperations<HelixApi>, IMachine
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedChangeStateRequest(ex);
         HandleFailedRequest(ex);
@@ -200,7 +200,7 @@ internal partial class Machine : IServiceOperations<HelixApi>, IMachine
             req,
             res,
             content,
-            Client.Deserialize<Models.ApiError>(content)
+            Client.DeserializeOrDefault<Models.ApiError>(content)
             );
         HandleFailedGetMachineStatusRequest(ex);
         HandleFailedRequest(ex);
