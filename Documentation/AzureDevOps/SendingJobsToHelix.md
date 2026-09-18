@@ -89,7 +89,7 @@ jobs:
 - template: /eng/common/core-templates/job/helix-job-monitor.yml
   parameters:
     useEntraAuthentication: true
-    azureSubscription: <Azure service connection ID authorized for Helix>
+    azureSubscription: <workload identity federation service connection name authorized for Helix>
     # other parameters here
 ```
 
