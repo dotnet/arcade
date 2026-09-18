@@ -31,15 +31,11 @@
 
     <Exec Command='"$(DotNetTool)" tool restore $(RestoreConfigFileOption)'
           WorkingDirectory="$(RepoRoot)"
-          IgnoreExitCode="$(RestoreRepoToolsRetryOnFailure)">
-      <Output TaskParameter="ExitCode" PropertyName="_RestoreRepoToolsExitCode" />
-    </Exec>
-    <Message Text="'dotnet tool restore' failed with exit code $(_RestoreRepoToolsExitCode). Retrying once."
-             Importance="high"
-             Condition="'$(RestoreRepoToolsRetryOnFailure)' == 'true' and '$(_RestoreRepoToolsExitCode)' != '0'" />
-    <Exec Command='"$(DotNetTool)" tool restore $(RestoreConfigFileOption)'
-          WorkingDirectory="$(RepoRoot)"
-          Condition="'$(RestoreRepoToolsRetryOnFailure)' == 'true' and '$(_RestoreRepoToolsExitCode)' != '0'" />
+          Condition="'$(RestoreRepoToolsRetryOnFailure)' != 'true'" />
+    <ExecWithRetries Command='"$(DotNetTool)" tool restore $(RestoreConfigFileOption)'
+                     WorkingDirectory="$(RepoRoot)"
+                     MaxAttempts="2"
+                     Condition="'$(RestoreRepoToolsRetryOnFailure)' == 'true'" />
   </Target>
 
   <!-- Set as DependsOnTargets when internal tools (e.g. IBC data, optprof) is required -->

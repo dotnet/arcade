@@ -9,7 +9,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Build.Tasks.Installers;
+namespace Microsoft.DotNet.Arcade.Sdk;
 
 /// <summary>
 /// Run a command and retry if the exit code is not 0.
