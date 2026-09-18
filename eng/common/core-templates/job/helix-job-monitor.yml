@@ -236,13 +236,6 @@ jobs:
         inlineScript: |
           set -euo pipefail
 
-          # AzurePipelinesCredential currently receives Azure DevOps-issued assertions,
-          # which cannot authenticate Entra-issued service connections. Force Arcade's
-          # credential chain to use the renewable Azure CLI session maintained by this task.
-          unset AZURESUBSCRIPTION_CLIENT_ID
-          unset AZURESUBSCRIPTION_TENANT_ID
-          unset AZURESUBSCRIPTION_SERVICE_CONNECTION_ID
-
           toolArgs=(
             --helix-base-uri              '${{ parameters.helixBaseUri }}'
             --use-entra-authentication    '${{ parameters.useEntraAuthentication }}'

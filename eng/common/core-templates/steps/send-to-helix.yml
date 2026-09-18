@@ -48,10 +48,6 @@ steps:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
-          Remove-Item Env:AZURESUBSCRIPTION_CLIENT_ID -ErrorAction SilentlyContinue
-          Remove-Item Env:AZURESUBSCRIPTION_TENANT_ID -ErrorAction SilentlyContinue
-          Remove-Item Env:AZURESUBSCRIPTION_SERVICE_CONNECTION_ID -ErrorAction SilentlyContinue
-
           $(Build.SourcesDirectory)\eng\common\msbuild.ps1 `
             $(Build.SourcesDirectory)/${{ parameters.HelixProjectPath }} `
             /restore `
@@ -96,10 +92,6 @@ steps:
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
-          unset AZURESUBSCRIPTION_CLIENT_ID
-          unset AZURESUBSCRIPTION_TENANT_ID
-          unset AZURESUBSCRIPTION_SERVICE_CONNECTION_ID
-
           $(Build.SourcesDirectory)/eng/common/msbuild.sh \
             $(Build.SourcesDirectory)/${{ parameters.HelixProjectPath }} \
             /restore \
