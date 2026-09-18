@@ -8,10 +8,6 @@
     <PackageReference Include="Azure.Identity" Condition="'$(DotNetBuildSourceOnly)' != 'true'" />
   </ItemGroup>
 
-  <ItemGroup>
-    <InternalsVisibleTo Include="Microsoft.DotNet.Helix.Sdk.Tests" />
-  </ItemGroup>
-
   <ItemGroup Condition="'$(DotNetBuildSourceOnly)' == 'true'">
     <Compile Remove="AzureCliCredentialWithAzNoUpdateWrapper.cs" />
     <Compile Remove="DefaultIdentityTokenCredential.cs" />
