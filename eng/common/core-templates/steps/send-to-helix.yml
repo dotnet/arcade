@@ -48,12 +48,34 @@ steps:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
-          if ([string]::IsNullOrWhiteSpace($env:servicePrincipalId) -or [string]::IsNullOrWhiteSpace($env:tenantId)) {
-            throw "The Helix Azure service connection did not provide a service principal or tenant ID."
+          if ([string]::IsNullOrWhiteSpace($env:servicePrincipalId) -or
+              [string]::IsNullOrWhiteSpace($env:tenantId) -or
+              [string]::IsNullOrWhiteSpace($env:idToken)) {
+            throw "The Helix Azure service connection must use workload identity federation."
           }
 
           Write-Host "##vso[task.setvariable variable=HelixEntraClientId]$env:servicePrincipalId"
           Write-Host "##vso[task.setvariable variable=HelixEntraTenantId]$env:tenantId"
+          $tokenFile = Join-Path $env:AGENT_TEMPDIRECTORY "helix-entra-token-$([guid]::NewGuid())"
+          [IO.File]::WriteAllText($tokenFile, "")
+          if ($IsWindows) {
+            $acl = Get-Acl $tokenFile
+            $acl.SetAccessRuleProtection($true, $false)
+            $identity = [Security.Principal.WindowsIdentity]::GetCurrent().User
+            $rule = [Security.AccessControl.FileSystemAccessRule]::new(
+              $identity,
+              [Security.AccessControl.FileSystemRights]::FullControl,
+              [Security.AccessControl.AccessControlType]::Allow)
+            $acl.AddAccessRule($rule)
+            Set-Acl -LiteralPath $tokenFile -AclObject $acl
+          } else {
+            & chmod 600 $tokenFile
+            if ($LASTEXITCODE -ne 0) {
+              throw "Failed to restrict access to the Helix Entra token file."
+            }
+          }
+          [IO.File]::WriteAllText($tokenFile, $env:idToken)
+          Write-Host "##vso[task.setvariable variable=HelixEntraTokenFile]$tokenFile"
       condition: ${{ parameters.condition }}
 
   - powershell: >
@@ -77,6 +99,9 @@ steps:
       ${{ if eq(parameters.HelixUseEntraAuthentication, false) }}:
         HelixAccessToken: ${{ parameters.HelixAccessToken }}
       ${{ if eq(parameters.HelixUseEntraAuthentication, true) }}:
+        HELIX_ENTRA_CLIENT_ID: $(HelixEntraClientId)
+        HELIX_ENTRA_TENANT_ID: $(HelixEntraTenantId)
+        HELIX_ENTRA_TOKEN_FILE: $(HelixEntraTokenFile)
         AZURESUBSCRIPTION_CLIENT_ID: $(HelixEntraClientId)
         AZURESUBSCRIPTION_TENANT_ID: $(HelixEntraTenantId)
         AZURESUBSCRIPTION_SERVICE_CONNECTION_ID: ${{ parameters.HelixAzureSubscription }}
@@ -121,6 +146,9 @@ steps:
       ${{ if eq(parameters.HelixUseEntraAuthentication, false) }}:
         HelixAccessToken: ${{ parameters.HelixAccessToken }}
       ${{ if eq(parameters.HelixUseEntraAuthentication, true) }}:
+        HELIX_ENTRA_CLIENT_ID: $(HelixEntraClientId)
+        HELIX_ENTRA_TENANT_ID: $(HelixEntraTenantId)
+        HELIX_ENTRA_TOKEN_FILE: $(HelixEntraTokenFile)
         AZURESUBSCRIPTION_CLIENT_ID: $(HelixEntraClientId)
         AZURESUBSCRIPTION_TENANT_ID: $(HelixEntraTenantId)
         AZURESUBSCRIPTION_SERVICE_CONNECTION_ID: ${{ parameters.HelixAzureSubscription }}
@@ -144,3 +172,8 @@ steps:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     condition: and(${{ parameters.condition }}, ne(variables['Agent.Os'], 'Windows_NT'))
     continueOnError: ${{ parameters.continueOnError }}
+
+  - ${{ if eq(parameters.HelixUseEntraAuthentication, true) }}:
+    - pwsh: Remove-Item -LiteralPath "$(HelixEntraTokenFile)" -Force -ErrorAction SilentlyContinue
+      displayName: Clean up Helix Entra token
+      condition: always()

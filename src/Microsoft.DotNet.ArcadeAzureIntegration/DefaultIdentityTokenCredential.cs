@@ -40,32 +40,36 @@ public class DefaultIdentityTokenCredential : TokenCredential
         return _tokenCredential.GetToken(requestContext, cancellationToken);
     }
 
-    private static TokenCredential CreateAvailableTokenCredential(DefaultIdentityTokenCredentialOptions options)
+    internal static TokenCredential CreateAvailableTokenCredential(DefaultIdentityTokenCredentialOptions options)
     {
+        TokenCredential? workloadIdentityCredential = GetWorkloadIdentityCredentialForAzurePipelineTask();
         TokenCredential? azurePipelinesCredential = GetAzurePipelinesCredentialForAzurePipelineTask();
 
         if (options.UseAzurePipelineCredentialAloneIfConfigured)
         {
-            if (azurePipelinesCredential != null)
+            TokenCredential? pipelineCredential = options.PreferWorkloadIdentityCredential
+                ? workloadIdentityCredential ?? azurePipelinesCredential
+                : azurePipelinesCredential;
+            if (pipelineCredential != null)
             {
                 if (!options.DisableShortCache)
                 {
-                    return new TokenCredentialShortCache(azurePipelinesCredential);
+                    return new TokenCredentialShortCache(pipelineCredential);
                 }
-                return azurePipelinesCredential;
+                return pipelineCredential;
             }
         }
 
         List<TokenCredential> tokenCredentials = [];
 
-        // Add Azure Pipelines credential if the environment variables are set
-        if (azurePipelinesCredential != null)
+        if (options.PreferWorkloadIdentityCredential)
         {
-            if (!options.DisableShortCache)
-            {
-                azurePipelinesCredential = new TokenCredentialShortCache(azurePipelinesCredential);
-            }
-            tokenCredentials.Add(azurePipelinesCredential);
+            AddCredential(workloadIdentityCredential);
+            AddCredential(azurePipelinesCredential);
+        }
+        else
+        {
+            AddCredential(azurePipelinesCredential);
         }
 
         // Add Managed Identity credential
@@ -74,15 +78,9 @@ public class DefaultIdentityTokenCredential : TokenCredential
             : ManagedIdentityId.FromUserAssignedClientId(options.ManagedIdentityClientId);
         tokenCredentials.Add(new ManagedIdentityCredential(managedIdentityId));
 
-        // Add work load identity credential if the environment variables are set
-        TokenCredential? workloadIdentityCredential = GetWorkloadIdentityCredentialForAzurePipelineTask();
-        if (workloadIdentityCredential != null)
+        if (!options.PreferWorkloadIdentityCredential)
         {
-            if (!options.DisableShortCache)
-            {
-                workloadIdentityCredential = new TokenCredentialShortCache(workloadIdentityCredential);
-            }
-            tokenCredentials.Add(workloadIdentityCredential);
+            AddCredential(workloadIdentityCredential);
         }
 
         if (!options.ExcludeAzureCliCredential)
@@ -110,6 +108,18 @@ public class DefaultIdentityTokenCredential : TokenCredential
 
         var ret = new ChainedTokenCredential(tokenCredentials.ToArray());
         return ret;
+
+        void AddCredential(TokenCredential? credential)
+        {
+            if (credential == null)
+            {
+                return;
+            }
+
+            tokenCredentials.Add(options.DisableShortCache
+                ? credential
+                : new TokenCredentialShortCache(credential));
+        }
     }
 
     private static object _workloadTokenFileLock = new object();
@@ -119,33 +129,65 @@ public class DefaultIdentityTokenCredential : TokenCredential
     // Create WorkloadIdentityCredential if the environment variables set by AzurePipeline are provided
     private static WorkloadIdentityCredential? GetWorkloadIdentityCredentialForAzurePipelineTask()
     {
-        string? servicePrincipalId = Environment.GetEnvironmentVariable("servicePrincipalId");
-        string? idToken = Environment.GetEnvironmentVariable("idToken");
-        string? tenantId = Environment.GetEnvironmentVariable("tenantId");
-
-        if (!string.IsNullOrEmpty(idToken) &&
-            !string.IsNullOrEmpty(tenantId) &&
-            !string.IsNullOrEmpty(servicePrincipalId))
+        WorkloadIdentityCredential? credential = CreateFromTokenFile(
+            "HELIX_ENTRA_CLIENT_ID",
+            "HELIX_ENTRA_TENANT_ID",
+            "HELIX_ENTRA_TOKEN_FILE");
+        if (credential != null)
         {
-            lock (_workloadTokenFileLock)
-            {
-                if (idToken != _workloadToken)
-                {
-                    // create token file
-                    var tokenFileName = Path.GetTempFileName();
-                    File.WriteAllText(tokenFileName, idToken);
-                    _workloadTokenFile = tokenFileName;
-                    _workloadToken = idToken;
-                }
-                return new WorkloadIdentityCredential(new WorkloadIdentityCredentialOptions
-                {
-                    ClientId = servicePrincipalId,
-                    TokenFilePath = _workloadTokenFile,
-                    TenantId = tenantId,
-                });
-            }
+            return credential;
         }
-        return null;
+
+        string? servicePrincipalId = Environment.GetEnvironmentVariable("servicePrincipalId");
+        string? tenantId = Environment.GetEnvironmentVariable("tenantId");
+        string? idToken = Environment.GetEnvironmentVariable("idToken");
+        if (string.IsNullOrEmpty(servicePrincipalId) ||
+            string.IsNullOrEmpty(tenantId) ||
+            string.IsNullOrEmpty(idToken))
+        {
+            return null;
+        }
+
+        lock (_workloadTokenFileLock)
+        {
+            if (idToken != _workloadToken)
+            {
+                var tokenFileName = Path.GetTempFileName();
+                File.WriteAllText(tokenFileName, idToken);
+                _workloadTokenFile = tokenFileName;
+                _workloadToken = idToken;
+            }
+            return new WorkloadIdentityCredential(new WorkloadIdentityCredentialOptions
+            {
+                ClientId = servicePrincipalId,
+                TokenFilePath = _workloadTokenFile,
+                TenantId = tenantId,
+            });
+        }
+
+        static WorkloadIdentityCredential? CreateFromTokenFile(
+            string clientIdVariable,
+            string tenantIdVariable,
+            string tokenFileVariable)
+        {
+            string? clientId = Environment.GetEnvironmentVariable(clientIdVariable);
+            string? tenantId = Environment.GetEnvironmentVariable(tenantIdVariable);
+            string? tokenFile = Environment.GetEnvironmentVariable(tokenFileVariable);
+            if (string.IsNullOrEmpty(clientId) ||
+                string.IsNullOrEmpty(tenantId) ||
+                string.IsNullOrEmpty(tokenFile) ||
+                !File.Exists(tokenFile))
+            {
+                return null;
+            }
+
+            return new WorkloadIdentityCredential(new WorkloadIdentityCredentialOptions
+            {
+                ClientId = clientId,
+                TokenFilePath = tokenFile,
+                TenantId = tenantId,
+            });
+        }
     }
 
     // Create AzurePipelinesCredential if the environment variables set by AzureCli task and SYSTEM_ACCESSTOKEN are provided

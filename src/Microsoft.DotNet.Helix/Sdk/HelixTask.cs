@@ -97,7 +97,10 @@ public abstract class HelixTask : BaseTask, ICancelableTask
 #else
         return ApiFactory.GetAuthenticatedWithEntra(
             baseUri,
-            new DefaultIdentityTokenCredential());
+            new DefaultIdentityTokenCredential(new DefaultIdentityTokenCredentialOptions
+            {
+                PreferWorkloadIdentityCredential = true,
+            }));
 #endif
     }
 

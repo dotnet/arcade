@@ -20,10 +20,15 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Common\Microsoft.Arcade.Common\Microsoft.Arcade.Common.csproj" />
     <ProjectReference Include="..\..\..\Common\Microsoft.Arcade.Test.Common\Microsoft.Arcade.Test.Common.csproj" />
+    <ProjectReference Include="..\..\..\Microsoft.DotNet.ArcadeAzureIntegration\Microsoft.DotNet.ArcadeAzureIntegration.csproj" Condition="'$(DotNetBuildSourceOnly)' != 'true'" />
     <ProjectReference Include="..\..\..\Microsoft.DotNet.Internal.DependencyInjection.Testing\Microsoft.DotNet.Internal.DependencyInjection.Testing.csproj" />
     <ProjectReference Include="..\..\Client\CSharp\Microsoft.DotNet.Helix.Client.csproj" />
     <ProjectReference Include="..\..\Sdk\Microsoft.DotNet.Helix.Sdk.csproj" />
     <ProjectReference Include="..\..\JobMonitor\Microsoft.DotNet.Helix.JobMonitor.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(DotNetBuildSourceOnly)' == 'true'">
+    <Compile Remove="DefaultIdentityTokenCredentialTests.cs" />
   </ItemGroup>
 
 </Project>
