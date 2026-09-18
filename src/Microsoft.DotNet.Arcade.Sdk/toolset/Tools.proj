@@ -3,9 +3,9 @@
 
   <PropertyGroup>
     <_RepoToolManifest>$([MSBuild]::NormalizePath('$(RepoRoot)', '.config', 'dotnet-tools.json'))</_RepoToolManifest>
-    <!-- Retry once by default in CI; callers can explicitly opt in or out. -->
-    <RestoreRepoToolsRetryOnFailure Condition="'$(RestoreRepoToolsRetryOnFailure)' == '' and '$(ContinuousIntegrationBuild)' == 'true'">true</RestoreRepoToolsRetryOnFailure>
-    <RestoreRepoToolsRetryOnFailure Condition="'$(RestoreRepoToolsRetryOnFailure)' == ''">false</RestoreRepoToolsRetryOnFailure>
+    <!-- Retry once by default in CI; callers can override the number of attempts. -->
+    <RestoreRepoToolsMaxAttempts Condition="'$(RestoreRepoToolsMaxAttempts)' == '' and '$(ContinuousIntegrationBuild)' == 'true'">2</RestoreRepoToolsMaxAttempts>
+    <RestoreRepoToolsMaxAttempts Condition="'$(RestoreRepoToolsMaxAttempts)' == ''">1</RestoreRepoToolsMaxAttempts>
 
     <!-- VisualStudio.InsertionManifests.targets: Keep condition in sync with import in AfterSigning.proj. -->
     <RestoreInternalTooling Condition="'$(UsingToolVSSDK)' == 'true' and '$(GenerateSbom)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'">true</RestoreInternalTooling>
@@ -27,14 +27,12 @@
     <PropertyGroup>
       <RestoreConfigFileOption></RestoreConfigFileOption>
       <RestoreConfigFileOption Condition="'$(RestoreConfigFile)' != ''">--configfile "$(RestoreConfigFile)"</RestoreConfigFileOption>
-      <_RestoreRepoToolsMaxAttempts Condition="'$(RestoreRepoToolsRetryOnFailure)' == 'true'">2</_RestoreRepoToolsMaxAttempts>
-      <_RestoreRepoToolsMaxAttempts Condition="'$(_RestoreRepoToolsMaxAttempts)' == ''">1</_RestoreRepoToolsMaxAttempts>
     </PropertyGroup>
 
     <Microsoft.DotNet.Build.Tasks.Installers.ExecWithRetries
       Command='"$(DotNetTool)" tool restore $(RestoreConfigFileOption)'
       WorkingDirectory="$(RepoRoot)"
-      MaxAttempts="$(_RestoreRepoToolsMaxAttempts)" />
+      MaxAttempts="$(RestoreRepoToolsMaxAttempts)" />
   </Target>
 
   <!-- Set as DependsOnTargets when internal tools (e.g. IBC data, optprof) is required -->
