@@ -65,6 +65,8 @@ Please note that authorized jobs *cannot* be submitted to queues with `IsInterna
 
 Set `HelixUseEntraAuthentication` to `true` and pass an Azure service connection authorized for Helix through `HelixAzureSubscription`. These parameters configure the `send-to-helix.yml` steps template and the SDK tasks that submit jobs.
 
+The service connection must use workload identity federation. Azure DevOps resolves the service connection name to its endpoint ID for `AzureCLI@2`, and the templates forward that resolved ID to `AzurePipelinesCredential`. The OIDC token endpoint requires the endpoint ID rather than the display name. This allows the credential to request renewable assertions using either legacy Azure DevOps-issued or newer Microsoft Entra-issued service connections.
+
 When Entra authentication is enabled, the template does not forward `HelixAccessToken` to the Helix processes. If a legacy token is still injected by a variable group, explicit Entra opt-in takes precedence and the task ignores the token with a warning.
 
 ```yaml
@@ -73,7 +75,7 @@ steps:
   displayName: Send to Helix
   parameters:
     HelixUseEntraAuthentication: true
-    HelixAzureSubscription: <Azure service connection ID authorized for Helix>
+    HelixAzureSubscription: <workload identity federation service connection name authorized for Helix>
     # other parameters here
 ```
 
