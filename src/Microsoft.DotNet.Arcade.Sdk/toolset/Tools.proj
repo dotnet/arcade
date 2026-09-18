@@ -27,15 +27,14 @@
     <PropertyGroup>
       <RestoreConfigFileOption></RestoreConfigFileOption>
       <RestoreConfigFileOption Condition="'$(RestoreConfigFile)' != ''">--configfile "$(RestoreConfigFile)"</RestoreConfigFileOption>
+      <_RestoreRepoToolsMaxAttempts Condition="'$(RestoreRepoToolsRetryOnFailure)' == 'true'">2</_RestoreRepoToolsMaxAttempts>
+      <_RestoreRepoToolsMaxAttempts Condition="'$(_RestoreRepoToolsMaxAttempts)' == ''">1</_RestoreRepoToolsMaxAttempts>
     </PropertyGroup>
 
-    <Exec Command='"$(DotNetTool)" tool restore $(RestoreConfigFileOption)'
-          WorkingDirectory="$(RepoRoot)"
-          Condition="'$(RestoreRepoToolsRetryOnFailure)' != 'true'" />
-    <ExecWithRetries Command='"$(DotNetTool)" tool restore $(RestoreConfigFileOption)'
-                     WorkingDirectory="$(RepoRoot)"
-                     MaxAttempts="2"
-                     Condition="'$(RestoreRepoToolsRetryOnFailure)' == 'true'" />
+    <Microsoft.DotNet.Build.Tasks.Installers.ExecWithRetries
+      Command='"$(DotNetTool)" tool restore $(RestoreConfigFileOption)'
+      WorkingDirectory="$(RepoRoot)"
+      MaxAttempts="$(_RestoreRepoToolsMaxAttempts)" />
   </Target>
 
   <!-- Set as DependsOnTargets when internal tools (e.g. IBC data, optprof) is required -->
