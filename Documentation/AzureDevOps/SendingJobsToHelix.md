@@ -65,7 +65,7 @@ Please note that authorized jobs *cannot* be submitted to queues with `IsInterna
 
 Set `HelixUseEntraAuthentication` to `true` and pass an Azure service connection authorized for Helix through `HelixAzureSubscription`. These parameters configure the `send-to-helix.yml` steps template and the SDK tasks that submit jobs.
 
-The service connection must use workload identity federation. The templates run the Helix process inside `AzureCLI@2` with automatic session refresh enabled, allowing `AzureCliCredential` to obtain renewable access tokens for both Azure DevOps-issued and Microsoft Entra-issued service connections. This is required for inline waits and the standalone monitor, which can run longer than a single workload identity assertion remains valid.
+The service connection must use workload identity federation. The templates run the Helix process inside `AzureCLI@2` with automatic session refresh enabled, and the Helix clients prefer `AzureCliCredential` over managed identity. This allows them to obtain renewable access tokens for both Azure DevOps-issued and Microsoft Entra-issued service connections, including on hosted agents where an unavailable managed identity would otherwise prevent the credential chain from reaching Azure CLI. This is required for inline waits and the standalone monitor, which can run longer than a single workload identity assertion remains valid.
 
 When Entra authentication is enabled, the template does not forward `HelixAccessToken` to the Helix processes. If a legacy token is still injected by a variable group, explicit Entra opt-in takes precedence and the task ignores the token with a warning.
 
