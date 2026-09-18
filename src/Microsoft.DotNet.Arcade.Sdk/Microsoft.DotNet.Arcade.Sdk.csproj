@@ -28,7 +28,7 @@
 
   <ItemGroup>
     <Compile Include="..\Common\Internal\AbsolutePathExtensions.cs" Link="Internal\AbsolutePathExtensions.cs" />
-    <Compile Include="..\Microsoft.DotNet.Build.Tasks.Installers\src\ExecWithRetries.cs" Link="ExecWithRetries.cs" />
+    <Compile Include="..\Common\Tasks\ExecWithRetries.cs" Link="ExecWithRetries.cs" />
   </ItemGroup>
 
   <ItemGroup>
