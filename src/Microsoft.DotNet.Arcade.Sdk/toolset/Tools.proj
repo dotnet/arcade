@@ -29,7 +29,7 @@
       <RestoreConfigFileOption Condition="'$(RestoreConfigFile)' != ''">--configfile "$(RestoreConfigFile)"</RestoreConfigFileOption>
     </PropertyGroup>
 
-    <Microsoft.DotNet.Build.Tasks.Installers.ExecWithRetries
+    <Microsoft.DotNet.Arcade.Sdk.ExecWithRetries
       Command='"$(DotNetTool)" tool restore $(RestoreConfigFileOption)'
       WorkingDirectory="$(RepoRoot)"
       MaxAttempts="$(RestoreRepoToolsMaxAttempts)" />
