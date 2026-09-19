@@ -36,4 +36,39 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" IsImplicitlyDefined="true" />
   </ItemGroup>
 
+  <!-- Code Coverage Support -->
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <!-- Enable code coverage collection. Set to 'true' to collect code coverage when running tests. -->
+    <CollectCoverage Condition="'$(CollectCoverage)' == ''">false</CollectCoverage>
+    
+    <!-- Code coverage output format. Supported values: 'cobertura', 'opencover', 'lcov', 'json', or combination like 'cobertura,opencover'. -->
+    <CodeCoverageFormat Condition="'$(CodeCoverageFormat)' == ''">cobertura</CodeCoverageFormat>
+    
+    <!-- Directory where code coverage reports will be generated. -->
+    <CodeCoverageOutputDirectory Condition="'$(CodeCoverageOutputDirectory)' == ''">$(ArtifactsTestResultsDir)coverage</CodeCoverageOutputDirectory>
+    
+    <!-- Enable/disable generation of deterministic coverage reports. -->
+    <CoverageDeterministic Condition="'$(CoverageDeterministic)' == ''">true</CoverageDeterministic>
+    
+    <!-- Assemblies to include in code coverage (semicolon-separated patterns). Default is all assemblies. -->
+    <CoverageInclude Condition="'$(CoverageInclude)' == ''"></CoverageInclude>
+    
+    <!-- Assemblies to exclude from code coverage (semicolon-separated patterns). -->
+    <CoverageExclude Condition="'$(CoverageExclude)' == ''"></CoverageExclude>
+    
+    <!-- Files to include in code coverage (semicolon-separated patterns). -->
+    <CoverageIncludeByFile Condition="'$(CoverageIncludeByFile)' == ''"></CoverageIncludeByFile>
+    
+    <!-- Files to exclude from code coverage (semicolon-separated patterns). -->
+    <CoverageExcludeByFile Condition="'$(CoverageExcludeByFile)' == ''"></CoverageExcludeByFile>
+    
+    <!-- Attributes to exclude from code coverage (semicolon-separated). -->
+    <CoverageExcludeByAttribute Condition="'$(CoverageExcludeByAttribute)' == ''"></CoverageExcludeByAttribute>
+  </PropertyGroup>
+
+  <!-- Add coverlet.collector package when code coverage is enabled and using VSTest -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true' and '$(CollectCoverage)' == 'true' and '$(UseVSTestRunner)' == 'true'">
+    <PackageReference Include="coverlet.collector" IsImplicitlyDefined="true" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+  </ItemGroup>
+
 </Project>
