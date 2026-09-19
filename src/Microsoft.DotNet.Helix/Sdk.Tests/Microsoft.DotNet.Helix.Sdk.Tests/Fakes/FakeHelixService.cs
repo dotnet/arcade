@@ -159,10 +159,16 @@ internal sealed class FakeHelixService : IHelixService
         return Task.FromResult<IReadOnlyCollection<WorkItemSummary>>(items);
     }
 
-    public Task CancelJobAsync(string jobName, CancellationToken cancellationToken)
+    public Dictionary<string, string> CancellationTokens { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+    public Task CancelJobAsync(
+        string jobName,
+        string jobCancellationToken,
+        CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         CanceledJobs.Add(jobName);
+        CancellationTokens[jobName] = jobCancellationToken;
         return Task.CompletedTask;
     }
 

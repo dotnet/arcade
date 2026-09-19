@@ -25,6 +25,7 @@ internal sealed class FakeAzureDevOpsService :
     private readonly object _sync = new();
     private readonly List<AzureDevOpsTimelineRecord[]> _timelineResponses = [];
     private readonly HashSet<string> _previouslyProcessedJobs = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> _jobCancellationTokens = new(StringComparer.OrdinalIgnoreCase);
     private readonly Queue<Exception> _createFailures = [];
     private readonly Queue<Exception> _uploadFailures = [];
     private readonly Queue<Exception> _completeFailures = [];
@@ -186,6 +187,32 @@ internal sealed class FakeAzureDevOpsService :
         {
             var result = new HashSet<string>(_previouslyProcessedJobs, StringComparer.OrdinalIgnoreCase);
             return Task.FromResult<IReadOnlySet<string>>(result);
+        }
+
+        public Task<IReadOnlyDictionary<string, string>> GetJobCancellationTokensAsync(
+            IReadOnlyCollection<string> jobNames,
+            CancellationToken cancellationToken)
+        {
+            lock (_sync)
+            {
+                var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (string jobName in jobNames)
+                {
+                    if (_jobCancellationTokens.TryGetValue(jobName, out string token))
+                    {
+                        result[jobName] = token;
+                    }
+                }
+                return Task.FromResult<IReadOnlyDictionary<string, string>>(result);
+            }
+        }
+
+        public void AddJobCancellationToken(string jobName, string cancellationToken)
+        {
+            lock (_sync)
+            {
+                _jobCancellationTokens[jobName] = cancellationToken;
+            }
         }
     }
 

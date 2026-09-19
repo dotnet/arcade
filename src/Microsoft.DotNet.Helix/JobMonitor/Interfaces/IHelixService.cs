@@ -49,6 +49,7 @@ public interface IHelixService
     /// </summary>
     Task CancelJobAsync(
         string jobName,
+        string jobCancellationToken,
         CancellationToken cancellationToken);
 
     /// <summary>

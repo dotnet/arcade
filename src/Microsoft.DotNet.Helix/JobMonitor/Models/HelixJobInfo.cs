@@ -53,7 +53,8 @@ public sealed class HelixJobInfo
         string stageAttempt = null,
         string jobAttempt = null,
         string logicalJobName = null,
-        string submitterPhaseName = null)
+        string submitterPhaseName = null,
+        string jobCancellationToken = null)
     {
         JobName = jobName ?? throw new ArgumentNullException(nameof(jobName));
         Status = status ?? throw new ArgumentNullException(nameof(status));
@@ -63,6 +64,7 @@ public sealed class HelixJobInfo
         JobAttempt = jobAttempt;
         QueueId = queueId;
         InitialWorkItemCount = initialWorkItemCount;
+        JobCancellationToken = jobCancellationToken;
         Properties = CreateProperties(
             testRunName,
             stageName,
@@ -169,6 +171,12 @@ public sealed class HelixJobInfo
     }
 
     public int? InitialWorkItemCount { get; }
+
+    /// <summary>
+    /// Per-job token used to cancel anonymously submitted jobs. This value is kept out of
+    /// Helix job properties because those properties may be publicly readable.
+    /// </summary>
+    public string JobCancellationToken { get; }
 
     public JToken Properties { get; }
 

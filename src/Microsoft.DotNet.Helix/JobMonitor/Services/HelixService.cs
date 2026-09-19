@@ -201,12 +201,13 @@ internal sealed class HelixService : IHelixService
 
     public async Task CancelJobAsync(
         string jobName,
+        string jobCancellationToken,
         CancellationToken cancellationToken)
     {
         await RetryAsync(
             async () =>
             {
-                await _helixApi.Job.CancelAsync(jobName, cancellationToken: cancellationToken);
+                await _helixApi.Job.CancelAsync(jobName, jobCancellationToken, cancellationToken);
                 return jobName;
             },
             cancellationToken);
@@ -383,7 +384,8 @@ internal sealed class HelixService : IHelixService
             stageAttempt: resubmittedStageAttempt,
             jobAttempt: submitterJobAttempt,
             logicalJobName: logicalJobName,
-            submitterPhaseName: submitterPhaseName);
+            submitterPhaseName: submitterPhaseName,
+            jobCancellationToken: newJob.CancellationToken);
 
         _logger.LogInformation("Resubmitted {Count} failed work item(s) from '{OriginalJobName}' as new job '{NewJobName}'{nl}{JobUri}",
             filteredEntries.Count,

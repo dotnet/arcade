@@ -666,11 +666,32 @@ internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
 
         LogWarning($"Cancellation requested. Attempting to cancel {inFlightJobs.Count} in-flight Helix job(s).");
 
+        IReadOnlyDictionary<string, string> persistedTokens =
+            await _azdo.GetJobCancellationTokensAsync(
+                inFlightJobs
+                    .Where(job => string.IsNullOrEmpty(job.JobCancellationToken))
+                    .Select(job => job.JobName)
+                    .ToArray(),
+                cancellationToken);
+
         await Task.WhenAll(inFlightJobs.Select(async job =>
         {
+            string jobCancellationToken = job.JobCancellationToken;
+            if (string.IsNullOrEmpty(jobCancellationToken))
+            {
+                persistedTokens.TryGetValue(job.JobName, out jobCancellationToken);
+            }
+
+            if (string.IsNullOrEmpty(jobCancellationToken))
+            {
+                LogWarning(
+                    $"Cannot cancel Helix job {job.DisplayName} because its cancellation token was not available.");
+                return;
+            }
+
             try
             {
-                await _helix.CancelJobAsync(job.JobName, cancellationToken);
+                await _helix.CancelJobAsync(job.JobName, jobCancellationToken, cancellationToken);
                 _logger.LogWarning("🛑 Requested cancellation of Helix job {JobName}.{nl}{JobUri}",
                     job.DisplayName, Environment.NewLine, job.DetailsUri);
             }
