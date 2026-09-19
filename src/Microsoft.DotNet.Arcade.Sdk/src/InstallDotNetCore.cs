@@ -88,7 +88,7 @@ public class InstallDotNetCore : Microsoft.Build.Utilities.Task
                             }
                             else
                             {
-                                var proj = Project.FromFile(VersionsPropsPath, new Build.Definition.ProjectOptions() { ProjectCollection = new ProjectCollection() });
+                                var proj = Project.FromFile(VersionsPropsPath, new Microsoft.Build.Definition.ProjectOptions() { ProjectCollection = new ProjectCollection() });
                                 properties = proj.AllEvaluatedProperties.ToLookup(p => p.Name, StringComparer.OrdinalIgnoreCase);
                             }
                         }
