@@ -120,6 +120,18 @@ All assets that are a direct output of this CMakeLists.txt will be copied to you
 
 By default, a NativeProjectReference will not build the native project. It assumes that the project has already been built. To build the project as part of the reference, you can opt-in by setting the `BuildNative="true"` metadata on the `NativeProjectReference`.
 
+#### Referencing CMake targets with CMakeProjectReference
+
+To build and copy the artifacts for particular CMake targets, add a `CMakeProjectReference` item. Its `CMakeTargets` metadata contains the target names to build:
+
+```xml
+<ItemGroup>
+    <CMakeProjectReference Include="path/to/CMake/Project/UsingThisSdk.proj" CMakeTargets="my-library" />
+</ItemGroup>
+```
+
+The target artifacts are read from the CMake File API target descriptions and copied to the consuming project's output folder. Multiple target references to the same CMake SDK project are supported. CMake configure and build executions are serialized per CMake build tree across processes to avoid concurrent native tool access.
+
 ### Generating a raw build script for bringup scenarios
 
 This SDK also supports outputting the script that the SDK runs to configure and build your CMake project. This feature can be used to generate a simple script for use in bringup scenarios where we don't have MSBuild available for the device we are building on. This would enable teams to generate bringup build scripts when needed instead of using bringup-style scripts at all times or having unused bringup scripts that quickly bitrot.
