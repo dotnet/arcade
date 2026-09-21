@@ -44,6 +44,14 @@ jobs:
           $azdoToken = az account get-access-token --resource "499b84ac-1321-427f-aa17-267ca6975798" --query accessToken -o tsv
           if ($LASTEXITCODE -ne 0) { Write-Error "Failed to get AzDO token"; exit 1 }
           Write-Host "##vso[task.setvariable variable=WifAzDoToken;issecret=true]$azdoToken"
+    - template: /eng/common/templates-official/steps/get-github-app-token.yml@self
+      parameters:
+        azureSubscription: "dnceng-arcade-promotion-githubapp"
+        keyVaultName: EngKeyVault
+        appIdSecretName: arcade-promotion-validation-app-app-id
+        appPrivateKeySecretName: arcade-promotion-validation-app-app-private-key
+        installationOwner: dotnet
+        outputVariableName: GitHubAppInstallationToken
     - task: AzureCLI@2
       displayName: Validate promotion with the newly built Arcade
       inputs:
@@ -55,3 +63,4 @@ jobs:
           -BuildId $(BARBuildId)
           -Commit $(Build.SourceVersion)
           -AzdoToken $(WifAzDoToken)
+          -GitHubToken $(GitHubAppInstallationToken)
