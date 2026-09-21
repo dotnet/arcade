@@ -37,6 +37,13 @@ def _add_handler(handler):
     logging.getLogger().addHandler(handler)
 
 
+def _file_handler(path):
+    # Staged logs are uploaded by the Helix client and read back as UTF-8, so
+    # never fall back to the machine's locale encoding (cp1252 on many Windows
+    # images), which would mangle or drop non-ASCII output.
+    return logging.FileHandler(path, encoding="utf-8")
+
+
 def _configure():
     root = logging.getLogger()
     root.setLevel(logging.INFO)
@@ -49,7 +56,7 @@ def _configure():
     if upload_root:
         log_directory = os.path.join(upload_root, ".helix-logs")
         os.makedirs(log_directory, exist_ok=True)
-        _add_handler(logging.FileHandler(os.path.join(log_directory, "scriptrunner.log")))
+        _add_handler(_file_handler(os.path.join(log_directory, "scriptrunner.log")))
 
 
 def get_logger(*args, **kwargs):
@@ -64,7 +71,7 @@ def set_logfile(path):
     try:
         if directory:
             os.makedirs(directory, exist_ok=True)
-        _add_handler(logging.FileHandler(path))
+        _add_handler(_file_handler(path))
     except OSError:
         # An unwritable log destination must not stop the work item from
         # running or from staging its results.
@@ -94,7 +101,7 @@ class SelfUploadingLogFile:
         directory = os.path.dirname(self._path)
         if directory:
             os.makedirs(directory, exist_ok=True)
-        self._handler = logging.FileHandler(self._path)
+        self._handler = _file_handler(self._path)
         _add_handler(self._handler)
         return self
 

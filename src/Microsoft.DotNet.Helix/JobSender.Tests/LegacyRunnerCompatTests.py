@@ -11,6 +11,7 @@ import sys
 import tempfile
 import types
 import unittest
+import unittest.mock
 
 
 SOURCE_COMPATIBILITY_ROOT = (
@@ -149,6 +150,47 @@ class LegacyRunnerCompatTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             azure_storage.UploadClient().upload(io.BytesIO(b"result"), "../result.bin")
+
+    def test_upload_rejects_uncomparable_destination(self):
+        """A name that lands on another Windows drive must not leak a different error.
+
+        os.path.join resets to the drive in the name, and commonpath then fails
+        with its own ValueError instead of the traversal message.
+        """
+        azure_storage = load_module("helix.azure_storage")
+
+        with unittest.mock.patch(
+            "os.path.commonpath",
+            side_effect=ValueError("Paths don't have the same drive"),
+        ):
+            with self.assertRaises(ValueError) as caught:
+                azure_storage.UploadClient().upload(io.BytesIO(b"result"), "result.bin")
+
+        self.assertIn("HELIX_WORKITEM_UPLOAD_ROOT", str(caught.exception))
+
+    def test_upload_stages_text_streams(self):
+        azure_storage = load_module("helix.azure_storage")
+
+        result = azure_storage.UploadClient().upload(
+            io.StringIO("text-results"), "text/results.txt"
+        )
+
+        self.assertEqual(pathlib.Path(result).read_bytes(), b"text-results")
+
+    def test_staged_log_is_written_as_utf8(self):
+        helix_logs = load_module("helix.logs")
+        logger = helix_logs.get_logger("compatibility-encoding")
+
+        logger.info("na\u00efve caf\u00e9 \u2713")
+        for handler in logging.getLogger().handlers:
+            handler.flush()
+
+        log_path = (
+            pathlib.Path(self._temporary_directory.name)
+            / ".helix-logs"
+            / "scriptrunner.log"
+        )
+        self.assertIn("na\u00efve caf\u00e9 \u2713", log_path.read_text(encoding="utf-8"))
 
     def test_logger_stages_legacy_log(self):
         helix_logs = load_module("helix.logs")
