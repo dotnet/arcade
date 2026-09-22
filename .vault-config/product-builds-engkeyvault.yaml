@@ -30,7 +30,7 @@ secrets:
       hasWebhookSecret: false
       hasOAuthSecret: false
 
-  dotnet-publishing-github-app:
+  dotnet-vscode-csharp-publishing:
     type: github-app-secret
     parameters:
       hasPrivateKey: true
