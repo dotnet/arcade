@@ -58,6 +58,8 @@ public class XUnitRunnerTests
             string xmlPath = Path.ChangeExtension(logPath, ".xml");
             string htmlPath = Path.ChangeExtension(logPath, ".html");
             string assemblyPath = Path.Combine(tempDirectory, "test assembly.dll");
+            string runnerTool = windows ? Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe" : "/bin/sh";
+            string runnerArguments = windows ? $"/d /c call \"{runnerPath}\"" : $"\"{runnerPath}\"";
             const string quotedArgument = "quoted & argument";
 
             // Stand in for Mono, without requiring a runtime or an xUnit package.
@@ -87,8 +89,8 @@ public class XUnitRunnerTests
                 new XElement("Project",
                     new XElement("PropertyGroup",
                         new XElement("TestCaptureOutput", captureOutput),
-                        new XElement("MonoTool", windows ? runnerPath : "/bin/sh"),
-                        new XElement("TestRuntimeAdditionalArguments", windows ? "" : $"\"{runnerPath}\""),
+                        new XElement("MonoTool", runnerTool),
+                        new XElement("TestRuntimeAdditionalArguments", runnerArguments),
                         new XElement("NuGetPackageRoot", tempDirectory + Path.DirectorySeparatorChar),
                         new XElement("XUnitVersion", "unused")),
                     new[] { "MakeDir", "Delete", "WriteLinesToFile", "Message", "Exec", "Error" }.Select(task =>
