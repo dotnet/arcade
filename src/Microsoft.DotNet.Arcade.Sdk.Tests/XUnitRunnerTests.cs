@@ -63,6 +63,7 @@ public class XUnitRunnerTests
             const string quotedArgument = "quoted & argument";
 
             // Stand in for Mono, without requiring a runtime or an xUnit package.
+            // Windows-built assemblies also run on Unix; raw strings retain source line endings.
             File.WriteAllText(runnerPath, windows
                 ? $"""
                     @echo off
@@ -82,7 +83,7 @@ public class XUnitRunnerTests
                     printf 'html="%s"\n' "$7"
                     printf 'argument="%s"\n' "$8"
                     exit {exitCode}
-                    """);
+                    """.ReplaceLineEndings("\n"));
 
             string projectPath = Path.Combine(tempDirectory, "Runner.proj");
             new XDocument(
