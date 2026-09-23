@@ -52,9 +52,11 @@ safe-outputs:
       env: *copilot-pool-auth
 
 steps:
-  - name: Require a selected Copilot PAT
+  # Activation cannot see environment secrets; validate again in the agent job.
+  - name: Validate selected Copilot PAT
     shell: bash
     env:
+      <<: *copilot-pool-auth
       COPILOT_PAT_NUMBER: ${{ needs.pat_pool.outputs.pat_number }}
     run: |
       case "${COPILOT_PAT_NUMBER}" in
@@ -64,6 +66,7 @@ steps:
           exit 1
           ;;
       esac
+      bash "${RUNNER_TEMP}/gh-aw/actions/check_oauth_tokens.sh"
 ---
 
 # Build Failure Analyst
