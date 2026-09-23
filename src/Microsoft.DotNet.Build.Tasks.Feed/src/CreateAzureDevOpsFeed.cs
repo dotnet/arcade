@@ -63,7 +63,12 @@ public class CreateAzureDevOpsFeed : MSBuild.Task
 
     public string LocalViewVisibility { get; set; } = "collection";
 
-    public IRetryHandler FeedReadinessRetryHandler = GeneralUtils.CreateDefaultRetryHandler();
+    public IRetryHandler FeedReadinessRetryHandler = new ExponentialRetry
+    {
+        DelayBase = 5,
+        MaxAttempts = 10,
+        MaximumDelay = TimeSpan.FromMinutes(2)
+    };
 
     /// <summary>
     /// Number of characters from the commit SHA prefix that should be included in the feed name.
@@ -147,7 +152,7 @@ public class CreateAzureDevOpsFeed : MSBuild.Task
     {
         HttpStatusCode? lastStatusCode = null;
         Exception lastException = null;
-        IReadOnlyCollection<AzureDevOpsFeedPermission> lastPermissions = Array.Empty<AzureDevOpsFeedPermission>();
+        IReadOnlyCollection<AzureDevOpsFeedPermissionResponse> lastPermissions = Array.Empty<AzureDevOpsFeedPermissionResponse>();
 
         bool success = await retryHandler.RunAsync(async attempt =>
         {
@@ -162,10 +167,11 @@ public class CreateAzureDevOpsFeed : MSBuild.Task
                     string responseBody = await response.Content.ReadAsStringAsync();
                     AzureDevOpsFeedPermissionsResponse permissionsResponse =
                         JsonConvert.DeserializeObject<AzureDevOpsFeedPermissionsResponse>(responseBody);
-                    lastPermissions = permissionsResponse?.Value ?? Array.Empty<AzureDevOpsFeedPermission>();
+                    lastPermissions = permissionsResponse?.Value ?? Array.Empty<AzureDevOpsFeedPermissionResponse>();
 
                     bool allPermissionsEffective = requiredPermissions.All(required =>
                         lastPermissions.Any(actual =>
+                            actual.IsInheritedRole &&
                             string.Equals(actual.IdentityDescriptor, required.IdentityDescriptor, StringComparison.OrdinalIgnoreCase) &&
                             string.Equals(actual.Role, required.Role, StringComparison.OrdinalIgnoreCase)));
 
@@ -179,7 +185,8 @@ public class CreateAzureDevOpsFeed : MSBuild.Task
                     ", ",
                     requiredPermissions.Select(required =>
                     {
-                        AzureDevOpsFeedPermission actual = lastPermissions.FirstOrDefault(permission =>
+                        AzureDevOpsFeedPermissionResponse actual = lastPermissions.FirstOrDefault(permission =>
+                            permission.IsInheritedRole &&
                             string.Equals(permission.IdentityDescriptor, required.IdentityDescriptor, StringComparison.OrdinalIgnoreCase));
                         return $"{required.IdentityDescriptor}: {actual?.Role ?? "missing"}";
                     }));
@@ -375,7 +382,16 @@ public class CreateAzureDevOpsFeed : MSBuild.Task
 
     private sealed class AzureDevOpsFeedPermissionsResponse
     {
-        public IReadOnlyCollection<AzureDevOpsFeedPermission> Value { get; set; }
+        public IReadOnlyCollection<AzureDevOpsFeedPermissionResponse> Value { get; set; }
+    }
+
+    private sealed class AzureDevOpsFeedPermissionResponse
+    {
+        public string IdentityDescriptor { get; set; }
+
+        public string Role { get; set; }
+
+        public bool IsInheritedRole { get; set; }
     }
 
     /// <summary>

@@ -1,11 +1,14 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using AwesomeAssertions;
+using Microsoft.Arcade.Common;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
 using Xunit;
@@ -57,9 +60,9 @@ public class CreateAzureDevOpsFeedTests
     public async Task WaitForFeedPermissionsReadyRetriesUntilContributorRoleIsEffective()
     {
         using var httpClient = FakeHttpClient.WithResponses(
-            CreatePermissionsResponse("none"),
-            CreatePermissionsResponse("reader"),
-            CreatePermissionsResponse("contributor"));
+            CreatePermissionsResponse(("contributor", false), ("none", true)),
+            CreatePermissionsResponse(("contributor", false), ("reader", true)),
+            CreatePermissionsResponse(("contributor", false), ("contributor", true)));
         var retryHandler = new MockRetryHandler(maxAttempts: 3);
         var buildEngine = new MockBuildEngine();
         var task = new CreateAzureDevOpsFeed { BuildEngine = buildEngine };
@@ -84,8 +87,8 @@ public class CreateAzureDevOpsFeedTests
     {
         using var httpClient = FakeHttpClient.WithResponses(
             CreateEmptyPermissionsResponse(),
-            CreatePermissionsResponse("reader"),
-            CreatePermissionsResponse("reader"));
+            CreatePermissionsResponse(("contributor", false), ("reader", true)),
+            CreatePermissionsResponse(("contributor", false), ("reader", true)));
         var retryHandler = new MockRetryHandler(maxAttempts: 3);
         var buildEngine = new MockBuildEngine();
         var task = new CreateAzureDevOpsFeed { BuildEngine = buildEngine };
@@ -105,6 +108,16 @@ public class CreateAzureDevOpsFeedTests
         buildEngine.BuildErrorEvents.Should().ContainSingle();
     }
 
+    [Fact]
+    public void FeedReadinessRetryBudgetAllowsSlowPermissionPropagation()
+    {
+        var task = new CreateAzureDevOpsFeed();
+
+        var retryHandler = task.FeedReadinessRetryHandler.Should().BeOfType<ExponentialRetry>().Subject;
+        retryHandler.MaxAttempts.Should().Be(10);
+        retryHandler.MaximumDelay.Should().Be(TimeSpan.FromMinutes(2));
+    }
+
     private static HttpResponseMessage CreateEmptyPermissionsResponse()
     {
         return new HttpResponseMessage(HttpStatusCode.OK)
@@ -113,10 +126,14 @@ public class CreateAzureDevOpsFeedTests
         };
     }
 
-    private static HttpResponseMessage CreatePermissionsResponse(string role)
+    private static HttpResponseMessage CreatePermissionsResponse(params (string Role, bool IsInheritedRole)[] permissions)
     {
-        string response =
-            $"{{\"value\":[{{\"identityDescriptor\":\"{PublisherDescriptor.Replace("\\", "\\\\")}\",\"role\":\"{role}\"}}]}}";
+        string entries = string.Join(
+            ",",
+            permissions.Select(permission =>
+                $"{{\"identityDescriptor\":\"{PublisherDescriptor.Replace("\\", "\\\\")}\"," +
+                $"\"role\":\"{permission.Role}\",\"isInheritedRole\":{permission.IsInheritedRole.ToString().ToLowerInvariant()}}}"));
+        string response = $"{{\"value\":[{entries}]}}";
         return new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent(response, Encoding.UTF8, "application/json")
