@@ -63,7 +63,7 @@ parameters:
   type: boolean
   default: false
 
-# Azure service connection ID authorized for Helix. Required when
+# Workload identity federation service connection name authorized for Helix. Required when
 # useEntraAuthentication is true.
 - name: azureSubscription
   type: string
@@ -162,16 +162,18 @@ jobs:
       displayName: Initialize Helix Entra authentication
       inputs:
         azureSubscription: ${{ parameters.azureSubscription }}
-        addSpnToEnvironment: true
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
-          if ([string]::IsNullOrWhiteSpace($env:servicePrincipalId) -or [string]::IsNullOrWhiteSpace($env:tenantId)) {
-            throw "The Helix Azure service connection did not provide a service principal or tenant ID."
+          if ([string]::IsNullOrWhiteSpace($env:AZURESUBSCRIPTION_CLIENT_ID) -or
+              [string]::IsNullOrWhiteSpace($env:AZURESUBSCRIPTION_TENANT_ID) -or
+              [string]::IsNullOrWhiteSpace($env:AZURESUBSCRIPTION_SERVICE_CONNECTION_ID)) {
+            throw "The Helix Azure service connection must use workload identity federation; AzureCLI@2 did not provide its client, tenant, and endpoint IDs."
           }
 
-          Write-Host "##vso[task.setvariable variable=HelixEntraClientId]$env:servicePrincipalId"
-          Write-Host "##vso[task.setvariable variable=HelixEntraTenantId]$env:tenantId"
+          Write-Host "##vso[task.setvariable variable=HelixEntraClientId]$env:AZURESUBSCRIPTION_CLIENT_ID"
+          Write-Host "##vso[task.setvariable variable=HelixEntraTenantId]$env:AZURESUBSCRIPTION_TENANT_ID"
+          Write-Host "##vso[task.setvariable variable=HelixEntraServiceConnectionId]$env:AZURESUBSCRIPTION_SERVICE_CONNECTION_ID"
 
   - ${{ if ne(parameters.toolNupkgArtifactName, '') }}:
     - task: DownloadPipelineArtifact@2
@@ -313,4 +315,4 @@ jobs:
       ${{ if eq(parameters.useEntraAuthentication, true) }}:
         AZURESUBSCRIPTION_CLIENT_ID: $(HelixEntraClientId)
         AZURESUBSCRIPTION_TENANT_ID: $(HelixEntraTenantId)
-        AZURESUBSCRIPTION_SERVICE_CONNECTION_ID: ${{ parameters.azureSubscription }}
+        AZURESUBSCRIPTION_SERVICE_CONNECTION_ID: $(HelixEntraServiceConnectionId)
