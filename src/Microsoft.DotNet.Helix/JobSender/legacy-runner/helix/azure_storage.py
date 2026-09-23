@@ -21,23 +21,6 @@ def _write_chunk(output, chunk):
     output.write(chunk)
 
 
-def _is_contained(root, candidate):
-    """Return True when candidate is root or lives beneath it.
-
-    os.path.commonpath would be simpler, but it was added in Python 3.5 and
-    Helix only guarantees Python >= 3.4 on the client (see the Helix SDK readme
-    entry for HELIX_PYTHONPATH), where it would raise AttributeError.
-    """
-    try:
-        relative = os.path.relpath(candidate, root)
-    except ValueError:
-        # Windows raises when the paths have no common drive, which a name
-        # carrying a drive prefix produces. Such a name is not under the root.
-        return False
-
-    return relative != os.pardir and not relative.startswith(os.pardir + os.sep)
-
-
 def _destination(name):
     upload_root = os.environ.get("HELIX_WORKITEM_UPLOAD_ROOT")
     if not upload_root:
@@ -47,7 +30,16 @@ def _destination(name):
     normalized_name = name.replace("\\", "/").lstrip("/")
     destination = os.path.abspath(os.path.join(upload_root, *normalized_name.split("/")))
 
-    if not _is_contained(upload_root, destination):
+    # commonpath raises ValueError when the paths cannot be compared at all,
+    # which on Windows happens when a name carries a drive prefix and
+    # os.path.join resets to that drive. Such a name is invalid here too, so
+    # report it as traversal instead of leaking a different error.
+    try:
+        contained = os.path.commonpath([upload_root, destination]) == upload_root
+    except ValueError:
+        contained = False
+
+    if not contained:
         raise ValueError("Upload name must remain under HELIX_WORKITEM_UPLOAD_ROOT")
 
     os.makedirs(os.path.dirname(destination), exist_ok=True)

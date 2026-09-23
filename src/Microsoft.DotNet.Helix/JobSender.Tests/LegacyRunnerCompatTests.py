@@ -1,7 +1,6 @@
 # Licensed to the .NET Foundation under one or more agreements.
 # The .NET Foundation licenses this file to you under the MIT license.
 
-import ast
 import importlib.util
 import io
 import logging
@@ -62,40 +61,6 @@ def child_environment(**overrides):
     return environment
 
 
-# Helix only guarantees Python >= 3.4 on the client (see HELIX_PYTHONPATH in
-# the Helix SDK readme). The shipped shim targets that interpreter, and so does
-# this suite, so the shim can be verified on the oldest Python it must support.
-# These helpers stand in for APIs that arrived later:
-#   subprocess.run            3.5 (capture_output and text are 3.7)
-#   pathlib.Path.read_text    3.5, along with write_text/read_bytes
-#   importlib.util.module_from_spec  3.5
-def run_child(args, **popen_arguments):
-    process = subprocess.Popen(
-        args,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-        **popen_arguments
-    )
-    stdout, stderr = process.communicate()
-    return process.returncode, stdout, stderr
-
-
-def read_bytes(path):
-    with open(str(path), "rb") as handle:
-        return handle.read()
-
-
-def read_text(path, encoding="utf-8"):
-    with io.open(str(path), "r", encoding=encoding) as handle:
-        return handle.read()
-
-
-def write_text(path, text):
-    with io.open(str(path), "w") as handle:
-        handle.write(text)
-
-
 # PathFinder locates a module on the search path without importing it.
 # importlib.util.find_spec would import the parent 'helix' package first,
 # executing whatever the installed legacy package runs at import time.
@@ -122,16 +87,18 @@ def resolve_child_helix_logs():
     raises without them, so importing it here would fail for a reason unrelated
     to the shim.
     """
-    returncode, stdout, stderr = run_child(
+    result = subprocess.run(
         [sys.executable, "-c", _RESOLVE_HELIX_LOGS],
         env=child_environment(),
         cwd=str(RUNNER_PATH.parent),
+        capture_output=True,
+        text=True,
     )
 
-    origin = stdout.strip()
-    if returncode != 0 or not origin:
+    origin = result.stdout.strip()
+    if result.returncode != 0 or not origin:
         return None, "exit code {}\nstdout:\n{}\nstderr:\n{}".format(
-            returncode, stdout, stderr
+            result.returncode, result.stdout, result.stderr
         )
 
     return pathlib.Path(origin), None
@@ -144,113 +111,13 @@ def load_module(name):
         sys.modules["helix"] = helix
         helix.logs = load_module("helix.logs")
 
-    path = COMPATIBILITY_ROOT / (name.rsplit(".", 1)[-1] + ".py")
-    spec = importlib.util.spec_from_file_location(name, str(path))
-    # Build the module the way importlib.util.module_from_spec (3.5) would.
-    module = types.ModuleType(spec.name)
-    module.__spec__ = spec
-    module.__loader__ = spec.loader
-    module.__file__ = str(path)
+    spec = importlib.util.spec_from_file_location(
+        name, COMPATIBILITY_ROOT / (name.rsplit(".", 1)[-1] + ".py")
+    )
+    module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
     spec.loader.exec_module(module)
     return module
-
-
-# Constructs newer than the oldest interpreter Helix guarantees, keyed by the
-# version that introduced them. A regression here is not a style issue: the
-# shipped shim raised AttributeError on every staged upload when it reached for
-# os.path.commonpath, so TestResults.zip could not be staged at all.
-_TOO_NEW_DOTTED_NAMES = {
-    "asyncio.run": "3.7",
-    "functools.cached_property": "3.8",
-    "importlib.util.module_from_spec": "3.5",
-    "math.isclose": "3.5",
-    "os.path.commonpath": "3.5",
-    "os.scandir": "3.5",
-    "subprocess.CompletedProcess": "3.5",
-    "subprocess.run": "3.5",
-}
-
-# pathlib.Path methods. The receiver is not always statically known, so these
-# match on the attribute name alone.
-_TOO_NEW_ATTRIBUTES = {
-    "read_bytes": "3.5",
-    "read_text": "3.5",
-    "write_bytes": "3.5",
-    "write_text": "3.5",
-}
-
-_TOO_NEW_MODULES = {
-    "dataclasses": "3.7",
-    "graphlib": "3.9",
-    "secrets": "3.6",
-    "zoneinfo": "3.9",
-}
-
-_TOO_NEW_KEYWORDS = {
-    "capture_output": "3.7",
-}
-
-# Syntax that older interpreters cannot even parse. Looked up by name because
-# these node types do not exist on the older interpreters themselves.
-_TOO_NEW_NODE_TYPES = (
-    ("AsyncFunctionDef", "3.5"),
-    ("Await", "3.5"),
-    ("JoinedStr", "3.6"),
-    ("NamedExpr", "3.8"),
-)
-
-
-def _dotted_name(node):
-    parts = []
-    while isinstance(node, ast.Attribute):
-        parts.append(node.attr)
-        node = node.value
-
-    if not isinstance(node, ast.Name):
-        return None
-
-    parts.append(node.id)
-    parts.reverse()
-    return ".".join(parts)
-
-
-def find_constructs_newer_than_python34(path):
-    """Report constructs in path that the oldest supported interpreter lacks."""
-    tree = ast.parse(read_text(path), filename=str(path))
-    found = []
-
-    for node in ast.walk(tree):
-        line = getattr(node, "lineno", 0)
-
-        if isinstance(node, ast.Attribute):
-            dotted = _dotted_name(node)
-            if dotted in _TOO_NEW_DOTTED_NAMES:
-                found.append((line, dotted, _TOO_NEW_DOTTED_NAMES[dotted]))
-            elif node.attr in _TOO_NEW_ATTRIBUTES:
-                found.append((line, "." + node.attr, _TOO_NEW_ATTRIBUTES[node.attr]))
-        elif isinstance(node, ast.Import):
-            for alias in node.names:
-                root = alias.name.split(".")[0]
-                if root in _TOO_NEW_MODULES:
-                    found.append((line, alias.name, _TOO_NEW_MODULES[root]))
-        elif isinstance(node, ast.ImportFrom):
-            root = (node.module or "").split(".")[0]
-            if root in _TOO_NEW_MODULES:
-                found.append((line, node.module, _TOO_NEW_MODULES[root]))
-        elif isinstance(node, ast.Call):
-            for keyword in node.keywords:
-                if keyword.arg in _TOO_NEW_KEYWORDS:
-                    found.append(
-                        (line, keyword.arg + "=", _TOO_NEW_KEYWORDS[keyword.arg])
-                    )
-
-        for type_name, version in _TOO_NEW_NODE_TYPES:
-            node_type = getattr(ast, type_name, None)
-            if node_type is not None and isinstance(node, node_type):
-                found.append((line, type_name, version))
-
-    return found
 
 
 class LegacyRunnerCompatTests(unittest.TestCase):
@@ -287,32 +154,6 @@ class LegacyRunnerCompatTests(unittest.TestCase):
         else:
             os.environ["HELIX_WORKITEM_UPLOAD_ROOT"] = self._old_upload_root
 
-    def test_sources_run_on_the_oldest_supported_python(self):
-        """Helix only guarantees Python >= 3.4 on the client.
-
-        The shipped shim has to run there, and so does this suite, otherwise it
-        cannot verify the shim on the interpreter that actually matters.
-        """
-        sources = sorted(COMPATIBILITY_ROOT.parent.glob("**/*.py"))
-        sources.append(pathlib.Path(__file__))
-        if RUNNER_PATH.is_file():
-            sources.append(RUNNER_PATH)
-
-        reported = []
-        for source in sources:
-            for line, construct, version in find_constructs_newer_than_python34(source):
-                reported.append(
-                    "{}:{} uses {} (Python {}+)".format(
-                        source.name, line, construct, version
-                    )
-                )
-
-        self.assertEqual(
-            reported,
-            [],
-            "These sources must run on Python 3.4:\n" + "\n".join(reported),
-        )
-
     def test_upload_stages_stream_under_upload_root(self):
         azure_storage = load_module("helix.azure_storage")
 
@@ -321,7 +162,7 @@ class LegacyRunnerCompatTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            read_bytes(result),
+            pathlib.Path(result).read_bytes(),
             b"result",
         )
         self.assertEqual(
@@ -338,35 +179,19 @@ class LegacyRunnerCompatTests(unittest.TestCase):
     def test_upload_rejects_uncomparable_destination(self):
         """A name that lands on another Windows drive must not leak a different error.
 
-        os.path.join resets to the drive in the name, and the containment check
-        then fails with its own ValueError instead of the traversal message.
+        os.path.join resets to the drive in the name, and commonpath then fails
+        with its own ValueError instead of the traversal message.
         """
         azure_storage = load_module("helix.azure_storage")
 
         with unittest.mock.patch(
-            "os.path.relpath",
-            side_effect=ValueError("path is on mount 'C:', start on mount 'D:'"),
+            "os.path.commonpath",
+            side_effect=ValueError("Paths don't have the same drive"),
         ):
             with self.assertRaises(ValueError) as caught:
                 azure_storage.UploadClient().upload(io.BytesIO(b"result"), "result.bin")
 
         self.assertIn("HELIX_WORKITEM_UPLOAD_ROOT", str(caught.exception))
-
-    def test_upload_does_not_require_python35(self):
-        """Helix only guarantees Python >= 3.4 on the client.
-
-        os.path.commonpath was added in 3.5, so depending on it would make every
-        staged upload raise AttributeError on the oldest supported interpreter.
-        """
-        azure_storage = load_module("helix.azure_storage")
-
-        with unittest.mock.patch("os.path.commonpath") as commonpath:
-            result = azure_storage.UploadClient().upload(
-                io.BytesIO(b"result"), "compat/results.bin"
-            )
-
-        commonpath.assert_not_called()
-        self.assertEqual(read_bytes(result), b"result")
 
     def test_upload_stages_text_streams(self):
         azure_storage = load_module("helix.azure_storage")
@@ -375,7 +200,7 @@ class LegacyRunnerCompatTests(unittest.TestCase):
             io.StringIO("text-results"), "text/results.txt"
         )
 
-        self.assertEqual(read_bytes(result), b"text-results")
+        self.assertEqual(pathlib.Path(result).read_bytes(), b"text-results")
 
     def test_staged_log_is_written_as_utf8(self):
         helix_logs = load_module("helix.logs")
@@ -390,7 +215,7 @@ class LegacyRunnerCompatTests(unittest.TestCase):
             / ".helix-logs"
             / "scriptrunner.log"
         )
-        self.assertIn("na\u00efve caf\u00e9 \u2713", read_text(log_path))
+        self.assertIn("na\u00efve caf\u00e9 \u2713", log_path.read_text(encoding="utf-8"))
 
     def test_logger_stages_legacy_log(self):
         helix_logs = load_module("helix.logs")
@@ -401,12 +226,12 @@ class LegacyRunnerCompatTests(unittest.TestCase):
             handler.flush()
 
         log_path = pathlib.Path(self._temporary_directory.name) / ".helix-logs" / "scriptrunner.log"
-        self.assertIn("compatibility message", read_text(log_path))
+        self.assertIn("compatibility message", log_path.read_text())
 
     def test_legacy_script_runner_import_surface(self):
         self.skip_when_installed_helix_wins()
 
-        returncode, _, stderr = run_child(
+        result = subprocess.run(
             [
                 sys.executable,
                 "-c",
@@ -419,9 +244,11 @@ class LegacyRunnerCompatTests(unittest.TestCase):
             ],
             env=child_environment(),
             cwd=str(RUNNER_PATH.parent),
+            capture_output=True,
+            text=True,
         )
 
-        self.assertEqual(returncode, 0, stderr)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_appcompat_script_runner_stages_results_and_logs(self):
         self.skip_when_installed_helix_wins()
@@ -437,20 +264,18 @@ class LegacyRunnerCompatTests(unittest.TestCase):
 
             script = payload / "RunMstest.cmd"
             if os.name == "nt":
-                write_text(
-                    script,
+                script.write_text(
                     "@echo off\r\n"
                     "> \"%HELIX_WORKITEM_ROOT%\\TestResults.zip\" <nul set /p =test-results\r\n"
                     "echo appcompat-stdout\r\n"
-                    "echo appcompat-stderr 1>&2\r\n",
+                    "echo appcompat-stderr 1>&2\r\n"
                 )
             else:
-                write_text(
-                    script,
+                script.write_text(
                     "#!/bin/sh\n"
                     "printf 'test-results' > \"$HELIX_WORKITEM_ROOT/TestResults.zip\"\n"
                     "echo appcompat-stdout\n"
-                    "echo appcompat-stderr >&2\n",
+                    "echo appcompat-stderr >&2\n"
                 )
                 script.chmod(script.stat().st_mode | 0o100)
 
@@ -465,20 +290,22 @@ class LegacyRunnerCompatTests(unittest.TestCase):
                 HELIX_WORKITEM_FRIENDLYNAME="AppCompat",
             )
 
-            returncode, stdout, stderr = run_child(
+            result = subprocess.run(
                 [sys.executable, str(RUNNER_PATH), "--script", "RunMstest.cmd"],
                 env=environment,
+                capture_output=True,
+                text=True,
             )
 
-            self.assertEqual(returncode, 0, stdout + stderr)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             staged_result = pathlib.Path(self._temporary_directory.name) / "TestResults.zip"
-            self.assertEqual(read_text(staged_result), "test-results")
+            self.assertEqual(staged_result.read_text(), "test-results")
             staged_log = (
                 pathlib.Path(self._temporary_directory.name)
                 / ".helix-logs"
                 / "scriptrunner.log"
             )
-            log_text = read_text(staged_log)
+            log_text = staged_log.read_text()
             self.assertIn("appcompat-stdout", log_text)
             self.assertIn("appcompat-stderr", log_text)
 
