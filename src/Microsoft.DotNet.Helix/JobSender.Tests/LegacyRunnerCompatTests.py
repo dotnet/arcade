@@ -62,24 +62,40 @@ def child_environment(**overrides):
 
 
 def resolve_child_helix_logs():
-    """Return the helix.logs file a child process actually imports.
+    """Return the helix.logs file a child process would load, and any failure text.
 
     A regular `helix` package installed on the machine wins over this
     namespace-package shim even when the shim comes first on PYTHONPATH. That
     precedence is intentional so legacy queues keep their installed package.
+
+    This resolves the module without executing it. The installed legacy package
+    reads HELIX_CONFIG_ROOT and HELIX_LOG_ROOT at import time and raises without
+    them, so actually importing it here would fail for a reason unrelated to the
+    shim.
     """
     result = subprocess.run(
-        [sys.executable, "-c", "import helix.logs; print(helix.logs.__file__)"],
+        [
+            sys.executable,
+            "-c",
+            (
+                "import importlib.util; "
+                "spec = importlib.util.find_spec('helix.logs'); "
+                "print(spec.origin if spec else '')"
+            ),
+        ],
         env=child_environment(),
         cwd=str(RUNNER_PATH.parent),
         capture_output=True,
         text=True,
     )
 
-    if result.returncode != 0 or not result.stdout.strip():
-        return None
+    origin = result.stdout.strip()
+    if result.returncode != 0 or not origin:
+        return None, "exit code {}\nstdout:\n{}\nstderr:\n{}".format(
+            result.returncode, result.stdout, result.stderr
+        )
 
-    return pathlib.Path(result.stdout.strip())
+    return pathlib.Path(origin), None
 
 
 def load_module(name):
@@ -106,15 +122,18 @@ class LegacyRunnerCompatTests(unittest.TestCase):
         os.environ["HELIX_WORKITEM_UPLOAD_ROOT"] = self._temporary_directory.name
 
     def skip_when_installed_helix_wins(self):
-        imported = resolve_child_helix_logs()
-        if imported is None:
-            self.fail("A child process could not import helix.logs from the compatibility shim.")
+        resolved, failure = resolve_child_helix_logs()
+        if resolved is None:
+            self.fail(
+                "A child process could not resolve helix.logs from the compatibility "
+                "shim.\n{}".format(failure)
+            )
 
-        if imported.resolve() != (COMPATIBILITY_ROOT / "logs.py").resolve():
+        if resolved.resolve() != (COMPATIBILITY_ROOT / "logs.py").resolve():
             self.skipTest(
                 "An installed legacy 'helix' package at {} takes precedence over the "
                 "compatibility shim. That is the intended behavior on legacy Helix "
-                "queues, so the shim's runner behavior cannot be exercised here.".format(imported)
+                "queues, so the shim's runner behavior cannot be exercised here.".format(resolved)
             )
 
     def tearDown(self):
