@@ -226,12 +226,6 @@ jobs:
       displayName: Restore Helix Job Monitor
 
   - ${{ if eq(parameters.useEntraAuthentication, true) }}:
-    - bash: |
-        echo "##vso[task.setvariable variable=HelixAzdoAccessToken;issecret=true]$SYSTEM_ACCESSTOKEN"
-      displayName: Capture Azure DevOps access token
-      env:
-        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-
     - task: AzureCLI@2
       displayName: Monitor Helix Jobs
       inputs:
@@ -241,10 +235,6 @@ jobs:
         scriptLocation: inlineScript
         inlineScript: |
           set -euo pipefail
-
-          # AzureCLI@2 replaces SYSTEM_ACCESSTOKEN with the service connection token.
-          # Restore the pipeline OAuth token captured before this task started.
-          export SYSTEM_ACCESSTOKEN="$HELIX_AZDO_ACCESSTOKEN"
 
           toolArgs=(
             --helix-base-uri              '${{ parameters.helixBaseUri }}'
@@ -298,7 +288,7 @@ jobs:
             ./eng/common/dotnet.sh tool run '${{ parameters.toolCommand }}' -- "${toolArgs[@]}"
           fi
       env:
-        HELIX_AZDO_ACCESSTOKEN: $(HelixAzdoAccessToken)
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
   - ${{ if eq(parameters.useEntraAuthentication, false) }}:
     - bash: |
