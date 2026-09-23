@@ -236,6 +236,10 @@ jobs:
         inlineScript: |
           set -euo pipefail
 
+          # AzureCLI@2 replaces SYSTEM_ACCESSTOKEN with the service connection token.
+          # Restore the pipeline OAuth token used for Azure DevOps timeline and test APIs.
+          export SYSTEM_ACCESSTOKEN='$(System.AccessToken)'
+
           toolArgs=(
             --helix-base-uri              '${{ parameters.helixBaseUri }}'
             --use-entra-authentication    '${{ parameters.useEntraAuthentication }}'
