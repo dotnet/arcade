@@ -61,6 +61,20 @@ def child_environment(**overrides):
     return environment
 
 
+# PathFinder locates a module on the search path without importing it.
+# importlib.util.find_spec would import the parent 'helix' package first,
+# executing whatever the installed legacy package runs at import time.
+_RESOLVE_HELIX_LOGS = """
+import sys
+from importlib.machinery import PathFinder
+
+package = PathFinder.find_spec('helix', sys.path)
+locations = list(package.submodule_search_locations or []) if package else []
+module = PathFinder.find_spec('helix.logs', locations) if locations else None
+print(module.origin if module and module.origin else '')
+"""
+
+
 def resolve_child_helix_logs():
     """Return the helix.logs file a child process would load, and any failure text.
 
@@ -68,21 +82,13 @@ def resolve_child_helix_logs():
     namespace-package shim even when the shim comes first on PYTHONPATH. That
     precedence is intentional so legacy queues keep their installed package.
 
-    This resolves the module without executing it. The installed legacy package
-    reads HELIX_CONFIG_ROOT and HELIX_LOG_ROOT at import time and raises without
-    them, so actually importing it here would fail for a reason unrelated to the
-    shim.
+    This resolves the module without importing anything. The installed legacy
+    package reads HELIX_CONFIG_ROOT and HELIX_LOG_ROOT at import time and
+    raises without them, so importing it here would fail for a reason unrelated
+    to the shim.
     """
     result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            (
-                "import importlib.util; "
-                "spec = importlib.util.find_spec('helix.logs'); "
-                "print(spec.origin if spec else '')"
-            ),
-        ],
+        [sys.executable, "-c", _RESOLVE_HELIX_LOGS],
         env=child_environment(),
         cwd=str(RUNNER_PATH.parent),
         capture_output=True,
@@ -173,19 +179,35 @@ class LegacyRunnerCompatTests(unittest.TestCase):
     def test_upload_rejects_uncomparable_destination(self):
         """A name that lands on another Windows drive must not leak a different error.
 
-        os.path.join resets to the drive in the name, and commonpath then fails
-        with its own ValueError instead of the traversal message.
+        os.path.join resets to the drive in the name, and the containment check
+        then fails with its own ValueError instead of the traversal message.
         """
         azure_storage = load_module("helix.azure_storage")
 
         with unittest.mock.patch(
-            "os.path.commonpath",
-            side_effect=ValueError("Paths don't have the same drive"),
+            "os.path.relpath",
+            side_effect=ValueError("path is on mount 'C:', start on mount 'D:'"),
         ):
             with self.assertRaises(ValueError) as caught:
                 azure_storage.UploadClient().upload(io.BytesIO(b"result"), "result.bin")
 
         self.assertIn("HELIX_WORKITEM_UPLOAD_ROOT", str(caught.exception))
+
+    def test_upload_does_not_require_python35(self):
+        """Helix only guarantees Python >= 3.4 on the client.
+
+        os.path.commonpath was added in 3.5, so depending on it would make every
+        staged upload raise AttributeError on the oldest supported interpreter.
+        """
+        azure_storage = load_module("helix.azure_storage")
+
+        with unittest.mock.patch("os.path.commonpath") as commonpath:
+            result = azure_storage.UploadClient().upload(
+                io.BytesIO(b"result"), "compat/results.bin"
+            )
+
+        commonpath.assert_not_called()
+        self.assertEqual(pathlib.Path(result).read_bytes(), b"result")
 
     def test_upload_stages_text_streams(self):
         azure_storage = load_module("helix.azure_storage")
