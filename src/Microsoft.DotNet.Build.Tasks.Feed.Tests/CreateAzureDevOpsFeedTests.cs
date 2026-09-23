@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using AwesomeAssertions;
 using Microsoft.Arcade.Test.Common;
@@ -14,6 +15,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests;
 public class CreateAzureDevOpsFeedTests
 {
     private const string FeedUrl = "https://fakefeed.azure.com/nuget/v3/index.json";
+    private const string PermissionsUrl = "https://fakefeed.azure.com/_apis/packaging/feeds/test/permissions";
+    private const string PublisherDescriptor = "Microsoft.VisualStudio.Services.Claims.AadServicePrincipal;tenant\\publisher";
 
     [Fact]
     public async Task WaitForFeedReadyRetriesUntilPublishingCredentialCanReadFeed()
@@ -48,5 +51,75 @@ public class CreateAzureDevOpsFeedTests
         result.Should().BeFalse();
         retryHandler.ActualAttempts.Should().Be(2);
         buildEngine.BuildErrorEvents.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task WaitForFeedPermissionsReadyRetriesUntilContributorRoleIsEffective()
+    {
+        using var httpClient = FakeHttpClient.WithResponses(
+            CreatePermissionsResponse("none"),
+            CreatePermissionsResponse("reader"),
+            CreatePermissionsResponse("contributor"));
+        var retryHandler = new MockRetryHandler(maxAttempts: 3);
+        var buildEngine = new MockBuildEngine();
+        var task = new CreateAzureDevOpsFeed { BuildEngine = buildEngine };
+        var requiredPermissions = new[]
+        {
+            new AzureDevOpsFeedPermission(PublisherDescriptor, "contributor")
+        };
+
+        bool result = await task.WaitForFeedPermissionsReadyAsync(
+            PermissionsUrl,
+            requiredPermissions,
+            httpClient,
+            retryHandler);
+
+        result.Should().BeTrue();
+        retryHandler.ActualAttempts.Should().Be(3);
+        buildEngine.BuildErrorEvents.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task WaitForFeedPermissionsReadyFailsWhenPublisherRemainsReadOnly()
+    {
+        using var httpClient = FakeHttpClient.WithResponses(
+            CreateEmptyPermissionsResponse(),
+            CreatePermissionsResponse("reader"),
+            CreatePermissionsResponse("reader"));
+        var retryHandler = new MockRetryHandler(maxAttempts: 3);
+        var buildEngine = new MockBuildEngine();
+        var task = new CreateAzureDevOpsFeed { BuildEngine = buildEngine };
+        var requiredPermissions = new[]
+        {
+            new AzureDevOpsFeedPermission(PublisherDescriptor, "contributor")
+        };
+
+        bool result = await task.WaitForFeedPermissionsReadyAsync(
+            PermissionsUrl,
+            requiredPermissions,
+            httpClient,
+            retryHandler);
+
+        result.Should().BeFalse();
+        retryHandler.ActualAttempts.Should().Be(3);
+        buildEngine.BuildErrorEvents.Should().ContainSingle();
+    }
+
+    private static HttpResponseMessage CreateEmptyPermissionsResponse()
+    {
+        return new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("{\"value\":[]}", Encoding.UTF8, "application/json")
+        };
+    }
+
+    private static HttpResponseMessage CreatePermissionsResponse(string role)
+    {
+        string response =
+            $"{{\"value\":[{{\"identityDescriptor\":\"{PublisherDescriptor.Replace("\\", "\\\\")}\",\"role\":\"{role}\"}}]}}";
+        return new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(response, Encoding.UTF8, "application/json")
+        };
     }
 }
