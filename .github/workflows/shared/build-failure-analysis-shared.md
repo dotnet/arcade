@@ -15,7 +15,9 @@ description: "Shared prompt and authentication for build-failure-analysis workfl
 # same COPILOT_PAT_0..9 secrets. An empty pool fails before agent execution;
 # never fall back to the legacy COPILOT_GITHUB_TOKEN or the Actions token.
 # Environment is not importable: each caller must also declare
-# environment: copilot-pat-pool. Compile both with gh-aw v0.86.2.
+# environment: copilot-pat-pool. Compile both with gh-aw v0.86.2 and:
+# --action-mode action --action-tag 6aab9e5b5c91c615506061f09bedd81a23babe3c
+# Release-tag compilation prunes setup pins still used by other workflow locks.
 imports:
   - uses: pat_pool.md
     with:
