@@ -51,22 +51,45 @@ safe-outputs:
       # An explicit detection engine must also receive the credential override.
       env: *copilot-pool-auth
 
-steps:
-  # Activation cannot see environment secrets; validate again in the agent job.
-  - name: Validate selected Copilot PAT
-    shell: bash
-    env:
-      <<: *copilot-pool-auth
-      COPILOT_PAT_NUMBER: ${{ needs.pat_pool.outputs.pat_number }}
-    run: |
-      case "${COPILOT_PAT_NUMBER}" in
-        [0-9]) ;;
-        *)
-          echo "::error::No Copilot PAT was selected. Configure COPILOT_PAT_0..9 in the copilot-pat-pool environment."
-          exit 1
-          ;;
-      esac
-      bash "${RUNNER_TEMP}/gh-aw/actions/check_oauth_tokens.sh"
+jobs:
+  # Activation cannot see environment secrets. Validate before either consumer;
+  # detection's always() steps would otherwise ignore a failed local pre-step.
+  validate_copilot_pat:
+    needs: [pat_pool]
+    runs-on: ubuntu-slim
+    environment: copilot-pat-pool
+    permissions:
+      contents: read
+    steps:
+      - name: Setup Scripts
+        uses: github/gh-aw-actions/setup@6aab9e5b5c91c615506061f09bedd81a23babe3c # v0.86.2
+        with:
+          destination: ${{ runner.temp }}/gh-aw/actions
+          job-name: ${{ github.job }}
+      - name: Validate selected Copilot PAT
+        shell: bash
+        env:
+          <<: *copilot-pool-auth
+          COPILOT_PAT_NUMBER: ${{ needs.pat_pool.outputs.pat_number }}
+        run: |
+          case "${COPILOT_PAT_NUMBER}" in
+            [0-9]) ;;
+            *)
+              echo "::error::No Copilot PAT was selected. Configure COPILOT_PAT_0..9 in the copilot-pat-pool environment."
+              exit 1
+              ;;
+          esac
+          if [[ ! "$COPILOT_GITHUB_TOKEN" =~ [^[:space:]] ]]; then
+            echo "::error::The selected Copilot PAT is empty in the copilot-pat-pool environment."
+            exit 1
+          fi
+          bash "${RUNNER_TEMP}/gh-aw/actions/check_oauth_tokens.sh"
+  agent:
+    needs: [validate_copilot_pat]
+    if: needs.validate_copilot_pat.result == 'success'
+  detection:
+    needs: [validate_copilot_pat]
+    if: needs.validate_copilot_pat.result == 'success'
 ---
 
 # Build Failure Analyst
