@@ -373,7 +373,16 @@ public class CreateAzureDevOpsFeed : MSBuild.Task
                 }
             }
 
-            Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created successfully and is ready for publishing!");
+            if (publishingPermissions.Count > 0)
+            {
+                Log.LogMessage(
+                    MessageImportance.High,
+                    $"Feed '{TargetFeedURL}' publishing permissions are effective. Package uploads will remain retryable while authorization finishes propagating.");
+            }
+            else
+            {
+                Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created successfully and is ready for publishing!");
+            }
         }
         catch (Exception e)
         {
