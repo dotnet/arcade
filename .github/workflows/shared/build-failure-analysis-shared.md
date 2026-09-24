@@ -91,7 +91,10 @@ jobs:
     if: needs.validate_copilot_pat.result == 'success'
   detection:
     needs: [validate_copilot_pat]
-    if: needs.validate_copilot_pat.result == 'success'
+    # The compiler retains always(), allowing failed agents with partial output.
+    if: >-
+      needs.validate_copilot_pat.result == 'success' &&
+      (needs.agent.outputs.output_types != '' || needs.agent.outputs.has_patch == 'true')
 ---
 
 # Build Failure Analyst
