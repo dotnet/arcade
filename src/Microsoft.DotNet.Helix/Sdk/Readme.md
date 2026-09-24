@@ -91,7 +91,6 @@ Useful parameters:
 - `pollingIntervalSeconds`: how often the job monitor checks for new completed jobs.
 - `timeoutInMinutes`: overall timeout for the job monitor.
 - `continueOnError`: allow the pipeline to continue when the monitor job fails. Defaults to `false`.
-- `useFullyQualifiedTestName`: report fully qualified test names to Azure DevOps (see [Fully qualified test names](#fully-qualified-test-names)). Defaults to `false`.
 
 Implementation and semantic design documents are indexed at
 [JobMonitor/Design/README.md](../JobMonitor/Design/README.md).
@@ -168,22 +167,12 @@ monitor template. The equivalent tool switch is `--allow-no-helix-jobs`.
 
 #### Fully qualified test names
 
-By default the monitor reports each test to Azure DevOps using the framework-provided display name
-as both the visible title and the stable `automatedTestName`. That is a problem for some frameworks:
-MSTest reports only the method name (so `Tests.ClassA.MyTest` and `Tests.ClassB.MyTest` both show up
-as `MyTest`), and xUnit tests using a custom `[Fact(DisplayName = "...")]` get an arbitrary,
-non-unique name that is unstable over time.
+The monitor reports each test to Azure DevOps using its fully qualified name
+(`Namespace.Type.Method`) as the stable `automatedTestName`. This avoids identity problems for
+frameworks such as MSTest, which reports only the method name, and xUnit tests using a custom
+`[Fact(DisplayName = "...")]`, whose display names may be non-unique or change over time.
 
-Set the `useFullyQualifiedTestName` parameter to opt in to fully qualified reporting:
-
-```yaml
-jobs:
-- template: /eng/common/core-templates/job/helix-job-monitor.yml@self
-  parameters:
-    useFullyQualifiedTestName: true
-```
-
-When enabled, the monitor:
+The monitor:
 
 - uses the fully qualified name (`Namespace.Type.Method`) as the stable `automatedTestName`, so a test
   keeps a consistent identity in the AzDO **Tests** tab and history even when its display name changes,
@@ -194,10 +183,6 @@ When enabled, the monitor:
   - `Namespace.Type.Method ("net10.0")` for parameterized rows, keeping the arguments without
     duplicating the method name,
   - `Namespace.Type.Method (My custom name)` when a custom display name adds information.
-
-This is opt-in because switching an existing pipeline changes AzDO test identity and how titles are
-displayed. The equivalent tool flag is `--use-fully-qualified-test-name`, and it can also be enabled
-by setting the `HELIX_USE_FULLY_QUALIFIED_TEST_NAME` environment variable to `true`.
 
 #### Adding the `microsoft.dotnet.helix.jobmonitor` package
 

@@ -22,37 +22,18 @@ public class ResultAggregatorTests
     }
 
     [Fact]
-    public void Aggregate_WithFullyQualifiedGrouping_SeparatesSameMethodNameAcrossClasses()
+    public void Aggregate_SeparatesSameMethodNameAcrossClasses()
     {
         // MSTest reports the display name as just the method name, so both tests look like "MyMethod".
         TestResult a = Test("Ns.ClassA", "MyMethod", "MyMethod");
         TestResult b = Test("Ns.ClassB", "MyMethod", "MyMethod");
 
         IReadOnlyList<AggregatedResult> aggregate =
-            new ResultAggregator().Aggregate([[a, b]], useFullyQualifiedName: true);
+            new ResultAggregator().Aggregate([[a, b]]);
 
         Assert.Equal(2, aggregate.Count);
         Assert.Contains(aggregate, r => r.FullyQualifiedName == "Ns.ClassA.MyMethod");
         Assert.Contains(aggregate, r => r.FullyQualifiedName == "Ns.ClassB.MyMethod");
-    }
-
-    [Fact]
-    public void Aggregate_WithLegacyGrouping_CollapsesSameDisplayNameAcrossClasses()
-    {
-        // Documents the pre-existing (opt-out) behavior: grouping by display name merges
-        // same-named methods from different classes into a single data-driven result.
-        TestResult a = Test("Ns.ClassA", "MyMethod", "MyMethod");
-        TestResult b = Test("Ns.ClassB", "MyMethod", "MyMethod");
-
-        IReadOnlyList<AggregatedResult> aggregate =
-            new ResultAggregator().Aggregate([[a, b]], useFullyQualifiedName: false);
-
-        AggregatedResult merged = Assert.Single(aggregate);
-
-        // The merged group represents multiple unrelated tests, so its FullyQualifiedName must
-        // not be borrowed from an arbitrary member (which would be order-dependent). It falls
-        // back to the display-based group key instead.
-        Assert.Equal("MyMethod", merged.FullyQualifiedName);
     }
 
     [Fact]
@@ -62,7 +43,7 @@ public class ResultAggregatorTests
         TestResult net8 = Test("Ns.NativeAotTests", "WillRunWithExitCodeZero", "WillRunWithExitCodeZero (\"net8.0\")");
 
         AggregatedResult result = Assert.Single(
-            new ResultAggregator().Aggregate([[net10, net8]], useFullyQualifiedName: true));
+            new ResultAggregator().Aggregate([[net10, net8]]));
 
         Assert.Equal("Ns.NativeAotTests.WillRunWithExitCodeZero", result.FullyQualifiedName);
         Assert.Equal(AggregationType.DataDriven, result.AggregationType);

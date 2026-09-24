@@ -212,7 +212,7 @@ public class AzureDevOpsResultPublisherTests
             "Microsoft.DotNet.Cli.New.IntegrationTests.CommonTemplatesTests.FeaturesSupport";
         const string dataRowName = "FeaturesSupport(\"classlib\",True,\"netstandard2.0\")";
         var transport = new RecordingResultTransport();
-        var publisher = CreatePublisher(transport, useFullyQualifiedTestName: true);
+        var publisher = CreatePublisher(transport);
         var result = new AggregatedResult(
             AggregationType.DataDriven,
             fullyQualifiedName,
@@ -230,6 +230,7 @@ public class AzureDevOpsResultPublisherTests
 
         JsonElement publishedTest = Assert.Single(Assert.Single(transport.RequestBodies).EnumerateArray());
         Assert.Equal(fullyQualifiedName, publishedTest.GetProperty("TestCaseTitle").GetString());
+        Assert.Equal(fullyQualifiedName, publishedTest.GetProperty("AutomatedTestName").GetString());
         JsonElement dataRow = Assert.Single(publishedTest.GetProperty("SubResults").EnumerateArray());
         Assert.Equal(dataRowName, dataRow.GetProperty("DisplayName").GetString());
     }
@@ -240,7 +241,7 @@ public class AzureDevOpsResultPublisherTests
         const string fullyQualifiedName = "Ns.MyTests.FeaturesSupport";
         const string dataRowName = "FeaturesSupport(\"classlib\")";
         var transport = new RecordingResultTransport();
-        var publisher = CreatePublisher(transport, useFullyQualifiedTestName: true);
+        var publisher = CreatePublisher(transport);
         var attempt = new AggregatedResult(
             AggregationType.Single,
             $"Attempt #1 - {dataRowName}",
@@ -274,12 +275,9 @@ public class AzureDevOpsResultPublisherTests
             publishedAttempt.GetProperty("DisplayName").GetString());
     }
 
-    private static AzureDevOpsResultPublisher CreatePublisher(
-        IAzureDevOpsResultTransport transport,
-        bool useFullyQualifiedTestName = false)
+    private static AzureDevOpsResultPublisher CreatePublisher(IAzureDevOpsResultTransport transport)
         => new(
             NullLogger.Instance,
-            useFullyQualifiedTestName,
             transport);
 
     private static Task<long> PublishAsync(

@@ -10,18 +10,15 @@ namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 internal sealed class TestResultProcessor : ITestResultProcessor
 {
     private readonly TestResultAttachmentMode _attachmentMode;
-    private readonly bool _useFullyQualifiedTestName;
     private readonly ILogger _logger;
     private readonly JobMonitorMetrics _metrics;
 
     public TestResultProcessor(
         TestResultAttachmentMode attachmentMode,
-        bool useFullyQualifiedTestName,
         ILogger logger,
         JobMonitorMetrics metrics)
     {
         _attachmentMode = attachmentMode;
-        _useFullyQualifiedTestName = useFullyQualifiedTestName;
         _logger = logger;
         _metrics = metrics;
     }
@@ -46,7 +43,7 @@ internal sealed class TestResultProcessor : ITestResultProcessor
             }
 
             IReadOnlyList<AggregatedResult> aggregatedResults =
-                new ResultAggregator().Aggregate(parsedResults, _useFullyQualifiedTestName);
+                new ResultAggregator().Aggregate(parsedResults);
             if (aggregatedResults.Count == 0)
             {
                 _logger.LogDebug("Test results were discovered but none could be aggregated");

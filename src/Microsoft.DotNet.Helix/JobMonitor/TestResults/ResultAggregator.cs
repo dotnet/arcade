@@ -57,14 +57,6 @@ public sealed class AggregatedResult(
 public sealed class ResultAggregator
 {
     public IReadOnlyList<AggregatedResult> Aggregate(IEnumerable<IEnumerable<TestResult>>? results)
-        => Aggregate(results, useFullyQualifiedName: false);
-
-    /// <param name="useFullyQualifiedName">
-    /// When <see langword="true"/>, tests are grouped by their <see cref="TestResult.FullyQualifiedName"/>
-    /// instead of the display name. This keeps identity stable and avoids merging same-named methods
-    /// from different classes (a common problem for MSTest, whose display name is only the method name).
-    /// </param>
-    public IReadOnlyList<AggregatedResult> Aggregate(IEnumerable<IEnumerable<TestResult>>? results, bool useFullyQualifiedName)
     {
         if (results is null)
         {
@@ -304,7 +296,7 @@ public sealed class ResultAggregator
             var perAttempt = new Dictionary<string, List<TestResult>>(StringComparer.Ordinal);
             foreach (TestResult result in resultSet)
             {
-                string basicName = ParseBasicName(useFullyQualifiedName ? result.FullyQualifiedName : result.Name);
+                string basicName = ParseBasicName(result.FullyQualifiedName);
                 if (!perAttempt.TryGetValue(basicName, out List<TestResult>? list))
                 {
                     list = [];
@@ -348,13 +340,7 @@ public sealed class ResultAggregator
                     }
                 }
 
-                // When grouping by fully qualified name, every member of the group shares the same
-                // FQN, so any member is representative. When using legacy (display-name) grouping a
-                // single group can contain unrelated tests (e.g. MSTest methods that share a name
-                // across classes); picking one member's FQN would be order-dependent and misleading,
-                // so fall back to the group key instead.
-                string groupFullyQualifiedName = useFullyQualifiedName ? currentSet[0].FullyQualifiedName : pair.Key;
-                aggregate.Add(ProcessNamedTest(pair.Key, groupFullyQualifiedName, fullSet));
+                aggregate.Add(ProcessNamedTest(pair.Key, currentSet[0].FullyQualifiedName, fullSet));
             }
         }
 

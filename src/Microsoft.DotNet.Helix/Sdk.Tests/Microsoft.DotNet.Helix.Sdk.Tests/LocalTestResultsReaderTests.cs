@@ -187,7 +187,7 @@ public class LocalTestResultsReaderTests
         Assert.Equal("MyMethod", test.Name);
         Assert.Equal("Ns.MyTests.MyMethod", test.FullyQualifiedName);
 
-        AggregatedResult aggregated = Assert.Single(new ResultAggregator().Aggregate([resultSets], useFullyQualifiedName: true));
+        AggregatedResult aggregated = Assert.Single(new ResultAggregator().Aggregate([resultSets]));
         Assert.Equal("Ns.MyTests.MyMethod", aggregated.FullyQualifiedName);
         Assert.Equal("Passed", aggregated.Result);
     }

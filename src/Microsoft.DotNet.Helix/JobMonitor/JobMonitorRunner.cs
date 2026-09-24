@@ -774,12 +774,10 @@ internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
         var azureDevOps = new AzureDevOpsService(options, logger, metrics);
         var resultProcessor = new TestResultProcessor(
             options.TestResultAttachmentMode,
-            options.UseFullyQualifiedTestName,
             logger,
             metrics);
         var resultPublisher = new AzureDevOpsResultPublisher(
             logger,
-            options.UseFullyQualifiedTestName,
             azureDevOps,
             metrics);
         if (options.UseEntraAuthentication && !string.IsNullOrEmpty(options.HelixAccessToken))

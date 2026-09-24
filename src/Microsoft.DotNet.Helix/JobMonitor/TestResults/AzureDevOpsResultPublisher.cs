@@ -20,18 +20,15 @@ internal sealed class AzureDevOpsResultPublisher : IAzureDevOpsResultPublisher
     private const int MaximumNodesPerResultHierarchy = 950;
 
     private readonly ILogger _logger;
-    private readonly bool _useFullyQualifiedTestName;
     private readonly JobMonitorMetrics _metrics;
     private readonly IAzureDevOpsResultTransport _transport;
 
     internal AzureDevOpsResultPublisher(
         ILogger logger,
-        bool useFullyQualifiedTestName,
         IAzureDevOpsResultTransport transport,
         JobMonitorMetrics? metrics = null)
     {
         _logger = logger;
-        _useFullyQualifiedTestName = useFullyQualifiedTestName;
         _transport = transport;
         _metrics = metrics ?? new JobMonitorMetrics();
     }
@@ -222,12 +219,12 @@ internal sealed class AzureDevOpsResultPublisher : IAzureDevOpsResultPublisher
             HelixJobId = jobId,
             HelixWorkItemName = workItemName,
         });
-        bool useFullyQualifiedName = _useFullyQualifiedTestName;
 
         string DisplayNameFor(AggregatedResult result, bool isDataDrivenSubResult)
-            => useFullyQualifiedName
-                ? TestNameFormatter.FormatDisplayName(result.FullyQualifiedName, result.Name, isDataDrivenSubResult)
-                : result.Name;
+            => TestNameFormatter.FormatDisplayName(
+                result.FullyQualifiedName,
+                result.Name,
+                isDataDrivenSubResult);
 
         PublishedSubResult ConvertToSubTest(AggregatedResult result, bool isDataDrivenSubResult)
         {
@@ -279,7 +276,7 @@ internal sealed class AzureDevOpsResultPublisher : IAzureDevOpsResultPublisher
                 new PublishedTestCase
                 {
                     TestCaseTitle = displayName,
-                    AutomatedTestName = useFullyQualifiedName ? result.FullyQualifiedName : result.Name,
+                    AutomatedTestName = result.FullyQualifiedName,
                     AutomatedTestType = "helix",
                     // Azure DevOps uses this as part of the test definition identity. The work item
                     // name must remain stable across builds so existing test references are reused.
