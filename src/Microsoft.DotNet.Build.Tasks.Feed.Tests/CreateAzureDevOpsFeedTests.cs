@@ -57,7 +57,7 @@ public class CreateAzureDevOpsFeedTests
     }
 
     [Fact]
-    public async Task WaitForFeedPermissionsReadyRetriesUntilContributorRoleIsEffective()
+    public async Task WaitForFeedPermissionsReadyIgnoresDirectContributorUntilComputedRoleIsEffective()
     {
         using var httpClient = FakeHttpClient.WithResponses(
             CreatePermissionsResponse(("contributor", false), ("none", true)),

@@ -171,6 +171,9 @@ public class CreateAzureDevOpsFeed : MSBuild.Task
 
                     bool allPermissionsEffective = requiredPermissions.All(required =>
                         lastPermissions.Any(actual =>
+                            // The API can return the requested direct assignment (false) while its
+                            // computed role is still "none" or "reader". Only the computed entry
+                            // reflected by isInheritedRole predicts authorization propagation.
                             actual.IsInheritedRole &&
                             string.Equals(actual.IdentityDescriptor, required.IdentityDescriptor, StringComparison.OrdinalIgnoreCase) &&
                             string.Equals(actual.Role, required.Role, StringComparison.OrdinalIgnoreCase)));
