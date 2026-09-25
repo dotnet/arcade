@@ -233,6 +233,26 @@ public class CreateAzureDevOpsFeed : MSBuild.Task
         return success;
     }
 
+    public async Task<bool> WaitForFeedPublishingReadyAsync(
+        string feedUrl,
+        string permissionsUrl,
+        IReadOnlyCollection<AzureDevOpsFeedPermission> requiredPermissions,
+        HttpClient httpClient,
+        IRetryHandler retryHandler)
+    {
+        if (!await WaitForFeedReadyAsync(feedUrl, httpClient, retryHandler))
+        {
+            return false;
+        }
+
+        return requiredPermissions.Count == 0 ||
+            await WaitForFeedPermissionsReadyAsync(
+                permissionsUrl,
+                requiredPermissions,
+                httpClient,
+                retryHandler);
+    }
+
     private async Task<bool> ExecuteAsync()
     {
         try
@@ -344,30 +364,23 @@ public class CreateAzureDevOpsFeed : MSBuild.Task
             TargetFeedURL = $"https://pkgs.dev.azure.com/{AzureDevOpsOrg}/{AzureDevOpsProject}/_packaging/{baseFeedName}/nuget/v3/index.json";
             TargetFeedName = baseFeedName;
 
-            Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created. Waiting for publishing permissions to become effective...");
+            Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created. Waiting for the feed and publishing permissions to become effective...");
             using (HttpClient readinessClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }))
             {
                 readinessClient.DefaultRequestHeaders.Authorization = GeneralUtils.CreateAzdoAuthHeader(AzureDevOpsPersonalAccessToken);
-                bool feedIsReady;
-                if (publishingPermissions.Count > 0)
-                {
-                    // Public and inherited read access can make the service index readable before
-                    // the explicitly configured publishing role is effective.
-                    string permissionsUrl =
-                        $"{azureDevOpsFeedsBaseUrl}{AzureDevOpsProject}/_apis/packaging/feeds/{Uri.EscapeDataString(baseFeedName)}/permissions" +
-                        $"?includeIds=true&excludeInheritedPermissions=false&api-version={AzureDevOpsFeedsApiVersion}";
-                    feedIsReady = await WaitForFeedPermissionsReadyAsync(
-                        permissionsUrl,
-                        publishingPermissions,
-                        readinessClient,
-                        FeedReadinessRetryHandler);
-                }
-                else
-                {
-                    feedIsReady = await WaitForFeedReadyAsync(TargetFeedURL, readinessClient, FeedReadinessRetryHandler);
-                }
+                string permissionsUrl =
+                    $"{azureDevOpsFeedsBaseUrl}{AzureDevOpsProject}/_apis/packaging/feeds/{Uri.EscapeDataString(baseFeedName)}/permissions" +
+                    $"?includeIds=true&excludeInheritedPermissions=false&api-version={AzureDevOpsFeedsApiVersion}";
 
-                if (!feedIsReady)
+                // Wait for the feed to exist before checking the Contributor role that grants
+                // AddPackage. The permissions endpoint can otherwise return unrelated inherited
+                // entries while the feed itself is still propagating.
+                if (!await WaitForFeedPublishingReadyAsync(
+                    TargetFeedURL,
+                    permissionsUrl,
+                    publishingPermissions,
+                    readinessClient,
+                    FeedReadinessRetryHandler))
                 {
                     return false;
                 }

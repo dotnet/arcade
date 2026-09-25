@@ -109,6 +109,82 @@ public class CreateAzureDevOpsFeedTests
     }
 
     [Fact]
+    public async Task WaitForFeedPublishingReadyChecksFeedBeforeAddPackagePermission()
+    {
+        using var httpClient = FakeHttpClient.WithResponses(
+            new HttpResponseMessage(HttpStatusCode.Forbidden),
+            new HttpResponseMessage(HttpStatusCode.OK),
+            CreatePermissionsResponse(("contributor", false), ("reader", true)),
+            CreatePermissionsResponse(("contributor", false), ("contributor", true)));
+        var retryHandler = new MockRetryHandler(maxAttempts: 2);
+        var buildEngine = new MockBuildEngine();
+        var task = new CreateAzureDevOpsFeed { BuildEngine = buildEngine };
+        var requiredPermissions = new[]
+        {
+            new AzureDevOpsFeedPermission(PublisherDescriptor, "contributor")
+        };
+
+        bool result = await task.WaitForFeedPublishingReadyAsync(
+            FeedUrl,
+            PermissionsUrl,
+            requiredPermissions,
+            httpClient,
+            retryHandler);
+
+        result.Should().BeTrue();
+        retryHandler.ActualAttempts.Should().Be(4);
+        buildEngine.BuildErrorEvents.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task WaitForFeedPublishingReadyDoesNotCheckPermissionBeforeFeedExists()
+    {
+        using var httpClient = FakeHttpClient.WithResponses(
+            new HttpResponseMessage(HttpStatusCode.Forbidden),
+            new HttpResponseMessage(HttpStatusCode.Forbidden));
+        var retryHandler = new MockRetryHandler(maxAttempts: 2);
+        var buildEngine = new MockBuildEngine();
+        var task = new CreateAzureDevOpsFeed { BuildEngine = buildEngine };
+        var requiredPermissions = new[]
+        {
+            new AzureDevOpsFeedPermission(PublisherDescriptor, "contributor")
+        };
+
+        bool result = await task.WaitForFeedPublishingReadyAsync(
+            FeedUrl,
+            PermissionsUrl,
+            requiredPermissions,
+            httpClient,
+            retryHandler);
+
+        result.Should().BeFalse();
+        retryHandler.ActualAttempts.Should().Be(2);
+        buildEngine.BuildErrorEvents.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task WaitForFeedPublishingReadySkipsPermissionCheckWhenNoPublisherIsConfigured()
+    {
+        using var httpClient = FakeHttpClient.WithResponses(
+            new HttpResponseMessage(HttpStatusCode.Forbidden),
+            new HttpResponseMessage(HttpStatusCode.OK));
+        var retryHandler = new MockRetryHandler(maxAttempts: 2);
+        var buildEngine = new MockBuildEngine();
+        var task = new CreateAzureDevOpsFeed { BuildEngine = buildEngine };
+
+        bool result = await task.WaitForFeedPublishingReadyAsync(
+            FeedUrl,
+            PermissionsUrl,
+            Array.Empty<AzureDevOpsFeedPermission>(),
+            httpClient,
+            retryHandler);
+
+        result.Should().BeTrue();
+        retryHandler.ActualAttempts.Should().Be(2);
+        buildEngine.BuildErrorEvents.Should().BeEmpty();
+    }
+
+    [Fact]
     public void FeedReadinessRetryBudgetAllowsSlowPermissionPropagation()
     {
         var task = new CreateAzureDevOpsFeed();

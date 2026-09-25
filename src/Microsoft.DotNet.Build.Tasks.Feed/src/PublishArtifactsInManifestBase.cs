@@ -1510,10 +1510,10 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
 
     public enum NuGetFeedUploadPackageResult
     {
-        Success,
-        AlreadyExists,
-        AuthorizationFailed,
-        Failed,
+        Success = 0,
+        AlreadyExists = 1,
+        Failed = 2,
+        AuthorizationFailed = 3,
     }
 
     public static async Task<NuGetFeedUploadPackageResult> NuGetFeedUploadPackageAsync(HttpClient httpClient, string feedName, string feedUri, Stream packageContentReadStream)
