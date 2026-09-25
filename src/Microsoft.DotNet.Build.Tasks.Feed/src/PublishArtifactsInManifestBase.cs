@@ -1082,19 +1082,41 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         Exception mostRecentlyCaughtException = null;
         bool success = await RetryHandler.RunAsync(async attempt =>
         {
+            Stopwatch attemptDuration = Stopwatch.StartNew();
+            HttpStatusCode? statusCode = null;
+            long? expectedBytes = null;
+            long downloadedBytes = 0;
+            bool downloadStarted = false;
+
             try
             {
                 using CancellationTokenSource timeoutTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(TimeoutInMinutes));
                 using HttpResponseMessage response = await client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, timeoutTokenSource.Token);
+                statusCode = response.StatusCode;
+                expectedBytes = response.Content.Headers.ContentLength;
                 response.EnsureSuccessStatusCode();
                 using var fs = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                downloadStarted = true;
                 using var stream = await response.Content.ReadAsStreamAsync(timeoutTokenSource.Token);
                 await stream.CopyToAsync(fs, timeoutTokenSource.Token);
+                downloadedBytes = fs.Position;
                 return true;
             }
             catch (Exception ex)
             {
+                if (downloadStarted && File.Exists(path))
+                {
+                    downloadedBytes = new FileInfo(path).Length;
+                }
+
                 mostRecentlyCaughtException = ex;
+                Log.LogMessage(
+                    MessageImportance.High,
+                    $"Download attempt {attempt + 1}/{RetryHandler.MaxAttempts} failed for file '{fileName}' " +
+                    $"from artifact '{artifactName}' after {attemptDuration.Elapsed.TotalSeconds:F1} seconds. " +
+                    $"HTTP status: {statusCode?.ToString() ?? "unavailable"}; " +
+                    $"expected bytes: {expectedBytes?.ToString() ?? "unknown"}; downloaded bytes: {downloadedBytes}. " +
+                    $"{ex.GetType().FullName}: {ex.Message}");
                 return false;
             }
         }).ConfigureAwait(false);
@@ -1102,7 +1124,8 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         if (!success)
         {
             throw new Exception(
-                $"Failed to download '{path}' after {RetryHandler.MaxAttempts} attempts. See inner exception for details.",
+                $"Failed to download '{path}' after {RetryHandler.MaxAttempts} attempts. " +
+                $"Last failure: {mostRecentlyCaughtException?.GetType().FullName}: {mostRecentlyCaughtException?.Message}",
                 mostRecentlyCaughtException);
         }
     }
