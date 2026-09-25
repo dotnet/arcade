@@ -513,6 +513,24 @@ public class PublishArtifactsInManifestTests
         buildEngine.BuildWarningEvents.Should().BeEmpty();
     }
 
+    [Theory]
+    [InlineData(HttpStatusCode.Unauthorized)]
+    [InlineData(HttpStatusCode.Forbidden)]
+    public async Task NuGetFeedUploadPackageAsyncIdentifiesAuthorizationFailures(HttpStatusCode statusCode)
+    {
+        using var response = new HttpResponseMessage(statusCode);
+        using HttpClient client = FakeHttpClient.WithResponses(response);
+        using var packageStream = new MemoryStream([1, 2, 3]);
+
+        NuGetFeedUploadPackageResult result = await NuGetFeedUploadPackageAsync(
+            client,
+            "test-feed",
+            "https://pkgs.dev.azure.com/dnceng/_packaging/test-feed/nuget/v2",
+            packageStream);
+
+        result.Should().Be(NuGetFeedUploadPackageResult.AuthorizationFailed);
+    }
+
     [Fact]
     public async Task NuGetFeedUploadPackageAsyncLogsRequestException()
     {
@@ -619,6 +637,57 @@ public class PublishArtifactsInManifestTests
         buildEngine.BuildErrorEvents.Should().BeEmpty();
     }
 
+    [Theory]
+    [InlineData(12, false)]
+    [InlineData(13, true)]
+    public async Task PushNugetPackageExtendsRetriesForAzureDevOpsAuthorizationPropagation(
+        int pushAttemptsBeforeSuccess,
+        bool expectedFailure)
+    {
+        var buildEngine = new MockBuildEngine();
+        var task = new PublishArtifactsInManifestV3
+        {
+            InternalBuild = true,
+            BuildEngine = buildEngine,
+            MaxRetryCount = 5,
+            RetryHandler = new ExponentialRetry
+            {
+                MaxAttempts = 5,
+                DelayBase = 1
+            }
+        };
+        var config = new TargetFeedConfig(TargetFeedContentType.Package, "testUrl", FeedType.AzDoNugetFeed, "tokenValue");
+        var testPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.1.0.0.nupkg"));
+        int attempts = 0;
+
+        await task.PushNugetPackageAsync(
+            config,
+            null,
+            testPackagePath,
+            "1234",
+            "version",
+            "feedaccount",
+            "feedvisibility",
+            "feedname",
+            AttemptPushPackageCallback: (_, _, _, _) =>
+            {
+                attempts++;
+                return Task.FromResult(attempts == pushAttemptsBeforeSuccess
+                    ? NuGetFeedUploadPackageResult.Success
+                    : NuGetFeedUploadPackageResult.AuthorizationFailed);
+            });
+
+        attempts.Should().Be(12);
+        if (expectedFailure)
+        {
+            buildEngine.BuildErrorEvents.Should().ContainSingle(error =>
+                error.Message.Contains("after 12 attempts"));
+        }
+        else
+        {
+            buildEngine.BuildErrorEvents.Should().BeEmpty();
+        }
+    }
 
     [Theory]
     // Simple case where we fill the whole buffer on each stream call and the streams match

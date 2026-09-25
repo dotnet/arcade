@@ -212,6 +212,10 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
 
     private const uint SymbolExpirationInDays = 3650;
 
+    private const int AzureDevOpsPackagePushAuthorizationMaxAttempts = 12;
+
+    private static readonly TimeSpan AzureDevOpsPackagePushAuthorizationMaximumDelay = TimeSpan.FromMinutes(2);
+
     public int TimeoutInMinutes { get; set; } = 5;
 
     protected LatestLinksManager LinkManager { get; set; } = null;
@@ -1506,9 +1510,10 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
 
     public enum NuGetFeedUploadPackageResult
     {
-        Success,
-        AlreadyExists,
-        Failed,
+        Success = 0,
+        AlreadyExists = 1,
+        Failed = 2,
+        AuthorizationFailed = 3,
     }
 
     public static async Task<NuGetFeedUploadPackageResult> NuGetFeedUploadPackageAsync(HttpClient httpClient, string feedName, string feedUri, Stream packageContentReadStream)
@@ -1555,6 +1560,11 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
             log?.LogMessage(
                 MessageImportance.High,
                 $"NuGet package upload to Azure DevOps feed '{feedName}' returned HTTP {(int)response.StatusCode} ({response.ReasonPhrase}). Response: {responseBody}");
+
+            if (response.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)
+            {
+                return NuGetFeedUploadPackageResult.AuthorizationFailed;
+            }
 
             return NuGetFeedUploadPackageResult.Failed;
         }
@@ -1642,14 +1652,25 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         try
         {
             Log.LogMessage(MessageImportance.Normal, $"Pushing package {id}@{version} to target feed {feedConfig.TargetURL}");
+            bool supportsAuthorizationPropagationRetry = feedConfig.Type == FeedType.AzDoNugetFeed;
+            int maxAttempts = supportsAuthorizationPropagationRetry
+                ? Math.Max(MaxRetryCount, AzureDevOpsPackagePushAuthorizationMaxAttempts)
+                : MaxRetryCount;
+            TimeSpan? maximumDelay = RetryHandler.MaximumDelay;
+            if (supportsAuthorizationPropagationRetry &&
+                (maximumDelay is null || maximumDelay > AzureDevOpsPackagePushAuthorizationMaximumDelay))
+            {
+                maximumDelay = AzureDevOpsPackagePushAuthorizationMaximumDelay;
+            }
+
             var packagePushRetryHandler = new ExponentialRetry
             {
-                MaxAttempts = MaxRetryCount,
+                MaxAttempts = maxAttempts,
                 DelayBase = RetryHandler.DelayBase,
                 DelayConstant = RetryHandler.DelayConstant,
                 MinRandomFactor = RetryHandler.MinRandomFactor,
                 MaxRandomFactor = RetryHandler.MaxRandomFactor,
-                MaximumDelay = RetryHandler.MaximumDelay,
+                MaximumDelay = maximumDelay,
                 RetryDelayCallback = RetryHandler.RetryDelayCallback,
                 DefaultCancellationToken = RetryHandler.DefaultCancellationToken
             };
@@ -1696,16 +1717,34 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                             }
                         default:
                             {
-                                Log.LogMessage(MessageImportance.Low, $"Hit error checking package status after failed push: '{packageStatus}'. Will retry with exponential backoff.");
-                                return RetryResult.Retry();
+                                if (attemptIndex < MaxRetryCount)
+                                {
+                                    Log.LogMessage(MessageImportance.Low, $"Hit error checking package status after failed push: '{packageStatus}'. Will retry with exponential backoff.");
+                                    return RetryResult.Retry();
+                                }
+
+                                return RetryResult.Success;
                             }
                     }
+                }
+                else if (result == NuGetFeedUploadPackageResult.AuthorizationFailed)
+                {
+                    packageStatus = PackageFeedStatus.Unknown;
+                    Log.LogMessage(
+                        MessageImportance.Low,
+                        $"Attempt # {attemptIndex} was not authorized to push {localPackageLocation}. Will retry while Azure DevOps feed authorization propagates.");
+                    return RetryResult.Retry();
                 }
                 else
                 {
                     packageStatus = PackageFeedStatus.Unknown;
-                    Log.LogMessage(MessageImportance.Low, $"Attempt # {attemptIndex} failed to push {localPackageLocation}. Will retry with exponential backoff.");
-                    return RetryResult.Retry();
+                    if (attemptIndex < MaxRetryCount)
+                    {
+                        Log.LogMessage(MessageImportance.Low, $"Attempt # {attemptIndex} failed to push {localPackageLocation}. Will retry with exponential backoff.");
+                        return RetryResult.Retry();
+                    }
+
+                    return RetryResult.Success;
                 }
             });
 
