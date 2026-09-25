@@ -112,6 +112,88 @@ function GetCommitterGitHubName($sha) {
     return $null
 }
 
+function RemoteBranchExists($remoteName, $branchName) {
+    $lsRemoteOutput = & git ls-remote --heads $remoteName "refs/heads/$branchName" 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        # Fail loudly instead of assuming the branch is missing: treating an auth or network
+        # failure as "branch does not exist" would silently recreate the branch and discard
+        # whatever is already on the PR.
+        throw "Failed to query '$remoteName' for branch '$branchName'. Output: $lsRemoteOutput"
+    }
+
+    return [bool]$lsRemoteOutput
+}
+
+# Resolves merge conflicts that fall entirely within the ResetToTargetPaths patterns.
+#
+# Those files are expected to conflict: the merge branch holds the target branch's version of them
+# while the source branch keeps changing them. They are not conflicts anyone reviews -- the script
+# overwrites those exact paths with the target branch's content on every run no matter how the merge
+# turns out -- so taking the target's version here produces the same tree the script would have
+# produced anyway. Nothing outside the configured patterns is ever resolved: a single conflict
+# outside them makes this return $false so the caller aborts the merge and leaves it to a human.
+function TryResolveResetPathConflicts($patterns, $targetBranch) {
+    if (-not $patterns -or $patterns.Count -eq 0) {
+        return $false
+    }
+
+    $conflicted = @(& git diff --name-only --diff-filter=U)
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to list conflicted files after merging into the existing merge branch."
+    }
+
+    if ($conflicted.Count -eq 0) {
+        return $false
+    }
+
+    # Pathspec magic (anything starting with ':', e.g. ':(attr:...)' or ':(exclude)') can select a
+    # different set of files depending on repository state, so which files a pattern covers is not
+    # guaranteed to still hold after resolving. Only ordinary paths and globs are safe to reason
+    # about here; anything else falls back to leaving the merge to a human.
+    $magicPatterns = @($patterns | Where-Object { $_ -and $_.Trim().StartsWith(':') })
+    if ($magicPatterns.Count -gt 0) {
+        Write-Host -f Yellow "ResetToTargetPaths uses pathspec magic ($($magicPatterns -join ', ')); not resolving conflicts automatically."
+        return $false
+    }
+
+    $covered = @()
+    foreach ($pattern in $patterns) {
+        $pattern = $pattern.Trim()
+        if (-not $pattern) {
+            continue
+        }
+
+        $matched = @(& git diff --name-only --diff-filter=U -- $pattern)
+        if ($LASTEXITCODE -eq 0 -and $matched.Count -gt 0) {
+            $covered += $matched
+        }
+    }
+
+    $covered = @($covered | Select-Object -Unique)
+
+    $uncovered = @($conflicted | Where-Object { $covered -notcontains $_ })
+    if ($uncovered.Count -gt 0) {
+        Write-Host -f Yellow "Conflicts outside ResetToTargetPaths, leaving them for manual resolution: $($uncovered -join ', ')"
+        return $false
+    }
+
+    foreach ($file in $covered) {
+        & git checkout "origin/$targetBranch" -- $file 2>&1 | Write-Host
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host -f Yellow "Could not take the '$targetBranch' version of '$file'."
+            return $false
+        }
+    }
+
+    $stillConflicted = @(& git diff --name-only --diff-filter=U)
+    if ($LASTEXITCODE -ne 0 -or $stillConflicted.Count -gt 0) {
+        return $false
+    }
+
+    Write-Host -f Green "Took the '$targetBranch' version of conflicted ResetToTargetPaths files: $($covered -join ', ')"
+    return $true
+}
+
 function ResetFilesToTargetBranch($patterns, $targetBranch) {
     if (-not $patterns -or $patterns.Count -eq 0) {
         return
@@ -220,13 +302,6 @@ try {
     Write-Host $committersList
 
     $mergeBranchName = "merge/$MergeFromBranch-to-$MergeToBranch"
-    Invoke-Block { & git checkout -B $mergeBranchName  }
-
-    # Reset specified files to target branch if ResetToTargetPaths is configured
-    if ($ResetToTargetPaths) {
-        $patterns = $ResetToTargetPaths -split ";"
-        ResetFilesToTargetBranch $patterns $MergeToBranch
-    }
 
     $remoteName = 'origin'
     $prOwnerName = $RepoOwner
@@ -272,6 +347,105 @@ try {
         | ? { $_.headRef.name -eq $mergeBranchName -and $_.headRef.repository.owner.login -eq $prOwnerName } `
         | select -First 1
 
+    # Build the merge branch.
+    #
+    # When an open PR already exists for this merge branch, update that branch by merging the
+    # source branch into it rather than recreating it from the source branch tip. Recreating the
+    # branch produces history that is not a descendant of what was pushed on the previous run --
+    # with ResetToTargetPaths the "Reset files to <target>" commit is regenerated with a new SHA
+    # every run, so the branch can never fast-forward -- and the push below is rejected as
+    # non-fast-forward, leaving the PR silently un-updated from then on. Merging into the existing
+    # branch keeps the push a fast-forward and preserves conflict resolutions that were pushed to
+    # the PR branch by hand.
+    $updatedExistingBranch = $false
+    $mergeBranchHasDiverged = $false
+
+    if ($matchingPr -and (RemoteBranchExists $remoteName $mergeBranchName)) {
+        # Plain call, not Invoke-Block: the branch can be deleted between the check above and this
+        # fetch. Re-check rather than failing the run, but only treat a failure as "deleted" when
+        # the remote confirms it -- RemoteBranchExists still throws on an auth or network failure,
+        # so those keep failing loudly instead of silently recreating the branch.
+        & git fetch --quiet $remoteName "refs/heads/${mergeBranchName}:refs/remotes/${remoteName}/${mergeBranchName}" 2>&1 | Write-Host
+        $fetchFailed = $LASTEXITCODE -ne 0
+
+        if ($fetchFailed -and (RemoteBranchExists $remoteName $mergeBranchName)) {
+            throw "Failed to fetch existing merge branch '$mergeBranchName' from '$remoteName'."
+        }
+
+        if ($fetchFailed) {
+            Write-Host -f Yellow "Merge branch '$mergeBranchName' disappeared while it was being read; recreating it from $MergeFromBranch."
+        }
+        else {
+            # Only merge into the existing branch when it has diverged from the source branch. When
+            # it is still an ancestor of the source tip there is nothing on it to preserve and
+            # recreating it from the tip fast-forwards exactly as it always has, so the common case
+            # keeps running the code path it ran before this branch existed.
+            # Plain call, not Invoke-Block: `--is-ancestor` uses exit code 1 to mean "no", which is
+            # an answer rather than a failure.
+            & git merge-base --is-ancestor "refs/remotes/$remoteName/$mergeBranchName" "refs/remotes/$remoteName/$MergeFromBranch"
+            $isAncestorExitCode = $LASTEXITCODE
+
+            if ($isAncestorExitCode -ne 0 -and $isAncestorExitCode -ne 1) {
+                throw "Failed to compare '$mergeBranchName' with $MergeFromBranch (git merge-base --is-ancestor exited $isAncestorExitCode)."
+            }
+
+            $mergeBranchHasDiverged = $isAncestorExitCode -eq 1
+        }
+
+        if (-not $mergeBranchHasDiverged -and -not $fetchFailed) {
+            Write-Host "Merge branch '$mergeBranchName' has not diverged from $MergeFromBranch; recreating it from the source branch tip."
+        }
+        elseif ($mergeBranchHasDiverged) {
+            Invoke-Block { & git checkout -B $mergeBranchName "refs/remotes/$remoteName/$mergeBranchName" }
+
+            # A merge commit needs an identity. ResetFilesToTargetBranch configures the same one.
+            Invoke-Block { & git config user.name "github-actions[bot]" }
+            Invoke-Block { & git config user.email "41898282+github-actions[bot]@users.noreply.github.com" }
+
+            # No -X ours/-X theirs: nothing outside ResetToTargetPaths is ever auto-resolved.
+            $mergeOutput = & git merge --no-edit "refs/remotes/$remoteName/$MergeFromBranch" 2>&1
+            $mergeExitCode = $LASTEXITCODE
+
+            if ($mergeOutput) {
+                $mergeOutput | Write-Host
+            }
+
+            if ($mergeExitCode -eq 0) {
+                $updatedExistingBranch = $true
+            }
+            elseif ($ResetToTargetPaths -and (TryResolveResetPathConflicts ($ResetToTargetPaths -split ";") $MergeToBranch)) {
+                # Every conflicted file was one this script overwrites with the target branch's
+                # content anyway, and it has been set to that content. Finish the merge.
+                Invoke-Block { & git commit --no-edit }
+                $updatedExistingBranch = $true
+            }
+            else {
+                # Abort and fall back to recreating the branch from the source tip. That is what
+                # this script did before this branch existed: the push below is rejected as
+                # non-fast-forward and the existing PR is left untouched for manual resolution.
+                # Plain call, not Invoke-Block: `git merge --abort` exits non-zero when the merge
+                # failed for a reason that left no merge in progress.
+                & git merge --abort 2>&1 | Write-Host
+                Write-Host -f Yellow "Could not merge $MergeFromBranch into the existing '$mergeBranchName' branch; it needs manual conflict resolution. The existing PR will be left unchanged."
+                # An Actions annotation rather than only a log line: this is the one outcome that
+                # needs a human, and it is invisible otherwise -- the push below is classified as a
+                # benign non-fast-forward so the job stays green, and -QuietComments suppresses the
+                # PR comment. Annotations surface on the run summary regardless of either.
+                Write-Host "::warning::Merge branch '$mergeBranchName' has conflicts that must be resolved by hand; the PR for $MergeFromBranch -> $MergeToBranch is no longer being updated."
+            }
+        }
+    }
+
+    if (-not $updatedExistingBranch) {
+        Invoke-Block { & git checkout -B $mergeBranchName "refs/remotes/$remoteName/$MergeFromBranch" }
+    }
+
+    # Reset specified files to target branch if ResetToTargetPaths is configured
+    if ($ResetToTargetPaths) {
+        $patterns = $ResetToTargetPaths -split ";"
+        ResetFilesToTargetBranch $patterns $MergeToBranch
+    }
+
     if ($matchingPr) {
         $prUpdatedSuccess = $false
 
@@ -295,6 +469,7 @@ try {
                 # untouched and do not fail the job. Reset the exit code so the non-fast-forward
                 # rejection from git push does not propagate as the process exit code.
                 Write-Host -f Yellow "The existing PR branch '$mergeBranchName' has diverged and cannot be fast-forwarded; leaving the existing PR unchanged."
+                Write-Host "::warning::Could not update the PR branch '$mergeBranchName'; it has diverged and was not force-pushed over. The PR for $MergeFromBranch -> $MergeToBranch is stale until someone resolves it."
                 $global:LASTEXITCODE = 0
             }
             else {
