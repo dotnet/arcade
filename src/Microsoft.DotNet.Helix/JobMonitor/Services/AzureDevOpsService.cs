@@ -112,6 +112,100 @@ internal sealed class AzureDevOpsService : IAzureDevOpsService, IAzureDevOpsResu
         return data?["records"]?.ToObject<AzureDevOpsTimelineRecord[]>() ?? [];
     }
 
+    public async Task<IReadOnlyDictionary<string, string>> GetJobCancellationTokensAsync(
+        IReadOnlyCollection<string> jobNames,
+        CancellationToken cancellationToken)
+    {
+        var requestedJobs = new HashSet<string>(jobNames ?? [], StringComparer.OrdinalIgnoreCase);
+        if (requestedJobs.Count == 0)
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        JObject timeline = await SendAsync(
+            HttpMethod.Get,
+            $"{_options.CollectionUri}{_options.TeamProject}/_apis/build/builds/{_options.BuildId}/timeline?api-version=7.1-preview.2",
+            cancellationToken: cancellationToken);
+        string timelineId = timeline?.Value<string>("id");
+        AzureDevOpsTimelineRecord[] records = timeline?["records"]?.ToObject<AzureDevOpsTimelineRecord[]>() ?? [];
+        if (string.IsNullOrEmpty(timelineId))
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        var tokens = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var sync = new object();
+        IEnumerable<AzureDevOpsTimelineRecord> taskRecords = records.Where(
+            record => string.Equals(record.Type, "Task", StringComparison.OrdinalIgnoreCase));
+
+        await Task.WhenAll(taskRecords.Select(async record =>
+        {
+            try
+            {
+                string baseUri =
+                    $"{_options.CollectionUri}{_options.TeamProject}/_apis/build/builds/{_options.BuildId}"
+                    + $"/timelines/{timelineId}/records/{record.Id}/attachments/HelixJobCancellationToken";
+                string listContent;
+                try
+                {
+                    listContent = await SendForStringAsync(
+                        HttpMethod.Get,
+                        $"{baseUri}?api-version=7.1",
+                        cancellationToken: cancellationToken);
+                }
+                catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(listContent))
+                {
+                    return;
+                }
+
+                JToken list = JToken.Parse(listContent);
+                IEnumerable<JToken> attachments = list is JArray array
+                    ? array
+                    : list["value"]?.Children() ?? [];
+                foreach (JToken attachment in attachments)
+                {
+                    string attachmentName = attachment.Value<string>("name");
+                    if (string.IsNullOrEmpty(attachmentName) || !requestedJobs.Contains(attachmentName))
+                    {
+                        continue;
+                    }
+
+                    string content = await SendForStringAsync(
+                        HttpMethod.Get,
+                        $"{baseUri}/{Uri.EscapeDataString(attachmentName)}?api-version=7.1",
+                        cancellationToken: cancellationToken);
+                    JObject payload = JObject.Parse(content);
+                    string jobName = payload.Value<string>("jobName");
+                    string token = payload.Value<string>("cancellationToken");
+                    if (!string.Equals(jobName, attachmentName, StringComparison.OrdinalIgnoreCase)
+                        || string.IsNullOrEmpty(token))
+                    {
+                        continue;
+                    }
+
+                    lock (sync)
+                    {
+                        tokens[jobName] = token;
+                    }
+                }
+            }
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Failed to read Helix cancellation-token attachments from Azure DevOps task record '{RecordId}'.",
+                    record.Id);
+            }
+        }));
+
+        return tokens;
+    }
+
     public async Task<IReadOnlySet<string>> GetProcessedHelixJobNamesAsync(CancellationToken cancellationToken)
     {
         var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

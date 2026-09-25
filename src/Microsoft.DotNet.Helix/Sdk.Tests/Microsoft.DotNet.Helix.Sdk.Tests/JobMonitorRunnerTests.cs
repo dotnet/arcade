@@ -3082,6 +3082,31 @@ public class JobMonitorRunnerTests
             && message.Contains("Test Linux [state=inProgress, result=none]", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public async Task MonitorTimesOut_UsesPersistedCancellationToken()
+    {
+        var azdo = new FakeAzureDevOpsService();
+        var helix = new FakeHelixService();
+        azdo.AddTimelineResponse(MonitorJob(), PipelineJob("Test Linux", "inProgress"));
+        azdo.AddJobCancellationToken("helix-running", "persisted-token");
+        helix.AddResponse(
+            jobs: [HelixJob("helix-running", "running", jobCancellationToken: null)]);
+
+        using var cts = new CancellationTokenSource();
+        var runner = new JobMonitorRunner(DefaultOptions(), NullLogger.Instance, azdo, helix,
+            (_, _) =>
+            {
+                cts.Cancel();
+                return Task.CompletedTask;
+            });
+
+        int exitCode = await runner.RunAsync(cts.Token);
+
+        exitCode.Should().Be(1);
+        helix.CancellationTokens.Should().ContainKey("helix-running")
+            .WhoseValue.Should().Be("persisted-token");
+    }
+
     /// <summary>
     /// Regression: on cancellation the monitor must cancel in-flight Helix jobs immediately and
     /// must not gate that on the test-result upload queue draining. An upload that is stuck in a

@@ -18,6 +18,14 @@ public interface IAzureDevOpsService
     Task<IReadOnlyList<AzureDevOpsTimelineRecord>> GetTimelineRecordsAsync(CancellationToken cancellationToken);
 
     /// <summary>
+    /// Returns per-job cancellation tokens published as task attachments by Helix submission
+    /// tasks in the current build.
+    /// </summary>
+    Task<IReadOnlyDictionary<string, string>> GetJobCancellationTokensAsync(
+        IReadOnlyCollection<string> jobNames,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// Returns the set of Helix job names that have already been processed
     /// by a prior monitor invocation. A job is considered processed once its Azure DevOps
     /// test run has been completed and tagged with the Helix job name.

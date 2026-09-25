@@ -99,6 +99,9 @@ Implementation and semantic design documents are indexed at
 Behavior notes:
 
 - The reporter uses its own `SYSTEM_ACCESSTOKEN`, so it does not depend on the shorter-lived token from the job that originally submitted the Helix work.
+- When the monitor is enabled, submission tasks publish each job's cancellation token as a
+  build task attachment. The monitor retrieves these job-scoped tokens only when it needs to
+  cancel unfinished anonymous jobs; tokens are not stored in publicly readable Helix properties.
 - If parseable xUnit, JUnit, or TRX result files are available, those are uploaded.
 - Result processing uses globally bounded work-item parallelism and streams XML
   instead of loading complete result documents. Status polling remains

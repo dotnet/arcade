@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.Build.Framework;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace Microsoft.DotNet.Helix.Sdk.Tests;
@@ -64,5 +66,29 @@ public class QueueStatsLoggingTests
 
         Assert.Equal(MessageImportance.Normal, captured[0].Importance);
         Assert.Equal(MessageImportance.Normal, captured[1].Importance);
+    }
+
+    [Fact]
+    public void CancellationTokenAttachmentContainsJobScopedSecret()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        try
+        {
+            string path = SendHelixJob.WriteCancellationTokenAttachment(
+                "job-id",
+                "cancellation-token",
+                directory);
+
+            JObject payload = JObject.Parse(File.ReadAllText(path));
+            Assert.Equal("job-id", payload.Value<string>("jobName"));
+            Assert.Equal("cancellation-token", payload.Value<string>("cancellationToken"));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
     }
 }

@@ -27,6 +27,36 @@ public class AzureDevOpsServiceTests
     private const string HelixJobTag = "helixjobf79561f86c134e869c6f0527cd707a54";
 
     [Fact]
+    public async Task GetJobCancellationTokensAsync_ReadsTaskAttachments()
+    {
+        var handler = new RecordingHttpMessageHandler(request =>
+        {
+            string path = request.RequestUri.AbsolutePath;
+            string content = path switch
+            {
+                "/dnceng-public/public/_apis/build/builds/1403994/timeline" =>
+                    @"{""id"":""timeline-id"",""records"":[{""id"":""task-id"",""type"":""Task""}]}",
+                "/dnceng-public/public/_apis/build/builds/1403994/timelines/timeline-id/records/task-id/attachments/HelixJobCancellationToken" =>
+                    $"[{{""name"":""{HelixJobGuid}""}}]",
+                $"/dnceng-public/public/_apis/build/builds/1403994/timelines/timeline-id/records/task-id/attachments/HelixJobCancellationToken/{HelixJobGuid}" =>
+                    $"{{""jobName"":""{HelixJobGuid}"",""cancellationToken"":""job-token""}}",
+                _ => throw new InvalidOperationException($"Unexpected request: {request.RequestUri}"),
+            };
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(content)
+            };
+        });
+        using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler));
+
+        IReadOnlyDictionary<string, string> tokens =
+            await service.GetJobCancellationTokensAsync([HelixJobGuid], CancellationToken.None);
+
+        tokens.Should().ContainSingle()
+            .Which.Should().Be(new KeyValuePair<string, string>(HelixJobGuid, "job-token"));
+    }
+
+    [Fact]
     public async Task ResultUploadsIncludeVersionedUserAgent()
     {
         var handler = new RecordingHttpMessageHandler(_ =>

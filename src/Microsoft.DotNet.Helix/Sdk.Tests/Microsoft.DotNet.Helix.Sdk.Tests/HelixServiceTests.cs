@@ -219,12 +219,12 @@ public class HelixServiceTests
         using var cts = new CancellationTokenSource();
 
         api.Job
-            .Setup(j => j.CancelAsync("job-to-cancel", null, cts.Token))
+            .Setup(j => j.CancelAsync("job-to-cancel", "cancel-token", cts.Token))
             .Returns(Task.CompletedTask);
 
-        await CreateService(api.Api.Object).CancelJobAsync("job-to-cancel", cts.Token);
+        await CreateService(api.Api.Object).CancelJobAsync("job-to-cancel", "cancel-token", cts.Token);
 
-        api.Job.Verify(j => j.CancelAsync("job-to-cancel", null, cts.Token), Times.Once);
+        api.Job.Verify(j => j.CancelAsync("job-to-cancel", "cancel-token", cts.Token), Times.Once);
     }
 
     [Fact]
@@ -295,7 +295,10 @@ public class HelixServiceTests
                 capturedRequest = request;
                 capturedIdempotencyKey = idempotencyKey;
             })
-            .ReturnsAsync(new JobCreationResult("new-job", "summary", "results", null));
+            .ReturnsAsync(new JobCreationResult("new-job", "summary", "results", null)
+            {
+                CancellationToken = "new-job-token",
+            });
 
         var blobClientFactory = new FakeBlobClientFactory
         {
@@ -324,6 +327,7 @@ public class HelixServiceTests
         Assert.Equal("original-job", result.PreviousHelixJobName);
         Assert.Equal("2", result.StageAttempt);
         Assert.Equal("1", result.JobAttempt);
+        Assert.Equal("new-job-token", result.JobCancellationToken);
 
         Assert.Equal("https://storage/job-list.json", blobClientFactory.DownloadedTextUri);
         UploadCall upload = Assert.Single(blobClientFactory.Uploads);

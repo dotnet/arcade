@@ -88,7 +88,8 @@ internal static class ScenarioHelpers
         string stageAttempt = null,
         string jobAttempt = null,
         string logicalJobName = null,
-        string submitterPhaseName = null)
+        string submitterPhaseName = null,
+        string jobCancellationToken = "test-cancellation-token")
         => new(
             jobName,
             status,
@@ -101,7 +102,8 @@ internal static class ScenarioHelpers
             stageAttempt: stageAttempt,
             jobAttempt: jobAttempt,
             logicalJobName: logicalJobName,
-            submitterPhaseName: submitterPhaseName);
+            submitterPhaseName: submitterPhaseName,
+            jobCancellationToken: jobCancellationToken);
 
     public static HelixJobPassFail PassFail(string[] passed = null, string[] failed = null)
         => new(passed ?? [], failed ?? []);

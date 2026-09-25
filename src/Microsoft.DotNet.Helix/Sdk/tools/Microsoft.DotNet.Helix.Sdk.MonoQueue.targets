@@ -90,7 +90,8 @@
                   PostCommands="$(HelixPostCommands)"
                   CorrelationPayloads="@(HelixCorrelationPayload)"
                   WorkItems="@(HelixWorkItem)"
-                  HelixProperties="@(HelixProperties)">
+                  HelixProperties="@(HelixProperties)"
+                  PublishJobCancellationToken="$(EnableHelixJobMonitor)">
       <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
       <Output TaskParameter="JobCancellationToken" PropertyName="HelixJobCancellationToken"/>
     </SendHelixJob>

@@ -88,6 +88,12 @@ public class SendHelixJob : HelixTask, IMultiThreadableTask
     public string JobCancellationToken { get; set; }
 
     /// <summary>
+    ///   Publishes the per-job cancellation token as an Azure Pipelines task attachment so
+    ///   the standalone Helix Job Monitor can cancel anonymously submitted jobs.
+    /// </summary>
+    public bool PublishJobCancellationToken { get; set; }
+
+    /// <summary>
     ///   A collection of commands that will run for each work item before any work item commands.
     ///   Use a semicolon to delimit these and escape semicolons by percent coding them ('%3B').
     ///   NOTE: This is different behavior from the WorkItem PreCommands, where semicolons are escaped
@@ -284,10 +290,45 @@ public class SendHelixJob : HelixTask, IMultiThreadableTask
             ISentJob job = await def.SendAsync(logNormal, logQueueStats, cancellationToken);
             JobCorrelationId = job.CorrelationId;
             JobCancellationToken = job.HelixCancellationToken;
+            PublishCancellationTokenAttachment();
             cancellationToken.ThrowIfCancellationRequested();
         }
 
         cancellationToken.ThrowIfCancellationRequested();
+    }
+
+    private void PublishCancellationTokenAttachment()
+    {
+        if (!PublishJobCancellationToken
+            || string.IsNullOrEmpty(JobCorrelationId)
+            || string.IsNullOrEmpty(JobCancellationToken))
+        {
+            return;
+        }
+
+        string attachmentPath = WriteCancellationTokenAttachment(
+            JobCorrelationId,
+            JobCancellationToken,
+            Path.GetTempPath());
+        Log.LogMessage(
+            MessageImportance.High,
+            $"##vso[task.addattachment type=HelixJobCancellationToken;name={JobCorrelationId};]{attachmentPath}");
+    }
+
+    internal static string WriteCancellationTokenAttachment(
+        string jobName,
+        string cancellationToken,
+        string directory)
+    {
+        Directory.CreateDirectory(directory);
+        string path = Path.Combine(directory, $"helix-job-cancellation-{jobName}.json");
+        string content = JsonConvert.SerializeObject(new
+        {
+            jobName,
+            cancellationToken,
+        });
+        File.WriteAllText(path, content, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        return path;
     }
 
     internal static string GetCreatorValidationError(
