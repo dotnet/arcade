@@ -148,7 +148,7 @@ jobs:
         script: |
           New-Item -Path "$(Build.StagingDirectory)/ReleaseConfigs" -ItemType Directory -Force
           $filePath = "$(Build.StagingDirectory)/ReleaseConfigs/ReleaseConfigs.txt"
-          Add-Content -Path $filePath -Value $(BARBuildId)
+          Set-Content -Path $filePath -Value $(BARBuildId)
           Add-Content -Path $filePath -Value "$(DefaultChannels)"
           Add-Content -Path $filePath -Value $(IsStableBuild)
 
@@ -177,6 +177,10 @@ jobs:
           displayName: Publish ReleaseConfigs Artifact
           targetPath: '$(Build.StagingDirectory)/ReleaseConfigs'
           artifactName: ReleaseConfigs
+          # Pipeline artifacts are immutable, so a job rerun fails with
+          # "Artifact ReleaseConfigs already exists for build ...". The artifact was already
+          # published by the previous attempt, so let the rerun continue.
+          continueOnError: true
           retryCountOnTaskFailure: 10 # for any files being locked
           isProduction: false # just metadata for publishing
 
