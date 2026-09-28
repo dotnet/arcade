@@ -235,6 +235,9 @@ jobs:
         inlineScript: |
           set -euo pipefail
 
+          # AzureCLI@2 replaces SYSTEM_ACCESSTOKEN with the service connection token.
+          export SYSTEM_ACCESSTOKEN="$HELIX_AZDO_ACCESSTOKEN"
+
           toolArgs=(
             --helix-base-uri              '${{ parameters.helixBaseUri }}'
             --use-entra-authentication    '${{ parameters.useEntraAuthentication }}'
@@ -287,7 +290,7 @@ jobs:
             ./eng/common/dotnet.sh tool run '${{ parameters.toolCommand }}' -- "${toolArgs[@]}"
           fi
       env:
-        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+        HELIX_AZDO_ACCESSTOKEN: $(System.AccessToken)
 
   - ${{ if eq(parameters.useEntraAuthentication, false) }}:
     - bash: |

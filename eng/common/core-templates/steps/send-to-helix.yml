@@ -48,6 +48,9 @@ steps:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
+          # AzureCLI@2 replaces SYSTEM_ACCESSTOKEN with the service connection token.
+          $env:SYSTEM_ACCESSTOKEN = $env:HELIX_AZDO_ACCESSTOKEN
+
           $(Build.SourcesDirectory)\eng\common\msbuild.ps1 `
             $(Build.SourcesDirectory)/${{ parameters.HelixProjectPath }} `
             /restore `
@@ -81,7 +84,7 @@ steps:
         WaitForWorkItemCompletion: ${{ parameters.WaitForWorkItemCompletion }}
         HelixBaseUri: ${{ parameters.HelixBaseUri }}
         Creator: ${{ parameters.Creator }}
-        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+        HELIX_AZDO_ACCESSTOKEN: $(System.AccessToken)
       condition: and(${{ parameters.condition }}, eq(variables['Agent.Os'], 'Windows_NT'))
       continueOnError: ${{ parameters.continueOnError }}
     - task: AzureCLI@2
@@ -92,6 +95,9 @@ steps:
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
+          # AzureCLI@2 replaces SYSTEM_ACCESSTOKEN with the service connection token.
+          export SYSTEM_ACCESSTOKEN="$HELIX_AZDO_ACCESSTOKEN"
+
           $(Build.SourcesDirectory)/eng/common/msbuild.sh \
             $(Build.SourcesDirectory)/${{ parameters.HelixProjectPath }} \
             /restore \
@@ -125,7 +131,7 @@ steps:
         WaitForWorkItemCompletion: ${{ parameters.WaitForWorkItemCompletion }}
         HelixBaseUri: ${{ parameters.HelixBaseUri }}
         Creator: ${{ parameters.Creator }}
-        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+        HELIX_AZDO_ACCESSTOKEN: $(System.AccessToken)
       condition: and(${{ parameters.condition }}, ne(variables['Agent.Os'], 'Windows_NT'))
       continueOnError: ${{ parameters.continueOnError }}
 
