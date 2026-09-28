@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+scriptroot="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$scriptroot/pipeline-logging-functions.sh"
+
 toolArgs=(
   --helix-base-uri "$HELIX_MONITOR_BASE_URI"
   --use-entra-authentication "$HELIX_MONITOR_USE_ENTRA_AUTHENTICATION"
@@ -47,9 +50,15 @@ toolArgs+=( --build-reason "$BUILD_REASON" )
 toolArgs+=( --source-branch "$BUILD_SOURCEBRANCH" )
 
 cd "$BUILD_SOURCESDIRECTORY"
+exitCode=0
 if [ -n "${HELIX_MONITOR_TOOL_NUPKG_ARTIFACT_NAME:-}" ]; then
   export DOTNET_ROOT="$BUILD_SOURCESDIRECTORY/.dotnet"
-  ./eng/common/dotnet.sh exec "$HELIXJOBMONITORDLL" "${toolArgs[@]}"
+  ./eng/common/dotnet.sh exec "$HELIXJOBMONITORDLL" "${toolArgs[@]}" || exitCode=$?
 else
-  ./eng/common/dotnet.sh tool run "$HELIX_MONITOR_TOOL_COMMAND" -- "${toolArgs[@]}"
+  ./eng/common/dotnet.sh tool run "$HELIX_MONITOR_TOOL_COMMAND" -- "${toolArgs[@]}" || exitCode=$?
+fi
+
+if [ "$exitCode" -ne 0 ]; then
+  Write-PipelineTelemetryError -force -category 'Helix' "Helix job monitor failed (exit code '$exitCode')."
+  exit "$exitCode"
 fi
