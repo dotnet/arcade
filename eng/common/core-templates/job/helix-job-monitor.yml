@@ -2,7 +2,7 @@ parameters:
 # Maximum run time of the monitor job in minutes. Also used for --max-wait-minutes.
 - name: timeoutInMinutes
   type: number
-  default: 480
+  default: 360
 
 # Owner segment of the source repository (e.g. 'dotnet' for 'dotnet/runtime') passed via --organization.
 # Defaults to the owner segment of BUILD_REPOSITORY_NAME when empty.
@@ -135,6 +135,20 @@ jobs:
   displayName: Monitor Helix Jobs
   timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
   continueOnError: ${{ parameters.continueOnError }}
+  variables:
+    HELIX_MONITOR_BASE_URI: ${{ parameters.helixBaseUri }}
+    HELIX_MONITOR_USE_ENTRA_AUTHENTICATION: ${{ parameters.useEntraAuthentication }}
+    HELIX_MONITOR_POLLING_INTERVAL_SECONDS: ${{ parameters.pollingIntervalSeconds }}
+    HELIX_MONITOR_FAIL_ON_FAILED_TESTS: ${{ parameters.failWorkItemsWithFailedTests }}
+    HELIX_MONITOR_ALLOW_NO_HELIX_JOBS: ${{ parameters.allowNoHelixJobs }}
+    HELIX_MONITOR_USE_FULLY_QUALIFIED_TEST_NAME: ${{ parameters.useFullyQualifiedTestName }}
+    HELIX_MONITOR_TIMEOUT_IN_MINUTES: ${{ parameters.timeoutInMinutes }}
+    HELIX_MONITOR_TEST_RESULT_UPLOAD_PARALLELISM: ${{ parameters.testResultUploadParallelism }}
+    HELIX_MONITOR_ORGANIZATION: ${{ parameters.organization }}
+    HELIX_MONITOR_REPOSITORY: ${{ parameters.repository }}
+    HELIX_MONITOR_TEST_RESULT_ATTACHMENT_MODE: ${{ parameters.testResultAttachmentMode }}
+    HELIX_MONITOR_TOOL_NUPKG_ARTIFACT_NAME: ${{ parameters.toolNupkgArtifactName }}
+    HELIX_MONITOR_TOOL_COMMAND: ${{ parameters.toolCommand }}
   ${{ if ne(length(parameters.dependsOn), 0) }}:
     dependsOn: ${{ parameters.dependsOn }}
   ${{ if ne(parameters.condition, '') }}:
@@ -237,126 +251,12 @@ jobs:
 
           # AzureCLI@2 replaces SYSTEM_ACCESSTOKEN with the service connection token.
           export SYSTEM_ACCESSTOKEN="$HELIX_AZDO_ACCESSTOKEN"
-
-          toolArgs=(
-            --helix-base-uri              '${{ parameters.helixBaseUri }}'
-            --use-entra-authentication    '${{ parameters.useEntraAuthentication }}'
-            --polling-interval-seconds    '${{ parameters.pollingIntervalSeconds }}'
-            --fail-on-failed-tests        '${{ parameters.failWorkItemsWithFailedTests }}'
-            --allow-no-helix-jobs         '${{ parameters.allowNoHelixJobs }}'
-            --use-fully-qualified-test-name '${{ parameters.useFullyQualifiedTestName }}'
-            --max-wait-minutes            "$((${{ parameters.timeoutInMinutes }} - 5))"
-            --stage-name                  '$(System.StageName)'
-            --stage-attempt               '$(System.StageAttempt)'
-            --job-attempt                 '$(System.JobAttempt)'
-            --test-result-upload-parallelism '${{ parameters.testResultUploadParallelism }}'
-          )
-
-          organization='${{ parameters.organization }}'
-          repository='${{ parameters.repository }}'
-          testResultAttachmentMode='${{ parameters.testResultAttachmentMode }}'
-
-          if [ -z "$organization" ] || [ -z "$repository" ]; then
-            buildRepoName="${BUILD_REPOSITORY_NAME:-}"
-            if [ -n "$buildRepoName" ] && [[ "$buildRepoName" == */* ]]; then
-              repoOwner="${buildRepoName%%/*}"
-              repoName="${buildRepoName#*/}"
-            elif [ -n "$buildRepoName" ] && [[ "$buildRepoName" == *-* ]]; then
-              repoOwner="${buildRepoName%%-*}"
-              repoName="${buildRepoName#*-}"
-            fi
-
-            if [ -n "${repoOwner:-}" ] && [ -n "${repoName:-}" ]; then
-              if [ -z "$organization" ]; then organization="$repoOwner"; fi
-              if [ -z "$repository" ];   then repository="$repoName";   fi
-            fi
-          fi
-
-          if [ -n "$organization" ]; then toolArgs+=( --organization "$organization" ); fi
-          if [ -n "$repository" ];   then toolArgs+=( --repository   "$repository" );   fi
-          if [ -n "$testResultAttachmentMode" ]; then
-            toolArgs+=( --test-result-attachment-mode "$testResultAttachmentMode" )
-          fi
-
-          toolArgs+=( --build-reason  "$(Build.Reason)" )
-          toolArgs+=( --source-branch "$(Build.SourceBranch)" )
-
-          if [ -n '${{ parameters.toolNupkgArtifactName }}' ]; then
-            export DOTNET_ROOT="$(Build.SourcesDirectory)/.dotnet"
-            ./eng/common/dotnet.sh exec "$(HelixJobMonitorDll)" "${toolArgs[@]}"
-          else
-            pushd "$BUILD_SOURCESDIRECTORY" > /dev/null
-            trap 'popd > /dev/null' EXIT
-            ./eng/common/dotnet.sh tool run '${{ parameters.toolCommand }}' -- "${toolArgs[@]}"
-          fi
+          bash "$BUILD_SOURCESDIRECTORY/eng/common/run-helix-job-monitor.sh"
       env:
         HELIX_AZDO_ACCESSTOKEN: $(System.AccessToken)
 
   - ${{ if eq(parameters.useEntraAuthentication, false) }}:
-    - bash: |
-        set -euo pipefail
-
-        toolArgs=(
-          --helix-base-uri              '${{ parameters.helixBaseUri }}'
-          --use-entra-authentication    '${{ parameters.useEntraAuthentication }}'
-          --polling-interval-seconds    '${{ parameters.pollingIntervalSeconds }}'
-          --fail-on-failed-tests        '${{ parameters.failWorkItemsWithFailedTests }}'
-          --allow-no-helix-jobs         '${{ parameters.allowNoHelixJobs }}'
-          --use-fully-qualified-test-name '${{ parameters.useFullyQualifiedTestName }}'
-          --max-wait-minutes            "$((${{ parameters.timeoutInMinutes }} - 5))" # Set the tool's timeout slightly lower than the Azure DevOps job timeout to allow it to exit gracefully.
-          --stage-name                  '$(System.StageName)'
-          --stage-attempt               '$(System.StageAttempt)'
-          --job-attempt                 '$(System.JobAttempt)'
-          --test-result-upload-parallelism '${{ parameters.testResultUploadParallelism }}'
-        )
-
-        organization='${{ parameters.organization }}'
-        repository='${{ parameters.repository }}'
-        testResultAttachmentMode='${{ parameters.testResultAttachmentMode }}'
-
-        # Fall back to Azure DevOps-provided environment variables when the caller did not
-        # supply organization / repository explicitly. BUILD_REPOSITORY_NAME is typically
-        # 'owner/repo' for GitHub-backed builds and 'owner-repo' for internal builds.
-        if [ -z "$organization" ] || [ -z "$repository" ]; then
-          buildRepoName="${BUILD_REPOSITORY_NAME:-}"
-          if [ -n "$buildRepoName" ] && [[ "$buildRepoName" == */* ]]; then
-            repoOwner="${buildRepoName%%/*}"
-            repoName="${buildRepoName#*/}"
-          elif [ -n "$buildRepoName" ] && [[ "$buildRepoName" == *-* ]]; then
-            repoOwner="${buildRepoName%%-*}"
-            repoName="${buildRepoName#*-}"
-          fi
-
-          if [ -n "${repoOwner:-}" ] && [ -n "${repoName:-}" ]; then
-            if [ -z "$organization" ]; then organization="$repoOwner"; fi
-            if [ -z "$repository" ];   then repository="$repoName";   fi
-          fi
-        fi
-
-        if [ -n "$organization" ]; then toolArgs+=( --organization "$organization" ); fi
-        if [ -n "$repository" ];   then toolArgs+=( --repository   "$repository" );   fi
-        if [ -n "$testResultAttachmentMode" ]; then
-          toolArgs+=( --test-result-attachment-mode "$testResultAttachmentMode" )
-        fi
-
-        # Build.Reason and Build.SourceBranch are required to derive the Helix source filter
-        # the same way the Helix SDK submitter does (PR -> 'pr', internal -> 'official',
-        # otherwise -> 'ci'). Without these, manually-queued / scheduled / CI builds would
-        # be looked up under the wrong source prefix and find zero jobs.
-        toolArgs+=( --build-reason  "$(Build.Reason)" )
-        toolArgs+=( --source-branch "$(Build.SourceBranch)" )
-
-        if [ -n '${{ parameters.toolNupkgArtifactName }}' ]; then
-          # Tool was installed from a local nupkg; run the DLL via the repo-local dotnet.
-          export DOTNET_ROOT="$(Build.SourcesDirectory)/.dotnet"
-          ./eng/common/dotnet.sh exec "$(HelixJobMonitorDll)" "${toolArgs[@]}"
-        else
-          # Tool was restored from the local .config/dotnet-tools.json manifest; invoke it
-          # through the manifest from the repo root.
-          pushd "$BUILD_SOURCESDIRECTORY" > /dev/null
-          trap 'popd > /dev/null' EXIT
-          ./eng/common/dotnet.sh tool run '${{ parameters.toolCommand }}' -- "${toolArgs[@]}"
-        fi
+    - bash: bash "$BUILD_SOURCESDIRECTORY/eng/common/run-helix-job-monitor.sh"
       displayName: Monitor Helix Jobs
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)

@@ -79,7 +79,7 @@ jobs:
 - template: /eng/common/core-templates/job/helix-job-monitor.yml@self
   parameters:
     pollingIntervalSeconds: 30
-    timeoutInMinutes: 480
+    timeoutInMinutes: 360
 ```
 
 Useful parameters:
