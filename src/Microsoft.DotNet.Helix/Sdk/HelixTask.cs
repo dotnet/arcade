@@ -106,20 +106,27 @@ namespace Microsoft.DotNet.Helix.Sdk
             string serviceConnectionId = Environment.GetEnvironmentVariable("AZURESUBSCRIPTION_SERVICE_CONNECTION_ID");
             string oidcRequestUri = Environment.GetEnvironmentVariable("SYSTEM_OIDCREQUESTURI");
 
+            TokenCredential fallbackCredential;
             if (!string.IsNullOrEmpty(systemAccessToken) &&
                 !string.IsNullOrEmpty(clientId) &&
                 !string.IsNullOrEmpty(tenantId) &&
                 !string.IsNullOrEmpty(serviceConnectionId) &&
                 !string.IsNullOrEmpty(oidcRequestUri))
             {
-                return new AzurePipelinesCredential(
+                fallbackCredential = new AzurePipelinesCredential(
                     tenantId,
                     clientId,
                     serviceConnectionId,
                     systemAccessToken);
             }
+            else
+            {
+                fallbackCredential = new DefaultAzureCredential();
+            }
 
-            return new DefaultAzureCredential();
+            return new ChainedTokenCredential(
+                new AzureCliCredential(),
+                fallbackCredential);
         }
 #endif
 
