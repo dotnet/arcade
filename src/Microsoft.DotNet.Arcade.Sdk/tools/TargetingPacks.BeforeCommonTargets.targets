@@ -60,7 +60,7 @@
 
   <PropertyGroup Condition="'$(_NeedsTargetingPackCurrentForUnknownTargetFramework)' == 'true'">
     <!-- Allow targeting a higher Microsoft.NETCore.App version than what the SDK knows about -->
-    <NETCoreAppMaximumVersion>net$([MSBuild]::Add('$(BundledNETCoreAppTargetFrameworkVersion)', '1'))</NETCoreAppMaximumVersion>
+    <NETCoreAppMaximumVersion>$([MSBuild]::Add('$(NETCoreAppMaximumVersion.Split('.')[0])', '1')).$(NETCoreAppMaximumVersion.Split('.')[1])</NETCoreAppMaximumVersion>
     <!-- Allow missing prune package data and fallback to the previous TFM information -->
     <LoadPrunePackageDataFromNearestFramework>true</LoadPrunePackageDataFromNearestFramework>
   </PropertyGroup>
