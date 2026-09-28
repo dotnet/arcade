@@ -16,12 +16,8 @@
     <EnableKnownPackItemsForUnknownTargetFramework Condition="'$(EnableKnownPackItemsForUnknownTargetFramework)' == ''">true</EnableKnownPackItemsForUnknownTargetFramework>
     <TargetingPackCurrentTargetFramework Condition="'$(TargetingPackCurrentTargetFramework)' == ''">$(NetCurrent)</TargetingPackCurrentTargetFramework>
     <TargetingPackBaselineTargetFramework Condition="'$(TargetingPackBaselineTargetFramework)' == ''">$(BundledNETCoreAppTargetFramework)</TargetingPackBaselineTargetFramework>
-
-    <!-- If EnableKnownPackItemsForUnknownTargetFramework is enabled, add the required infra (props + items) when the "new" TFM is
-         incompatible with the baseline TFM and when the current inner-project TFM is that "new" TFM. -->
     <_NeedsTargetingPackCurrentForUnknownTargetFramework Condition="'$(EnableKnownPackItemsForUnknownTargetFramework)' == 'true' and
-      '$(TargetingPackCurrentTargetFramework)' != '$(TargetingPackBaselineTargetFramework)' and
-      '$(TargetFramework)' == '$(TargetingPackCurrentTargetFramework)' and
+      '$(TargetFrameworkIdentifier)' == '.NETCoreApp' and
       !$([MSBuild]::IsTargetFrameworkCompatible('$(TargetingPackBaselineTargetFramework)', '$(TargetingPackCurrentTargetFramework)'))">true</_NeedsTargetingPackCurrentForUnknownTargetFramework>
 
     <EnableKnownPackVersionUpdatesForCurrentTargetFramework Condition="'$(EnableKnownPackVersionUpdatesForCurrentTargetFramework)' == ''">true</EnableKnownPackVersionUpdatesForCurrentTargetFramework>
