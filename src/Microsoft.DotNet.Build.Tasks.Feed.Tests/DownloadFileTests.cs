@@ -363,13 +363,14 @@ public class DownloadFileTests
         actualError.WithMessage(
             $"Failed to download '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts. " +
             $"Last failure: System.Net.Http.HttpRequestException: Response status code does not indicate success: {(int)httpStatus} *");
+        actualError.WithInnerException<HttpRequestException>();
 
         buildEngine.BuildMessageEvents
             .Where(message => message.Message.StartsWith("Download attempt"))
             .Should().HaveCount(publishTask.RetryHandler.MaxAttempts);
         buildEngine.BuildMessageEvents.Should().OnlyContain(message =>
             !message.Message.StartsWith("Download attempt") ||
-            (message.Importance == Microsoft.Build.Framework.MessageImportance.High &&
+            (message.Importance == Microsoft.Build.Framework.MessageImportance.Low &&
              message.Message.Contains($"HTTP status: {httpStatus}") &&
              message.Message.Contains($"file '{_testTextFile}'") &&
              message.Message.Contains($"artifact '{PublishArtifactsInManifestBase.BlobArtifactsArtifactName}'") &&

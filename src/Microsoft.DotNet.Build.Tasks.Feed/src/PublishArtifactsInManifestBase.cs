@@ -1111,7 +1111,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
 
                 mostRecentlyCaughtException = ex;
                 Log.LogMessage(
-                    MessageImportance.High,
+                    MessageImportance.Low,
                     $"Download attempt {attempt + 1}/{RetryHandler.MaxAttempts} failed for file '{fileName}' " +
                     $"from artifact '{artifactName}' after {attemptDuration.Elapsed.TotalSeconds:F1} seconds. " +
                     $"HTTP status: {statusCode?.ToString() ?? "unavailable"}; " +
