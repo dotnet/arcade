@@ -32,11 +32,13 @@ The examples can all be run with `dotnet msbuild`. Internal queues (usually any 
 - `HelixUseEntraAuthentication=true` with an available `DefaultIdentityTokenCredential`, or
 - during migration, the legacy `HelixAccessToken` environment variable or MSBuild property.
 
-When Entra authentication is explicitly enabled, any legacy access token still
-injected by an existing variable group is ignored with a warning. Entra
-authentication supports Azure Pipelines workload identity, managed identity,
-and Azure CLI credentials and refreshes access tokens based on their expiry.
-It is not available in source-built Arcade.
+When a direct SDK invocation enables Entra authentication and also supplies a
+legacy access token, the token is ignored with a warning. The Azure Pipelines
+template does not forward `HelixAccessToken` when Entra authentication is
+enabled, so the template path has no token to warn about. Entra authentication
+supports Azure Pipelines workload identity, managed identity, and Azure CLI
+credentials and refreshes access tokens based on their expiry. It is not
+available in source-built Arcade.
 
 Azure Pipelines should use Arcade's `send-to-helix.yml` template rather than
 configure `DefaultIdentityTokenCredential` directly. The template accepts
