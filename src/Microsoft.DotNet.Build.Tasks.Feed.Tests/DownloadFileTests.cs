@@ -328,12 +328,27 @@ public class DownloadFileTests
 
         var testFile = Path.Combine("Symbols", _testTextFile);
         var fileResponseContent = TestInputs.ReadAllBytes(testFile);
-        var fileResponse = new HttpResponseMessage(httpStatus);
 
         var artifactResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = jsonContent
         };
+
+        HttpResponseMessage CreateFileResponse()
+        {
+            var response = new HttpResponseMessage(httpStatus)
+            {
+                Content = new ByteArrayContent(fileResponseContent),
+                RequestMessage = new HttpRequestMessage(
+                    HttpMethod.Get,
+                    "https://artifact-cdn.example/content?format=file&sig=secret-signature")
+            };
+            response.Headers.TryAddWithoutValidation("X-Test-Request-Id", "request-123");
+            response.Headers.TryAddWithoutValidation("X-TFS-Session", "00000000-1111-2222-3333-444444444444");
+            response.Headers.TryAddWithoutValidation("Set-Cookie", "secret-cookie");
+            response.Content.Headers.TryAddWithoutValidation("X-Test-Content", "content-123");
+            return response;
+        }
 
         // Create a series of fake http responses. First
         // there will be a response from the artifact API, which will be used
@@ -344,9 +359,9 @@ public class DownloadFileTests
                 { "https://dev.azure.com/dnceng/_apis/resources/Containers/123456?itemPath=BlobArtifacts%2Ftest.txt&isShallow=true&api-version=4.1-preview.4",
                     new[]
                     {
-                        new HttpResponseMessage(httpStatus),
-                        new HttpResponseMessage(httpStatus),
-                        new HttpResponseMessage(httpStatus),
+                        CreateFileResponse(),
+                        CreateFileResponse(),
+                        CreateFileResponse(),
                     }
                 }
             };
@@ -374,6 +389,11 @@ public class DownloadFileTests
              message.Message.Contains($"HTTP status: {httpStatus}") &&
              message.Message.Contains($"file '{_testTextFile}'") &&
              message.Message.Contains($"artifact '{PublishArtifactsInManifestBase.BlobArtifactsArtifactName}'") &&
+             message.Message.Contains("Request URI: 'https://dev.azure.com/dnceng/_apis/resources/Containers/123456?itemPath=BlobArtifacts%2Ftest.txt&isShallow=true&api-version=4.1-preview.4'") &&
+             message.Message.Contains("response URI: 'https://artifact-cdn.example/content?format=file&sig=[REDACTED]'") &&
+             message.Message.Contains($"response headers: Content-Length={fileResponseContent.Length}; Set-Cookie=[REDACTED]; X-Test-Content=content-123; X-Test-Request-Id=request-123; X-TFS-Session=00000000-1111-2222-3333-444444444444") &&
+             !message.Message.Contains("secret-cookie") &&
+             !message.Message.Contains("secret-signature") &&
              message.Message.Contains("System.Net.Http.HttpRequestException")));
 
         ValidateNoRemainingResponses(fakeHttpResponses, client);
