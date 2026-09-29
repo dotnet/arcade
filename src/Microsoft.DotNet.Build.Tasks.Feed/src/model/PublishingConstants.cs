@@ -1433,7 +1433,7 @@ public class PublishingConstants
             id: 10960,
             isInternal: false,
             publishingInfraVersion: PublishingInfraVersion.Latest,
-            akaMSChannelNames: [ "11.0.2xx" ],
+            akaMSChannelNames: [ "11.0.2xx", "11.0" ],
             akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
             akaMSDoNotCreateLinkPatterns: UnifiedBuildAkaMSDoNotCreateLinkPatterns,
             targetFeeds: DotNet11Feeds,
