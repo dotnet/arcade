@@ -301,27 +301,21 @@ public class PublishArtifactsInManifest : MSBuildTaskBase
                 tasks.Select(t => t.ExecuteAsync())
             );
 
+            // Once all assets have been published, promotes the build to the target channels informed.
+            // Since we can have multiple manifests (perhaps using different versions), things
+            // get a bit more complicated.
             // Check that all tasks returned true
             if (results.All(t => t) && !Log.HasLoggedErrors)
             {
-                // Once all assets have been published, promotes the build to the target channels informed. 
-                // Since we can have multiple manifests (perhaps using different versions), things
-                // get a bit more complicated.
-
-                IProductConstructionServiceApi client = PcsApiFactory.GetAuthenticated(
-                    MaestroApiEndpoint,
-                    BuildAssetRegistryToken,
-                    MaestroManagedIdentityId,
-                    !AllowInteractiveAuthentication);
-                ProductConstructionService.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
-
-                var targetChannelsIds = TargetChannels.Split('-').Select(ci => int.Parse(ci));
-
-                foreach (var targetChannelId in targetChannelsIds)
+                // The latest links should be updated only after publishing every manifest is complete,
+                // to avoid dead links in the interim.
+                var linkResults = await Task.WhenAll(tasks.Select(t => t.PublishLatestLinksAsync()));
+                if (!linkResults.All(result => result) || Log.HasLoggedErrors)
                 {
-                    await client.Channels.AddBuildToChannelAsync(BARBuildId, targetChannelId);
+                    return false;
                 }
 
+                await PromoteBuildToChannelsAsync();
                 return true;
             }
 
@@ -331,6 +325,23 @@ public class PublishArtifactsInManifest : MSBuildTaskBase
         {
             Log.LogErrorFromException(e, true);
             return false;
+        }
+    }
+
+    protected virtual async Task PromoteBuildToChannelsAsync()
+    {
+        IProductConstructionServiceApi client = PcsApiFactory.GetAuthenticated(
+            MaestroApiEndpoint,
+            BuildAssetRegistryToken,
+            MaestroManagedIdentityId,
+            !AllowInteractiveAuthentication);
+        ProductConstructionService.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
+
+        var targetChannelsIds = TargetChannels.Split('-').Select(ci => int.Parse(ci));
+
+        foreach (var targetChannelId in targetChannelsIds)
+        {
+            await client.Channels.AddBuildToChannelAsync(BARBuildId, targetChannelId);
         }
     }
 
