@@ -98,9 +98,9 @@ jobs:
 
 When Entra authentication is enabled:
 
-- `HelixAccessToken` is not forwarded to the Helix process. If a legacy token is still injected by a variable group, Arcade ignores it with a warning.
+- The pipeline templates do not forward `HelixAccessToken` to the Helix process. Direct SDK invocations that provide both a token and `HelixUseEntraAuthentication=true` ignore the token with a warning.
 - Authentication failures do not fall back to a PAT or anonymous access.
-- The selected authentication mode is logged without credential material.
+- The SDK submission task logs the selected authentication mode without credential material. The standalone monitor does not currently emit an equivalent mode message.
 - Source-built Arcade cannot use the Entra path.
 
 #### Migration and compatibility
