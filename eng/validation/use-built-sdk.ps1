@@ -19,15 +19,34 @@ $repoRoot = (Resolve-Path "$PSScriptRoot/../..").Path
 
 # Discover the produced Arcade SDK version from the built package. Exclude *.symbols.nupkg so we don't
 # pick a symbols package and extract a bogus version (e.g. '11.0.0-beta.xxx.symbols').
-$arcadePkg = Get-ChildItem -Path $PackagesSource -Recurse -Filter 'Microsoft.DotNet.Arcade.Sdk.*.nupkg' -ErrorAction SilentlyContinue |
-  Where-Object { $_.Name -notlike '*.symbols.nupkg' } | Select-Object -First 1
-if (-not $arcadePkg) {
+$arcadePackages = @(Get-ChildItem -Path $PackagesSource -Recurse -Filter 'Microsoft.DotNet.Arcade.Sdk.*.nupkg' -ErrorAction SilentlyContinue |
+  Where-Object { $_.Name -notlike '*.symbols.nupkg' })
+if ($arcadePackages.Count -eq 0) {
   throw "Could not find Microsoft.DotNet.Arcade.Sdk.*.nupkg under '$PackagesSource'."
 }
-if ($arcadePkg.Name -notmatch '^Microsoft\.DotNet\.Arcade\.Sdk\.(.+)\.nupkg$') {
-  throw "Unexpected Arcade SDK package name '$($arcadePkg.Name)'."
+
+$arcadeVersions = @($arcadePackages | ForEach-Object {
+  if ($_.Name -notmatch '^Microsoft\.DotNet\.Arcade\.Sdk\.(.+)\.nupkg$') {
+    throw "Unexpected Arcade SDK package name '$($_.Name)'."
+  }
+  $Matches[1]
+} | Sort-Object -Unique)
+if ($arcadeVersions.Count -ne 1) {
+  throw "Expected one Arcade SDK version under '$PackagesSource', but found: $($arcadeVersions -join ', ')."
 }
-$version = $Matches[1]
+$version = $arcadeVersions[0]
+
+# Both global.json SDK entries use the same build version. Require the matching Helix package before
+# changing either entry so validation cannot restore Helix remotely or fail later with a missing SDK.
+$helixPackages = @(Get-ChildItem -Path $PackagesSource -Recurse -Filter "Microsoft.DotNet.Helix.Sdk.$version.nupkg" -ErrorAction SilentlyContinue)
+if ($helixPackages.Count -eq 0) {
+  throw "Could not find Microsoft.DotNet.Helix.Sdk.$version.nupkg under '$PackagesSource'."
+}
+
+$sdkPackages = [ordered]@{
+  'Microsoft.DotNet.Arcade.Sdk' = $arcadePackages
+  'Microsoft.DotNet.Helix.Sdk' = $helixPackages
+}
 Write-Host "Using locally built Arcade/Helix SDK version '$version'."
 
 # Bump the msbuild-sdks versions in global.json (targeted replace to preserve formatting).
@@ -66,15 +85,13 @@ if ($null -eq $packageSources) {
   throw "'$nugetConfigPath' has no <packageSources> element; cannot add the local feed."
 }
 
-# If the config uses packageSourceMapping, a bare <add> source is never consulted for a package
-# whose ID is claimed by a more/equally specific pattern on another source. The newly built SDK
-# packages ('Microsoft.DotNet.Arcade.Sdk' / 'Microsoft.DotNet.Helix.Sdk') match the remote feeds'
-# 'microsoft.*' mapping, so without a matching mapping entry NuGet would never look at our local feed.
-# Mirror just the 'microsoft.*' pattern on each local feed so it *ties* with the remotes for
-# microsoft.* IDs: the local feed becomes eligible for the new SDK (which only it has) but, because it
-# only ties (never exceeds) the remote patterns and is scoped to microsoft.*, it neither blocks
-# resolution of microsoft.* packages it lacks nor gets consulted for unrelated (non-microsoft) IDs.
+# Exact SDK mappings take precedence over the remote feeds' wildcard mappings. Combined with an
+# isolated global-packages directory in the validation job, this guarantees both SDKs resolve from
+# the downloaded build output instead of a remote feed or a package cached by an earlier job.
 $packageSourceMapping = $nugetConfig.SelectSingleNode("//packageSourceMapping")
+if ($null -eq $packageSourceMapping) {
+  throw "'$nugetConfigPath' has no <packageSourceMapping> element; cannot restrict the built SDKs to local feeds."
+}
 
 # Idempotency: remove any 'arcade-local-*' entries a previous run may have added, so re-running in the
 # same workspace doesn't create duplicate keys (which NuGet rejects).
@@ -100,18 +117,32 @@ foreach ($dir in $feedDirs) {
   $newSource.Attributes.Append($valueAttribute) | Out-Null
   $packageSources.AppendChild($newSource) | Out-Null
 
-  if ($null -ne $packageSourceMapping) {
-    $mappingSource = $nugetConfig.CreateElement("packageSource")
-    $mappingKey = $nugetConfig.CreateAttribute("key")
-    $mappingKey.Value = $key
-    $mappingSource.Attributes.Append($mappingKey) | Out-Null
-    $pkg = $nugetConfig.CreateElement("package")
-    $patternAttribute = $nugetConfig.CreateAttribute("pattern")
-    $patternAttribute.Value = 'microsoft.*'
-    $pkg.Attributes.Append($patternAttribute) | Out-Null
-    $mappingSource.AppendChild($pkg) | Out-Null
-    $packageSourceMapping.AppendChild($mappingSource) | Out-Null
+  $mappingSource = $nugetConfig.CreateElement("packageSource")
+  $mappingKey = $nugetConfig.CreateAttribute("key")
+  $mappingKey.Value = $key
+  $mappingSource.Attributes.Append($mappingKey) | Out-Null
+
+  foreach ($sdkId in $sdkPackages.Keys) {
+    $feedContainsSdk = @($sdkPackages[$sdkId] | Where-Object {
+      [StringComparer]::OrdinalIgnoreCase.Equals($_.DirectoryName, $dir)
+    }).Count -gt 0
+    if ($feedContainsSdk) {
+      $pkg = $nugetConfig.CreateElement("package")
+      $patternAttribute = $nugetConfig.CreateAttribute("pattern")
+      $patternAttribute.Value = $sdkId
+      $pkg.Attributes.Append($patternAttribute) | Out-Null
+      $mappingSource.AppendChild($pkg) | Out-Null
+    }
   }
+
+  # Keep other built Microsoft packages eligible from local feeds. The exact SDK mappings above are
+  # more specific than every remote microsoft.* pattern, so only the SDKs are forced to local output.
+  $pkg = $nugetConfig.CreateElement("package")
+  $patternAttribute = $nugetConfig.CreateAttribute("pattern")
+  $patternAttribute.Value = 'microsoft.*'
+  $pkg.Attributes.Append($patternAttribute) | Out-Null
+  $mappingSource.AppendChild($pkg) | Out-Null
+  $packageSourceMapping.AppendChild($mappingSource) | Out-Null
 
   $index++
 }
