@@ -10,7 +10,7 @@ jobs:
   parameters:
     name: ValidateArcadeSDK
     displayName: Validate Arcade SDK
-    enableMicrobuild: false
+    enableMicrobuild: true
     microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
     artifacts:
       download:
