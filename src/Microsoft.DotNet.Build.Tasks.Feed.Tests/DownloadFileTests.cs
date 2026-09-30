@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using AwesomeAssertions;
 using Microsoft.Arcade.Common;
@@ -378,7 +379,7 @@ public class DownloadFileTests
         actualError.WithMessage(
             $"Failed to download '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts. " +
             $"Last failure: System.Net.Http.HttpRequestException: Response status code does not indicate success: {(int)httpStatus} *");
-        actualError.WithInnerException<HttpRequestException>();
+        actualError.And.InnerException.Should().BeNull();
 
         buildEngine.BuildMessageEvents
             .Where(message => message.Message.StartsWith("Download attempt"))
@@ -397,6 +398,44 @@ public class DownloadFileTests
              message.Message.Contains("System.Net.Http.HttpRequestException")));
 
         ValidateNoRemainingResponses(fakeHttpResponses, client);
+    }
+
+    [Fact]
+    public async Task DownloadFailure_RedactsSensitiveValuesFromExceptionMessages()
+    {
+        var buildEngine = new MockBuildEngine();
+        var publishTask = new PublishArtifactsInManifestV3
+        {
+            BuildEngine = buildEngine,
+            AzureDevOpsOrg = "dnceng",
+            BuildId = "1234",
+            AzureDevOpsProject = "blah",
+            RetryHandler = new ExponentialRetry() { MaxAttempts = 1, DelayBase = 1 }
+        };
+
+        using HttpClient client = new HttpClient(new ExceptionMessageHttpHandler());
+        var path = TestInputs.GetFullPath(Guid.NewGuid().ToString());
+
+        var actualError = await FluentActions.Invoking(() => publishTask.DownloadFileAsync(
+                client,
+                PublishArtifactsInManifestBase.BlobArtifactsArtifactName,
+                _testTextFile,
+                path))
+            .Should().ThrowAsync<Exception>();
+
+        actualError.And.Message.Should().Contain("sig=[REDACTED]");
+        actualError.And.Message.Should().Contain("token=[REDACTED]");
+        actualError.And.Message.Should().NotContain("secret-signature");
+        actualError.And.Message.Should().NotContain("secret-token");
+        actualError.And.InnerException.Should().BeNull();
+
+        buildEngine.BuildMessageEvents
+            .Where(message => message.Message.StartsWith("Download attempt"))
+            .Should().OnlyContain(message =>
+                message.Message.Contains("sig=[REDACTED]") &&
+                message.Message.Contains("token=[REDACTED]") &&
+                !message.Message.Contains("secret-signature") &&
+                !message.Message.Contains("secret-token"));
     }
 
     [Theory]
@@ -470,5 +509,39 @@ public class DownloadFileTests
         ValidateNoRemainingResponses(fakeHttpResponses, client);
         publishTask.DeleteTemporaryFiles(path);
         publishTask.DeleteTemporaryDirectory(path);
+    }
+
+    private sealed class ExceptionMessageHttpHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (request.RequestUri.AbsolutePath.EndsWith("/artifacts", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(
+                        new
+                        {
+                            count = 1,
+                            value = new[]
+                            {
+                                new
+                                {
+                                    id = "1234",
+                                    name = "BlobArtifacts",
+                                    resource = new
+                                    {
+                                        type = "Container",
+                                        data = "#/123456/BlobArtifacts",
+                                    }
+                                }
+                            }
+                        })
+                });
+            }
+
+            throw new HttpRequestException(
+                "Request to 'https://artifact.example/content?format=file&sig=secret-signature' failed; token=secret-token");
+        }
     }
 }

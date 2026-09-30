@@ -1114,6 +1114,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                 }
 
                 mostRecentlyCaughtException = ex;
+                string exceptionDetails = FormatExceptionForLogging(ex);
                 Log.LogMessage(
                     MessageImportance.Low,
                     $"Download attempt {attempt + 1}/{RetryHandler.MaxAttempts} failed for file '{fileName}' " +
@@ -1122,18 +1123,54 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                     $"expected bytes: {expectedBytes?.ToString() ?? "unknown"}; downloaded bytes: {downloadedBytes}. " +
                     $"Request URI: '{SanitizeUriForLogging(uri)}'; response URI: '{responseUri ?? "unavailable"}'; " +
                     $"response headers: {responseHeaders ?? "unavailable"}. " +
-                    $"{ex.GetType().FullName}: {ex.Message}");
+                    exceptionDetails);
                 return false;
             }
         }).ConfigureAwait(false);
 
         if (!success)
         {
+            string exceptionDetails = FormatExceptionForLogging(mostRecentlyCaughtException);
             throw new Exception(
                 $"Failed to download '{path}' after {RetryHandler.MaxAttempts} attempts. " +
-                $"Last failure: {mostRecentlyCaughtException?.GetType().FullName}: {mostRecentlyCaughtException?.Message}",
-                mostRecentlyCaughtException);
+                $"Last failure: {exceptionDetails}");
         }
+    }
+
+    private static string FormatExceptionForLogging(Exception exception)
+    {
+        if (exception == null)
+        {
+            return "unavailable";
+        }
+
+        var details = new List<string>();
+        for (Exception current = exception; current != null; current = current.InnerException)
+        {
+            details.Add($"{current.GetType().FullName}: {SanitizeTextForLogging(current.Message)}");
+        }
+
+        return string.Join(" ---> ", details);
+    }
+
+    private static string SanitizeTextForLogging(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return text ?? string.Empty;
+        }
+
+        string sanitized = Regex.Replace(
+            text,
+            @"https?://[^\s'""<>]+",
+            match => SanitizeUriForLogging(match.Value),
+            RegexOptions.IgnoreCase);
+
+        return Regex.Replace(
+            sanitized,
+            @"(?<name>[A-Za-z0-9_-]*(?:Authorization|Cookie|Api-Key|Credential|Password|Secret|Signature|Token|Sig)[A-Za-z0-9_-]*)\s*[:=]\s*[^&,;\r\n]+",
+            match => $"{match.Groups["name"].Value}=[REDACTED]",
+            RegexOptions.IgnoreCase);
     }
 
     private static string FormatResponseHeadersForLogging(HttpResponseMessage response)
