@@ -1767,14 +1767,12 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         }
     }
 
-    internal async Task<bool> PublishLatestLinksAsync()
+    protected async Task PublishLatestLinksAsync()
     {
         while (!Log.HasLoggedErrors && _pendingLatestLinks.TryDequeue(out var pendingLinks))
         {
             await CreateOrUpdateLatestLinksAsync(pendingLinks.Assets, pendingLinks.FeedConfig);
         }
-
-        return !Log.HasLoggedErrors;
     }
 
     protected virtual async Task CreateOrUpdateLatestLinksAsync(HashSet<string> assets, TargetFeedConfig feedConfig)

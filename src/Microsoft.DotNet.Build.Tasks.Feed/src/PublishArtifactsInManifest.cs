@@ -301,20 +301,12 @@ public class PublishArtifactsInManifest : MSBuildTaskBase
                 tasks.Select(t => t.ExecuteAsync())
             );
 
-            // Once all assets have been published, promotes the build to the target channels informed.
-            // Since we can have multiple manifests (perhaps using different versions), things
-            // get a bit more complicated.
             // Check that all tasks returned true
             if (results.All(t => t) && !Log.HasLoggedErrors)
             {
-                // The latest links should be updated only after publishing every manifest is complete,
-                // to avoid dead links in the interim.
-                var linkResults = await Task.WhenAll(tasks.Select(t => t.PublishLatestLinksAsync()));
-                if (!linkResults.All(result => result) || Log.HasLoggedErrors)
-                {
-                    return false;
-                }
-
+                // Once all assets have been published, promotes the build to the target channels informed.
+                // Since we can have multiple manifests (perhaps using different versions), things
+                // get a bit more complicated.
                 await PromoteBuildToChannelsAsync();
                 return true;
             }

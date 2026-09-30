@@ -158,6 +158,10 @@ public class PublishArtifactsInManifestTests
             ]));
             await HandleBlobPublishingAsync(buildAssets);
             await AfterPublishing();
+            if (!Log.HasLoggedErrors)
+            {
+                await PublishLatestLinksAsync();
+            }
             return !Log.HasLoggedErrors;
         }
 
@@ -405,35 +409,32 @@ public class PublishArtifactsInManifestTests
         };
 
     [Fact]
-    public async Task LatestLinksWaitForEveryManifestAndPromotionWaitsForLinks()
+    public async Task LatestLinksWaitForPublishingAndPromotionWaitsForLinks()
     {
         var buildEngine = new MockBuildEngine();
         var feedConfig = CreateLatestLinksFeed();
-        using var first = new BlobPublishingTask(buildEngine, feedConfig);
-        using var second = new BlobPublishingTask(buildEngine, feedConfig);
-        var firstPublished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var publishing = new BlobPublishingTask(buildEngine, feedConfig);
+        var blobsPublished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var finishPublishing = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var linksStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var finishLinks = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        first.AfterPublishing = () =>
+        publishing.AfterPublishing = () =>
         {
-            firstPublished.SetResult();
-            return Task.CompletedTask;
+            blobsPublished.SetResult();
+            return finishPublishing.Task;
         };
-        second.AfterPublishing = () => finishPublishing.Task;
-        first.UpdateLinks = () =>
+        publishing.UpdateLinks = () =>
         {
             linksStarted.SetResult();
             return finishLinks.Task;
         };
-        var task = CreatePublishingTask(buildEngine, first, second);
+        var task = CreatePublishingTask(buildEngine, publishing);
         Task<bool> execution = task.ExecuteAsync();
 
         try
         {
-            await firstPublished.Task.WaitAsync(TimeSpan.FromSeconds(30));
-            first.LinkUpdates.Should().BeEmpty();
-            second.LinkUpdates.Should().BeEmpty();
+            await blobsPublished.Task.WaitAsync(TimeSpan.FromSeconds(30));
+            publishing.LinkUpdates.Should().BeEmpty();
             task.PromotionCount.Should().Be(0);
 
             finishPublishing.SetResult();
@@ -443,11 +444,9 @@ public class PublishArtifactsInManifestTests
             finishLinks.SetResult();
 
             (await execution.WaitAsync(TimeSpan.FromSeconds(30))).Should().BeTrue();
-            first.LinkUpdates.Should().ContainSingle();
-            first.LinkUpdates[0].Assets.Should().Equal(first.BlobId);
-            first.LinkUpdates[0].FeedConfig.Should().BeSameAs(feedConfig);
-            second.LinkUpdates.Should().ContainSingle();
-            second.LinkUpdates[0].Assets.Should().Equal(second.BlobId);
+            publishing.LinkUpdates.Should().ContainSingle();
+            publishing.LinkUpdates[0].Assets.Should().Equal(publishing.BlobId);
+            publishing.LinkUpdates[0].FeedConfig.Should().BeSameAs(feedConfig);
             task.PromotionCount.Should().Be(1);
             buildEngine.BuildErrorEvents.Should().BeEmpty();
         }
@@ -462,36 +461,27 @@ public class PublishArtifactsInManifestTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task FailedManifestDoesNotUpdateLinksFromSuccessfulManifest(bool throwException)
+    public async Task FailureAfterBlobPublishingDoesNotUpdateLatestLinks(bool throwException)
     {
         var buildEngine = new MockBuildEngine();
-        using var successful = new BlobPublishingTask(buildEngine, CreateLatestLinksFeed());
-        var published = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        successful.AfterPublishing = () =>
+        using var publishing = new BlobPublishingTask(buildEngine, CreateLatestLinksFeed());
+        publishing.AfterPublishing = () =>
         {
-            published.SetResult();
-            return Task.CompletedTask;
-        };
-        var failed = new DelegatePublishingTask(async () =>
-        {
-            await published.Task;
             if (throwException)
             {
                 throw new InvalidOperationException("Upload failed.");
             }
 
-            return false;
-        });
-        var task = CreatePublishingTask(buildEngine, successful, failed);
+            publishing.Log.LogError("Upload failed.");
+            return Task.CompletedTask;
+        };
+        var task = CreatePublishingTask(buildEngine, publishing);
 
         (await task.ExecuteAsync()).Should().BeFalse();
 
-        successful.LinkUpdates.Should().BeEmpty();
+        publishing.LinkUpdates.Should().BeEmpty();
         task.PromotionCount.Should().Be(0);
-        if (throwException)
-        {
-            buildEngine.BuildErrorEvents.Should().ContainSingle(error => error.Message.Contains("Upload failed."));
-        }
+        buildEngine.BuildErrorEvents.Should().ContainSingle(error => error.Message.Contains("Upload failed."));
     }
 
     [Fact]

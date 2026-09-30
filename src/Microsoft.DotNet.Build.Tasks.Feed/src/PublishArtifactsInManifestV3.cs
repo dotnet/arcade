@@ -211,6 +211,13 @@ public class PublishArtifactsInManifestV3 : PublishArtifactsInManifestBase
             });
 
             await PersistPendingAssetLocationAsync(client);
+
+            // The latest links should be updated only after publishing is complete, to avoid
+            // dead links in the interim.
+            if (!Log.HasLoggedErrors)
+            {
+                await PublishLatestLinksAsync();
+            }
         }
         catch (Exception e)
         {
