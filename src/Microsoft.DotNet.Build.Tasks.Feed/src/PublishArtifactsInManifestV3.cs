@@ -210,7 +210,7 @@ public class PublishArtifactsInManifestV3 : PublishArtifactsInManifestBase
                     clientThrottle)
             });
 
-            await CompletePublishingAsync(client);
+            await PublishAssetLocationsAndLatestLinksAsync(client);
         }
         catch (Exception e)
         {

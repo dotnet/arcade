@@ -1767,7 +1767,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         }
     }
 
-    protected async Task CompletePublishingAsync(IProductConstructionServiceApi client)
+    protected async Task PublishAssetLocationsAndLatestLinksAsync(IProductConstructionServiceApi client)
     {
         await PersistPendingAssetLocationAsync(client);
 
