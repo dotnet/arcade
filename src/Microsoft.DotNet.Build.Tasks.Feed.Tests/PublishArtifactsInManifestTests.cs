@@ -125,8 +125,10 @@ public class PublishArtifactsInManifestTests
 
         public string BlobId => Path.GetFileName(_blobFile);
         public Mock<IAssetPublisher> Publisher { get; } = new();
+        public Mock<ProductConstructionService.Client.IProductConstructionServiceApi> BarClient { get; } = new();
         public List<(HashSet<string> Assets, TargetFeedConfig FeedConfig)> LinkUpdates { get; } = new();
         public Func<Task> AfterPublishing { get; set; } = () => Task.CompletedTask;
+        public Func<Task> PersistLocations { get; set; } = () => Task.CompletedTask;
         public Func<Task> UpdateLinks { get; set; } = () => Task.CompletedTask;
 
         public BlobPublishingTask(MockBuildEngine buildEngine, TargetFeedConfig feedConfig)
@@ -135,6 +137,10 @@ public class PublishArtifactsInManifestTests
             BuildEngine = buildEngine;
             BlobAssetsBasePath = Path.GetDirectoryName(_blobFile);
             NonStreamingPublishingMaxClients = 1;
+            BarClient.Setup(client => client.Assets.BulkAddLocationsAsync(
+                It.IsAny<List<ProductConstructionService.Client.Models.AssetAndLocation>>(),
+                It.IsAny<CancellationToken>()))
+                .Returns(() => PersistLocations());
             Publisher.Setup(p => p.PublishAssetAsync(
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<PushOptions>(), It.IsAny<SemaphoreSlim>()))
                 .Returns(Task.CompletedTask);
@@ -158,10 +164,7 @@ public class PublishArtifactsInManifestTests
             ]));
             await HandleBlobPublishingAsync(buildAssets);
             await AfterPublishing();
-            if (!Log.HasLoggedErrors)
-            {
-                await PublishLatestLinksAsync();
-            }
+            await CompletePublishingAsync(BarClient.Object);
             return !Log.HasLoggedErrors;
         }
 
@@ -409,13 +412,15 @@ public class PublishArtifactsInManifestTests
         };
 
     [Fact]
-    public async Task LatestLinksWaitForPublishingAndPromotionWaitsForLinks()
+    public async Task LatestLinksWaitForPublishingAndBarPersistenceAndPromotionWaitsForLinks()
     {
         var buildEngine = new MockBuildEngine();
         var feedConfig = CreateLatestLinksFeed();
         using var publishing = new BlobPublishingTask(buildEngine, feedConfig);
         var blobsPublished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var finishPublishing = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var persistenceStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var finishPersistence = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var linksStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var finishLinks = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         publishing.AfterPublishing = () =>
@@ -428,6 +433,11 @@ public class PublishArtifactsInManifestTests
             linksStarted.SetResult();
             return finishLinks.Task;
         };
+        publishing.PersistLocations = () =>
+        {
+            persistenceStarted.SetResult();
+            return finishPersistence.Task;
+        };
         var task = CreatePublishingTask(buildEngine, publishing);
         Task<bool> execution = task.ExecuteAsync();
 
@@ -438,6 +448,12 @@ public class PublishArtifactsInManifestTests
             task.PromotionCount.Should().Be(0);
 
             finishPublishing.SetResult();
+            await persistenceStarted.Task.WaitAsync(TimeSpan.FromSeconds(30));
+            publishing.LinkUpdates.Should().BeEmpty();
+            task.PromotionCount.Should().Be(0);
+            execution.IsCompleted.Should().BeFalse();
+
+            finishPersistence.SetResult();
             await linksStarted.Task.WaitAsync(TimeSpan.FromSeconds(30));
             task.PromotionCount.Should().Be(0);
             execution.IsCompleted.Should().BeFalse();
@@ -447,12 +463,17 @@ public class PublishArtifactsInManifestTests
             publishing.LinkUpdates.Should().ContainSingle();
             publishing.LinkUpdates[0].Assets.Should().Equal(publishing.BlobId);
             publishing.LinkUpdates[0].FeedConfig.Should().BeSameAs(feedConfig);
+            publishing.BarClient.Verify(client => client.Assets.BulkAddLocationsAsync(
+                It.Is<List<ProductConstructionService.Client.Models.AssetAndLocation>>(locations =>
+                    locations.Count == 1 && locations[0].AssetId == 1 && locations[0].Location == feedConfig.SafeTargetURL),
+                It.IsAny<CancellationToken>()), Times.Once);
             task.PromotionCount.Should().Be(1);
             buildEngine.BuildErrorEvents.Should().BeEmpty();
         }
         finally
         {
             finishPublishing.TrySetResult();
+            finishPersistence.TrySetResult();
             finishLinks.TrySetResult();
             await execution.WaitAsync(TimeSpan.FromSeconds(30));
         }
@@ -500,6 +521,32 @@ public class PublishArtifactsInManifestTests
         publishing.LinkUpdates.Should().BeEmpty();
         task.PromotionCount.Should().Be(0);
         buildEngine.BuildErrorEvents.Should().ContainSingle(error => error.Message.Contains("Upload failed."));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task BarPersistenceFailureDoesNotUpdateLatestLinksOrPromote(bool throwException)
+    {
+        var buildEngine = new MockBuildEngine();
+        using var publishing = new BlobPublishingTask(buildEngine, CreateLatestLinksFeed());
+        publishing.PersistLocations = () =>
+        {
+            if (throwException)
+            {
+                throw new InvalidOperationException("BAR persistence failed.");
+            }
+
+            publishing.Log.LogError("BAR persistence failed.");
+            return Task.CompletedTask;
+        };
+        var task = CreatePublishingTask(buildEngine, publishing);
+
+        (await task.ExecuteAsync()).Should().BeFalse();
+
+        publishing.LinkUpdates.Should().BeEmpty();
+        task.PromotionCount.Should().Be(0);
+        buildEngine.BuildErrorEvents.Should().ContainSingle(error => error.Message.Contains("BAR persistence failed."));
     }
 
     [Theory]
