@@ -220,4 +220,29 @@ public class GenerateTrainingInputFilesTests
         Assert.True(result);
         Directory.Delete(dir, recursive: true);
     }
+
+    [Fact]
+    public void ShortensOutputFileNamesThatExceedLegacyPathLimit()
+    {
+        const string outputDirectory = @"C:\OptProf\Test\Configurations\TestCase";
+        var entry = new IbcEntry(
+            entryName: "Microsoft.Build.dll",
+            relativeInstallationPath: @"Common7\IDE\Microsoft.Build.dll",
+            relativeDirectoryPath: new string('a', 240),
+            ngenApplicationPath: @"Common7\IDE\devenv.exe");
+
+        string basePath = GenerateTrainingInputFiles.GetOutputBasePath(outputDirectory, entry);
+
+        Assert.StartsWith(Path.Combine(outputDirectory, "Microsoft.Build."), basePath);
+        Assert.True((basePath + ".2147483647.IBC.json").Length <= 259);
+        Assert.Equal(basePath, GenerateTrainingInputFiles.GetOutputBasePath(outputDirectory, entry));
+
+        var differentEntry = new IbcEntry(
+            entryName: "Microsoft.Build.dll",
+            relativeInstallationPath: @"Common7\IDE\Microsoft.Build.dll",
+            relativeDirectoryPath: new string('b', 240),
+            ngenApplicationPath: @"Common7\IDE\devenv.exe");
+
+        Assert.NotEqual(basePath, GenerateTrainingInputFiles.GetOutputBasePath(outputDirectory, differentEntry));
+    }
 }
