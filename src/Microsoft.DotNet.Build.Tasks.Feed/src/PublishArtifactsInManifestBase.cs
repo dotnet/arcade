@@ -1773,14 +1773,6 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
 
         // The latest links should be updated only after publishing is complete, to avoid
         // dead links in the interim.
-        if (!Log.HasLoggedErrors)
-        {
-            await PublishLatestLinksAsync();
-        }
-    }
-
-    private async Task PublishLatestLinksAsync()
-    {
         while (!Log.HasLoggedErrors && _pendingLatestLinks.TryDequeue(out var pendingLinks))
         {
             await CreateOrUpdateLatestLinksAsync(pendingLinks.Assets, pendingLinks.FeedConfig);
