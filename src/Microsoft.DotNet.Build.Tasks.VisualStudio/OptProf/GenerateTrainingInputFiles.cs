@@ -5,7 +5,6 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -20,9 +19,7 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio;
 public sealed class GenerateTrainingInputFiles : Microsoft.Build.Utilities.Task
 {
     private const int MaxLegacyPathLength = 259;
-    private const int MaximumIndexLength = 10;
     private const string IbcFileExtension = ".IBC.json";
-    private const int HashLength = 16;
 
     /// <summary>
     /// Absolute path to the OptProf.json config file.
@@ -150,12 +147,11 @@ public sealed class GenerateTrainingInputFiles : Microsoft.Build.Utilities.Task
         foreach (var entry in ibcEntries)
         {
             int index = 0;
-            string basePath = GetOutputBasePath(outDir, entry);
 
             string fullPath;
             do
             {
-                fullPath = basePath + "." + index + IbcFileExtension;
+                fullPath = GetOutputPath(outDir, entry, index);
                 index++;
             }
             while (File.Exists(fullPath));
@@ -168,35 +164,22 @@ public sealed class GenerateTrainingInputFiles : Microsoft.Build.Utilities.Task
         }
     }
 
-    internal static string GetOutputBasePath(string outDir, IbcEntry entry)
+    internal static string GetOutputPath(string outDir, IbcEntry entry, int index)
     {
         string fileName = entry.RelativeDirectoryPath.Replace("\\", "") + Path.GetFileNameWithoutExtension(entry.RelativeInstallationPath);
-        string basePath = Path.Combine(outDir, fileName);
-        int maxBasePathLength = MaxLegacyPathLength - MaximumIndexLength - IbcFileExtension.Length - 1;
+        string suffix = "." + index + IbcFileExtension;
+        int maxFileNameLength = MaxLegacyPathLength - outDir.Length - suffix.Length - 1;
 
-        if (basePath.Length <= maxBasePathLength)
-        {
-            return basePath;
-        }
-
-        string hash;
-        using (SHA256 sha256 = SHA256.Create())
-        {
-            hash = BitConverter.ToString(sha256.ComputeHash(Encoding.UTF8.GetBytes(fileName))).Replace("-", "").Substring(0, HashLength);
-        }
-
-        string assemblyName = Path.GetFileNameWithoutExtension(entry.RelativeInstallationPath);
-        int maxAssemblyNameLength = maxBasePathLength - outDir.Length - hash.Length - 2;
-        if (maxAssemblyNameLength <= 0)
+        if (maxFileNameLength <= 0)
         {
             throw new PathTooLongException($"The OptProf output directory '{outDir}' is too long.");
         }
 
-        if (assemblyName.Length > maxAssemblyNameLength)
+        if (fileName.Length > maxFileNameLength)
         {
-            assemblyName = assemblyName.Substring(0, maxAssemblyNameLength);
+            fileName = fileName.Substring(0, maxFileNameLength);
         }
 
-        return Path.Combine(outDir, assemblyName + "." + hash);
+        return Path.Combine(outDir, fileName + suffix);
     }
 }

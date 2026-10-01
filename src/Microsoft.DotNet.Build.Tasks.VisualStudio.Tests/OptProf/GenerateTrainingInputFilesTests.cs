@@ -222,7 +222,7 @@ public class GenerateTrainingInputFilesTests
     }
 
     [Fact]
-    public void ShortensOutputFileNamesThatExceedLegacyPathLimit()
+    public void ShortensOnlyThePartOfTheFileNameThatExceedsLegacyPathLimit()
     {
         const string outputDirectory = @"C:\OptProf\Test\Configurations\TestCase";
         var entry = new IbcEntry(
@@ -231,18 +231,32 @@ public class GenerateTrainingInputFilesTests
             relativeDirectoryPath: new string('a', 240),
             ngenApplicationPath: @"Common7\IDE\devenv.exe");
 
-        string basePath = GenerateTrainingInputFiles.GetOutputBasePath(outputDirectory, entry);
+        string firstPath = GenerateTrainingInputFiles.GetOutputPath(outputDirectory, entry, 0);
+        string secondPath = GenerateTrainingInputFiles.GetOutputPath(outputDirectory, entry, 1);
 
-        Assert.StartsWith(Path.Combine(outputDirectory, "Microsoft.Build."), basePath);
-        Assert.True((basePath + ".2147483647.IBC.json").Length <= 259);
-        Assert.Equal(basePath, GenerateTrainingInputFiles.GetOutputBasePath(outputDirectory, entry));
+        Assert.Equal(259, firstPath.Length);
+        Assert.Equal(259, secondPath.Length);
+        Assert.EndsWith(".0.IBC.json", firstPath);
+        Assert.EndsWith(".1.IBC.json", secondPath);
+        Assert.NotEqual(firstPath, secondPath);
+    }
 
-        var differentEntry = new IbcEntry(
-            entryName: "Microsoft.Build.dll",
-            relativeInstallationPath: @"Common7\IDE\Microsoft.Build.dll",
-            relativeDirectoryPath: new string('b', 240),
+    [Fact]
+    public void PreservesFileNameWhenConcreteIndexedPathFits()
+    {
+        const string outputDirectory = @"C:\OptProf\Test\Configurations\TestCase";
+        string suffix = ".0.IBC.json";
+        int fileNameLength = 259 - outputDirectory.Length - suffix.Length - 1;
+        string fileName = new string('a', fileNameLength);
+        var entry = new IbcEntry(
+            entryName: fileName + ".dll",
+            relativeInstallationPath: fileName + ".dll",
+            relativeDirectoryPath: "",
             ngenApplicationPath: @"Common7\IDE\devenv.exe");
 
-        Assert.NotEqual(basePath, GenerateTrainingInputFiles.GetOutputBasePath(outputDirectory, differentEntry));
+        string path = GenerateTrainingInputFiles.GetOutputPath(outputDirectory, entry, 0);
+
+        Assert.Equal(Path.Combine(outputDirectory, fileName + suffix), path);
+        Assert.Equal(259, path.Length);
     }
 }
