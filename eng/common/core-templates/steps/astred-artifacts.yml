@@ -97,6 +97,7 @@ steps:
 - task: UploadAstred@0
   displayName: Upload Digest to Astred
   condition: and(succeededOrFailed(), eq(variables['ASTRED_DIGEST_READY'], 'true'))
+  continueOnError: true
   inputs:
     SourcePath: ${{ parameters.capturePath }}/upload
   env:
