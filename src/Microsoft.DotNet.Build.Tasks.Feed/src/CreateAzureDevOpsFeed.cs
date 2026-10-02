@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -62,7 +63,12 @@ public class CreateAzureDevOpsFeed : MSBuild.Task
 
     public string LocalViewVisibility { get; set; } = "collection";
 
-    public IRetryHandler FeedReadinessRetryHandler = GeneralUtils.CreateDefaultRetryHandler();
+    public IRetryHandler FeedReadinessRetryHandler = new ExponentialRetry
+    {
+        DelayBase = 5,
+        MaxAttempts = 10,
+        MaximumDelay = TimeSpan.FromMinutes(2)
+    };
 
     /// <summary>
     /// Number of characters from the commit SHA prefix that should be included in the feed name.
@@ -138,6 +144,115 @@ public class CreateAzureDevOpsFeed : MSBuild.Task
         return success;
     }
 
+    public async Task<bool> WaitForFeedPermissionsReadyAsync(
+        string permissionsUrl,
+        IReadOnlyCollection<AzureDevOpsFeedPermission> requiredPermissions,
+        HttpClient httpClient,
+        IRetryHandler retryHandler)
+    {
+        HttpStatusCode? lastStatusCode = null;
+        Exception lastException = null;
+        IReadOnlyCollection<AzureDevOpsFeedPermissionResponse> lastPermissions = Array.Empty<AzureDevOpsFeedPermissionResponse>();
+
+        bool success = await retryHandler.RunAsync(async attempt =>
+        {
+            try
+            {
+                using HttpResponseMessage response = await httpClient.GetAsync(permissionsUrl);
+                lastStatusCode = response.StatusCode;
+                lastException = null;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    AzureDevOpsFeedPermissionsResponse permissionsResponse =
+                        JsonConvert.DeserializeObject<AzureDevOpsFeedPermissionsResponse>(responseBody);
+                    lastPermissions = permissionsResponse?.Value ?? Array.Empty<AzureDevOpsFeedPermissionResponse>();
+
+                    bool allPermissionsEffective = requiredPermissions.All(required =>
+                        lastPermissions.Any(actual =>
+                            // The API can return the requested direct assignment (false) while its
+                            // computed role is still "none" or "reader". Only the computed entry
+                            // reflected by isInheritedRole predicts authorization propagation.
+                            actual.IsInheritedRole &&
+                            string.Equals(actual.IdentityDescriptor, required.IdentityDescriptor, StringComparison.OrdinalIgnoreCase) &&
+                            string.Equals(actual.Role, required.Role, StringComparison.OrdinalIgnoreCase)));
+
+                    if (allPermissionsEffective)
+                    {
+                        return RetryResult.Success;
+                    }
+                }
+
+                string actualRoles = string.Join(
+                    ", ",
+                    requiredPermissions.Select(required =>
+                    {
+                        AzureDevOpsFeedPermissionResponse actual = lastPermissions.FirstOrDefault(permission =>
+                            permission.IsInheritedRole &&
+                            string.Equals(permission.IdentityDescriptor, required.IdentityDescriptor, StringComparison.OrdinalIgnoreCase));
+                        return $"{required.IdentityDescriptor}: {actual?.Role ?? "missing"}";
+                    }));
+
+                Log.LogMessage(
+                    MessageImportance.Low,
+                    $"Feed publishing permissions are not ready. Attempt {attempt + 1} returned " +
+                    $"HTTP {(int)response.StatusCode} ({response.StatusCode}); effective roles: {actualRoles}.");
+
+                TimeSpan? retryAfter = response.Headers.RetryAfter?.Delta;
+                if (retryAfter == null && response.Headers.RetryAfter?.Date is DateTimeOffset retryDate)
+                {
+                    retryAfter = retryDate - DateTimeOffset.UtcNow;
+                    if (retryAfter < TimeSpan.Zero)
+                    {
+                        retryAfter = TimeSpan.Zero;
+                    }
+                }
+
+                return RetryResult.Retry(retryAfter);
+            }
+            catch (Exception e) when (e is HttpRequestException || e is TaskCanceledException || e is JsonException)
+            {
+                lastStatusCode = null;
+                lastException = e;
+                Log.LogMessage(
+                    MessageImportance.Low,
+                    $"Feed publishing permissions are not ready. Attempt {attempt + 1} failed: {e.Message}");
+                return RetryResult.Retry();
+            }
+        });
+
+        if (!success)
+        {
+            string failure = lastStatusCode is HttpStatusCode statusCode
+                ? $"HTTP {(int)statusCode} ({statusCode})"
+                : lastException?.Message ?? "an unknown error";
+            Log.LogError($"The feed was created, but its publishing permissions did not become effective after retrying. Last failure: {failure}.");
+        }
+
+        return success;
+    }
+
+    public async Task<bool> WaitForFeedPublishingReadyAsync(
+        string feedUrl,
+        string permissionsUrl,
+        IReadOnlyCollection<AzureDevOpsFeedPermission> requiredPermissions,
+        HttpClient httpClient,
+        IRetryHandler retryHandler)
+    {
+        if (!await WaitForFeedReadyAsync(feedUrl, httpClient, retryHandler))
+        {
+            return false;
+        }
+
+        return requiredPermissions.Count == 0 ||
+            await WaitForFeedPermissionsReadyAsync(
+                permissionsUrl,
+                requiredPermissions,
+                httpClient,
+                retryHandler);
+    }
+
     private async Task<bool> ExecuteAsync()
     {
         try
@@ -172,6 +287,7 @@ public class CreateAzureDevOpsFeed : MSBuild.Task
             string versionedFeedName = baseFeedName;
             bool needsUniqueName = false;
             int subVersion = 0;
+            IReadOnlyCollection<AzureDevOpsFeedPermission> publishingPermissions = Array.Empty<AzureDevOpsFeedPermission>();
 
             Log.LogMessage(MessageImportance.High, $"Creating the new Azure DevOps artifacts feed '{baseFeedName}'...");
 
@@ -219,6 +335,9 @@ public class CreateAzureDevOpsFeed : MSBuild.Task
                     {
                         needsUniqueName = false;
                         baseFeedName = versionedFeedName;
+                        publishingPermissions = newFeed.Permissions?
+                            .Where(permission => string.Equals(permission.Role, "contributor", StringComparison.OrdinalIgnoreCase))
+                            .ToArray() ?? Array.Empty<AzureDevOpsFeedPermission>();
 
                         /// This is where we would potentially update the Local feed view with permissions to the organization's
                         /// valid users. But, see <seealso cref="AzureDevOpsArtifactFeed"/> for more info on why this is not
@@ -245,17 +364,38 @@ public class CreateAzureDevOpsFeed : MSBuild.Task
             TargetFeedURL = $"https://pkgs.dev.azure.com/{AzureDevOpsOrg}/{AzureDevOpsProject}/_packaging/{baseFeedName}/nuget/v3/index.json";
             TargetFeedName = baseFeedName;
 
-            Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created. Waiting for publishing permissions to become effective...");
+            Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created. Waiting for the feed and publishing permissions to become effective...");
             using (HttpClient readinessClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }))
             {
                 readinessClient.DefaultRequestHeaders.Authorization = GeneralUtils.CreateAzdoAuthHeader(AzureDevOpsPersonalAccessToken);
-                if (!await WaitForFeedReadyAsync(TargetFeedURL, readinessClient, FeedReadinessRetryHandler))
+                string permissionsUrl =
+                    $"{azureDevOpsFeedsBaseUrl}{AzureDevOpsProject}/_apis/packaging/feeds/{Uri.EscapeDataString(baseFeedName)}/permissions" +
+                    $"?includeIds=true&excludeInheritedPermissions=false&api-version={AzureDevOpsFeedsApiVersion}";
+
+                // Wait for the feed to exist before checking the Contributor role that grants
+                // AddPackage. The permissions endpoint can otherwise return unrelated inherited
+                // entries while the feed itself is still propagating.
+                if (!await WaitForFeedPublishingReadyAsync(
+                    TargetFeedURL,
+                    permissionsUrl,
+                    publishingPermissions,
+                    readinessClient,
+                    FeedReadinessRetryHandler))
                 {
                     return false;
                 }
             }
 
-            Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created successfully and is ready for publishing!");
+            if (publishingPermissions.Count > 0)
+            {
+                Log.LogMessage(
+                    MessageImportance.High,
+                    $"Feed '{TargetFeedURL}' publishing permissions are effective. Package uploads will remain retryable while authorization finishes propagating.");
+            }
+            else
+            {
+                Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created successfully and is ready for publishing!");
+            }
         }
         catch (Exception e)
         {
@@ -263,6 +403,20 @@ public class CreateAzureDevOpsFeed : MSBuild.Task
         }
 
         return !Log.HasLoggedErrors;
+    }
+
+    private sealed class AzureDevOpsFeedPermissionsResponse
+    {
+        public IReadOnlyCollection<AzureDevOpsFeedPermissionResponse> Value { get; set; }
+    }
+
+    private sealed class AzureDevOpsFeedPermissionResponse
+    {
+        public string IdentityDescriptor { get; set; }
+
+        public string Role { get; set; }
+
+        public bool IsInheritedRole { get; set; }
     }
 
     /// <summary>
