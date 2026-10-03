@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
-  <Source Uri="https://github.com/dotnet/dotnet" Mapping="arcade" Sha="12b51dc5eb3ed9e10e0d08c3bccccffe9419b72f" BarId="332790" />
+  <Source Uri="https://github.com/dotnet/dotnet" Mapping="arcade" Sha="45ef1b6146342457a0067f531861d52ad67ee6c9" BarId="332871" />
   <ProductDependencies>
   </ProductDependencies>
   <ToolsetDependencies>
