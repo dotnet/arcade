@@ -16,7 +16,6 @@ parameters:
 steps:
 - task: AstredInstaller@0
   displayName: Install Astred CLI
-  condition: succeededOrFailed()
   inputs:
     Version: '2.14.1'
     FeedUrl: 'https://pkgs.dev.azure.com/dnceng/_packaging/dotnet-internal-FoSSE/nuget/v3/index.json'
@@ -45,7 +44,6 @@ steps:
   env:
     ASTRED_BINLOG_DIR: ${{ parameters.binlogDir }}
     ASTRED_CAPTURE_PATH: ${{ parameters.capturePath }}
-  condition: succeededOrFailed()
   continueOnError: true
 
 - pwsh: |
@@ -92,12 +90,11 @@ steps:
   env:
     ASTRED_SOURCES_PATH: ${{ parameters.sourcesPath }}
     ASTRED_CAPTURE_PATH: ${{ parameters.capturePath }}
-  condition: succeededOrFailed()
   continueOnError: true
 
 - task: UploadAstred@0
   displayName: Upload Digest to Astred
-  condition: and(succeededOrFailed(), eq(variables['ASTRED_DIGEST_READY'], 'true'))
+  condition: and(succeeded(), eq(variables['ASTRED_DIGEST_READY'], 'true'))
   continueOnError: true
   inputs:
     SourcePath: ${{ parameters.capturePath }}/upload
