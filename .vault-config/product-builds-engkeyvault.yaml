@@ -78,6 +78,13 @@ secrets:
       hasWebhookSecret: false
       hasOAuthSecret: false
 
+  dotnet-source-build-automation:
+    type: github-app-secret
+    parameters:
+      hasPrivateKey: true
+      hasWebhookSecret: false
+      hasOAuthSecret: false
+
   BotAccount-dotnet-maestro-bot:
     type: github-account
     parameters:
