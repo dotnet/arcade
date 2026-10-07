@@ -18,7 +18,11 @@ namespace Microsoft.DotNet.Build.Tasks.Installers;
 /// <summary>
 /// Run a command and retry if the exit code is not 0.
 /// </summary>
+#if ARCADE_SDK_BUILD_TASKS_ASSEMBLY
 public class ExecWithRetries : Microsoft.Build.Utilities.Task, ICancelableTask
+#else
+public class ExecWithRetries : BuildTask, ICancelableTask
+#endif
 {
     [Required]
     public string Command { get; set; }
@@ -102,7 +106,11 @@ public class ExecWithRetries : Microsoft.Build.Utilities.Task, ICancelableTask
             TimeSpan delay = TimeSpan.FromSeconds(
                 Math.Pow(RetryDelayBase, i) + RetryDelayConstant);
 
+#if ARCADE_SDK_BUILD_TASKS_ASSEMBLY
             Log.LogMessage(MessageImportance.High, $"{message} -- Retrying after {delay}...");
+#else
+            Log.LogMessage(LogImportance.High, $"{message} -- Retrying after {delay}...");
+#endif
 
             try
             {
