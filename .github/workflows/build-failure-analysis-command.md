@@ -353,6 +353,7 @@ jobs:
           MAX_ZIP_BYTES=524288000       # 500 MB compressed per artifact
           MAX_UNZIP_BYTES=2147483648    # 2 GB uncompressed per artifact
           MAX_TOTAL_BYTES=4294967296    # 4 GB uncompressed across all artifacts
+          MAX_ZIP_ENTRIES=65536
           TOTAL_BYTES=0
           mkdir -p /tmp/binlogs
           count=0
@@ -427,23 +428,49 @@ jobs:
             if [ $((TOTAL_BYTES + UNCOMP)) -gt "${MAX_TOTAL_BYTES}" ]; then
               echo "::warning::Cumulative uncompressed budget ${MAX_TOTAL_BYTES} reached at ${name}; stopping extraction."; break
             fi
-            # Refuse the archive if any entry path is absolute or has a `..`
-            # component (defense-in-depth over unzip's own traversal guard),
-            # then extract `*.binlog` entries *preserving* their in-archive
-            # paths (no `-j`) under a fresh dir + timeout, so two binlogs that
-            # share a basename in different folders don't overwrite each other.
-            # The listing is streamed through `grep` (no full in-memory buffer
-            # of entry names) and PIPESTATUS separates the failure modes: a
-            # non-zero listing exit (error/timeout) FAILS CLOSED; a grep match
-            # means a suspicious absolute/`..` path.
-            timeout 60 unzip -Z1 /tmp/a.zip 2>/dev/null | grep -qE '(^/|(^|/)\.\.(/|$))'
-            zscan_rc=("${PIPESTATUS[@]}")
-            if [ "${zscan_rc[0]}" -ne 0 ]; then
-              echo "::warning::Skipping ${name}: could not list archive entries (unzip -Z1 rc=${zscan_rc[0]})."; continue
+            # --- Validate ZIP entry metadata before extraction ---
+            # Refuse path escapes and special Unix entry types before `unzip`
+            # can materialize anything. A symlink followed by a nested binlog
+            # can otherwise redirect extraction outside /tmp/ax.
+            timeout 60 python3 - /tmp/a.zip "${MAX_ZIP_ENTRIES}" 2>/dev/null <<'PY'
+          import stat
+          import sys
+          import zipfile
+
+          archive_path = sys.argv[1]
+          max_entries = int(sys.argv[2])
+          with zipfile.ZipFile(archive_path) as archive:
+              entries = archive.infolist()
+              if len(entries) > max_entries:
+                  raise SystemExit(4)
+              for entry in entries:
+                  name = entry.filename.replace("\\", "/")
+                  parts = name.split("/")
+                  if (
+                      not name
+                      or "\0" in name
+                      or name.startswith("/")
+                      or ".." in parts
+                      or (len(parts[0]) >= 2 and parts[0][0].isalpha() and parts[0][1] == ":")
+                  ):
+                      raise SystemExit(2)
+                  file_type = stat.S_IFMT((entry.external_attr >> 16) & 0xFFFF)
+                  if file_type not in (0, stat.S_IFREG, stat.S_IFDIR):
+                      raise SystemExit(3)
+          PY
+            zscan_rc=$?
+            if [ "${zscan_rc}" -ne 0 ]; then
+              case "${zscan_rc}" in
+                2) echo "::warning::Skipping ${name}: archive has a suspicious entry path." ;;
+                3) echo "::warning::Skipping ${name}: archive has a symlink, device, or other unsupported entry type." ;;
+                4) echo "::warning::Skipping ${name}: archive exceeds the ${MAX_ZIP_ENTRIES}-entry limit." ;;
+                *) echo "::warning::Skipping ${name}: archive entry validation failed or timed out." ;;
+              esac
+              continue
             fi
-            if [ "${zscan_rc[1]}" -eq 0 ]; then
-              echo "::warning::Skipping ${name}: archive has a suspicious (absolute or ..) entry path."; continue
-            fi
+            # --- Extract validated binlogs ---
+            # Preserve in-archive paths under a fresh directory so duplicate
+            # basenames in separate folders do not overwrite each other.
             timeout 120 unzip -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 \
               || { echo "::warning::Skipping ${name}: extraction failed or timed out."; continue; }
             # Consume the budget only once the archive actually extracted, so a
