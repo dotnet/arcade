@@ -20,6 +20,9 @@
 
   <ItemGroup>
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\Microsoft.DotNet.Arcade.Sdk\toolset\Tools.proj"
+             Link="testassets\ArcadeSdkTools\Tools.proj"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\Microsoft.DotNet.Arcade.Sdk\tools\Tests.targets"
              Link="testassets\ArcadeSdkTools\Tests.targets"
              CopyToOutputDirectory="PreserveNewest" />

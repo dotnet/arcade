@@ -3,9 +3,8 @@
 
   <PropertyGroup>
     <_RepoToolManifest>$([MSBuild]::NormalizePath('$(RepoRoot)', '.config', 'dotnet-tools.json'))</_RepoToolManifest>
-    <!-- Retry once by default in CI; callers can override the number of attempts. -->
-    <RestoreRepoToolsMaxAttempts Condition="'$(RestoreRepoToolsMaxAttempts)' == '' and '$(ContinuousIntegrationBuild)' == 'true'">2</RestoreRepoToolsMaxAttempts>
-    <RestoreRepoToolsMaxAttempts Condition="'$(RestoreRepoToolsMaxAttempts)' == ''">1</RestoreRepoToolsMaxAttempts>
+    <!-- Retry once by default; callers can override the number of attempts. -->
+    <RestoreRepoToolsMaxAttempts Condition="'$(RestoreRepoToolsMaxAttempts)' == ''">2</RestoreRepoToolsMaxAttempts>
 
     <!-- VisualStudio.InsertionManifests.targets: Keep condition in sync with import in AfterSigning.proj. -->
     <RestoreInternalTooling Condition="'$(UsingToolVSSDK)' == 'true' and '$(GenerateSbom)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'">true</RestoreInternalTooling>
