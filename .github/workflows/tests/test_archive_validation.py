@@ -9,6 +9,7 @@ import tempfile
 import textwrap
 import unittest
 import zipfile
+import zlib
 
 
 WORKFLOWS = Path(__file__).resolve().parents[1]
@@ -21,12 +22,35 @@ SOURCES = (
 def archive_bytes(entries):
     content = io.BytesIO()
     with zipfile.ZipFile(content, "w") as archive:
-        for name, mode in entries:
+        for item in entries:
+            name, mode, *optional = item
+            payload = optional[0] if optional else b"binlog"
+            extra = optional[1] if len(optional) > 1 else b""
             entry = zipfile.ZipInfo(name)
             entry.create_system = 3
             entry.external_attr = mode << 16
-            archive.writestr(entry, b"binlog")
+            entry.extra = extra
+            archive.writestr(entry, payload)
     return content.getvalue()
+
+
+def asi_unix_extra(mode, size):
+    attributes = struct.pack("<HIHH", mode, size, 0, 0)
+    data = struct.pack("<I", zlib.crc32(attributes) & 0xFFFFFFFF) + attributes
+    return struct.pack("<HH", 0x756E, len(data)) + data
+
+
+def classic_max_entries_archive():
+    content = io.BytesIO()
+    with zipfile.ZipFile(content, "w", allowZip64=True) as archive:
+        for index in range(65535):
+            archive.writestr(f"{index:04x}", b"")
+    data = content.getvalue()
+    eocd_offset = data.rfind(b"PK\x05\x06")
+    eocd = struct.unpack_from("<4s4H2LH", data, eocd_offset)
+    if eocd[3:5] != (0xFFFF, 0xFFFF) or data[eocd_offset - 20 : eocd_offset].startswith(b"PK\x06\x07"):
+        raise AssertionError("fixture is not a classic 65,535-entry archive")
+    return data
 
 
 def rewrite_eocd(content, **updates):
@@ -106,6 +130,13 @@ def production_validator(path):
     lines = path.read_text(encoding="utf-8").splitlines()
     start = next(index for index, line in enumerate(lines) if "Validate ZIP entry metadata before extraction" in line)
     end = next(index for index, line in enumerate(lines[start:], start) if "Extract validated binlogs" in line)
+    return textwrap.dedent("\n".join(lines[start:end])) + "\n"
+
+
+def production_extractor(path):
+    lines = path.read_text(encoding="utf-8").splitlines()
+    start = next(index for index, line in enumerate(lines) if "Extract validated binlogs" in line)
+    end = next(index for index, line in enumerate(lines[start:], start) if "Stage extracted binlogs" in line)
     return textwrap.dedent("\n".join(lines[start:end])) + "\n"
 
 
@@ -219,6 +250,7 @@ class ArchiveValidationTests(unittest.TestCase):
 
     def test_archive_preflight_rejects_unbounded_and_multidisk_metadata(self):
         regular = archive_bytes((("build.binlog", stat.S_IFREG | 0o644),))
+        classic_boundary = classic_max_entries_archive()
         cases = (
             ("missing-eocd", b"not a zip", 65536, 16 * 1024 * 1024, False),
             (
@@ -241,6 +273,13 @@ class ArchiveValidationTests(unittest.TestCase):
                 65536,
                 16 * 1024 * 1024,
                 False,
+            ),
+            (
+                "classic-max-entry-count",
+                classic_boundary,
+                65536,
+                16 * 1024 * 1024,
+                True,
             ),
             ("zip64", zip64_archive(regular), 65536, 16 * 1024 * 1024, True),
             (
@@ -284,6 +323,65 @@ class ArchiveValidationTests(unittest.TestCase):
                     )
                     self.assertEqual(result.returncode, 0, result.stderr)
                     self.assertEqual("accepted=true" in result.stdout, accepted, result.stdout)
+
+    def test_python_extraction_does_not_honor_asi_symlink_mode(self):
+        payload = b"target"
+        archive_content = archive_bytes(
+            (
+                (
+                    "nested/link.binlog",
+                    0,
+                    payload,
+                    asi_unix_extra(stat.S_IFLNK | 0o777, len(payload)),
+                ),
+            )
+        )
+        for source in SOURCES:
+            with self.subTest(source=source.name):
+                with tempfile.TemporaryDirectory(prefix="bfa-extraction-test-") as directory:
+                    root = Path(directory)
+                    archive = root / "archive.zip"
+                    archive.write_bytes(archive_content)
+                    path_value = os.environ.get("PATH", "")
+                    if os.name == "nt":
+                        python3 = root / "python3"
+                        python3.write_text(
+                            '#!/usr/bin/env bash\nexec python "$@"\n',
+                            encoding="utf-8",
+                        )
+                        python3.chmod(0o755)
+                        path_value = str(root) + os.pathsep + path_value
+                    script = (
+                        "set +e\n"
+                        'rm -rf /tmp/ax /tmp/a.zip\n'
+                        'cp "$ARCHIVE" /tmp/a.zip\n'
+                        'mkdir -p /tmp/ax\n'
+                        'for ZIP_TMP in "$ARCHIVE"; do\n'
+                        "  safe_name=test\n"
+                        "  name=test\n"
+                        + production_extractor(source)
+                        + '  echo extracted=true\n'
+                        "done\n"
+                        'test -f /tmp/ax/nested/link.binlog\n'
+                        'test ! -L /tmp/ax/nested/link.binlog\n'
+                        'test "$(cat /tmp/ax/nested/link.binlog)" = target\n'
+                        'rm -rf /tmp/ax /tmp/a.zip\n'
+                    )
+                    result = subprocess.run(
+                        [self.bash, "--noprofile", "--norc", "-eo", "pipefail", "-s"],
+                        input=script,
+                        text=True,
+                        capture_output=True,
+                        cwd=root,
+                        env={
+                            **os.environ,
+                            "ARCHIVE": str(archive),
+                            "PATH": path_value,
+                        },
+                        timeout=30,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertIn("extracted=true", result.stdout)
 
 
 if __name__ == "__main__":
