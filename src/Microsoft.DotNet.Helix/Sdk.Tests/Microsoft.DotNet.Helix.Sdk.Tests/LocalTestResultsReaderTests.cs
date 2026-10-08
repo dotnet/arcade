@@ -125,6 +125,22 @@ public class LocalTestResultsReaderTests
         Assert.Equal("Passed", result.Result);
     }
 
+    [Theory]
+    [InlineData("<assemblies><test", typeof(System.Xml.XmlException))]
+    [InlineData("<notTestResults />", typeof(InvalidDataException))]
+    public async Task LocalTestResultsReader_StrictModeReportsMalformedOrUnsupportedFiles(string content, Type exceptionType)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        _fileSystem.CreateDirectory(directory);
+        string file = Path.Combine(directory, "testResults.xml");
+        _fileSystem.WriteToFile(file, content);
+        var reader = CreateReader();
+
+        Assert.Empty(await reader.ReadResultFileAsync(file));
+        await Assert.ThrowsAsync(exceptionType, () =>
+            reader.ReadResultFileAsync(file, failOnParseError: true));
+    }
+
     [Fact]
     public async Task LocalTestResultsReader_CombinesPackedAndXmlResultsAcrossWorkItems()
     {

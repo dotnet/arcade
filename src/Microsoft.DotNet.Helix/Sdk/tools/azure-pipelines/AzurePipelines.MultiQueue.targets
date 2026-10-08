@@ -4,6 +4,8 @@
   <PropertyGroup>
     <!-- Azure Pipelines requires waiting for work item completion -->
     <WaitForWorkItemCompletion>true</WaitForWorkItemCompletion>
+    <HelixResultsDestinationDir Condition="'$(HelixResultsDestinationDir)' == '' and '$(BUILD_SOURCESDIRECTORY)' != ''">$([MSBuild]::NormalizeDirectory($(BUILD_SOURCESDIRECTORY), 'artifacts', 'helixresults'))</HelixResultsDestinationDir>
+    <HelixResultsDestinationDir Condition="'$(HelixResultsDestinationDir)' == ''">$(MSBuildProjectDirectory)/artifacts/helixresults</HelixResultsDestinationDir>
   </PropertyGroup>
 
   <Target Name="StartTestRuns"
@@ -27,13 +29,23 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="UploadTestResults">
+    <UploadHelixTestResults
+      AccessToken="$(HelixAccessToken)"
+      UseEntraAuthentication="$(HelixUseEntraAuthentication)"
+      BaseUri="$(HelixBaseUri)"
+      WorkItems="@(CompletedWorkItem)"
+      OutputDirectory="$(HelixResultsDestinationDir)" />
+  </Target>
+
   <Target Name="CreateTestsForWorkItems"
-          BeforeTargets="StopTestRuns">
+          DependsOnTargets="UploadTestResults">
     <CreateTestsForWorkItems WorkItems="@(CompletedWorkItem)"/>
   </Target>
 
   <Target Name="StopTestRuns"
           AfterTargets="CoreTest"
+          DependsOnTargets="CreateTestsForWorkItems"
           Outputs="%(HelixTargetQueue.Identity)">
     <StopAzurePipelinesTestRun TestRunId="%(HelixTargetQueue.TestRunId)" TestRunName="%(HelixTargetQueue.TestRunName)"/>
   </Target>

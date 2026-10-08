@@ -15,6 +15,15 @@ refer to definitions by ID and may precede them in the file.
 Malformed files are warned and omitted. Caller cancellation is propagated.
 DTD processing is prohibited.
 
+The SDK's inline caller enables strict parsing: malformed files and unsupported
+roots fail reporting rather than allowing a successful work-item result to hide
+missing tests. The monitor retains its warning-and-omission parsing policy.
+
+Both callers use the shared downloader and transport. Download failures are
+reported after attempting the other files; partial downloads and incomplete
+Azure DevOps result responses do not count as successful publication. The
+monitor leaves failed uploads untagged for replay.
+
 Helix may append `.txt` to uploaded result artifacts, for example
 `testResults.xml.txt` or `results.trx.txt`. File recognition strips that single
 transport suffix before matching the supported xUnit, JUnit, and TRX names.

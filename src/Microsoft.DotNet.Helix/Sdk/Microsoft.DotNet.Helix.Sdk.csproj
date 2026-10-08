@@ -36,7 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="**\*.py;**\*.bat;**\*.sh"
+    <None Include="**\*.py;**\*.bat;**\*.sh;tools\test-results\*.ps1"
           Pack="true"
           PackagePath="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>

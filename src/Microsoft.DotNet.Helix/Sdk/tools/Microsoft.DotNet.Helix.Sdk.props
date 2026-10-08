@@ -19,7 +19,7 @@
   <!--
     Feature flag: when 'true', the Helix Sdk emits jobs that are intended to be reported on by the
     standalone dotnet-helix-job-monitor tool running in a separate Azure Pipelines job. This:
-      * disables the in-pipeline Python xunit/AzureDevOps reporter (no AzDO test runs are created
+      * disables the inline Azure DevOps reporter (no AzDO test runs are created
         from this build job),
       * copies any *.trx / *Results.xml / junit*results.xml produced by the work item into
         $HELIX_WORKITEM_UPLOAD_ROOT so the monitor can download them, and
@@ -46,6 +46,7 @@
   <UsingTask TaskName="CheckHelixJobStatus" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)" Runtime="NET" Architecture="*" TaskFactory="$(MicrosoftDotNetHelixSdkTasksFactory)" />
   <UsingTask TaskName="FindDotNetCliPackage" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)" Runtime="NET" Architecture="*" TaskFactory="$(MicrosoftDotNetHelixSdkTasksFactory)" />
   <UsingTask TaskName="GetHelixWorkItems" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)" Runtime="NET" Architecture="*" TaskFactory="$(MicrosoftDotNetHelixSdkTasksFactory)" />
+  <UsingTask TaskName="UploadHelixTestResults" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)" Runtime="NET" Architecture="*" TaskFactory="$(MicrosoftDotNetHelixSdkTasksFactory)" />
   <UsingTask TaskName="CreateXUnitWorkItems" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)" Runtime="NET" Architecture="*" TaskFactory="$(MicrosoftDotNetHelixSdkTasksFactory)" />
   <UsingTask TaskName="CreateMTPWorkItems" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)" Runtime="NET" Architecture="*" TaskFactory="$(MicrosoftDotNetHelixSdkTasksFactory)" />
   <UsingTask TaskName="CreateXHarnessAndroidWorkItems" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)" Runtime="NET" Architecture="*" TaskFactory="$(MicrosoftDotNetHelixSdkTasksFactory)" />

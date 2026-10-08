@@ -54,6 +54,37 @@ env:
   SYSTEM_ACCESSTOKEN: $(System.AccessToken) # We need to set this env var to publish helix results to Azure DevOps
 ```
 
+### Publishing test results to Azure DevOps
+
+`EnableAzurePipelinesReporter` defaults to `true` when `SYSTEM_ACCESSTOKEN` is
+available. The submitting build waits for Helix completion, downloads raw result
+files, and publishes them with the same C# readers and publisher used by the
+Helix Job Monitor. All uploads finish before test runs are closed and failures
+are checked. This mode requires waiting for work-item completion.
+
+- Supported formats: xUnit XML (`*testResults.xml`, `*test-results.xml`,
+  `*test_results.xml`), JUnit XML (`*junit-results.xml`, `*junitresults.xml`), and
+  TRX (`*.trx`).
+- Results in the working directory are collected recursively into
+  `HELIX_WORKITEM_UPLOAD_ROOT`, preserving relative paths. Files already in the
+  upload directory are not copied again.
+- Helix workers only upload raw files to Helix storage. They do not run the
+  Python Azure DevOps reporter or receive the build's Azure DevOps token.
+- Downloads use `HelixResultsDestinationDir`, defaulting to
+  `artifacts/helixresults` under the build sources or project directory.
+- Download, parse, and publishing failures fail inline reporting. Failed-test
+  and work-item failure policies remain controlled by the existing properties.
+- Existing inline work-item execution results, test-run names, test identities,
+  expected failures, and flaky-test support are preserved.
+- With `EnableHelixJobMonitor=true`, the submitting job does not wait or publish;
+  the monitor owns reporting. Local builds and explicit reporting opt-out
+  continue to work without an Azure DevOps token.
+
+Custom producers of the removed Python reporter's JSON/pickle format must emit
+one of the supported XML formats instead. Place results in the working directory
+or directly in `HELIX_WORKITEM_UPLOAD_ROOT`; no worker-side Azure DevOps
+parameters are needed.
+
 ### Helix Job Monitor for Azure DevOps
 
 If you want to decouple Helix test execution from the build agents that submit the work, use the Helix Job Monitor.

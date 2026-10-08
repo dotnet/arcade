@@ -51,9 +51,14 @@ internal sealed class HelixTestResultsDownloader
         _fileSystem.CreateDirectory(workItemDirectory);
         List<string> downloaded = [];
         List<Exception> transientFailures = [];
+        List<Exception> permanentFailures = [];
         foreach (UploadedFile file in resultFiles)
         {
             string relativePath = file.Name.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+            if (Path.IsPathRooted(relativePath) || relativePath.Split(Path.DirectorySeparatorChar).Contains(".."))
+            {
+                throw new InvalidOperationException($"Invalid test-result artifact path '{file.Name}' for '{jobName}/{workItemName}'.");
+            }
             string destinationFile = _fileSystem.PathCombine(workItemDirectory, relativePath);
             string directory = _fileSystem.GetDirectoryName(destinationFile);
             if (!string.IsNullOrEmpty(directory))
@@ -83,8 +88,15 @@ internal sealed class HelixTestResultsDownloader
             catch (Exception ex)
             {
                 _metrics.RecordResultBlobDownload(failed: true);
+                permanentFailures.Add(ex);
                 _logger.LogWarning(ex, "Failed to download '{FileName}' for '{JobName}/{WorkItemName}'.", file.Name, jobName, workItemName);
             }
+        }
+        if (permanentFailures.Count > 0)
+        {
+            throw new AggregateException(
+                $"Test-result downloads failed for '{jobName}/{workItemName}'.",
+                permanentFailures.Concat(transientFailures));
         }
         if (transientFailures.Count > 0)
         {

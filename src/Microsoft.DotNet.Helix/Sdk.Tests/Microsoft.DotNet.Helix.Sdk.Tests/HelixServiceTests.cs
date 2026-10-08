@@ -152,7 +152,7 @@ public class HelixServiceTests
     }
 
     [Fact]
-    public async Task DownloadTestResultsAsync_FiltersFilesUsesFileSystemAndContinuesAfterDownloadFailure()
+    public async Task DownloadTestResultsAsync_FiltersFilesAndReportsPermanentFailureAfterAttemptingBatch()
     {
         var api = CreateApi();
         api.Job
@@ -172,14 +172,11 @@ public class HelixServiceTests
         blobClientFactory.FailDownloadsFor.Add("https://storage/failed.trx");
         var fileSystem = new MockFileSystem(directorySeparator: Path.DirectorySeparatorChar.ToString());
 
-        WorkItemTestResults result = await CreateService(api.Api.Object, blobClientFactory, fileSystem)
-            .DownloadTestResultsAsync("job:name", "work:item", "work", CancellationToken.None);
-        Assert.Equal("job:name", result.JobName);
-        Assert.Equal("work:item", result.WorkItemName);
+        await Assert.ThrowsAsync<AggregateException>(() => CreateService(api.Api.Object, blobClientFactory, fileSystem)
+            .DownloadTestResultsAsync("job:name", "work:item", "work", CancellationToken.None));
         string jobDirectory = fileSystem.PathCombine("work", SanitizeForCurrentPlatform("job:name"));
         string workItemDirectory = fileSystem.PathCombine(jobDirectory, SanitizeForCurrentPlatform("work:item"));
         string expectedResultFile = fileSystem.PathCombine(workItemDirectory, NormalizeForCurrentPlatform("nested/testResults.xml.txt"));
-        Assert.Equal([expectedResultFile], result.TestResultFiles);
         Assert.Contains(jobDirectory, fileSystem.Directories);
         Assert.Contains(workItemDirectory, fileSystem.Directories);
         Assert.Contains(fileSystem.GetDirectoryName(expectedResultFile), fileSystem.Directories);
