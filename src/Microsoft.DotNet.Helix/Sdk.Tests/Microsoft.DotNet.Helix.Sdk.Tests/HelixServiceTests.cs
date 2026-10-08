@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Microsoft.Arcade.Common;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Helix.Client;
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor;
 using Microsoft.DotNet.Helix.JobMonitor.Models;

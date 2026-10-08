@@ -1,8 +1,9 @@
 # Test-result processing
 
-Result processing lives under `JobMonitor/TestResults`; the former standalone
-`AzureDevOpsTestPublisher` project was removed because the job monitor was its
-only product consumer.
+Result processing lives in the shared `Microsoft.DotNet.Helix.TestResults`
+library. Both the Helix SDK and Job Monitor use its readers, aggregation,
+downloader, and Azure DevOps publisher. Submission, polling, test-run lifecycle,
+and failure policies remain caller responsibilities.
 
 ## Parsing
 
