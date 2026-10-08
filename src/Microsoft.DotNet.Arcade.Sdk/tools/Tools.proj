@@ -88,6 +88,7 @@
     <Microsoft.DotNet.Arcade.Sdk.ExecWithRetries
       Command='"$(DotNetTool)" tool restore $(RestoreConfigFileOption)'
       WorkingDirectory="$(RepoRoot)"
+      IgnoreStandardErrorWarningFormat="true"
       MaxAttempts="$(RestoreRepoToolsMaxAttempts)" />
   </Target>
 
