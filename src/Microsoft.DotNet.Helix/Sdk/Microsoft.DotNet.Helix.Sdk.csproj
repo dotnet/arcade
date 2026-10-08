@@ -6,6 +6,8 @@
     <IsBuildTaskProject>true</IsBuildTaskProject>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <!-- The PowerShell collector is a Helix payload, not a NuGet installation script. -->
+    <NoWarn>$(NoWarn);NU5111</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(DotNetBuildSourceOnly)' == 'true'">
@@ -36,9 +38,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="**\*.py;**\*.bat;**\*.sh;tools\test-results\*.ps1"
+    <None Include="**\*.py;**\*.bat;**\*.sh"
           Pack="true"
           PackagePath="%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="tools\test-results\collect-test-results.ps1"
+          Pack="true"
+          PackagePath="tools/test-results/collect-test-results.ps1" />
   </ItemGroup>
 
   <ItemGroup>
