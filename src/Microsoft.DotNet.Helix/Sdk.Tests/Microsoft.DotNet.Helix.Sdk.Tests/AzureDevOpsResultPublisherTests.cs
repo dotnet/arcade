@@ -22,12 +22,6 @@ public class AzureDevOpsResultPublisherTests
     [Fact]
     public void AttachmentModeDefaultsToFailed()
     {
-        var reportingParameters = new AzureDevOpsReportingParameters(
-            new Uri("https://dev.azure.com/dnceng-public/"),
-            "public",
-            "123");
-
-        Assert.Equal(TestResultAttachmentMode.Failed, reportingParameters.TestResultAttachmentMode);
         Assert.Equal(TestResultAttachmentMode.Failed, new JobMonitorOptions().TestResultAttachmentMode);
     }
 

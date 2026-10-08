@@ -142,12 +142,12 @@ public class LocalTestResultsReaderTests
     }
 
     [Fact]
-    public async Task LocalTestResultsReader_CombinesPackedAndXmlResultsAcrossWorkItems()
+    public async Task LocalTestResultsReader_CombinesResultsAcrossWorkItems()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-        string packedDirectory = Path.Combine(tempDirectory, "packed-item");
+        string firstDirectory = Path.Combine(tempDirectory, "first-item");
         string xmlDirectory = Path.Combine(tempDirectory, "xml-item");
-        _fileSystem.CreateDirectory(packedDirectory);
+        _fileSystem.CreateDirectory(firstDirectory);
         _fileSystem.CreateDirectory(xmlDirectory);
 
         string filePath = Path.Combine(xmlDirectory, "testResults.xml");
