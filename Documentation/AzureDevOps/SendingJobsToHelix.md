@@ -34,9 +34,9 @@ Example: `"Microsoft.DotNet.Helix.Sdk": "1.0.0-beta.18502.3"`
 </configuration>
 ```
 
-## Helix Access Token
+## Helix authentication
 
-Helix access tokens are used to authenticate users sending jobs to Helix.
+Helix supports anonymous submissions to public queues and authenticated submissions to internal queues. Internal pipelines should use Microsoft Entra ID authentication through workload identity federation. Helix access tokens remain available temporarily for compatibility with pipelines that have not migrated.
 
 ### External builds (Public CI)
 
@@ -57,17 +57,23 @@ steps:
 
 ### Internal builds
 
-Internal builds can authenticate with Entra ID through an Azure service connection or with a legacy Helix access token.
+Internal builds can authenticate with Entra ID through an Azure service connection or, during migration, with a legacy Helix access token.
 
 Please note that authorized jobs *cannot* be submitted to queues with `IsInternalOnly` set to false. To determine this value for a particular queue, see the list of available queues [here](https://helix.dot.net/api/2018-03-14/info/queues).
 
-#### Entra ID authentication
+#### Recommended: Entra ID authentication
 
 Set `HelixUseEntraAuthentication` to `true` and pass an Azure service connection authorized for Helix through `HelixAzureSubscription`. These parameters configure the `send-to-helix.yml` steps template and the SDK tasks that submit jobs.
 
-The service connection must use workload identity federation. The templates run the Helix process inside `AzureCLI@2` with automatic session refresh enabled, and the Helix clients prefer `AzureCliCredential` over managed identity. This allows them to obtain renewable access tokens for both Azure DevOps-issued and Microsoft Entra-issued service connections, including on hosted agents where an unavailable managed identity would otherwise prevent the credential chain from reaching Azure CLI. This is required for inline waits and the standalone monitor, which can run longer than a single workload identity assertion remains valid.
+The service connection must:
 
-When Entra authentication is enabled, the template does not forward `HelixAccessToken` to the Helix processes. If a legacy token is still injected by a variable group, explicit Entra opt-in takes precedence and the task ignores the token with a warning.
+- use workload identity federation,
+- be authorized for the consuming pipeline, and
+- have the Helix application role for the target environment.
+
+Arcade selects the production or staging Helix scope from `HelixBaseUri`. `https://helix.dot.net/` uses the production scope, while `https://helix.int-dot.net/` uses the staging scope. Custom Helix hosts require an explicit scope when using the client API directly.
+
+The templates run the Helix process inside `AzureCLI@2` with `keepAzSessionActive: true`, and the Helix clients prefer `AzureCliCredential` over managed identity. The credential refreshes access tokens based on their expiration, so inline waits and the standalone monitor are not limited to the lifetime of the initial workload identity assertion.
 
 ```yaml
 steps:
@@ -79,10 +85,7 @@ steps:
     # other parameters here
 ```
 
-If the pipeline also uses the standalone Helix Job Monitor, configure its
-separate job template with `useEntraAuthentication` and `azureSubscription`.
-Enabling Entra authentication on `send-to-helix.yml` does not automatically
-configure the monitor job.
+If the pipeline also uses the standalone Helix Job Monitor, configure its separate job template with `useEntraAuthentication` and `azureSubscription`. Enabling Entra authentication on `send-to-helix.yml` does not automatically configure the monitor job.
 
 ```yaml
 jobs:
@@ -93,9 +96,34 @@ jobs:
     # other parameters here
 ```
 
+When Entra authentication is enabled:
+
+- The pipeline templates do not forward `HelixAccessToken` to the Helix process. Direct SDK invocations that provide both a token and `HelixUseEntraAuthentication=true` ignore the token with a warning.
+- Authentication failures do not fall back to a PAT or anonymous access.
+- The SDK submission task logs the selected authentication mode without credential material. The standalone monitor does not currently emit an equivalent mode message.
+- Source-built Arcade cannot use the Entra path.
+
+#### Migration and compatibility
+
+Entra authentication is opt-in. Ingesting a newer Arcade SDK does not change an existing pipeline until it sets `HelixUseEntraAuthentication: true` or `useEntraAuthentication: true`.
+
+| Existing configuration | Behavior after Arcade update |
+| --- | --- |
+| No token and Entra disabled | Continues using anonymous access and public queues. |
+| `HelixAccessToken` set and Entra disabled | Continues using legacy access-token authentication. |
+| Entra enabled | Uses the configured workload identity service connection; any supplied `HelixAccessToken` is ignored. |
+
+To migrate an internal pipeline:
+
+1. Obtain a workload identity federation service connection with the appropriate Helix application role.
+2. Authorize that service connection for the pipeline.
+3. Set `HelixUseEntraAuthentication: true` and `HelixAzureSubscription` on every `send-to-helix.yml` invocation.
+4. If the pipeline uses the standalone monitor, also set `useEntraAuthentication: true` and `azureSubscription` on `helix-job-monitor.yml`.
+5. Remove the Helix access-token variable group and `HelixAccessToken` parameter after the authenticated path succeeds.
+
 #### Legacy access-token authentication
 
-In the dev.azure.com/dnceng/internal project, you can use the `DotNet-HelixApi-Access` variable group to provide this secret to your build and then specify the `HelixApiAccessToken` secret for the `HelixAccessToken` parameter.
+Use this only while migrating an existing pipeline. In the dev.azure.com/dnceng/internal project, the `DotNet-HelixApi-Access` variable group provides the `HelixApiAccessToken` secret for the `HelixAccessToken` parameter.
 
 Example:
 
