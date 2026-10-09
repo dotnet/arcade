@@ -155,7 +155,7 @@ jobs:
           is1ESPipeline: ${{ parameters.is1ESPipeline }}
           args:
             targetPath: '$(Build.ArtifactStagingDirectory)/oneloc-diagnostics'
-            artifactName: 'OneLocBuildDiagnostics${{ parameters.JobNameSuffix }}'
+            artifactName: 'OneLocBuildDiagnostics${{ parameters.JobNameSuffix }}_Attempt$(System.JobAttempt)'
             displayName: Publish OneLocBuild GitHub diagnostics
             condition: failed()
 

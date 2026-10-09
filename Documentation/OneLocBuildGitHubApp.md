@@ -144,7 +144,8 @@ private key, so syntax and unit checks alone do not validate this boundary.
 
 ### Failure-only GitHub diagnostics
 
-Failed GitHub OneLoc jobs publish `OneLocBuildDiagnostics` (plus `JobNameSuffix`).
+Failed GitHub OneLoc jobs publish `OneLocBuildDiagnostics` (plus `JobNameSuffix`
+and `_Attempt$(System.JobAttempt)`).
 Using the existing App token, the script probes the repository, both refs and their
 commits, then compares refs and observed SHAs. It makes no retries or mutations and
 preserves the original failure. The JSON records request URIs, operations, status,
