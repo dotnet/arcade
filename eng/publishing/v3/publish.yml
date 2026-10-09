@@ -43,6 +43,7 @@ stages:
         artifact: BlobArtifacts
         itemPattern: |
           **/MergedManifest.xml
+          **/*.blobids
         downloadPath: '$(Build.ArtifactStagingDirectory)/BlobArtifacts'
 
     - task: DownloadPipelineArtifact@2
@@ -73,6 +74,7 @@ stages:
         artifact: AssetManifests
         itemPattern: |
           **/MergedManifest.xml
+          **/*.blobids
         downloadPath: '$(Build.ArtifactStagingDirectory)/BlobArtifacts'
 
     - task: DownloadPipelineArtifact@2

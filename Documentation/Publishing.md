@@ -307,6 +307,43 @@ Most frequent cause of this is that there is no Default Channel configured for t
 
 **Note:** only packages and blobs described in at least one build manifest will be published.
 
+### Can I publish only some blobs from a build?
+
+Pass `/p:BlobAssetIdManifests=daily.blobids` through
+`artifactsPublishingAdditionalParameters` (or Darc's
+`--artifact-publishing-parameters`). This optional property accepts semicolon-separated
+file paths. Relative paths are resolved against `BlobBasePath`.
+When setting multiple paths on the MSBuild command line, escape the separating
+semicolons as `%3B`.
+
+Each file contains one exact, case-sensitive blob `Id` from the build manifest per
+line. Blank lines and surrounding whitespace are ignored; duplicate IDs are combined.
+The caller owns selection logic and can generate these files with MSBuild's
+`WriteLinesToFile` task. They are allowlists, not replacement build manifests.
+The [publishing task](../src/Microsoft.DotNet.Build.Tasks.Feed/src/PublishArtifactsInManifest.cs)
+applies the selection before starting the individual publishers.
+
+For V4 publishing, upload the files alongside `MergedManifest.xml` in the
+`AssetManifests` pipeline artifact, using the `.blobids` extension. The promotion
+pipeline downloads both the complete manifest and these files. For example, a build
+can supply `daily.blobids` and `preview.blobids`, then select:
+
+- Daily: `/p:BuildQuality=daily /p:BlobAssetIdManifests=daily.blobids`
+- Preview: `/p:BuildQuality=preview /p:BlobAssetIdManifests=preview.blobids`
+
+For V3 publishing, upload the `.blobids` files in the `BlobArtifacts` pipeline artifact.
+
+Only selected blobs are eligible for publication and associated latest-link updates.
+Include shared blobs, such as a manifest archive, explicitly if they should also be
+published. Packages and PDBs are not filtered by this property. Existing feed
+shipping/nonshipping filters still apply.
+
+Missing or unreadable files, an empty selection, or IDs absent from the supplied
+build manifests fail publishing before any publisher runs or the build is assigned
+to a channel. When the property is omitted, existing publishing behavior is unchanged.
+BAR registration remains complete and channel membership remains build-level.
+`BuildQuality` still controls link destinations, not asset selection.
+
 ### Where can I see publishing logs in V1?
 
 The publishing logs are stored inside an Azure DevOps artifacts container named `PostBuildLogs`. Each activated post-build channel/stage will have a subfolder under `PostBuildLogs`. Each job in a publishing channel/stage will have `.binlogs` in the container.

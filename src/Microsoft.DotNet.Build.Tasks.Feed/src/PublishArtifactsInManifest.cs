@@ -10,6 +10,7 @@ using Microsoft.DotNet.ProductConstructionService.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -64,6 +65,12 @@ public class PublishArtifactsInManifest : MSBuildTaskBase
     /// </summary>
     [Required]
     public ITaskItem[] AssetManifestPaths { get; set; }
+
+    /// <summary>
+    /// Optional files containing one exact blob asset ID per line. Relative paths are resolved
+    /// against BlobAssetsBasePath. When omitted, all blobs in the asset manifests are eligible.
+    /// </summary>
+    public ITaskItem[] BlobAssetIdManifests { get; set; }
 
     /// <summary>
     /// Full path to the folder containing blob assets.
@@ -296,6 +303,11 @@ public class PublishArtifactsInManifest : MSBuildTaskBase
                 return false;
             }
 
+            if (!SelectBlobAssets(tasks))
+            {
+                return false;
+            }
+
             // Process all manifests in parallel
             var results = await Task.WhenAll(
                 tasks.Select(t => t.ExecuteAsync())
@@ -318,6 +330,67 @@ public class PublishArtifactsInManifest : MSBuildTaskBase
             Log.LogErrorFromException(e, true);
             return false;
         }
+    }
+
+    private bool SelectBlobAssets(PublishArtifactsInManifestBase[] tasks)
+    {
+        if (BlobAssetIdManifests == null || BlobAssetIdManifests.Length == 0)
+        {
+            return true;
+        }
+
+        var selectedIds = new HashSet<string>(StringComparer.Ordinal);
+        foreach (ITaskItem manifest in BlobAssetIdManifests)
+        {
+            string path = Path.IsPathRooted(manifest.ItemSpec)
+                ? manifest.ItemSpec
+                : Path.Combine(BlobAssetsBasePath, manifest.ItemSpec);
+
+            if (!_fileSystem.FileExists(path))
+            {
+                Log.LogError($"Blob asset ID manifest '{path}' does not exist.");
+                return false;
+            }
+
+            using var stream = _fileSystem.GetFileStream(path, FileMode.Open, FileAccess.Read);
+            using var reader = new StreamReader(stream);
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                string id = line.Trim();
+                if (id.Length != 0)
+                {
+                    selectedIds.Add(id);
+                }
+            }
+        }
+
+        if (selectedIds.Count == 0)
+        {
+            Log.LogError("The blob asset ID manifests do not select any blobs.");
+            return false;
+        }
+
+        var availableIds = tasks.SelectMany(t => t.BuildModel.Artifacts.Blobs)
+            .Select(blob => blob.Id)
+            .ToHashSet(StringComparer.Ordinal);
+        foreach (string id in selectedIds.Except(availableIds))
+        {
+            Log.LogError($"Selected blob asset ID '{id}' was not found in the asset manifests.");
+        }
+
+        if (Log.HasLoggedErrors)
+        {
+            return false;
+        }
+
+        foreach (PublishArtifactsInManifestBase task in tasks)
+        {
+            task.BuildModel.Artifacts.Blobs.RemoveAll(blob => !selectedIds.Contains(blob.Id));
+        }
+
+        Log.LogMessage(MessageImportance.High, $"Selected {selectedIds.Count} blob asset IDs for publishing.");
+        return true;
     }
 
     protected virtual async Task PromoteBuildToChannelsAsync()

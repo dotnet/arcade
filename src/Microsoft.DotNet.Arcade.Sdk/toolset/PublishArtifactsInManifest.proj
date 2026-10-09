@@ -12,6 +12,8 @@
                                                   be assigned to once the assets are published.
       - ManifestsBasePath                       : Full path to place where build manifests are stored.
       - BlobBasePath                            : Full path to place where all packages/blobs, from all manifests, are stored.
+      - BlobAssetIdManifests                     : Optional semicolon-separated files listing exact blob IDs, one per line.
+                                                  Relative paths are resolved against BlobBasePath. Packages and PDBs are unaffected.
       - PackageBasePath                         
       - BARBuildId                              : BAR ID of the build being published.
       - MaestroApiEndpoint                      : Maestro API/Token. Used for updating asset locations.
@@ -135,6 +137,7 @@
       BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
       PublishInstallersAndChecksums="$(PublishInstallersAndChecksums)"
       AssetManifestPaths="@(ManifestFiles)"
+      BlobAssetIdManifests="$(BlobAssetIdManifests)"
       BlobAssetsBasePath="$(BlobBasePath)"
       PackageAssetsBasePath="$(PackageBasePath)"
       AkaMSClientId="$(AkaMSClientId)"
