@@ -41,9 +41,7 @@ stages:
         buildId: $(AzDOBuildId)
         downloadType: 'specific'
         artifact: BlobArtifacts
-        itemPattern: |
-          **/MergedManifest.xml
-          **/*.blobids
+        itemPattern: '**/MergedManifest.xml'
         downloadPath: '$(Build.ArtifactStagingDirectory)/BlobArtifacts'
 
     - task: DownloadPipelineArtifact@2
@@ -72,9 +70,7 @@ stages:
         buildId: $(AzDOBuildId)
         downloadType: 'specific'
         artifact: AssetManifests
-        itemPattern: |
-          **/MergedManifest.xml
-          **/*.blobids
+        itemPattern: '**/MergedManifest.xml'
         downloadPath: '$(Build.ArtifactStagingDirectory)/BlobArtifacts'
 
     - task: DownloadPipelineArtifact@2

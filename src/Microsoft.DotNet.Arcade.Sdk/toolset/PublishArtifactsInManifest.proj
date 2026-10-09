@@ -12,7 +12,7 @@
                                                   be assigned to once the assets are published.
       - ManifestsBasePath                       : Full path to place where build manifests are stored.
       - BlobBasePath                            : Full path to place where all packages/blobs, from all manifests, are stored.
-      - BlobAssetIdManifests                     : Optional semicolon-separated files listing exact blob IDs, one per line.
+      - BlobAssetIdPattern                       : Optional case-sensitive, culture-invariant .NET regex selecting full blob IDs.
                                                   Relative paths are resolved against BlobBasePath. Packages and PDBs are unaffected.
       - PackageBasePath                         
       - BARBuildId                              : BAR ID of the build being published.
@@ -137,7 +137,7 @@
       BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
       PublishInstallersAndChecksums="$(PublishInstallersAndChecksums)"
       AssetManifestPaths="@(ManifestFiles)"
-      BlobAssetIdManifests="$(BlobAssetIdManifests)"
+      BlobAssetIdPattern="$(BlobAssetIdPattern)"
       BlobAssetsBasePath="$(BlobBasePath)"
       PackageAssetsBasePath="$(PackageBasePath)"
       AkaMSClientId="$(AkaMSClientId)"

@@ -15,7 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
 
@@ -67,10 +67,10 @@ public class PublishArtifactsInManifest : MSBuildTaskBase
     public ITaskItem[] AssetManifestPaths { get; set; }
 
     /// <summary>
-    /// Optional files containing one exact blob asset ID per line. Relative paths are resolved
-    /// against BlobAssetsBasePath. When omitted, all blobs in the asset manifests are eligible.
+    /// Optional case-sensitive, culture-invariant .NET regular expression applied to each full
+    /// blob asset ID. When null or empty, all blobs in the asset manifests are eligible.
     /// </summary>
-    public ITaskItem[] BlobAssetIdManifests { get; set; }
+    public string BlobAssetIdPattern { get; set; }
 
     /// <summary>
     /// Full path to the folder containing blob assets.
@@ -334,62 +334,43 @@ public class PublishArtifactsInManifest : MSBuildTaskBase
 
     private bool SelectBlobAssets(PublishArtifactsInManifestBase[] tasks)
     {
-        if (BlobAssetIdManifests == null || BlobAssetIdManifests.Length == 0)
+        if (string.IsNullOrEmpty(BlobAssetIdPattern))
         {
             return true;
         }
 
-        var selectedIds = new HashSet<string>(StringComparer.Ordinal);
-        foreach (ITaskItem manifest in BlobAssetIdManifests)
+        List<BlobArtifactModel>[] selectedBlobs;
+        try
         {
-            string path = Path.IsPathRooted(manifest.ItemSpec)
-                ? manifest.ItemSpec
-                : Path.Combine(BlobAssetsBasePath, manifest.ItemSpec);
-
-            if (!_fileSystem.FileExists(path))
-            {
-                Log.LogError($"Blob asset ID manifest '{path}' does not exist.");
-                return false;
-            }
-
-            using var stream = _fileSystem.GetFileStream(path, FileMode.Open, FileAccess.Read);
-            using var reader = new StreamReader(stream);
-            string line;
-            while ((line = reader.ReadLine()) != null)
-            {
-                string id = line.Trim();
-                if (id.Length != 0)
-                {
-                    selectedIds.Add(id);
-                }
-            }
+            var pattern = new Regex(BlobAssetIdPattern, RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+            // Evaluate every manifest before mutating any model or starting any publisher.
+            selectedBlobs = tasks.Select(task => task.BuildModel.Artifacts.Blobs
+                .Where(blob => pattern.IsMatch(blob.Id)).ToList()).ToArray();
         }
-
-        if (selectedIds.Count == 0)
+        catch (ArgumentException e)
         {
-            Log.LogError("The blob asset ID manifests do not select any blobs.");
+            Log.LogError($"Invalid BlobAssetIdPattern: {e.Message}");
+            return false;
+        }
+        catch (RegexMatchTimeoutException e)
+        {
+            Log.LogError($"BlobAssetIdPattern exceeded the regex match timeout of {e.MatchTimeout.TotalSeconds} second(s).");
             return false;
         }
 
-        var availableIds = tasks.SelectMany(t => t.BuildModel.Artifacts.Blobs)
-            .Select(blob => blob.Id)
-            .ToHashSet(StringComparer.Ordinal);
-        foreach (string id in selectedIds.Except(availableIds))
+        int selectedCount = selectedBlobs.Sum(blobs => blobs.Count);
+        if (selectedCount == 0)
         {
-            Log.LogError($"Selected blob asset ID '{id}' was not found in the asset manifests.");
-        }
-
-        if (Log.HasLoggedErrors)
-        {
+            Log.LogError("BlobAssetIdPattern did not match any blobs across the asset manifests.");
             return false;
         }
 
-        foreach (PublishArtifactsInManifestBase task in tasks)
+        for (int i = 0; i < tasks.Length; i++)
         {
-            task.BuildModel.Artifacts.Blobs.RemoveAll(blob => !selectedIds.Contains(blob.Id));
+            tasks[i].BuildModel.Artifacts.Blobs = selectedBlobs[i];
         }
 
-        Log.LogMessage(MessageImportance.High, $"Selected {selectedIds.Count} blob asset IDs for publishing.");
+        Log.LogMessage(MessageImportance.High, $"Selected {selectedCount} blobs for publishing using BlobAssetIdPattern.");
         return true;
     }
 
