@@ -141,3 +141,20 @@ private key, so syntax and unit checks alone do not validate this boundary.
 ## Scope and limitations
 
 - Arcade supports OneLocBuild in **`dnceng/internal`** and **`DevDiv/DevDiv`**.
+
+### Failure-only GitHub diagnostics
+
+Failed GitHub OneLoc jobs publish `OneLocBuildDiagnostics` (plus `JobNameSuffix`).
+Using the existing App token, the script probes the repository, both refs and their
+commits, then compares refs and observed SHAs. It makes no retries or mutations and
+preserves the original failure. The JSON records request URIs, operations, status,
+elapsed time, attempt number, SHAs, request IDs, and retry/rate-limit headers.
+Tokens, authorization headers, raw logs, response bodies, and exception messages
+are excluded; collection failures produce warnings.
+
+Refs come from the last comparison entry in the failed task's log, read using
+`System.AccessToken` (requires build-read permission). Missing logs or unrecognized
+formats are reported, not guessed. Mirrors use `GitHubOrg`/`MirrorRepo`; other jobs
+use the GitHub build repository. These are post-failure observations, not proof of
+the earlier request's behavior. OneLocBuild should expose refs and creation/update
+SHAs as structured outputs; its internal logging and retry policy are outside Arcade.

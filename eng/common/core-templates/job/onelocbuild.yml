@@ -134,6 +134,31 @@ jobs:
           xLocCustomPowerShellScript: ${{ parameters.xLocCustomPowerShellScript }}
       condition: ${{ parameters.condition }}
 
+    - ${{ if eq(parameters.RepoType, 'gitHub') }}:
+      - task: PowerShell@2
+        displayName: Diagnose OneLocBuild GitHub failure
+        condition: failed()
+        inputs:
+          pwsh: true
+          targetType: filePath
+          filePath: $(System.DefaultWorkingDirectory)/eng/common/Get-OneLocBuildDiagnostics.ps1
+          arguments: >-
+            -OutputDirectory "$(Build.ArtifactStagingDirectory)/oneloc-diagnostics"
+        env:
+          GITHUB_APP_TOKEN: $(GitHubAppInstallationToken)
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          ONELOC_MIRROR_REPO: ${{ parameters.MirrorRepo }}
+          ONELOC_GITHUB_ORG: ${{ parameters.GitHubOrg }}
+
+      - template: /eng/common/core-templates/steps/publish-pipeline-artifacts.yml
+        parameters:
+          is1ESPipeline: ${{ parameters.is1ESPipeline }}
+          args:
+            targetPath: '$(Build.ArtifactStagingDirectory)/oneloc-diagnostics'
+            artifactName: 'OneLocBuildDiagnostics${{ parameters.JobNameSuffix }}'
+            displayName: Publish OneLocBuild GitHub diagnostics
+            condition: failed()
+
     # Copy the locProject.json to the root of the Loc directory, then publish a pipeline artifact
     - task: CopyFiles@2
       displayName: Copy LocProject.json
