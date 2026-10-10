@@ -5,7 +5,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Helix.JobMonitor;
+namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
 internal interface IBlobClient
 {

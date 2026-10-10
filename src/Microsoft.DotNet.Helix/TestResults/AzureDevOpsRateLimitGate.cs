@@ -1,14 +1,14 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-namespace Microsoft.DotNet.Helix.JobMonitor;
+namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
 internal sealed class AzureDevOpsRateLimitGate
 {
-    private readonly JobMonitorMetrics _metrics;
+    private readonly TestReportingMetrics _metrics;
     private long _notBeforeUtcTicks;
 
-    public AzureDevOpsRateLimitGate(JobMonitorMetrics metrics = null)
+    public AzureDevOpsRateLimitGate(TestReportingMetrics metrics = null)
     {
         _metrics = metrics;
     }
@@ -53,7 +53,7 @@ internal sealed class AzureDevOpsRateLimitGate
                     return;
                 }
 
-                waitStartedAt = waitStartedAt == 0 ? JobMonitorMetrics.StartOperation() : waitStartedAt;
+                waitStartedAt = waitStartedAt == 0 ? TestReportingMetrics.StartOperation() : waitStartedAt;
                 await Task.Delay(delay, cancellationToken);
             }
         }

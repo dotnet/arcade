@@ -1,7 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.DotNet.Helix.JobMonitor;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Microsoft.Extensions.Logging;
 
@@ -12,18 +11,21 @@ internal sealed class TestResultProcessor : ITestResultProcessor
     private readonly TestResultAttachmentMode _attachmentMode;
     private readonly bool _useFullyQualifiedTestName;
     private readonly ILogger _logger;
-    private readonly JobMonitorMetrics _metrics;
+    private readonly TestReportingMetrics _metrics;
+    private readonly bool _failOnParseError;
 
     public TestResultProcessor(
         TestResultAttachmentMode attachmentMode,
         bool useFullyQualifiedTestName,
         ILogger logger,
-        JobMonitorMetrics metrics)
+        TestReportingMetrics metrics,
+        bool failOnParseError = false)
     {
         _attachmentMode = attachmentMode;
         _useFullyQualifiedTestName = useFullyQualifiedTestName;
         _logger = logger;
         _metrics = metrics;
+        _failOnParseError = failOnParseError;
     }
 
     public async Task<PreparedTestResults> PrepareAsync(
@@ -35,14 +37,14 @@ internal sealed class TestResultProcessor : ITestResultProcessor
             return new PreparedTestResults([], AllPassed: true);
         }
 
-        long parseStartedAt = JobMonitorMetrics.StartOperation();
+        long parseStartedAt = TestReportingMetrics.StartOperation();
         try
         {
             var reader = new LocalTestResultsReader(_logger, _attachmentMode);
             var parsedResults = new List<IReadOnlyList<TestResult>>(results.TestResultFiles.Count);
             foreach (string file in results.TestResultFiles)
             {
-                parsedResults.Add(await reader.ReadResultFileAsync(file, cancellationToken));
+                parsedResults.Add(await reader.ReadResultFileAsync(file, cancellationToken, _failOnParseError));
             }
 
             IReadOnlyList<AggregatedResult> aggregatedResults =

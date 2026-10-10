@@ -22,12 +22,6 @@ public class AzureDevOpsResultPublisherTests
     [Fact]
     public void AttachmentModeDefaultsToFailed()
     {
-        var reportingParameters = new AzureDevOpsReportingParameters(
-            new Uri("https://dev.azure.com/dnceng-public/"),
-            "public",
-            "123");
-
-        Assert.Equal(TestResultAttachmentMode.Failed, reportingParameters.TestResultAttachmentMode);
         Assert.Equal(TestResultAttachmentMode.Failed, new JobMonitorOptions().TestResultAttachmentMode);
     }
 
@@ -176,6 +170,20 @@ public class AzureDevOpsResultPublisherTests
         Assert.Null(attachment.TestSubResultId);
         Assert.Equal("failure.txt", attachment.FileName);
         Assert.Equal("details", System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(attachment.Stream)));
+    }
+
+    [Theory]
+    [InlineData("{\"value\":[]}", 1)]
+    [InlineData("{\"value\":[{\"id\":1}]}", 2)]
+    [InlineData("{\"value\":[{\"id\":-1}]}", 1)]
+    public async Task UploadTestResultsWithCountAsync_RejectsIncompleteResponses(string response, int resultCount)
+    {
+        var transport = new FixedResponseTransport(response);
+        var publisher = CreatePublisher(transport);
+        AggregatedResult[] results = [.. Enumerable.Range(0, resultCount)
+            .Select(i => new AggregatedResult(AggregationType.Single, $"Test{i}", 1, "Passed"))];
+
+        await Assert.ThrowsAsync<AzureDevOpsReportingError>(() => PublishAsync(publisher, results));
     }
 
     [Fact]
@@ -327,9 +335,18 @@ public class AzureDevOpsResultPublisherTests
 
             return Task.FromResult(JsonSerializer.Serialize(new
             {
-                value = Enumerable.Range(1, resultCount).Select(id => new { id })
+                value = requestBody.RootElement.EnumerateArray().Select((result, index) => ResultReference(result, index + 1))
             }));
         }
+
+        private static object ResultReference(JsonElement result, int id)
+            => new
+            {
+                id,
+                subResults = result.TryGetProperty("SubResults", out JsonElement children) && children.ValueKind == JsonValueKind.Array
+                    ? children.EnumerateArray().Select((child, index) => ResultReference(child, index + 1)).ToArray()
+                    : null,
+            };
 
         public Task UploadAttachmentAsync(
             int testRunId,
@@ -356,6 +373,12 @@ public class AzureDevOpsResultPublisherTests
                 ? 1 + subResults.EnumerateArray().Sum(CountHierarchyNodes)
                 : 1;
         }
+    }
+
+    private sealed class FixedResponseTransport(string response) : RecordingResultTransport
+    {
+        public override Task<string> PublishResultsAsync(int testRunId, object results, CancellationToken cancellationToken)
+            => Task.FromResult(response);
     }
 
     private sealed class BlockingResultTransport : RecordingResultTransport

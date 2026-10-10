@@ -28,22 +28,21 @@
   <Import Project="$(_HelixMonoQueueTargets)" Condition="'$(_HelixMonoQueueTargets)' != ''"/>
 
   <!--
-    When the standalone Helix Job Monitor is enabled, ensure any test result files produced inside
-    the work item working directory end up in $HELIX_WORKITEM_UPLOAD_ROOT so the monitor (running
-    as a separate Azure Pipelines job) can download and publish them. We don't force users to
-    redirect their test runner output - instead we sweep the working directory after the test
-    command runs.
+    Stage raw results for the build-side C# reporter, whether it runs inline or in the monitor.
   -->
-  <PropertyGroup Condition="'$(EnableHelixJobMonitor)' == 'true' and $(IsPosixShell)">
+  <ItemGroup Condition="'$(EnableHelixJobMonitor)' == 'true' or '$(ImportAzurePipelinesTargets)' == 'true'">
+    <HelixCorrelationPayload Include="$(MSBuildThisFileDirectory)test-results" IncludeDirectoryName="true" />
+  </ItemGroup>
+  <PropertyGroup Condition="('$(EnableHelixJobMonitor)' == 'true' or '$(ImportAzurePipelinesTargets)' == 'true') and $(IsPosixShell)">
     <HelixPostCommands>
       $(HelixPostCommands);
-      find . -maxdepth 5 '(' -iname '*.trx' -o -iname 'testResults.xml' -o -iname 'test-results.xml' -o -iname 'test_results.xml' -o -iname 'junit-results.xml' -o -iname 'junitresults.xml' ')' -print0 | xargs -0 -I {} sh -c 'mkdir -p "$HELIX_WORKITEM_UPLOAD_ROOT/$$(dirname "{}")" &amp;&amp; cp -f "{}" "$HELIX_WORKITEM_UPLOAD_ROOT/{}"' || true
+      sh "$HELIX_CORRELATION_PAYLOAD/test-results/collect-test-results.sh" || exit $?
     </HelixPostCommands>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(EnableHelixJobMonitor)' == 'true' and !$(IsPosixShell)">
+  <PropertyGroup Condition="('$(EnableHelixJobMonitor)' == 'true' or '$(ImportAzurePipelinesTargets)' == 'true') and !$(IsPosixShell)">
     <HelixPostCommands>
       $(HelixPostCommands);
-      powershell -NoProfile -NonInteractive -Command "Get-ChildItem -Path . -Recurse -File -Depth 5 -Include *.trx,testResults.xml,test-results.xml,test_results.xml,junit-results.xml,junitresults.xml -ErrorAction SilentlyContinue | ForEach-Object { $destDir = Join-Path $env:HELIX_WORKITEM_UPLOAD_ROOT (Split-Path $_.FullName -NoQualifier | Resolve-Path -Relative)%3B New-Item -ItemType Directory -Path (Split-Path $destDir) -Force -ErrorAction SilentlyContinue | Out-Null%3B Copy-Item -Path $_.FullName -Destination $destDir -Force -ErrorAction SilentlyContinue }"
+      powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%HELIX_CORRELATION_PAYLOAD%\test-results\collect-test-results.ps1" || exit /b
     </HelixPostCommands>
   </PropertyGroup>
 

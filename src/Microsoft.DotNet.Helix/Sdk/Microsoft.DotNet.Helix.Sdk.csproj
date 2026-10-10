@@ -6,6 +6,8 @@
     <IsBuildTaskProject>true</IsBuildTaskProject>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <!-- The PowerShell collector is a Helix payload, not a NuGet installation script. -->
+    <NoWarn>$(NoWarn);NU5111</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(DotNetBuildSourceOnly)' == 'true'">
@@ -28,6 +30,7 @@
     <ProjectReference Include="..\..\Microsoft.DotNet.ArcadeAzureIntegration\Microsoft.DotNet.ArcadeAzureIntegration.csproj" Condition="'$(DotNetBuildSourceOnly)' != 'true'" />
     <ProjectReference Include="..\Client\CSharp\Microsoft.DotNet.Helix.Client.csproj" />
     <ProjectReference Include="..\JobSender\Microsoft.DotNet.Helix.JobSender.csproj" />
+    <ProjectReference Include="..\TestResults\Microsoft.DotNet.Helix.TestResults.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,6 +41,9 @@
     <None Include="**\*.py;**\*.bat;**\*.sh"
           Pack="true"
           PackagePath="%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="tools\test-results\collect-test-results.ps1"
+          Pack="true"
+          PackagePath="tools/test-results/collect-test-results.ps1" />
   </ItemGroup>
 
   <ItemGroup>

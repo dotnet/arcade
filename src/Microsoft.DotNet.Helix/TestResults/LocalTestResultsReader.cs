@@ -55,12 +55,13 @@ public sealed class LocalTestResultsReader
 
     public async Task<IReadOnlyList<TestResult>> ReadResultFileAsync(
         string filePath,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool failOnParseError = false)
     {
         try
         {
             var results = new List<TestResult>();
-            await foreach (TestResult result in ReadResultsAsync(filePath, cancellationToken))
+            await foreach (TestResult result in ReadResultsAsync(filePath, cancellationToken, failOnParseError))
             {
                 results.Add(result);
             }
@@ -74,13 +75,18 @@ public sealed class LocalTestResultsReader
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to parse test results file '{Path}'.", filePath);
+            if (failOnParseError)
+            {
+                throw;
+            }
             return [];
         }
     }
 
     private async IAsyncEnumerable<TestResult> ReadResultsAsync(
         string filePath,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken,
+        bool failOnParseError)
     {
         string rootName = await ReadRootNameAsync(filePath, cancellationToken);
         string workItemName = _fileSystem.GetFileName(_fileSystem.GetDirectoryName(filePath)) ?? string.Empty;
@@ -125,6 +131,10 @@ public sealed class LocalTestResultsReader
                 break;
 
             default:
+                if (failOnParseError)
+                {
+                    throw new InvalidDataException($"Test result file '{filePath}' has unsupported root element '{rootName}'.");
+                }
                 _logger.LogWarning(
                     "Test result file '{Path}' has unsupported root element '{RootElement}' and will be skipped.",
                     filePath,
