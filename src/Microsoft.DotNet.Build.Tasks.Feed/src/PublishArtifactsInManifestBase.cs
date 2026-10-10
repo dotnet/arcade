@@ -1079,35 +1079,158 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         string uri = helper.ConstructDownloadUrl(fileName);
 
 
-        Log.LogMessage(MessageImportance.Low, $"Downloading file from '{uri}' to '{path}'");
+        Log.LogMessage(MessageImportance.Low, $"Downloading file from '{SanitizeUriForLogging(uri)}' to '{path}'");
 
         Exception mostRecentlyCaughtException = null;
         bool success = await RetryHandler.RunAsync(async attempt =>
         {
+            Stopwatch attemptDuration = Stopwatch.StartNew();
+            HttpStatusCode? statusCode = null;
+            long? expectedBytes = null;
+            long downloadedBytes = 0;
+            bool downloadStarted = false;
+            string responseUri = null;
+            string responseHeaders = null;
+
             try
             {
                 using CancellationTokenSource timeoutTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(TimeoutInMinutes));
                 using HttpResponseMessage response = await client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, timeoutTokenSource.Token);
+                statusCode = response.StatusCode;
+                expectedBytes = response.Content.Headers.ContentLength;
+                responseUri = SanitizeUriForLogging(response.RequestMessage?.RequestUri?.ToString());
+                responseHeaders = FormatResponseHeadersForLogging(response);
                 response.EnsureSuccessStatusCode();
                 using var fs = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                downloadStarted = true;
                 using var stream = await response.Content.ReadAsStreamAsync(timeoutTokenSource.Token);
                 await stream.CopyToAsync(fs, timeoutTokenSource.Token);
+                downloadedBytes = fs.Position;
                 return true;
             }
             catch (Exception ex)
             {
+                if (downloadStarted && File.Exists(path))
+                {
+                    downloadedBytes = new FileInfo(path).Length;
+                }
+
                 mostRecentlyCaughtException = ex;
+                string exceptionDetails = FormatExceptionForLogging(ex);
+                Log.LogMessage(
+                    MessageImportance.Low,
+                    $"Download attempt {attempt + 1}/{RetryHandler.MaxAttempts} failed for file '{fileName}' " +
+                    $"from artifact '{artifactName}' after {attemptDuration.Elapsed.TotalSeconds:F1} seconds. " +
+                    $"HTTP status: {statusCode?.ToString() ?? "unavailable"}; " +
+                    $"expected bytes: {expectedBytes?.ToString() ?? "unknown"}; downloaded bytes: {downloadedBytes}. " +
+                    $"Request URI: '{SanitizeUriForLogging(uri)}'; response URI: '{responseUri ?? "unavailable"}'; " +
+                    $"response headers: {responseHeaders ?? "unavailable"}. " +
+                    exceptionDetails);
                 return false;
             }
         }).ConfigureAwait(false);
 
         if (!success)
         {
+            string exceptionDetails = FormatExceptionForLogging(mostRecentlyCaughtException);
             throw new Exception(
-                $"Failed to download '{path}' after {RetryHandler.MaxAttempts} attempts. See inner exception for details.",
-                mostRecentlyCaughtException);
+                $"Failed to download '{path}' after {RetryHandler.MaxAttempts} attempts. " +
+                $"Last failure: {exceptionDetails}");
         }
     }
+
+    private static string FormatExceptionForLogging(Exception exception)
+    {
+        if (exception == null)
+        {
+            return "unavailable";
+        }
+
+        var details = new List<string>();
+        for (Exception current = exception; current != null; current = current.InnerException)
+        {
+            details.Add($"{current.GetType().FullName}: {SanitizeTextForLogging(current.Message)}");
+        }
+
+        return string.Join(" ---> ", details);
+    }
+
+    private static string SanitizeTextForLogging(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return text ?? string.Empty;
+        }
+
+        string sanitized = Regex.Replace(
+            text,
+            @"https?://[^\s'""<>]+",
+            match => SanitizeUriForLogging(match.Value),
+            RegexOptions.IgnoreCase);
+
+        return Regex.Replace(
+            sanitized,
+            @"(?<name>[A-Za-z0-9_-]*(?:Authorization|Cookie|Api-Key|Credential|Password|Secret|Signature|Token|Sig)[A-Za-z0-9_-]*)\s*[:=]\s*[^&,;\r\n]+",
+            match => $"{match.Groups["name"].Value}=[REDACTED]",
+            RegexOptions.IgnoreCase);
+    }
+
+    private static string FormatResponseHeadersForLogging(HttpResponseMessage response)
+    {
+        IEnumerable<KeyValuePair<string, IEnumerable<string>>> headers = response.Headers;
+        if (response.Content != null)
+        {
+            headers = headers.Concat(response.Content.Headers);
+        }
+
+        string formattedHeaders = string.Join(
+            "; ",
+            headers
+                .OrderBy(header => header.Key, StringComparer.OrdinalIgnoreCase)
+                .Select(header =>
+                    $"{header.Key}=" +
+                    (IsSensitiveHttpName(header.Key) ? "[REDACTED]" : string.Join(",", header.Value))));
+
+        return string.IsNullOrEmpty(formattedHeaders) ? "none" : formattedHeaders;
+    }
+
+    private static string SanitizeUriForLogging(string uri)
+    {
+        if (!Uri.TryCreate(uri, UriKind.Absolute, out Uri parsedUri) || string.IsNullOrEmpty(parsedUri.Query))
+        {
+            return uri ?? "unavailable";
+        }
+
+        string sanitizedQuery = string.Join(
+            "&",
+            parsedUri.Query
+                .TrimStart('?')
+                .Split('&', StringSplitOptions.RemoveEmptyEntries)
+                .Select(parameter =>
+                {
+                    int separatorIndex = parameter.IndexOf('=');
+                    string encodedName = separatorIndex >= 0 ? parameter[..separatorIndex] : parameter;
+                    string name = Uri.UnescapeDataString(encodedName);
+                    return IsSensitiveHttpName(name)
+                        ? $"{encodedName}=[REDACTED]"
+                        : parameter;
+                }));
+
+        return $"{parsedUri.GetLeftPart(UriPartial.Path)}{(sanitizedQuery.Length > 0 ? $"?{sanitizedQuery}" : string.Empty)}{parsedUri.Fragment}";
+    }
+
+    private static bool IsSensitiveHttpName(string name) =>
+        name.Equals("Authorization", StringComparison.OrdinalIgnoreCase) ||
+        name.Equals("Proxy-Authorization", StringComparison.OrdinalIgnoreCase) ||
+        name.Equals("Cookie", StringComparison.OrdinalIgnoreCase) ||
+        name.Equals("Set-Cookie", StringComparison.OrdinalIgnoreCase) ||
+        name.Equals("Sig", StringComparison.OrdinalIgnoreCase) ||
+        name.Contains("Api-Key", StringComparison.OrdinalIgnoreCase) ||
+        name.Contains("Credential", StringComparison.OrdinalIgnoreCase) ||
+        name.Contains("Password", StringComparison.OrdinalIgnoreCase) ||
+        name.Contains("Secret", StringComparison.OrdinalIgnoreCase) ||
+        name.Contains("Signature", StringComparison.OrdinalIgnoreCase) ||
+        name.Contains("Token", StringComparison.OrdinalIgnoreCase);
 
     private async Task<IArtifactUrlHelper> CreateArtifactUrlHelper(HttpClient client, string artifactName)
     {

@@ -4,9 +4,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using AwesomeAssertions;
 using Microsoft.Arcade.Common;
@@ -327,12 +329,27 @@ public class DownloadFileTests
 
         var testFile = Path.Combine("Symbols", _testTextFile);
         var fileResponseContent = TestInputs.ReadAllBytes(testFile);
-        var fileResponse = new HttpResponseMessage(httpStatus);
 
         var artifactResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = jsonContent
         };
+
+        HttpResponseMessage CreateFileResponse()
+        {
+            var response = new HttpResponseMessage(httpStatus)
+            {
+                Content = new ByteArrayContent(fileResponseContent),
+                RequestMessage = new HttpRequestMessage(
+                    HttpMethod.Get,
+                    "https://artifact-cdn.example/content?format=file&sig=secret-signature")
+            };
+            response.Headers.TryAddWithoutValidation("X-Test-Request-Id", "request-123");
+            response.Headers.TryAddWithoutValidation("X-TFS-Session", "00000000-1111-2222-3333-444444444444");
+            response.Headers.TryAddWithoutValidation("Set-Cookie", "secret-cookie");
+            response.Content.Headers.TryAddWithoutValidation("X-Test-Content", "content-123");
+            return response;
+        }
 
         // Create a series of fake http responses. First
         // there will be a response from the artifact API, which will be used
@@ -343,9 +360,9 @@ public class DownloadFileTests
                 { "https://dev.azure.com/dnceng/_apis/resources/Containers/123456?itemPath=BlobArtifacts%2Ftest.txt&isShallow=true&api-version=4.1-preview.4",
                     new[]
                     {
-                        new HttpResponseMessage(httpStatus),
-                        new HttpResponseMessage(httpStatus),
-                        new HttpResponseMessage(httpStatus),
+                        CreateFileResponse(),
+                        CreateFileResponse(),
+                        CreateFileResponse(),
                     }
                 }
             };
@@ -359,9 +376,66 @@ public class DownloadFileTests
                 _testTextFile,
                 path))
             .Should().ThrowAsync<Exception>();
-        actualError.WithMessage($"Failed to download '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts. See inner exception for details.");
+        actualError.WithMessage(
+            $"Failed to download '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts. " +
+            $"Last failure: System.Net.Http.HttpRequestException: Response status code does not indicate success: {(int)httpStatus} *");
+        actualError.And.InnerException.Should().BeNull();
+
+        buildEngine.BuildMessageEvents
+            .Where(message => message.Message.StartsWith("Download attempt"))
+            .Should().HaveCount(publishTask.RetryHandler.MaxAttempts);
+        buildEngine.BuildMessageEvents.Should().OnlyContain(message =>
+            !message.Message.StartsWith("Download attempt") ||
+            (message.Importance == Microsoft.Build.Framework.MessageImportance.Low &&
+             message.Message.Contains($"HTTP status: {httpStatus}") &&
+             message.Message.Contains($"file '{_testTextFile}'") &&
+             message.Message.Contains($"artifact '{PublishArtifactsInManifestBase.BlobArtifactsArtifactName}'") &&
+             message.Message.Contains("Request URI: 'https://dev.azure.com/dnceng/_apis/resources/Containers/123456?itemPath=BlobArtifacts%2Ftest.txt&isShallow=true&api-version=4.1-preview.4'") &&
+             message.Message.Contains("response URI: 'https://artifact-cdn.example/content?format=file&sig=[REDACTED]'") &&
+             message.Message.Contains($"response headers: Content-Length={fileResponseContent.Length}; Set-Cookie=[REDACTED]; X-Test-Content=content-123; X-Test-Request-Id=request-123; X-TFS-Session=00000000-1111-2222-3333-444444444444") &&
+             !message.Message.Contains("secret-cookie") &&
+             !message.Message.Contains("secret-signature") &&
+             message.Message.Contains("System.Net.Http.HttpRequestException")));
 
         ValidateNoRemainingResponses(fakeHttpResponses, client);
+    }
+
+    [Fact]
+    public async Task DownloadFailure_RedactsSensitiveValuesFromExceptionMessages()
+    {
+        var buildEngine = new MockBuildEngine();
+        var publishTask = new PublishArtifactsInManifestV3
+        {
+            BuildEngine = buildEngine,
+            AzureDevOpsOrg = "dnceng",
+            BuildId = "1234",
+            AzureDevOpsProject = "blah",
+            RetryHandler = new ExponentialRetry() { MaxAttempts = 1, DelayBase = 1 }
+        };
+
+        using HttpClient client = new HttpClient(new ExceptionMessageHttpHandler());
+        var path = TestInputs.GetFullPath(Guid.NewGuid().ToString());
+
+        var actualError = await FluentActions.Invoking(() => publishTask.DownloadFileAsync(
+                client,
+                PublishArtifactsInManifestBase.BlobArtifactsArtifactName,
+                _testTextFile,
+                path))
+            .Should().ThrowAsync<Exception>();
+
+        actualError.And.Message.Should().Contain("sig=[REDACTED]");
+        actualError.And.Message.Should().Contain("token=[REDACTED]");
+        actualError.And.Message.Should().NotContain("secret-signature");
+        actualError.And.Message.Should().NotContain("secret-token");
+        actualError.And.InnerException.Should().BeNull();
+
+        buildEngine.BuildMessageEvents
+            .Where(message => message.Message.StartsWith("Download attempt"))
+            .Should().OnlyContain(message =>
+                message.Message.Contains("sig=[REDACTED]") &&
+                message.Message.Contains("token=[REDACTED]") &&
+                !message.Message.Contains("secret-signature") &&
+                !message.Message.Contains("secret-token"));
     }
 
     [Theory]
@@ -435,5 +509,39 @@ public class DownloadFileTests
         ValidateNoRemainingResponses(fakeHttpResponses, client);
         publishTask.DeleteTemporaryFiles(path);
         publishTask.DeleteTemporaryDirectory(path);
+    }
+
+    private sealed class ExceptionMessageHttpHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (request.RequestUri.AbsolutePath.EndsWith("/artifacts", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(
+                        new
+                        {
+                            count = 1,
+                            value = new[]
+                            {
+                                new
+                                {
+                                    id = "1234",
+                                    name = "BlobArtifacts",
+                                    resource = new
+                                    {
+                                        type = "Container",
+                                        data = "#/123456/BlobArtifacts",
+                                    }
+                                }
+                            }
+                        })
+                });
+            }
+
+            throw new HttpRequestException(
+                "Request to 'https://artifact.example/content?format=file&sig=secret-signature' failed; token=secret-token");
+        }
     }
 }
