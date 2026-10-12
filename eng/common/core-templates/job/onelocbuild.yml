@@ -158,6 +158,8 @@ jobs:
             artifactName: 'OneLocBuildDiagnostics${{ parameters.JobNameSuffix }}_Attempt$(System.JobAttempt)'
             displayName: Publish OneLocBuild GitHub diagnostics
             condition: failed()
+            continueOnError: true
+            isProduction: false
 
     # Copy the locProject.json to the root of the Loc directory, then publish a pipeline artifact
     - task: CopyFiles@2
