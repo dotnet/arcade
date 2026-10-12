@@ -211,14 +211,14 @@ public class AzureDevOpsServiceTests
                 Content = new StringContent(isAttachment ? "{}" : @"{""value"":[{""id"":1}]}")
             };
         });
-        var metrics = new JobMonitorMetrics();
+        var metrics = new TestReportingMetrics();
         using var service = new AzureDevOpsService(CreateOptions(), NullLogger.Instance, new HttpClient(handler), metrics);
         IAzureDevOpsResultTransport transport = service;
 
         await transport.PublishResultsAsync(123, new[] { new { outcome = "Passed" } }, CancellationToken.None);
         await transport.UploadAttachmentAsync(123, 1, null, "log.txt", "YQ==", CancellationToken.None);
 
-        JobMonitorMetricsSnapshot snapshot = metrics.Snapshot();
+        TestReportingMetricsSnapshot snapshot = metrics.Snapshot();
         snapshot.AzureDevOpsResultRequests.Should().Be(2);
         snapshot.AzureDevOpsAttachmentRequests.Should().Be(2);
         snapshot.AzureDevOpsControlRequests.Should().Be(0);
@@ -248,20 +248,20 @@ public class AzureDevOpsServiceTests
     [Fact]
     public void AzureDevOpsTransportClassifiesTimeoutsAndRateLimitHeaders()
     {
-        AzureDevOpsService.IsTransientException(
+        AzureDevOpsResultTransport.IsTransientException(
             new OperationCanceledException("timeout", new TimeoutException()),
             CancellationToken.None).Should().BeTrue();
 
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
-        AzureDevOpsService.IsTransientException(
+        AzureDevOpsResultTransport.IsTransientException(
             new OperationCanceledException("timeout", new TimeoutException()),
             cancellation.Token).Should().BeFalse();
 
         using var response = new HttpResponseMessage(HttpStatusCode.OK);
         response.Headers.RetryAfter = new System.Net.Http.Headers.RetryConditionHeaderValue(TimeSpan.FromSeconds(2));
         response.Headers.Add("X-RateLimit-Delay", "3.5");
-        AzureDevOpsService.GetRateLimitDelay(response).Should().Be(TimeSpan.FromSeconds(3.5));
+        AzureDevOpsResultTransport.GetRateLimitDelay(response).Should().Be(TimeSpan.FromSeconds(3.5));
     }
 
     [Fact]

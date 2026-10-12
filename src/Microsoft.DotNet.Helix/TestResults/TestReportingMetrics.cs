@@ -3,7 +3,7 @@
 
 using System.Diagnostics;
 
-namespace Microsoft.DotNet.Helix.JobMonitor;
+namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
 internal enum AzureDevOpsRequestKind
 {
@@ -21,7 +21,7 @@ internal enum PipelineOperation
     ResultParseAndAggregate,
 }
 
-internal sealed class JobMonitorMetrics
+internal sealed class TestReportingMetrics
 {
     private readonly long _startedAt = Stopwatch.GetTimestamp();
     private long _pipelineStartedAt;
@@ -171,12 +171,12 @@ internal sealed class JobMonitorMetrics
         }
     }
 
-    public JobMonitorMetricsSnapshot Snapshot()
+    public TestReportingMetricsSnapshot Snapshot()
     {
         long controlRequests = Interlocked.Read(ref _azdoControlRequests);
         long resultRequests = Interlocked.Read(ref _azdoResultRequests);
         long attachmentRequests = Interlocked.Read(ref _azdoAttachmentRequests);
-        return new JobMonitorMetricsSnapshot(
+        return new TestReportingMetricsSnapshot(
             Elapsed: Stopwatch.GetElapsedTime(_startedAt),
             PipelineElapsed: GetPipelineElapsed(),
             AzureDevOpsRequests: controlRequests + resultRequests + attachmentRequests,
@@ -270,7 +270,7 @@ internal sealed class JobMonitorMetrics
     }
 }
 
-internal readonly record struct JobMonitorMetricsSnapshot(
+internal readonly record struct TestReportingMetricsSnapshot(
     TimeSpan Elapsed,
     TimeSpan PipelineElapsed,
     long AzureDevOpsRequests,

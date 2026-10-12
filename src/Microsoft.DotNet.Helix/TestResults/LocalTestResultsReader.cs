@@ -16,25 +16,31 @@ public sealed class LocalTestResultsReader
     private readonly ILogger _logger;
     private readonly TestResultAttachmentMode _attachmentMode;
     private readonly IFileSystem _fileSystem;
+    private readonly bool _qualifyTrxTestNames;
 
     public LocalTestResultsReader(ILogger logger)
         : this(logger, TestResultAttachmentMode.Failed)
     {
     }
 
-    public LocalTestResultsReader(ILogger logger, TestResultAttachmentMode attachmentMode)
-        : this(logger, attachmentMode, new FileSystem())
+    public LocalTestResultsReader(
+        ILogger logger,
+        TestResultAttachmentMode attachmentMode,
+        bool qualifyTrxTestNames = false)
+        : this(logger, attachmentMode, new FileSystem(), qualifyTrxTestNames)
     {
     }
 
     public LocalTestResultsReader(
         ILogger logger,
         TestResultAttachmentMode attachmentMode,
-        IFileSystem fileSystem)
+        IFileSystem fileSystem,
+        bool qualifyTrxTestNames = false)
     {
         _logger = logger;
         _attachmentMode = attachmentMode;
         _fileSystem = fileSystem;
+        _qualifyTrxTestNames = qualifyTrxTestNames;
     }
 
     public static bool LooksLikeTestResultFile(string path)
@@ -55,12 +61,13 @@ public sealed class LocalTestResultsReader
 
     public async Task<IReadOnlyList<TestResult>> ReadResultFileAsync(
         string filePath,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool failOnParseError = false)
     {
         try
         {
             var results = new List<TestResult>();
-            await foreach (TestResult result in ReadResultsAsync(filePath, cancellationToken))
+            await foreach (TestResult result in ReadResultsAsync(filePath, cancellationToken, failOnParseError))
             {
                 results.Add(result);
             }
@@ -74,13 +81,18 @@ public sealed class LocalTestResultsReader
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to parse test results file '{Path}'.", filePath);
+            if (failOnParseError)
+            {
+                throw;
+            }
             return [];
         }
     }
 
     private async IAsyncEnumerable<TestResult> ReadResultsAsync(
         string filePath,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken,
+        bool failOnParseError)
     {
         string rootName = await ReadRootNameAsync(filePath, cancellationToken);
         string workItemName = _fileSystem.GetFileName(_fileSystem.GetDirectoryName(filePath)) ?? string.Empty;
@@ -125,6 +137,10 @@ public sealed class LocalTestResultsReader
                 break;
 
             default:
+                if (failOnParseError)
+                {
+                    throw new InvalidDataException($"Test result file '{filePath}' has unsupported root element '{rootName}'.");
+                }
                 _logger.LogWarning(
                     "Test result file '{Path}' has unsupported root element '{RootElement}' and will be skipped.",
                     filePath,
@@ -271,6 +287,11 @@ public sealed class LocalTestResultsReader
         string method = definition?.Method ?? GetAttribute(result, "testName") ?? string.Empty;
         string displayName = GetAttribute(result, "testName")
             ?? (!string.IsNullOrEmpty(className) ? $"{className}.{method}" : method);
+        if (_qualifyTrxTestNames && !string.IsNullOrEmpty(className)
+            && !displayName.StartsWith(className + ".", StringComparison.Ordinal))
+        {
+            displayName = $"{className}.{displayName}";
+        }
 
         XElement? output = result.Descendants().FirstOrDefault(static x => x.Name.LocalName == "Output");
         string? failureMessage = output?.Descendants().FirstOrDefault(static x => x.Name.LocalName == "Message")?.Value?.Trim();

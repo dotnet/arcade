@@ -7,9 +7,19 @@
   <ItemGroup>
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" />
+    <PackageReference Include="Microsoft.Build" />
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Moq" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\Sdk\tools\**\*.props;..\..\Sdk\tools\**\*.targets"
+          Link="SdkTools\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Sdk\tools\test-results\*"
+          Link="SdkTools\test-results\%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- The tests reference the MSBuild task assembly directly and therefore we need to add references that would normally be provided by MSBuild. -->
