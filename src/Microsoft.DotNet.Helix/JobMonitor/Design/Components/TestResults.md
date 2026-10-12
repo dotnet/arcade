@@ -19,6 +19,11 @@ The SDK's inline caller enables strict parsing: malformed files and unsupported
 roots fail reporting rather than allowing a successful work-item result to hide
 missing tests. The monitor retains its warning-and-omission parsing policy.
 
+The inline caller also qualifies TRX display names with their class name, as
+the former Python reader did, without duplicating an existing prefix. This
+preserves MSTest identities under display-name aggregation without changing
+xUnit XML custom display names. The monitor retains its existing naming policy.
+
 Both callers use the shared downloader and transport. Download failures are
 reported after attempting the other files; partial downloads and incomplete
 Azure DevOps result responses do not count as successful publication. The

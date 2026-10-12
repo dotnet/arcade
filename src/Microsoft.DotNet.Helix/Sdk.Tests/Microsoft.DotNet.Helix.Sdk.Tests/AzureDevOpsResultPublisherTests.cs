@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
@@ -280,6 +281,115 @@ public class AzureDevOpsResultPublisherTests
         Assert.Equal(
             $"{fullyQualifiedName} (Attempt #1 - {dataRowName})",
             publishedAttempt.GetProperty("DisplayName").GetString());
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task InlineReporting_TrxPreservesDistinctClassIdentities(bool qualifiedNames, bool dataRows)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string file = Path.Combine(directory, "results.trx");
+            string TestName(string className, int row)
+                => (qualifiedNames ? className + "." : "") + "MyMethod" + (dataRows ? $"({row})" : "");
+            await File.WriteAllTextAsync(file, $"""
+                <TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+                  <Results>
+                    <UnitTestResult testId="a" testName="{TestName("Ns.ClassA", 1)}" outcome="Passed" />
+                    <UnitTestResult testId="b" testName="{TestName("Ns.ClassB", 1)}" outcome="Failed" />
+                    {(dataRows ? $"""
+                    <UnitTestResult testId="a" testName="{TestName("Ns.ClassA", 2)}" outcome="Passed" />
+                    <UnitTestResult testId="b" testName="{TestName("Ns.ClassB", 2)}" outcome="Passed" />
+                    """ : "")}
+                  </Results>
+                  <TestDefinitions>
+                    <UnitTest id="a"><TestMethod className="Ns.ClassA" name="MyMethod" /></UnitTest>
+                    <UnitTest id="b"><TestMethod className="Ns.ClassB" name="MyMethod" /></UnitTest>
+                  </TestDefinitions>
+                </TestRun>
+                """);
+
+            var processor = new TestResultProcessor(
+                TestResultAttachmentMode.Failed, useFullyQualifiedTestName: false,
+                NullLogger.Instance, new TestReportingMetrics(), failOnParseError: true, qualifyTrxTestNames: true);
+            var workItem = new WorkItemTestResults("job", "work-item", [file]);
+            PreparedTestResults prepared = await processor.PrepareAsync(workItem, CancellationToken.None);
+            Assert.Equal(2, prepared.Results.Count);
+            Assert.False(prepared.AllPassed);
+            var transport = new RecordingResultTransport();
+
+            Assert.Equal(2, await CreatePublisher(transport).PublishAsync(
+                TestRunId, workItem, prepared, CancellationToken.None));
+
+            JsonElement[] published = Assert.Single(transport.RequestBodies).EnumerateArray().ToArray();
+            Assert.Equal(2, published.Length);
+            for (int i = 0; i < published.Length; i++)
+            {
+                string name = $"Ns.Class{(i == 0 ? "A" : "B")}.MyMethod";
+                Assert.Equal(name, published[i].GetProperty("TestCaseTitle").GetString());
+                Assert.Equal(name, published[i].GetProperty("AutomatedTestName").GetString());
+                Assert.Equal(i == 0 ? "Passed" : "Failed", published[i].GetProperty("Outcome").GetString());
+                if (dataRows)
+                {
+                    Assert.Equal(
+                        new[] { $"{name}(1)", $"{name}(2)" },
+                        published[i].GetProperty("SubResults").EnumerateArray()
+                            .Select(row => row.GetProperty("DisplayName").GetString()));
+                }
+                else
+                {
+                    Assert.Equal(JsonValueKind.Null, published[i].GetProperty("SubResults").ValueKind);
+                }
+            }
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task InlineReporting_TrxQualificationDoesNotChangeXunitCustomDisplayIdentities(bool qualifyTrxTestNames)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string file = Path.Combine(directory, "testResults.xml");
+            await File.WriteAllTextAsync(file, """
+                <assemblies><assembly><collection>
+                  <test name="First custom display" type="Ns.Tests" method="MyMethod" result="Pass" />
+                  <test name="Second custom display" type="Ns.Tests" method="MyMethod" result="Pass" />
+                </collection></assembly></assemblies>
+                """);
+            var processor = new TestResultProcessor(
+                TestResultAttachmentMode.Failed, useFullyQualifiedTestName: false,
+                NullLogger.Instance, new TestReportingMetrics(), failOnParseError: true, qualifyTrxTestNames: qualifyTrxTestNames);
+            var workItem = new WorkItemTestResults("job", "work-item", [file]);
+            PreparedTestResults prepared = await processor.PrepareAsync(workItem, CancellationToken.None);
+            Assert.Equal(2, prepared.Results.Count);
+            var transport = new RecordingResultTransport();
+
+            Assert.Equal(2, await CreatePublisher(transport).PublishAsync(
+                TestRunId, workItem, prepared, CancellationToken.None));
+
+            JsonElement[] published = Assert.Single(transport.RequestBodies).EnumerateArray().ToArray();
+            Assert.Equal(new[] { "First custom display", "Second custom display" },
+                published.Select(result => result.GetProperty("AutomatedTestName").GetString()));
+            Assert.Equal(new[] { "First custom display", "Second custom display" },
+                published.Select(result => result.GetProperty("TestCaseTitle").GetString()));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     private static AzureDevOpsResultPublisher CreatePublisher(

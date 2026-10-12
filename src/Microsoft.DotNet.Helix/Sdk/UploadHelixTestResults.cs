@@ -41,7 +41,8 @@ public class UploadHelixTestResults : HelixTask, IMultiThreadableTask
         client.DefaultRequestHeaders.UserAgent.Add(Helpers.UserAgentHeaderValue);
         var transport = new AzureDevOpsResultTransport(collectionUri, teamProject, client, logger, metrics);
         var downloader = new HelixTestResultsDownloader(HelixApi, logger, metrics);
-        var processor = new TestResultProcessor(TestResultAttachmentMode.Failed, useFullyQualifiedTestName: false, logger, metrics, failOnParseError: true);
+        var processor = new TestResultProcessor(TestResultAttachmentMode.Failed, useFullyQualifiedTestName: false, logger, metrics,
+            failOnParseError: true, qualifyTrxTestNames: true);
         var publisher = new AzureDevOpsResultPublisher(logger, useFullyQualifiedTestName: false, transport, metrics);
 
         await UploadAsync(

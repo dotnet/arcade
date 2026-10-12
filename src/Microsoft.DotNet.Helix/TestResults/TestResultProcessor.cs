@@ -13,19 +13,22 @@ internal sealed class TestResultProcessor : ITestResultProcessor
     private readonly ILogger _logger;
     private readonly TestReportingMetrics _metrics;
     private readonly bool _failOnParseError;
+    private readonly bool _qualifyTrxTestNames;
 
     public TestResultProcessor(
         TestResultAttachmentMode attachmentMode,
         bool useFullyQualifiedTestName,
         ILogger logger,
         TestReportingMetrics metrics,
-        bool failOnParseError = false)
+        bool failOnParseError = false,
+        bool qualifyTrxTestNames = false)
     {
         _attachmentMode = attachmentMode;
         _useFullyQualifiedTestName = useFullyQualifiedTestName;
         _logger = logger;
         _metrics = metrics;
         _failOnParseError = failOnParseError;
+        _qualifyTrxTestNames = qualifyTrxTestNames;
     }
 
     public async Task<PreparedTestResults> PrepareAsync(
@@ -40,7 +43,7 @@ internal sealed class TestResultProcessor : ITestResultProcessor
         long parseStartedAt = TestReportingMetrics.StartOperation();
         try
         {
-            var reader = new LocalTestResultsReader(_logger, _attachmentMode);
+            var reader = new LocalTestResultsReader(_logger, _attachmentMode, _qualifyTrxTestNames);
             var parsedResults = new List<IReadOnlyList<TestResult>>(results.TestResultFiles.Count);
             foreach (string file in results.TestResultFiles)
             {

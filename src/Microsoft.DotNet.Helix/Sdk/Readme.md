@@ -76,6 +76,9 @@ are checked. This mode requires waiting for work-item completion.
   and work-item failure policies remain controlled by the existing properties.
 - Existing inline work-item execution results, test-run names, test identities,
   expected failures, and flaky-test support are preserved.
+- Inline TRX names retain the class prefix (without duplicating an existing
+  prefix), keeping same-named MSTest methods in different classes distinct.
+  xUnit XML custom display names remain unchanged.
 - With `EnableHelixJobMonitor=true`, the submitting job does not wait or publish;
   the monitor owns reporting. Local builds and explicit reporting opt-out
   continue to work without an Azure DevOps token.

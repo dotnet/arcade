@@ -171,8 +171,11 @@ public class LocalTestResultsReaderTests
         Assert.Contains(aggregate, static x => x.Name == "Xml.Tests.Passes");
     }
 
-    [Fact]
-    public async Task LocalTestResultsReader_TrxWithUnqualifiedTestName_DerivesFullyQualifiedName()
+    [Theory]
+    [InlineData(false, "MyMethod")]
+    [InlineData(true, "Ns.MyTests.MyMethod")]
+    public async Task LocalTestResultsReader_TrxWithUnqualifiedTestName_DerivesFullyQualifiedName(
+        bool qualifyTrxTestNames, string expectedName)
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
         string workItemDirectory = Path.Combine(tempDirectory, "work-item");
@@ -196,11 +199,11 @@ public class LocalTestResultsReaderTests
                 </TestRun>
                 """);
 
-        var reader = CreateReader();
+        var reader = new LocalTestResultsReader(_logger, TestResultAttachmentMode.Failed, _fileSystem, qualifyTrxTestNames);
         IReadOnlyList<TestResult> resultSets = await reader.ReadResultFileAsync(filePath);
 
         TestResult test = Assert.Single(resultSets);
-        Assert.Equal("MyMethod", test.Name);
+        Assert.Equal(expectedName, test.Name);
         Assert.Equal("Ns.MyTests.MyMethod", test.FullyQualifiedName);
 
         AggregatedResult aggregated = Assert.Single(new ResultAggregator().Aggregate([resultSets], useFullyQualifiedName: true));
