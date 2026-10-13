@@ -2,14 +2,74 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.IO;
+using System.Linq;
 using System.Net;
+using System.Threading;
 using AwesomeAssertions;
+using Microsoft.DotNet.Build.Manifest;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests;
 
 public class PublishBuildToMaestroTests
 {
+    [Theory]
+    [InlineData("", "assets/manifests/sdk/20261013.1/MergedManifest.xml", "AssetManifests")]
+    [InlineData("daily", "assets/manifests/sdk/20261013.1/variants/daily/MergedManifest.xml", "AssetManifests_daily")]
+    [InlineData("preview", "assets/manifests/sdk/20261013.1/variants/preview/MergedManifest.xml", "AssetManifests_preview")]
+    public void ArchivedManifestIdentifiesBuildVariant(string variant, string expectedId, string artifactName)
+    {
+        var model = new BuildModel(new BuildIdentity
+        {
+            Name = "sdk",
+            AzureDevOpsBuildNumber = "20261013.1",
+            PublishingVersion = PublishingInfraVersion.V4,
+        });
+        var task = new PublishBuildToMaestro
+        {
+            BuildVariant = variant,
+        };
+
+        var manifest = task.AddManifestAsAsset(model, Path.Combine("staging", "MergedManifest.xml"));
+
+        manifest.Id.Should().Be(expectedId);
+        manifest.PipelineArtifactName.Should().Be(artifactName);
+        manifest.PipelineArtifactPath.Should().Be("MergedManifest.xml");
+        model.Artifacts.Blobs.Should().ContainSingle().Which.Should().BeSameAs(manifest);
+    }
+
+    [Fact]
+    public void TwoVariantsRegisterDisjointAssetsWithTheSamePipelineIdentity()
+    {
+        var records = new[] { "daily", "preview" }.Select(variant =>
+        {
+            var model = new BuildModel(new BuildIdentity
+            {
+                Name = "sdk",
+                Commit = "abcdef",
+                AzureDevOpsBuildNumber = "20261013.1",
+                AzureDevOpsBuildId = 123,
+                AzureDevOpsBuildDefinitionId = 456,
+                PublishingVersion = PublishingInfraVersion.V4,
+            });
+            model.Artifacts.Blobs.Add(new BlobArtifactModel
+            {
+                Id = $"dotnetup/0.3.0-{variant}.1.26505.1/dotnetup-win-x64.exe",
+            });
+            var task = new PublishBuildToMaestro { BuildVariant = variant };
+            var archive = task.AddManifestAsAsset(model, "MergedManifest.xml");
+            return task.GetMaestroBuildDataFromMergedManifest(model, archive, CancellationToken.None);
+        }).ToArray();
+
+        records[0].AzureDevOpsBuildId.Should().Be(records[1].AzureDevOpsBuildId);
+        records[0].AzureDevOpsBuildDefinitionId.Should().Be(records[1].AzureDevOpsBuildDefinitionId);
+        records[0].Commit.Should().Be(records[1].Commit);
+        records[0].Assets.Select(a => a.Name).Intersect(records[1].Assets.Select(a => a.Name)).Should().BeEmpty();
+        records[0].Assets.Should().Contain(a => a.Name.Contains("-daily."));
+        records[1].Assets.Should().Contain(a => a.Name.Contains("-preview."));
+    }
+
     [Fact]
     public void GetTimeToWait_ReadsGitHubRateLimitingHeaders()
     {

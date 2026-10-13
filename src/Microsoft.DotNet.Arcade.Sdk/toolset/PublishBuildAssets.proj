@@ -13,6 +13,7 @@
     <!-- Block stable versioning so that the merged asset manifest is pushed
          to a unique location -->
     <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
+    <MergedManifestArtifactName Condition="'$(MergedManifestArtifactName)' == ''">AssetManifests</MergedManifestArtifactName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,6 +28,8 @@
                            MaestroApiEndpoint="$(MaestroApiEndpoint)"
                            RepoRoot="$(RepoRoot)"
                            AssetVersion="$(Version)"
+                           BuildVariant="$(BuildVariant)"
+                           MergedManifestArtifactName="$(MergedManifestArtifactName)"
                            IsAssetlessBuild="$(IsAssetlessBuild)"/>
   </Target>
 

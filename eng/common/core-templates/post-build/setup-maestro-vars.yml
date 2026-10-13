@@ -2,6 +2,7 @@ parameters:
   BARBuildId: ''
   PromoteToChannelIds: ''
   is1ESPipeline: ''
+  releaseConfigsArtifactName: ReleaseConfigs
 
 steps:
   - ${{ if eq(parameters.is1ESPipeline, '') }}:
@@ -11,7 +12,7 @@ steps:
     - task: DownloadPipelineArtifact@2
       displayName: Download Release Configs
       inputs:
-        artifactName: ReleaseConfigs
+        artifactName: ${{ parameters.releaseConfigsArtifactName }}
         targetPath: '$(Build.StagingDirectory)/ReleaseConfigs'
 
   - task: AzureCLI@2
