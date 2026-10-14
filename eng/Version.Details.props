@@ -38,11 +38,11 @@ This file should be imported by eng/Versions.props
     <MicrosoftExtensionsLoggingAbstractionsPackageVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsLoggingAbstractionsPackageVersion>
     <MicrosoftExtensionsLoggingConsolePackageVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsLoggingConsolePackageVersion>
     <SystemCollectionsImmutablePackageVersion>9.0.0-rc.2.24473.5</SystemCollectionsImmutablePackageVersion>
-    <SystemFormatsAsn1PackageVersion>9.0.0-rc.2.24473.5</SystemFormatsAsn1PackageVersion>
+    <SystemFormatsAsn1PackageVersion>9.0.21</SystemFormatsAsn1PackageVersion>
     <SystemIOPackagingPackageVersion>9.0.0-rc.2.24473.5</SystemIOPackagingPackageVersion>
     <SystemReflectionMetadataPackageVersion>9.0.0-rc.2.24473.5</SystemReflectionMetadataPackageVersion>
-    <SystemSecurityCryptographyPkcsPackageVersion>9.0.0-rc.2.24473.5</SystemSecurityCryptographyPkcsPackageVersion>
-    <SystemSecurityCryptographyXmlPackageVersion>9.0.0-rc.2.24473.5</SystemSecurityCryptographyXmlPackageVersion>
+    <SystemSecurityCryptographyPkcsPackageVersion>9.0.21</SystemSecurityCryptographyPkcsPackageVersion>
+    <SystemSecurityCryptographyXmlPackageVersion>9.0.21</SystemSecurityCryptographyXmlPackageVersion>
     <SystemTextEncodingsWebPackageVersion>9.0.0-rc.2.24473.5</SystemTextEncodingsWebPackageVersion>
     <SystemTextJsonPackageVersion>9.0.0-rc.2.24473.5</SystemTextJsonPackageVersion>
     <!-- dotnet-sdk dependencies -->

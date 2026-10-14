@@ -150,17 +150,17 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-runtime</Uri>
       <Sha>990ebf52fc408ca45929fd176d2740675a67fab8</Sha>
     </Dependency>
-    <Dependency Name="System.Formats.Asn1" Version="9.0.0-rc.2.24473.5">
-      <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-runtime</Uri>
-      <Sha>990ebf52fc408ca45929fd176d2740675a67fab8</Sha>
+    <Dependency Name="System.Formats.Asn1" Version="9.0.21">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>d280e4fb388c6deed22d480daada060b6b456008</Sha>
     </Dependency>
-    <Dependency Name="System.Security.Cryptography.Pkcs" Version="9.0.0-rc.2.24473.5">
-      <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-runtime</Uri>
-      <Sha>990ebf52fc408ca45929fd176d2740675a67fab8</Sha>
+    <Dependency Name="System.Security.Cryptography.Pkcs" Version="9.0.21">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>d280e4fb388c6deed22d480daada060b6b456008</Sha>
     </Dependency>
-    <Dependency Name="System.Security.Cryptography.Xml" Version="9.0.0-rc.2.24473.5">
-      <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-runtime</Uri>
-      <Sha>990ebf52fc408ca45929fd176d2740675a67fab8</Sha>
+    <Dependency Name="System.Security.Cryptography.Xml" Version="9.0.21">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>d280e4fb388c6deed22d480daada060b6b456008</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DncEng.SecretManager" Version="1.1.0-beta.25421.1">
       <Uri>https://github.com/dotnet/dnceng</Uri>
