@@ -3,7 +3,6 @@
 
     <!-- Reject unsupported OS via RID prefix match -->
     <_NativeAotSupportedOS Condition="
-      '$(TargetOS)' != 'browser' and
       '$(TargetOS)' != 'haiku' and
       '$(TargetOS)' != 'illumos' and
       '$(TargetOS)' != 'netbsd' and
