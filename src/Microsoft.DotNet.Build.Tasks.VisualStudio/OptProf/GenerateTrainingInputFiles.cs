@@ -18,6 +18,9 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio;
 /// </summary>
 public sealed class GenerateTrainingInputFiles : Microsoft.Build.Utilities.Task
 {
+    private const int MaxLegacyPathLength = 259;
+    private const string IbcFileExtension = ".IBC.json";
+
     /// <summary>
     /// Absolute path to the OptProf.json config file.
     /// </summary>
@@ -144,12 +147,11 @@ public sealed class GenerateTrainingInputFiles : Microsoft.Build.Utilities.Task
         foreach (var entry in ibcEntries)
         {
             int index = 0;
-            string basePath = Path.Combine(outDir, entry.RelativeDirectoryPath.Replace("\\", "") + Path.GetFileNameWithoutExtension(entry.RelativeInstallationPath));
 
             string fullPath;
             do
             {
-                fullPath = basePath + "." + index + ".IBC.json";
+                fullPath = GetOutputPath(outDir, entry, index);
                 index++;
             }
             while (File.Exists(fullPath));
@@ -160,5 +162,24 @@ public sealed class GenerateTrainingInputFiles : Microsoft.Build.Utilities.Task
             }
 
         }
+    }
+
+    internal static string GetOutputPath(string outDir, IbcEntry entry, int index)
+    {
+        string fileName = entry.RelativeDirectoryPath.Replace("\\", "") + Path.GetFileNameWithoutExtension(entry.RelativeInstallationPath);
+        string suffix = "." + index + IbcFileExtension;
+        int maxFileNameLength = MaxLegacyPathLength - outDir.Length - suffix.Length - 1;
+
+        if (maxFileNameLength <= 0)
+        {
+            throw new PathTooLongException($"The OptProf output directory '{outDir}' is too long.");
+        }
+
+        if (fileName.Length > maxFileNameLength)
+        {
+            fileName = fileName.Substring(0, maxFileNameLength);
+        }
+
+        return Path.Combine(outDir, fileName + suffix);
     }
 }
