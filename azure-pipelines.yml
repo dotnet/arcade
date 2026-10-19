@@ -1,44 +1,10 @@
-trigger:
-  batch: true
-  branches:
-    include:
-    - main
-    - release/*.0
-  paths:
-    include:
-    - '*'
-    exclude:
-    - .github/*
-    - Documentation/*
-    - Images/*
-    - CODE-OF-CONDUCT.md
-    - CONTRIBUTING.md
-    - LICENSE.TXT
-    - PATENTS.TXT
-    - README.md
-    - SECURITY.md
-    - THIRD-PARTY-NOTICES.TXT
+trigger: none
 pr: none
 
-parameters:
-# Bootstrap-breakage escape hatch. The ValidateSdk stage self-bootstraps arcade with the newly
-# produced SDK and validates signing + promotion using that SDK; publishing depends on it.
-# Override to false at queue time to ship a new Arcade when the current one cannot self-validate.
-- name: runValidateSdk
-  displayName: Run the Validate Arcade SDK stage (signing + self-build + promotion validation)
-  type: boolean
-  default: true
-
 variables:
-- template: /eng/common-variables.yml@self
-  parameters:
-    signType: real
 - template: /eng/common/templates-official/variables/pool-providers.yml@self
 
 resources:
-  containers:
-  - container: LinuxContainer
-    image: mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-fpm-amd64
   repositories:
   - repository: 1ESPipelineTemplates
     type: git
@@ -63,10 +29,15 @@ extends:
         analyzeTargetGlob: +:f|**/artifacts/**/*.dll;+:f|**/artifacts/**/*.exe;-:f|**/*.Tests/**/*;-:f|**/wix/**/*;-:f|**/wix3/**/*;-:f|**/winterop.dll;
 
     stages:
-    - template: /eng/build.yml@self
-      parameters:
-        ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
-          oneLocEnabled: true
-        microbuildUseESRP: true
-        runValidateSdk: ${{ parameters.runValidateSdk }}
-        runPromotionValidation: true
+    - stage: OneLocMirrorValidation
+      displayName: Validate OneLoc v3 Azure Repos mirror checkout
+      jobs:
+      - template: /eng/common/templates-official/job/onelocbuild.yml@self
+        parameters:
+          MirrorRepo: arcade
+          MirrorBranch: users/mjanecke/oneloc-v3-mirror-ci-13198
+          LclSource: lclFilesFromPackage
+          LclPackageId: LCL-JUNO-PROD-ARCADE
+          CreatePr: true
+          AutoCompletePr: false
+          ReusePr: false
