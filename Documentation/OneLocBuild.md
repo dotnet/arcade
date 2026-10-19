@@ -67,7 +67,7 @@ that the official build is based on.
 As a further note, the template by default assumes that your mirror repository is located in the dotnet GitHub
 organization. If that is not the case, you will need to specify `GitHubOrg` as well.
 
-For GitHub repositories built from an Azure Repos mirror, the job checks out the same source
+When `RepoType` is `gitHub` and `MirrorRepo` is set, the job checks out the same source
 commit from GitHub into a separate temporary directory. OneLocBuild v3 uses this checkout
 to select the public GitHub API host; the original Azure Repos checkout is not modified.
 The mirrored commit must be available in the GitHub repository, and the localization
