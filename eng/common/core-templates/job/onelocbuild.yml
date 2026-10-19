@@ -40,8 +40,13 @@ jobs:
   displayName: OneLocBuild${{ parameters.JobNameSuffix }}
 
   variables:
+    - name: _OneLocSourcesDirectory
+      value: ${{ parameters.SourcesDirectory }}
+    - ${{ if and(eq(parameters.RepoType, 'gitHub'), ne(parameters.MirrorRepo, ''), eq(variables['Build.Repository.Provider'], 'TfsGit')) }}:
+      - name: _OneLocSourcesDirectory
+        value: $(Agent.TempDirectory)/oneloc-$(System.JobId)
     - name: _GenerateLocProjectArguments
-      value: -SourcesDirectory ${{ parameters.SourcesDirectory }}
+      value: -SourcesDirectory "$(_OneLocSourcesDirectory)"
         -LanguageSet "${{ parameters.LanguageSet }}"
         -CreateNeutralXlfs
     - ${{ if eq(parameters.UseCheckedInLocProjectJson, 'true') }}:
@@ -75,14 +80,6 @@ jobs:
     - ${{ if eq(parameters.CeapexServiceConnection, '') }}:
       - 'CeapexServiceConnection must identify a WIF service connection.': error
 
-    - ${{ if ne(parameters.SkipLocProjectJsonGeneration, 'true') }}:
-      - task: Powershell@2
-        inputs:
-          filePath: $(System.DefaultWorkingDirectory)/eng/common/generate-locproject.ps1
-          arguments: $(_GenerateLocProjectArguments)
-        displayName: Generate LocProject.json
-        condition: ${{ parameters.condition }}
-
     # Acquire a short-lived Entra token for Ceapex feed access.
     - template: /eng/common/templates/steps/get-federated-access-token.yml
       parameters:
@@ -106,12 +103,59 @@ jobs:
           outputVariableName: 'GitHubAppInstallationToken'
           condition: ${{ parameters.condition }}
 
+    # OneLoc v3 selects its GitHub API host from the checkout's origin.
+    - ${{ if and(eq(parameters.RepoType, 'gitHub'), ne(parameters.MirrorRepo, ''), eq(variables['Build.Repository.Provider'], 'TfsGit')) }}:
+      - task: PowerShell@2
+        displayName: Check out GitHub source for OneLoc
+        condition: ${{ parameters.condition }}
+        env:
+          ONELOC_SOURCE: ${{ parameters.SourcesDirectory }}
+          ONELOC_DESTINATION: $(_OneLocSourcesDirectory)
+          ONELOC_REPOSITORY: https://github.com/${{ parameters.GitHubOrg }}/${{ parameters.MirrorRepo }}.git
+          ONELOC_GITHUB_TOKEN: $(GitHubAppInstallationToken)
+        inputs:
+          pwsh: true
+          targetType: inline
+          script: |
+            $ErrorActionPreference = 'Stop'
+            $commit = git -C $env:ONELOC_SOURCE rev-parse HEAD
+            if ($LASTEXITCODE -ne 0) { throw 'Unable to identify the mirrored source commit.' }
+            if (Test-Path $env:ONELOC_DESTINATION) { throw 'OneLoc checkout directory already exists.' }
+            git init --quiet $env:ONELOC_DESTINATION
+            if ($LASTEXITCODE -ne 0) { throw 'Unable to initialize the OneLoc checkout.' }
+            git -C $env:ONELOC_DESTINATION remote add origin $env:ONELOC_REPOSITORY
+            if ($LASTEXITCODE -ne 0) { throw 'Unable to configure the OneLoc GitHub origin.' }
+            $env:GIT_CONFIG_COUNT = '1'
+            $env:GIT_CONFIG_KEY_0 = 'http.https://github.com/.extraheader'
+            $env:GIT_CONFIG_VALUE_0 = 'AUTHORIZATION: basic ' + [Convert]::ToBase64String(
+              [Text.Encoding]::UTF8.GetBytes("x-access-token:$env:ONELOC_GITHUB_TOKEN"))
+            $env:GIT_TERMINAL_PROMPT = '0'
+            try {
+              git -C $env:ONELOC_DESTINATION fetch --quiet --no-tags --depth=1 origin $commit
+              if ($LASTEXITCODE -ne 0) { throw "Unable to fetch mirrored commit $commit from GitHub." }
+            }
+            finally {
+              Remove-Item Env:GIT_CONFIG_COUNT, Env:GIT_CONFIG_KEY_0, Env:GIT_CONFIG_VALUE_0
+            }
+            git -C $env:ONELOC_DESTINATION checkout --quiet --detach $commit
+            if ($LASTEXITCODE -ne 0) { throw "Unable to check out mirrored commit $commit." }
+            Write-Host "OneLoc GitHub checkout is pinned to mirrored commit $commit."
+
+    - ${{ if ne(parameters.SkipLocProjectJsonGeneration, 'true') }}:
+      - task: Powershell@2
+        inputs:
+          filePath: $(System.DefaultWorkingDirectory)/eng/common/generate-locproject.ps1
+          arguments: $(_GenerateLocProjectArguments)
+        displayName: Generate LocProject.json
+        condition: ${{ parameters.condition }}
+
     - task: OneLocBuild@3
       displayName: OneLocBuild
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       inputs:
-        locProj: eng/Localize/LocProject.json
+        repoRoot: $(_OneLocSourcesDirectory)
+        locProj: $(_OneLocSourcesDirectory)/eng/Localize/LocProject.json
         outDir: $(Build.ArtifactStagingDirectory)
         lclSource: ${{ parameters.LclSource }}
         lclPackageId: ${{ parameters.LclPackageId }}
@@ -138,7 +182,7 @@ jobs:
     - task: CopyFiles@2
       displayName: Copy LocProject.json
       inputs:
-        SourceFolder: '$(System.DefaultWorkingDirectory)/eng/Localize/'
+        SourceFolder: '$(_OneLocSourcesDirectory)/eng/Localize/'
         Contents: 'LocProject.json'
         TargetFolder: '$(Build.ArtifactStagingDirectory)/loc'
       condition: ${{ parameters.condition }}
