@@ -44,7 +44,7 @@ jobs:
       value: ${{ parameters.SourcesDirectory }}
     - ${{ if and(eq(parameters.RepoType, 'gitHub'), ne(parameters.MirrorRepo, '')) }}:
       - name: _OneLocSourcesDirectory
-        value: $(Agent.TempDirectory)/oneloc-$(System.JobId)
+        value: $(Agent.TempDirectory)\oneloc-$(System.JobId)
     - name: _GenerateLocProjectArguments
       value: -SourcesDirectory "$(_OneLocSourcesDirectory)"
         -LanguageSet "${{ parameters.LanguageSet }}"
@@ -155,7 +155,7 @@ jobs:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       inputs:
         repoRoot: $(_OneLocSourcesDirectory)
-        locProj: $(_OneLocSourcesDirectory)/eng/Localize/LocProject.json
+        locProj: $(_OneLocSourcesDirectory)\eng\Localize\LocProject.json
         outDir: $(Build.ArtifactStagingDirectory)
         lclSource: ${{ parameters.LclSource }}
         lclPackageId: ${{ parameters.LclPackageId }}
@@ -182,7 +182,7 @@ jobs:
     - task: CopyFiles@2
       displayName: Copy LocProject.json
       inputs:
-        SourceFolder: '$(_OneLocSourcesDirectory)/eng/Localize/'
+        SourceFolder: '$(_OneLocSourcesDirectory)\eng\Localize\'
         Contents: 'LocProject.json'
         TargetFolder: '$(Build.ArtifactStagingDirectory)/loc'
       condition: ${{ parameters.condition }}
