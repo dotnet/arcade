@@ -42,7 +42,7 @@ jobs:
   variables:
     - name: _OneLocSourcesDirectory
       value: ${{ parameters.SourcesDirectory }}
-    - ${{ if and(eq(parameters.RepoType, 'gitHub'), ne(parameters.MirrorRepo, ''), eq(variables['Build.Repository.Provider'], 'TfsGit')) }}:
+    - ${{ if and(eq(parameters.RepoType, 'gitHub'), ne(parameters.MirrorRepo, '')) }}:
       - name: _OneLocSourcesDirectory
         value: $(Agent.TempDirectory)/oneloc-$(System.JobId)
     - name: _GenerateLocProjectArguments
@@ -104,7 +104,7 @@ jobs:
           condition: ${{ parameters.condition }}
 
     # OneLoc v3 selects its GitHub API host from the checkout's origin.
-    - ${{ if and(eq(parameters.RepoType, 'gitHub'), ne(parameters.MirrorRepo, ''), eq(variables['Build.Repository.Provider'], 'TfsGit')) }}:
+    - ${{ if and(eq(parameters.RepoType, 'gitHub'), ne(parameters.MirrorRepo, '')) }}:
       - task: PowerShell@2
         displayName: Check out GitHub source for OneLoc
         condition: ${{ parameters.condition }}
