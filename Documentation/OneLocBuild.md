@@ -9,11 +9,6 @@ repo. Xliff-Tasks will continue to be used in addition to OneLocBuild.
 To make OneLocBuild easier to use, we have integrated the task into Arcade. This integration is a job template
 ([here](/eng/common/templates/job/onelocbuild.yml)) that is described in this document.
 
-The template uses `OneLocBuild@3`. Repositories using this template receive the task upgrade through their
-Arcade update to `eng/common`; existing template parameters and authentication settings are unchanged.
-Before removing a temporary Network Isolation HTTP proxy exemption, validate the upgraded task with the proxy
-enabled, including new localization branch creation, file push, comparison, and PR creation or branch cleanup.
-
 To see your repo's current loc configuration, please refer to https://aka.ms/locstats.
 
 > **Authenticating the check-in PR:** GitHub-based repos can use a short-lived, repository-scoped
