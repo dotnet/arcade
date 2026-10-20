@@ -63,7 +63,7 @@ Please note that authorized jobs *cannot* be submitted to queues with `IsInterna
 
 #### Recommended: Entra ID authentication
 
-Set `HelixUseEntraAuthentication` to `true` and pass an Azure service connection authorized for Helix through `HelixAzureSubscription`. These parameters configure the `send-to-helix.yml` steps template and the SDK tasks that submit jobs.
+When using `send-to-helix.yml`, set its `HelixUseEntraAuthentication` parameter to `true` and select an Azure service connection authorized for Helix through `HelixAzureSubscription`. The template passes `HelixUseEntraAuthentication` to MSBuild and uses `HelixAzureSubscription` to configure `AzureCLI@2`; the service connection name is not an SDK MSBuild property. For pipelines that invoke MSBuild without this template, see [Direct MSBuild invocations](#direct-msbuild-invocations).
 
 The service connection must:
 
@@ -102,6 +102,31 @@ When Entra authentication is enabled:
 - Authentication failures do not fall back to a PAT or anonymous access.
 - The SDK submission task logs the selected authentication mode without credential material. The standalone monitor does not currently emit an equivalent mode message.
 - Source-built Arcade cannot use the Entra path.
+
+##### Direct MSBuild invocations
+
+If your pipeline invokes the Helix SDK without `send-to-helix.yml`, pass `/p:HelixUseEntraAuthentication=true` to that MSBuild command, or set `<HelixUseEntraAuthentication>true</HelixUseEntraAuthentication>` in the project's `PropertyGroup`.
+
+The property enables Entra authentication but does not sign in or select a service connection. In Azure Pipelines, run your command inside `AzureCLI@2`, using `azureSubscription` to select the authorized workload identity service connection and `keepAzSessionActive: true` to keep its session renewable:
+
+```yaml
+steps:
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: <workload identity federation service connection name authorized for Helix>
+    keepAzSessionActive: true
+    scriptType: pscore
+    scriptLocation: inlineScript
+    inlineScript: |
+      $env:SYSTEM_ACCESSTOKEN = $env:HELIX_AZDO_ACCESSTOKEN
+      dotnet msbuild helix.proj /restore /p:HelixUseEntraAuthentication=true
+  env:
+    HELIX_AZDO_ACCESSTOKEN: $(System.AccessToken)
+```
+
+Replace `helix.proj` with your Helix SDK project and retain the targets, properties, and other inputs your submission already requires. The environment mapping preserves the pipeline's `System.AccessToken` for Azure DevOps test reporting because `AzureCLI@2` replaces `SYSTEM_ACCESSTOKEN` with the service connection token.
+
+Do not pass `HelixAzureSubscription` to MSBuild or acquire a one-time bearer token for `HelixAccessToken`. The SDK uses the available refreshable credential; in this example it uses the Azure CLI session. Outside Azure Pipelines, make an authorized Azure CLI or managed identity credential available before invoking MSBuild.
 
 #### Migration and compatibility
 

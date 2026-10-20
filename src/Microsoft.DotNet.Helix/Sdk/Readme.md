@@ -40,13 +40,22 @@ supports Azure Pipelines workload identity, managed identity, and Azure CLI
 credentials and refreshes access tokens based on their expiry. It is not
 available in source-built Arcade.
 
-Azure Pipelines should use Arcade's `send-to-helix.yml` template rather than
-configure `DefaultIdentityTokenCredential` directly. The template accepts
+Azure Pipelines can use Arcade's `send-to-helix.yml` template to configure the
+authenticated session. The template accepts
 `HelixUseEntraAuthentication` and `HelixAzureSubscription`, runs the SDK under
 `AzureCLI@2` with a renewable workload identity session, and selects the Helix
 scope from `HelixBaseUri`. See
 [Sending Jobs to Helix](../../../Documentation/AzureDevOps/SendingJobsToHelix.md#recommended-entra-id-authentication)
 for setup and migration guidance.
+
+If your pipeline invokes the SDK directly, pass
+`/p:HelixUseEntraAuthentication=true` to MSBuild (or set that property in the
+project) and run it inside an authenticated `AzureCLI@2` task with
+`keepAzSessionActive: true`. Select the service connection through the task's
+`azureSubscription` input, not an MSBuild property: `HelixAzureSubscription`
+is a `send-to-helix.yml` template parameter only. See the
+[direct MSBuild example](../../../Documentation/AzureDevOps/SendingJobsToHelix.md#direct-msbuild-invocations),
+including how to preserve the Azure DevOps reporting token.
 
 You will also need to set the following environment variables before building:
 
