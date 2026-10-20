@@ -36,7 +36,7 @@ Example: `"Microsoft.DotNet.Helix.Sdk": "1.0.0-beta.18502.3"`
 
 ## Helix authentication
 
-Helix supports anonymous submissions to public queues and authenticated submissions to internal queues. Internal pipelines should use Microsoft Entra ID authentication through workload identity federation. Helix access tokens remain available temporarily for compatibility with pipelines that have not migrated.
+Helix supports anonymous submissions to public queues and authenticated submissions to internal queues. Internal pipelines should use Microsoft Entra ID authentication through workload identity federation. Helix access tokens remain available for private local submissions and for compatibility with pipelines that have not migrated.
 
 ### External builds (Public CI)
 
@@ -126,7 +126,7 @@ steps:
 
 Replace `helix.proj` with your Helix SDK project and retain the targets, properties, and other inputs your submission already requires. The environment mapping preserves the pipeline's `System.AccessToken` for Azure DevOps test reporting because `AzureCLI@2` replaces `SYSTEM_ACCESSTOKEN` with the service connection token.
 
-Do not pass `HelixAzureSubscription` to MSBuild or acquire a one-time bearer token for `HelixAccessToken`. The SDK uses the available refreshable credential; in this example it uses the Azure CLI session. Outside Azure Pipelines, make an authorized Azure CLI or managed identity credential available before invoking MSBuild.
+For this Entra-authenticated pipeline workflow, do not pass `HelixAzureSubscription` to MSBuild or acquire a one-time bearer token for `HelixAccessToken`. The SDK uses the available refreshable credential; in this example it uses the Azure CLI session. This does not establish an interactive-user authentication path for local submissions; see [Private local submissions](#private-local-submissions).
 
 #### Migration and compatibility
 
@@ -148,7 +148,7 @@ To migrate an internal pipeline:
 
 #### Legacy access-token authentication
 
-Use this only while migrating an existing pipeline. In the dev.azure.com/dnceng/internal project, the `DotNet-HelixApi-Access` variable group provides the `HelixApiAccessToken` secret for the `HelixAccessToken` parameter.
+Pipelines should use this only while migrating to Entra authentication. For private local submissions, see the [local workflow](#private-local-submissions) below. In the dev.azure.com/dnceng/internal project, the `DotNet-HelixApi-Access` variable group provides the `HelixApiAccessToken` secret for the `HelixAccessToken` parameter.
 
 Example:
 
@@ -164,6 +164,20 @@ steps:
     HelixAccessToken: $(HelixApiAccessToken)
     # other parameters here
 ```
+
+#### Private local submissions
+
+For a developer submitting to internal queues from a local machine, continue using a personal **Helix access token**, not an Azure DevOps PAT or a shared pipeline identity. Obtain the token through your [Helix account](https://helix.dot.net/Account/Tokens) and make it available through the local process's `HelixAccessToken` environment variable. Do not commit it or include it in command-line arguments.
+
+Keep `HelixUseEntraAuthentication` disabled and disable Azure DevOps test reporting for the local run:
+
+```powershell
+dotnet msbuild helix.proj /restore /p:HelixUseEntraAuthentication=false /p:EnableAzurePipelinesReporter=false
+```
+
+Replace `helix.proj` with your Helix SDK project, retain its other required submission inputs, and set the build metadata described in the [SDK README](../../src/Microsoft.DotNet.Helix/Sdk/Readme.md#developing-helix-sdk). This local workflow does not require an Azure Pipelines service connection or `SYSTEM_ACCESSTOKEN`.
+
+An interactive `az login` alone is not currently a supported replacement for private local submissions. Although the SDK can obtain Azure CLI credentials, the Entra authorization model requires `Helix.Internal` or `Helix.Admin` for internal job submission, and both roles are defined for applications only. The user-assignable `Helix.MachineManagement` role authorizes machine operations, not job submission. A delegated-user submission workflow must be defined and validated before replacing the personal Helix-token path.
 
 ## The Simple Case
 
