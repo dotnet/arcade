@@ -79,6 +79,11 @@ are checked. This mode requires waiting for work-item completion.
 - Inline TRX names retain the class prefix (without duplicating an existing
   prefix), keeping same-named MSTest methods in different classes distinct.
   xUnit XML custom display names remain unchanged.
+- Diagnostic mappings retain the Python reporter's behavior: JUnit `failure`/`error`
+  attributes supply the exception type and failure message, with element text as
+  the stack trace; skipped TRX tests use `Output/StdOut` as the skip reason
+  (falling back to `ErrorInfo/Message` when stdout is absent); xUnit failure
+  messages decode the framework's backslash escapes.
 - With `EnableHelixJobMonitor=true`, the submitting job does not wait or publish;
   the monitor owns reporting. Local builds and explicit reporting opt-out
   continue to work without an Azure DevOps token.

@@ -3,6 +3,7 @@
 
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Arcade.Common;
@@ -236,7 +237,7 @@ public sealed class LocalTestResultsReader
             ParseDouble(GetAttribute(test, "time")),
             outcome,
             GetAttribute(failure, "exception-type"),
-            failure?.Elements().FirstOrDefault(static x => x.Name.LocalName == "message")?.Value?.Trim(),
+            UnescapeXunitMessage(failure?.Elements().FirstOrDefault(static x => x.Name.LocalName == "message")?.Value),
             failure?.Elements().FirstOrDefault(static x => x.Name.LocalName == "stack-trace")?.Value?.Trim(),
             test.Elements().FirstOrDefault(static x => x.Name.LocalName == "reason")?.Value?.Trim(),
             attachments);
@@ -244,7 +245,8 @@ public sealed class LocalTestResultsReader
 
     private TestResult ReadJUnitResult(XElement test, string workItemName)
     {
-        XElement? failure = test.Elements().FirstOrDefault(static x => x.Name.LocalName is "failure" or "error");
+        XElement? failure = test.Elements().FirstOrDefault(static x => x.Name.LocalName == "failure")
+            ?? test.Elements().FirstOrDefault(static x => x.Name.LocalName == "error");
         XElement? skipped = test.Elements().FirstOrDefault(static x => x.Name.LocalName == "skipped");
         string className = GetAttribute(test, "classname") ?? workItemName;
         string method = GetAttribute(test, "name") ?? string.Empty;
@@ -269,9 +271,9 @@ public sealed class LocalTestResultsReader
             method,
             ParseDouble(GetAttribute(test, "time")),
             outcome,
-            null,
-            failure?.Value?.Trim(),
-            null,
+            GetAttribute(failure, "type"),
+            GetAttribute(failure, "message"),
+            failure?.Value,
             skipped?.Value?.Trim(),
             attachments);
     }
@@ -294,6 +296,7 @@ public sealed class LocalTestResultsReader
         }
 
         XElement? output = result.Descendants().FirstOrDefault(static x => x.Name.LocalName == "Output");
+        string? standardOutput = output?.Descendants().FirstOrDefault(static x => x.Name.LocalName == "StdOut")?.Value;
         string? failureMessage = output?.Descendants().FirstOrDefault(static x => x.Name.LocalName == "Message")?.Value?.Trim();
         string outcome = NormalizeOutcome(GetAttribute(result, "outcome"));
 
@@ -301,7 +304,7 @@ public sealed class LocalTestResultsReader
         AddAttachmentIfEnabled(
             attachments,
             "stdout.txt",
-            output?.Descendants().FirstOrDefault(static x => x.Name.LocalName == "StdOut")?.Value?.Trim(),
+            standardOutput?.Trim(),
             outcome);
         AddAttachmentIfEnabled(
             attachments,
@@ -317,9 +320,9 @@ public sealed class LocalTestResultsReader
             ParseDuration(GetAttribute(result, "duration")),
             outcome,
             null,
-            failureMessage,
+            string.Equals(outcome, "Skip", StringComparison.Ordinal) ? null : failureMessage,
             output?.Descendants().FirstOrDefault(static x => x.Name.LocalName == "StackTrace")?.Value?.Trim(),
-            string.Equals(outcome, "Skip", StringComparison.Ordinal) ? failureMessage : null,
+            string.Equals(outcome, "Skip", StringComparison.Ordinal) ? standardOutput ?? failureMessage : null,
             attachments);
     }
 
@@ -334,6 +337,22 @@ public sealed class LocalTestResultsReader
 
     private static string? GetAttribute(XElement? element, string name)
         => element?.Attribute(name)?.Value;
+
+    private static string? UnescapeXunitMessage(string? value)
+        => value is null ? null : Regex.Replace(value, @"\\x[0-9a-fA-F]{2,4}|\\[^x]", static match =>
+            match.Value[1] switch
+            {
+                'x' => ((char)int.Parse(match.Value.AsSpan(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture)).ToString(),
+                'r' => "\r",
+                'n' => "\n",
+                't' => "\t",
+                '0' => "\0",
+                'a' => "\a",
+                'b' => "\b",
+                'v' => "\v",
+                'f' => "\f",
+                _ => match.Value[1].ToString(),
+            });
 
     private static double ParseDouble(string? value)
         => double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double result) ? result : 0;

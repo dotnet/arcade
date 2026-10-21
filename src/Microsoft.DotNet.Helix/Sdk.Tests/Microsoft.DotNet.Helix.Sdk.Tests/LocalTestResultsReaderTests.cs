@@ -211,6 +211,98 @@ public class LocalTestResultsReaderTests
         Assert.Equal("Passed", aggregated.Result);
     }
 
+    [Theory]
+    [InlineData("failure", "")]
+    [InlineData("failure", "  at Sample.Tests.Test()\n  at TestRunner.Run()")]
+    [InlineData("error", "")]
+    [InlineData("error", "  at Sample.Tests.Test()\n  at TestRunner.Run()")]
+    public async Task LocalTestResultsReader_JUnitPreservesFailureDiagnostics(string elementName, string stackTrace)
+    {
+        string file = Path.Combine(Path.GetTempPath(), "work-item", "junit-results.xml");
+        _fileSystem.WriteToFile(file, $"""
+            <testsuite>
+              <testcase classname="Sample.Tests" name="Test" time="0.125">
+                <{elementName} type="AssertionError" message="assertion failed">{stackTrace}</{elementName}>
+              </testcase>
+            </testsuite>
+            """);
+
+        TestResult result = Assert.Single(await CreateReader().ReadResultFileAsync(file, failOnParseError: true));
+
+        Assert.Equal("Fail", result.Result);
+        Assert.Equal("AssertionError", result.ExceptionType);
+        Assert.Equal("assertion failed", result.FailureMessage);
+        Assert.Equal(stackTrace, result.StackTrace);
+    }
+
+    [Fact]
+    public async Task LocalTestResultsReader_JUnitPrefersFailureOverError()
+    {
+        string file = Path.Combine(Path.GetTempPath(), "work-item", "junit-results.xml");
+        _fileSystem.WriteToFile(file, """
+            <testsuite>
+              <testcase classname="Sample.Tests" name="Test">
+                <error message="secondary error">error stack</error>
+                <failure message="assertion failed">failure stack</failure>
+              </testcase>
+            </testsuite>
+            """);
+
+        TestResult result = Assert.Single(await CreateReader().ReadResultFileAsync(file, failOnParseError: true));
+
+        Assert.Equal("assertion failed", result.FailureMessage);
+        Assert.Equal("failure stack", result.StackTrace);
+    }
+
+    [Theory]
+    [InlineData("<StdOut>test is disabled</StdOut>", "", "test is disabled")]
+    [InlineData("<StdOut>test is disabled</StdOut>", "<ErrorInfo><Message>other message</Message></ErrorInfo>", "test is disabled")]
+    [InlineData("", "<ErrorInfo><Message>fallback reason</Message></ErrorInfo>", "fallback reason")]
+    public async Task LocalTestResultsReader_TrxPreservesSkipReason(
+        string standardOutput, string errorInfo, string expectedReason)
+    {
+        string file = Path.Combine(Path.GetTempPath(), "work-item", "results.trx");
+        _fileSystem.WriteToFile(file, $"""
+            <TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+              <Results>
+                <UnitTestResult testName="Test" outcome="NotExecuted">
+                  <Output>{standardOutput}{errorInfo}</Output>
+                </UnitTestResult>
+              </Results>
+            </TestRun>
+            """);
+
+        TestResult result = Assert.Single(await CreateReader().ReadResultFileAsync(file, failOnParseError: true));
+
+        Assert.Equal("Skip", result.Result);
+        Assert.Equal(expectedReason, result.SkipReason);
+        Assert.Null(result.FailureMessage);
+        Assert.Empty(result.Attachments);
+    }
+
+    [Theory]
+    [InlineData(@"first\r\nsecond\tvalue", "first\r\nsecond\tvalue")]
+    [InlineData(@"\0\a\b\v\f", "\0\a\b\v\f")]
+    [InlineData(@"\x41\x0042\x263A", "AB\u263A")]
+    [InlineData(@"\x123\x12", "\u0123\u0012")]
+    [InlineData("""slash\\quote\"unknown\q""", "slash\\quote\"unknownq")]
+    [InlineData(@"\xZ1\x1", @"\xZ1\x1")]
+    public async Task LocalTestResultsReader_XunitDecodesEscapedFailureMessage(string escaped, string expected)
+    {
+        string file = Path.Combine(Path.GetTempPath(), "work-item", "testResults.xml");
+        _fileSystem.WriteToFile(file, $"""
+            <assemblies><assembly><collection>
+              <test name="Sample.Tests.Test" type="Sample.Tests" method="Test" result="Fail">
+                <failure><message>{escaped}</message></failure>
+              </test>
+            </collection></assembly></assemblies>
+            """);
+
+        TestResult result = Assert.Single(await CreateReader().ReadResultFileAsync(file, failOnParseError: true));
+
+        Assert.Equal(expected, result.FailureMessage);
+    }
+
     private static int ExpectedAttachmentCount(string format)
         => format == "xunit" ? 1 : 2;
 

@@ -392,6 +392,138 @@ public class AzureDevOpsResultPublisherTests
         }
     }
 
+    [Theory]
+    [InlineData("failure", "")]
+    [InlineData("failure", "  at Sample.Tests.Test()\n  at TestRunner.Run()")]
+    [InlineData("error", "")]
+    [InlineData("error", "  at Sample.Tests.Test()\n  at TestRunner.Run()")]
+    public async Task InlineReporting_JUnitPublishesFailureDiagnostics(string elementName, string stackTrace)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string file = Path.Combine(directory, "junit-results.xml");
+            await File.WriteAllTextAsync(file, $"""
+                <testsuites><testsuite>
+                  <testcase classname="Sample.Tests" name="Test" time="0.125">
+                    <{elementName} type="AssertionError" message="assertion failed">{stackTrace}</{elementName}>
+                    <system-out>test output</system-out>
+                    <system-err>test error output</system-err>
+                  </testcase>
+                </testsuite></testsuites>
+                """);
+            var processor = new TestResultProcessor(
+                TestResultAttachmentMode.Failed, useFullyQualifiedTestName: false,
+                NullLogger.Instance, new TestReportingMetrics(), failOnParseError: true, qualifyTrxTestNames: true);
+            var workItem = new WorkItemTestResults("job", "work-item", [file]);
+            PreparedTestResults prepared = await processor.PrepareAsync(workItem, CancellationToken.None);
+            Assert.False(prepared.AllPassed);
+            var transport = new RecordingResultTransport();
+
+            Assert.Equal(1, await CreatePublisher(transport).PublishAsync(
+                TestRunId, workItem, prepared, CancellationToken.None));
+
+            JsonElement published = Assert.Single(Assert.Single(transport.RequestBodies).EnumerateArray());
+            Assert.Equal("Failed", published.GetProperty("Outcome").GetString());
+            Assert.Equal("assertion failed", published.GetProperty("ErrorMessage").GetString());
+            Assert.Equal(stackTrace, published.GetProperty("StackTrace").GetString());
+            Assert.Equal(new[] { "test output", "test error output" },
+                transport.Attachments.Select(attachment =>
+                    System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(attachment.Stream))));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task InlineReporting_TrxPublishesSkipReasonWithoutAttachingStandardOutput()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string file = Path.Combine(directory, "results.trx");
+            await File.WriteAllTextAsync(file, """
+                <TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+                  <Results>
+                    <UnitTestResult testId="a" testName="Test" outcome="NotExecuted">
+                      <Output>
+                        <StdOut>test is disabled</StdOut>
+                        <ErrorInfo><Message>other message</Message></ErrorInfo>
+                      </Output>
+                    </UnitTestResult>
+                  </Results>
+                  <TestDefinitions>
+                    <UnitTest id="a"><TestMethod className="Sample.Tests" name="Test" /></UnitTest>
+                  </TestDefinitions>
+                </TestRun>
+                """);
+            var processor = new TestResultProcessor(
+                TestResultAttachmentMode.Failed, useFullyQualifiedTestName: false,
+                NullLogger.Instance, new TestReportingMetrics(), failOnParseError: true, qualifyTrxTestNames: true);
+            var workItem = new WorkItemTestResults("job", "work-item", [file]);
+            PreparedTestResults prepared = await processor.PrepareAsync(workItem, CancellationToken.None);
+            Assert.True(prepared.AllPassed);
+            var transport = new RecordingResultTransport();
+
+            Assert.Equal(1, await CreatePublisher(transport).PublishAsync(
+                TestRunId, workItem, prepared, CancellationToken.None));
+
+            JsonElement published = Assert.Single(Assert.Single(transport.RequestBodies).EnumerateArray());
+            Assert.Equal("NotExecuted", published.GetProperty("Outcome").GetString());
+            Assert.Equal("test is disabled", published.GetProperty("ErrorMessage").GetString());
+            Assert.Empty(transport.Attachments);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task InlineReporting_XunitPublishesDecodedFailureMessage()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string file = Path.Combine(directory, "testResults.xml");
+            await File.WriteAllTextAsync(file, """
+                <assemblies><assembly><collection>
+                  <test name="Sample.Tests.Test" type="Sample.Tests" method="Test" result="Fail">
+                    <failure exception-type="AssertionError">
+                      <message>  assertion failed\nExpected:\x20true\nActual:\tfalse  </message>
+                      <stack-trace>at Sample.Tests.Test()</stack-trace>
+                    </failure>
+                  </test>
+                </collection></assembly></assemblies>
+                """);
+            var processor = new TestResultProcessor(
+                TestResultAttachmentMode.Failed, useFullyQualifiedTestName: false,
+                NullLogger.Instance, new TestReportingMetrics(), failOnParseError: true, qualifyTrxTestNames: true);
+            var workItem = new WorkItemTestResults("job", "work-item", [file]);
+            PreparedTestResults prepared = await processor.PrepareAsync(workItem, CancellationToken.None);
+            Assert.False(prepared.AllPassed);
+            var transport = new RecordingResultTransport();
+
+            Assert.Equal(1, await CreatePublisher(transport).PublishAsync(
+                TestRunId, workItem, prepared, CancellationToken.None));
+
+            JsonElement published = Assert.Single(Assert.Single(transport.RequestBodies).EnumerateArray());
+            Assert.Equal("Failed", published.GetProperty("Outcome").GetString());
+            Assert.Equal("  assertion failed\nExpected: true\nActual:\tfalse  ",
+                published.GetProperty("ErrorMessage").GetString());
+            Assert.Equal("at Sample.Tests.Test()", published.GetProperty("StackTrace").GetString());
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     private static AzureDevOpsResultPublisher CreatePublisher(
         IAzureDevOpsResultTransport transport,
         bool useFullyQualifiedTestName = false)
