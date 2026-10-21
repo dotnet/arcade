@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -35,6 +36,11 @@ public sealed class UploadHelixTestResults : Task
         {
             Log.LogMessage(MessageImportance.High, $"event:publish:{item.ItemSpec}:{item.GetMetadata("TestRunId")}");
         }
+        if (WorkItems.Any(item => item.GetMetadata("FailUpload") == "true"))
+        {
+            Log.LogError("Simulated result upload failure.");
+            return false;
+        }
         return true;
     }
 }
@@ -46,6 +52,11 @@ public sealed class CreateTestsForWorkItems : Task
     public override bool Execute()
     {
         Log.LogMessage(MessageImportance.High, "event:execution-results");
+        if (WorkItems.Any(item => item.GetMetadata("FailExecutionResults") == "true"))
+        {
+            Log.LogError("Simulated execution result failure.");
+            return false;
+        }
         return true;
     }
 }

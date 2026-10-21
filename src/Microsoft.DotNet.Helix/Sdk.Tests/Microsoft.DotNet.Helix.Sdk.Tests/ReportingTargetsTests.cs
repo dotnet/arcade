@@ -51,8 +51,12 @@ public class ReportingTargetsTests
         Assert.DoesNotContain(project.GetItems("HelixCorrelationPayload"), item => item.EvaluatedInclude.EndsWith("reporter", StringComparison.Ordinal));
     }
 
-    [Fact]
-    public void InlineTargets_PublishIntoCorrectRunsBeforeClosingAndChecking()
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public void InlineTargets_FinalizeRunsWithoutRetryingFailedReporting(bool failUpload, bool failExecutionResults)
     {
         using var collection = new ProjectCollection();
         var root = ProjectRootElement.Create(collection);
@@ -81,12 +85,24 @@ public class ReportingTargetsTests
         var completed = coreTest.AddItemGroup().AddItem("CompletedWorkItem", "@(HelixTargetQueue)");
         completed.AddMetadata("JobName", "job-%(Identity)");
         completed.AddMetadata("WorkItemName", "work-item");
+        completed.AddMetadata("FailUpload", failUpload ? "true" : "false");
+        completed.AddMetadata("FailExecutionResults", failExecutionResults ? "true" : "false");
         root.AddTarget("AfterTest").AddTask("Message").SetParameter("Text", "event:check-work-items");
         root.AddTarget("Test").DependsOnTargets = "CoreBuild;CoreTest;AfterTest";
         var project = new Project(root, null, null, collection);
         var logger = new RecordingLogger();
 
-        Assert.True(project.Build("Test", [logger]), string.Join(Environment.NewLine, logger.Errors));
+        bool expectSuccess = !failUpload && !failExecutionResults;
+        Assert.Equal(expectSuccess, project.Build("Test", [logger]));
+        if (failUpload)
+        {
+            Assert.Contains("Simulated result upload failure.", logger.Errors);
+        }
+        if (failExecutionResults)
+        {
+            Assert.Contains("Simulated execution result failure.", logger.Errors);
+        }
+        Assert.Equal((failUpload ? 1 : 0) + (failExecutionResults ? 1 : 0), logger.Errors.Count);
         Assert.Equal(new[]
         {
             "event:start:custom-windows:14",
@@ -98,14 +114,14 @@ public class ReportingTargetsTests
             "event:execution-results",
             "event:stop:custom-windows:14",
             "event:stop:prefix-linux-suffix:19",
-            "event:check-work-items",
-            "event:check-results",
-        }.Order(StringComparer.Ordinal), logger.Events.Order(StringComparer.Ordinal));
+        }.Concat(expectSuccess ? ["event:check-work-items", "event:check-results"] : Array.Empty<string>())
+            .Order(StringComparer.Ordinal), logger.Events.Order(StringComparer.Ordinal));
         Assert.Equal(new[]
         {
             "start", "start", "wait", "discover", "publish", "publish",
-            "execution-results", "stop", "stop", "check-work-items", "check-results",
-        }, logger.Events.Select(e => e.Split(':')[1]));
+            "execution-results", "stop", "stop",
+        }.Concat(expectSuccess ? ["check-work-items", "check-results"] : Array.Empty<string>()),
+            logger.Events.Select(e => e.Split(':')[1]));
     }
 
     private sealed class RecordingLogger : ILogger

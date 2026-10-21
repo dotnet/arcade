@@ -7,7 +7,8 @@ if (-not $env:HELIX_WORKITEM_UPLOAD_ROOT) {
     throw 'HELIX_WORKITEM_UPLOAD_ROOT is required'
 }
 
-$sourceRoot = (Get-Location).ProviderPath.TrimEnd([IO.Path]::DirectorySeparatorChar)
+# Windows PowerShell can reset its provider location when the process starts in a bracketed path.
+$sourceRoot = [Environment]::CurrentDirectory.TrimEnd([IO.Path]::DirectorySeparatorChar)
 $uploadRoot = [IO.Path]::GetFullPath($env:HELIX_WORKITEM_UPLOAD_ROOT).TrimEnd([IO.Path]::DirectorySeparatorChar)
 New-Item -ItemType Directory -Path $uploadRoot -Force | Out-Null
 

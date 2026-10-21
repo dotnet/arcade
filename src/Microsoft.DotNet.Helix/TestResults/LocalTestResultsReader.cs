@@ -182,7 +182,28 @@ public sealed class LocalTestResultsReader
 
             using XmlReader subtree = reader.ReadSubtree();
             await subtree.ReadAsync();
-            yield return convert(XElement.Load(subtree, LoadOptions.PreserveWhitespace));
+            XElement element = XElement.Load(subtree, LoadOptions.PreserveWhitespace);
+            foreach (XElement result in EnumerateResultElements(element, elementName))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return convert(result);
+            }
+        }
+    }
+
+    private static IEnumerable<XElement> EnumerateResultElements(XElement element, string elementName)
+    {
+        foreach (XElement child in element.Elements())
+        {
+            foreach (XElement result in EnumerateResultElements(child, elementName))
+            {
+                yield return result;
+            }
+        }
+
+        if (element.Name.LocalName == elementName)
+        {
+            yield return element;
         }
     }
 
@@ -295,9 +316,10 @@ public sealed class LocalTestResultsReader
             displayName = $"{className}.{displayName}";
         }
 
-        XElement? output = result.Descendants().FirstOrDefault(static x => x.Name.LocalName == "Output");
-        string? standardOutput = output?.Descendants().FirstOrDefault(static x => x.Name.LocalName == "StdOut")?.Value;
-        string? failureMessage = output?.Descendants().FirstOrDefault(static x => x.Name.LocalName == "Message")?.Value?.Trim();
+        XElement? output = result.Elements().FirstOrDefault(static x => x.Name.LocalName == "Output");
+        XElement? errorInfo = output?.Elements().FirstOrDefault(static x => x.Name.LocalName == "ErrorInfo");
+        string? standardOutput = output?.Elements().FirstOrDefault(static x => x.Name.LocalName == "StdOut")?.Value;
+        string? failureMessage = errorInfo?.Elements().FirstOrDefault(static x => x.Name.LocalName == "Message")?.Value?.Trim();
         string outcome = NormalizeOutcome(GetAttribute(result, "outcome"));
 
         List<TestResultAttachment> attachments = [];
@@ -309,7 +331,7 @@ public sealed class LocalTestResultsReader
         AddAttachmentIfEnabled(
             attachments,
             "stderr.txt",
-            output?.Descendants().FirstOrDefault(static x => x.Name.LocalName == "StdErr")?.Value?.Trim(),
+            output?.Elements().FirstOrDefault(static x => x.Name.LocalName == "StdErr")?.Value?.Trim(),
             outcome);
 
         return new TestResult(
@@ -321,7 +343,7 @@ public sealed class LocalTestResultsReader
             outcome,
             null,
             string.Equals(outcome, "Skip", StringComparison.Ordinal) ? null : failureMessage,
-            output?.Descendants().FirstOrDefault(static x => x.Name.LocalName == "StackTrace")?.Value?.Trim(),
+            errorInfo?.Elements().FirstOrDefault(static x => x.Name.LocalName == "StackTrace")?.Value?.Trim(),
             string.Equals(outcome, "Skip", StringComparison.Ordinal) ? standardOutput ?? failureMessage : null,
             attachments);
     }

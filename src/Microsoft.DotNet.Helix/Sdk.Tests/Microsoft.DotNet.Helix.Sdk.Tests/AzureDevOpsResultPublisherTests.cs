@@ -524,6 +524,100 @@ public class AzureDevOpsResultPublisherTests
         }
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task InlineReporting_TrxPublishesNestedRowsWithTheirOwnDiagnostics(bool parentHasOutput)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string file = Path.Combine(directory, "results.trx");
+            await File.WriteAllTextAsync(file, $"""
+                <TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+                  <Results>
+                    <UnitTestResult testId="a" testName="DataTest" outcome="Failed">
+                      <InnerResults>
+                        <UnitTestResult testId="a" testName="DataTest(1)" outcome="Passed" />
+                        <UnitTestResult testId="a" testName="DataTest(2)" outcome="Failed">
+                          <InnerResults>
+                            <UnitTestResult testId="a" testName="DataTest(2.1)" outcome="Failed">
+                              <Output>
+                                <StdOut>nested output</StdOut>
+                                <ErrorInfo><Message>nested failure</Message><StackTrace>nested stack</StackTrace></ErrorInfo>
+                              </Output>
+                            </UnitTestResult>
+                          </InnerResults>
+                          <Output>
+                            <StdOut>row output</StdOut>
+                            <ErrorInfo><Message>row failure</Message><StackTrace>row stack</StackTrace></ErrorInfo>
+                          </Output>
+                        </UnitTestResult>
+                        <UnitTestResult testId="a" testName="DataTest(3)" outcome="NotExecuted">
+                          <Output><StdOut>row is disabled</StdOut></Output>
+                        </UnitTestResult>
+                      </InnerResults>
+                      {(parentHasOutput ? """
+                      <Output>
+                        <StdOut>parent output</StdOut>
+                        <ErrorInfo><Message>parent failure</Message><StackTrace>parent stack</StackTrace></ErrorInfo>
+                      </Output>
+                      """ : "")}
+                    </UnitTestResult>
+                  </Results>
+                  <TestDefinitions>
+                    <UnitTest id="a"><TestMethod className="Sample.Tests" name="DataTest" /></UnitTest>
+                  </TestDefinitions>
+                </TestRun>
+                """);
+            var reader = new LocalTestResultsReader(
+                NullLogger.Instance, TestResultAttachmentMode.Failed, qualifyTrxTestNames: true);
+            IReadOnlyList<TestResult> parsed = await reader.ReadResultFileAsync(file, failOnParseError: true);
+            string[] names =
+            [
+                "Sample.Tests.DataTest(1)", "Sample.Tests.DataTest(2.1)", "Sample.Tests.DataTest(2)",
+                "Sample.Tests.DataTest(3)", "Sample.Tests.DataTest",
+            ];
+            Assert.Equal(names, parsed.Select(result => result.Name));
+            Assert.Equal(new[] { "Pass", "Fail", "Fail", "Skip", "Fail" }, parsed.Select(result => result.Result));
+            Assert.Equal(new[] { null, "nested failure", "row failure", null, parentHasOutput ? "parent failure" : null },
+                parsed.Select(result => result.FailureMessage));
+            Assert.Equal(new[] { null, "nested stack", "row stack", null, parentHasOutput ? "parent stack" : null },
+                parsed.Select(result => result.StackTrace));
+            Assert.Equal("row is disabled", parsed[3].SkipReason);
+            Assert.Null(parsed[4].SkipReason);
+            Assert.Equal(new[] { 0, 1, 1, 0, parentHasOutput ? 1 : 0 }, parsed.Select(result => result.Attachments.Count));
+
+            var processor = new TestResultProcessor(
+                TestResultAttachmentMode.Failed, useFullyQualifiedTestName: false,
+                NullLogger.Instance, new TestReportingMetrics(), failOnParseError: true, qualifyTrxTestNames: true);
+            var workItem = new WorkItemTestResults("job", "work-item", [file]);
+            PreparedTestResults prepared = await processor.PrepareAsync(workItem, CancellationToken.None);
+            Assert.False(prepared.AllPassed);
+            var transport = new RecordingResultTransport();
+
+            Assert.Equal(1, await CreatePublisher(transport).PublishAsync(
+                TestRunId, workItem, prepared, CancellationToken.None));
+
+            JsonElement published = Assert.Single(Assert.Single(transport.RequestBodies).EnumerateArray());
+            Assert.Equal("Failed", published.GetProperty("Outcome").GetString());
+            JsonElement[] rows = published.GetProperty("SubResults").EnumerateArray().ToArray();
+            Assert.Equal(names, rows.Select(row => row.GetProperty("DisplayName").GetString()));
+            Assert.Equal(new[] { "Passed", "Failed", "Failed", "NotExecuted", "Failed" },
+                rows.Select(row => row.GetProperty("Outcome").GetString()));
+            Assert.Equal(new[] { null, "nested failure", "row failure", "row is disabled", parentHasOutput ? "parent failure" : null },
+                rows.Select(row => row.GetProperty("ErrorMessage").GetString()));
+            Assert.Equal(new[] { null, "nested stack", "row stack", null, parentHasOutput ? "parent stack" : null },
+                rows.Select(row => row.GetProperty("StackTrace").GetString()));
+            Assert.Equal(parentHasOutput ? 3 : 2, transport.Attachments.Count);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     private static AzureDevOpsResultPublisher CreatePublisher(
         IAzureDevOpsResultTransport transport,
         bool useFullyQualifiedTestName = false)

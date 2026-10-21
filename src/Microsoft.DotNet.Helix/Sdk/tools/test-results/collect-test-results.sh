@@ -9,7 +9,7 @@ source_root=$(pwd -P)
 mkdir -p "${HELIX_WORKITEM_UPLOAD_ROOT:?HELIX_WORKITEM_UPLOAD_ROOT is required}"
 upload_root=$(cd "$HELIX_WORKITEM_UPLOAD_ROOT" && pwd -P)
 
-find "$source_root" -type d -path "$upload_root" -prune -o -type f \
+find "$source_root" -type d -exec test '{}' = "$upload_root" \; -prune -o -type f \
     \( -iname '*.trx' -o -iname '*testResults.xml' -o -iname '*test-results.xml' \
        -o -iname '*test_results.xml' -o -iname '*junit-results.xml' -o -iname '*junitresults.xml' \) \
     -exec sh -c '

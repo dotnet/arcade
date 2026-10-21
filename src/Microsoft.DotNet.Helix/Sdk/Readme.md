@@ -67,18 +67,23 @@ are checked. This mode requires waiting for work-item completion.
   TRX (`*.trx`).
 - Results in the working directory are collected recursively into
   `HELIX_WORKITEM_UPLOAD_ROOT`, preserving relative paths. Files already in the
-  upload directory are not copied again.
+  upload directory are not copied again, including when directory names contain
+  brackets or other glob characters.
 - Helix workers only upload raw files to Helix storage. They do not run the
   Python Azure DevOps reporter or receive the build's Azure DevOps token.
 - Downloads use `HelixResultsDestinationDir`, defaulting to
   `artifacts/helixresults` under the build sources or project directory.
 - Download, parse, and publishing failures fail inline reporting. Failed-test
   and work-item failure policies remain controlled by the existing properties.
+  After a reporting failure, completed work-item execution results are still
+  published and test runs are closed without retrying the failed upload or
+  clearing the original error.
 - Existing inline work-item execution results, test-run names, test identities,
   expected failures, and flaky-test support are preserved.
 - Inline TRX names retain the class prefix (without duplicating an existing
   prefix), keeping same-named MSTest methods in different classes distinct.
-  xUnit XML custom display names remain unchanged.
+  Nested MSTest `InnerResults` rows are also published, with diagnostics scoped
+  to each row's own output. xUnit XML custom display names remain unchanged.
 - Diagnostic mappings retain the Python reporter's behavior: JUnit `failure`/`error`
   attributes supply the exception type and failure message, with element text as
   the stack trace; skipped TRX tests use `Output/StdOut` as the skip reason

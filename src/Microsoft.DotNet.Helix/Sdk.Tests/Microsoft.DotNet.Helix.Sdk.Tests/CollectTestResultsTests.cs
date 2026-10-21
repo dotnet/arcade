@@ -12,16 +12,18 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests;
 public class CollectTestResultsTests
 {
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task Collector_StagesNestedResultsWithoutDuplicatingUploadRoot(bool uploadInsideWorkingDirectory)
+    [InlineData(true, "work")]
+    [InlineData(false, "work")]
+    [InlineData(true, "work[1]")]
+    [InlineData(false, "work[1]")]
+    public async Task Collector_StagesNestedResultsWithoutDuplicatingUploadRoot(bool uploadInsideWorkingDirectory, string workDirectoryName)
     {
         string root = Path.Combine(Path.GetTempPath(), "helix-collector-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         try
         {
-            string work = Path.Combine(root, "work");
-            string upload = Path.Combine(root, uploadInsideWorkingDirectory ? Path.Combine("work", "upload") : "upload");
+            string work = Path.Combine(root, workDirectoryName);
+            string upload = uploadInsideWorkingDirectory ? Path.Combine(work, "upload") : Path.Combine(root, "upload");
             string nested = Path.Combine(work, "one", "two", "three", "four", "five", "six", "space and 'quote'");
             Directory.CreateDirectory(nested);
             Directory.CreateDirectory(upload);

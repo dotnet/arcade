@@ -36,16 +36,22 @@
       BaseUri="$(HelixBaseUri)"
       WorkItems="@(CompletedWorkItem)"
       OutputDirectory="$(HelixResultsDestinationDir)" />
+    <OnError ExecuteTargets="_CreateTestsForWorkItems;_StopTestRuns" />
   </Target>
 
   <Target Name="CreateTestsForWorkItems"
-          DependsOnTargets="UploadTestResults">
+          DependsOnTargets="UploadTestResults;_CreateTestsForWorkItems" />
+
+  <Target Name="_CreateTestsForWorkItems">
     <CreateTestsForWorkItems WorkItems="@(CompletedWorkItem)"/>
+    <OnError ExecuteTargets="_StopTestRuns" />
   </Target>
 
   <Target Name="StopTestRuns"
           AfterTargets="CoreTest"
-          DependsOnTargets="CreateTestsForWorkItems"
+          DependsOnTargets="CreateTestsForWorkItems;_StopTestRuns" />
+
+  <Target Name="_StopTestRuns"
           Outputs="%(HelixTargetQueue.Identity)">
     <StopAzurePipelinesTestRun TestRunId="%(HelixTargetQueue.TestRunId)" TestRunName="%(HelixTargetQueue.TestRunName)"/>
   </Target>
