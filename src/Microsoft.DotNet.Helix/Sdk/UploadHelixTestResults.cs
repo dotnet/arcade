@@ -2,9 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -68,40 +70,60 @@ public class UploadHelixTestResults : HelixTask, IMultiThreadableTask
             }
         }
 
+        var failures = new ConcurrentQueue<Exception>();
         await Parallel.ForEachAsync(
             WorkItems,
             new ParallelOptions { MaxDegreeOfParallelism = 16, CancellationToken = cancellationToken },
             async (workItem, ct) =>
             {
-                var retry = new ExponentialRetry { MaxAttempts = 3 };
-                WorkItemTestResults downloaded = null;
-                Exception lastException = null;
-                bool succeeded = await retry.RunAsync(
-                    async _ =>
-                    {
-                        try
-                        {
-                            downloaded = await download(workItem, ct);
-                            return RetryResult.Success;
-                        }
-                        catch (Exception ex) when (!ct.IsCancellationRequested && TransientFailureDetector.IsTransient(ex))
-                        {
-                            lastException = ex;
-                            Log.LogWarning($"Transient test-result download failure for '{workItem.ItemSpec}': {ex.Message}. Retrying.");
-                            return RetryResult.Retry();
-                        }
-                    }, ct);
-                if (!succeeded)
+                try
                 {
-                    throw lastException ?? new InvalidOperationException($"Result downloads did not complete for '{workItem.ItemSpec}'.");
-                }
+                    var retry = new ExponentialRetry { MaxAttempts = 3 };
+                    WorkItemTestResults downloaded = null;
+                    Exception lastException = null;
+                    bool succeeded = await retry.RunAsync(
+                        async _ =>
+                        {
+                            try
+                            {
+                                downloaded = await download(workItem, ct);
+                                return RetryResult.Success;
+                            }
+                            catch (Exception ex) when (!ct.IsCancellationRequested && TransientFailureDetector.IsTransient(ex))
+                            {
+                                lastException = ex;
+                                Log.LogWarning($"Transient test-result download failure for '{workItem.ItemSpec}': {ex.Message}. Retrying.");
+                                return RetryResult.Retry();
+                            }
+                        }, ct);
+                    if (!succeeded)
+                    {
+                        throw lastException ?? new InvalidOperationException($"Result downloads did not complete for '{workItem.ItemSpec}'.");
+                    }
 
-                PreparedTestResults prepared = await processor.PrepareAsync(downloaded, ct);
-                int testRunId = int.Parse(workItem.GetMetadata("TestRunId"), CultureInfo.InvariantCulture);
-                long published = await publisher.PublishAsync(testRunId, downloaded, prepared, ct);
-                Log.LogMessage(MessageImportance.High,
-                    $"Published {published} test result(s) from '{workItem.ItemSpec}' to Azure Pipelines test run {testRunId}.");
+                    PreparedTestResults prepared = await processor.PrepareAsync(downloaded, ct);
+                    int testRunId = int.Parse(workItem.GetMetadata("TestRunId"), CultureInfo.InvariantCulture);
+                    long published = await publisher.PublishAsync(testRunId, downloaded, prepared, ct);
+                    Log.LogMessage(MessageImportance.High,
+                        $"Published {published} test result(s) from '{workItem.ItemSpec}' to Azure Pipelines test run {testRunId}.");
+                }
+                catch (Exception ex) when (!ct.IsCancellationRequested)
+                {
+                    Log.LogError(FailureCategory.Helix, $"Failed to report test results for '{workItem.ItemSpec}': {ex.Message}");
+                    failures.Enqueue(ex);
+                }
             });
+
+        cancellationToken.ThrowIfCancellationRequested();
+        Exception[] errors = failures.ToArray();
+        if (errors.Length == 1)
+        {
+            ExceptionDispatchInfo.Capture(errors[0]).Throw();
+        }
+        if (errors.Length > 1)
+        {
+            throw new AggregateException("Test result reporting failed for multiple work items.", errors);
+        }
     }
 
     private string GetRequiredEnvironmentVariable(string name)

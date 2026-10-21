@@ -75,6 +75,9 @@ are checked. This mode requires waiting for work-item completion.
   `artifacts/helixresults` under the build sources or project directory.
 - Download, parse, and publishing failures fail inline reporting. Failed-test
   and work-item failure policies remain controlled by the existing properties.
+  A work-item reporting failure does not cancel unrelated uploads: all work
+  items are processed before errors are reported. Caller cancellation still
+  stops the batch.
   After a reporting failure, completed work-item execution results are still
   published and test runs are closed without retrying the failed upload or
   clearing the original error.
