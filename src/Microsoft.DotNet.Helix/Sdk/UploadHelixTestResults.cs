@@ -70,7 +70,11 @@ public class UploadHelixTestResults : HelixTask, IMultiThreadableTask
             }
         }
 
+        Log.LogMessage(MessageImportance.High,
+            $"Processing Helix test results for {WorkItems.Length} completed work item(s), with up to 16 work items in parallel.");
         var failures = new ConcurrentQueue<Exception>();
+        int completedWorkItems = 0;
+        long publishedResults = 0;
         await Parallel.ForEachAsync(
             WorkItems,
             new ParallelOptions { MaxDegreeOfParallelism = 16, CancellationToken = cancellationToken },
@@ -78,6 +82,9 @@ public class UploadHelixTestResults : HelixTask, IMultiThreadableTask
             {
                 try
                 {
+                    int testRunId = int.Parse(workItem.GetMetadata("TestRunId"), CultureInfo.InvariantCulture);
+                    Log.LogMessage(MessageImportance.High,
+                        $"Downloading test-result files for '{workItem.ItemSpec}' (Azure Pipelines test run {testRunId}).");
                     var retry = new ExponentialRetry { MaxAttempts = 3 };
                     WorkItemTestResults downloaded = null;
                     Exception lastException = null;
@@ -101,21 +108,30 @@ public class UploadHelixTestResults : HelixTask, IMultiThreadableTask
                         throw lastException ?? new InvalidOperationException($"Result downloads did not complete for '{workItem.ItemSpec}'.");
                     }
 
+                    Log.LogMessage(MessageImportance.High, downloaded.TestResultFiles.Count == 0
+                        ? $"No supported test-result files found for '{workItem.ItemSpec}'."
+                        : $"Downloaded {downloaded.TestResultFiles.Count} test-result file(s) for '{workItem.ItemSpec}'. Parsing and aggregating results.");
                     PreparedTestResults prepared = await processor.PrepareAsync(downloaded, ct);
-                    int testRunId = int.Parse(workItem.GetMetadata("TestRunId"), CultureInfo.InvariantCulture);
-                    long published = await publisher.PublishAsync(testRunId, downloaded, prepared, ct);
                     Log.LogMessage(MessageImportance.High,
-                        $"Published {published} test result(s) from '{workItem.ItemSpec}' to Azure Pipelines test run {testRunId}.");
+                        $"Prepared {prepared.Results.Count} top-level test result(s) from {downloaded.TestResultFiles.Count} file(s) for '{workItem.ItemSpec}'. Publishing to Azure Pipelines test run {testRunId}.");
+                    long published = await publisher.PublishAsync(testRunId, downloaded, prepared, ct);
+                    Interlocked.Add(ref publishedResults, published);
+                    int completed = Interlocked.Increment(ref completedWorkItems);
+                    Log.LogMessage(MessageImportance.High,
+                        $"Published {published} test result(s) from '{workItem.ItemSpec}' to Azure Pipelines test run {testRunId}. Completed {completed}/{WorkItems.Length} work item(s).");
                 }
                 catch (Exception ex) when (!ct.IsCancellationRequested)
                 {
                     Log.LogError(FailureCategory.Helix, $"Failed to report test results for '{workItem.ItemSpec}': {ex.Message}");
                     failures.Enqueue(ex);
+                    Interlocked.Increment(ref completedWorkItems);
                 }
             });
 
         cancellationToken.ThrowIfCancellationRequested();
         Exception[] errors = failures.ToArray();
+        Log.LogMessage(MessageImportance.High,
+            $"Finished processing Helix test results: {completedWorkItems - errors.Length} succeeded, {errors.Length} failed; {publishedResults} test result(s) published from {WorkItems.Length} work item(s).");
         if (errors.Length == 1)
         {
             ExceptionDispatchInfo.Capture(errors[0]).Throw();

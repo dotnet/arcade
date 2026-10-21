@@ -73,6 +73,10 @@
       <Output TaskParameter="TargetOutputs" ItemName="SentJob" />
     </MSBuild>
 
+    <Message Condition="'$(ImportAzurePipelinesTargets)' == 'true'"
+      Importance="High"
+      Text="Waiting for all submitted Helix jobs to finish before downloading and publishing test results." />
+
     <WaitForHelixJobCompletion 
       Condition="$(WaitForWorkItemCompletion)"
       AccessToken="$(HelixAccessToken)"
@@ -80,6 +84,10 @@
       BaseUri="$(HelixBaseUri)"
       CancelHelixJobsOnTaskCancellation="$(CancelHelixJobsIfBuildCancelled)"
       Jobs="@(SentJob)" />
+
+    <Message Condition="'$(ImportAzurePipelinesTargets)' == 'true'"
+      Importance="High"
+      Text="All submitted Helix jobs have finished. Discovering completed work items for test-result processing." />
 
     <GetHelixWorkItems
       Condition="$(WaitForWorkItemCompletion)"

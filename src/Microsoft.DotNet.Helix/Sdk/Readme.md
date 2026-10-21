@@ -57,11 +57,15 @@ env:
 ### Publishing test results to Azure DevOps
 
 `EnableAzurePipelinesReporter` defaults to `true` when `SYSTEM_ACCESSTOKEN` is
-available. The submitting build waits for Helix completion, downloads raw result
-files, and publishes them with the same C# readers and publisher used by the
+available. The submitting build waits for all submitted Helix jobs to finish,
+downloads raw result files, and publishes them with the same C# readers and publisher used by the
 Helix Job Monitor. All uploads finish before test runs are closed and failures
 are checked. This mode requires waiting for work-item completion.
 
+- High-importance build logs show when the build is waiting for all jobs, then
+  report per-work-item download, parsing/aggregation, and publication progress,
+  including file/result counts and a final success/failure summary. Work items
+  with no supported result files are reported explicitly.
 - Supported formats: xUnit XML (`*testResults.xml`, `*test-results.xml`,
   `*test_results.xml`), JUnit XML (`*junit-results.xml`, `*junitresults.xml`), and
   TRX (`*.trx`).

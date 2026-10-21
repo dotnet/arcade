@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -18,6 +19,50 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests;
 
 public class UploadHelixTestResultsTests
 {
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(2, 3)]
+    public async Task UploadAsync_LogsVisibleStageProgressAndSummary(int fileCount, int resultCount)
+    {
+        var task = CreateTask(WorkItem("job", "work-item", "101", failed: false));
+        ConcurrentQueue<BuildMessageEventArgs> messages = CaptureMessages(task);
+        string downloadSummary = fileCount == 0
+            ? "No supported test-result files found for 'job/work-item'."
+            : $"Downloaded {fileCount} test-result file(s) for 'job/work-item'. Parsing and aggregating results.";
+        string preparationSummary =
+            $"Prepared {resultCount} top-level test result(s) from {fileCount} file(s) for 'job/work-item'. Publishing to Azure Pipelines test run 101.";
+        var processor = new DelegateResultProcessor((results, ct) =>
+        {
+            Assert.Contains(messages, message => message.Message == downloadSummary);
+            return Task.FromResult(new PreparedTestResults(
+                [.. Enumerable.Range(0, resultCount).Select(i => new AggregatedResult(AggregationType.Single, $"Test{i}", 1, "Passed"))],
+                AllPassed: true));
+        });
+        var publisher = new DelegateResultPublisher((runId, results, prepared, ct) =>
+        {
+            Assert.Contains(messages, message => message.Message == preparationSummary);
+            return Task.FromResult((long)resultCount);
+        });
+
+        await task.UploadAsync(
+            (item, ct) =>
+            {
+                Assert.Contains(messages, message => message.Message ==
+                    "Downloading test-result files for 'job/work-item' (Azure Pipelines test run 101).");
+                return Task.FromResult(new WorkItemTestResults("job", "work-item",
+                    [.. Enumerable.Range(0, fileCount).Select(i => $"results-{i}.trx")]));
+            }, processor, publisher, CancellationToken.None);
+
+        Assert.Contains(messages, message => message.Message ==
+            "Processing Helix test results for 1 completed work item(s), with up to 16 work items in parallel.");
+        Assert.Contains(messages, message => message.Message ==
+            $"Published {resultCount} test result(s) from 'job/work-item' to Azure Pipelines test run 101. Completed 1/1 work item(s).");
+        Assert.Equal(
+            $"Finished processing Helix test results: 1 succeeded, 0 failed; {resultCount} test result(s) published from 1 work item(s).",
+            messages.Last().Message);
+        Assert.All(messages, message => Assert.Equal(MessageImportance.High, message.Importance));
+    }
+
     [Fact]
     public async Task UploadAsync_PublishesPassedAndFailedWorkItemsIntoTheirOwnRuns()
     {
@@ -120,6 +165,7 @@ public class UploadHelixTestResultsTests
         var failureInjected = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var reporter = new FakeAzureDevOpsService { UploadBlocker = releaseUploads.Task };
         var task = CreateTask([.. Enumerable.Range(0, 40).Select(i => WorkItem("job", $"work-{i}", "101", false))]);
+        ConcurrentQueue<BuildMessageEventArgs> messages = CaptureMessages(task);
         var failures = new Dictionary<string, Exception>
         {
             ["work-0"] = new InvalidOperationException("First reporting failure"),
@@ -177,6 +223,9 @@ public class UploadHelixTestResultsTests
             Enumerable.Range(0, 40).Select(i => $"work-{i}").Where(name => !failures.ContainsKey(name)).Order(StringComparer.Ordinal),
             reporter.UploadedResultsByRunId[101].Select(result => result.WorkItemName).Order(StringComparer.Ordinal));
         Assert.InRange(reporter.MaximumConcurrentUploads, 1, 16);
+        Assert.Equal(
+            "Finished processing Helix test results: 38 succeeded, 2 failed; 38 test result(s) published from 40 work item(s).",
+            messages.Last().Message);
     }
 
     [Fact]
@@ -267,6 +316,16 @@ public class UploadHelixTestResultsTests
 
     private static UploadHelixTestResults CreateTask(params ITaskItem[] workItems)
         => new() { WorkItems = workItems, BuildEngine = new Mock<IBuildEngine>().Object };
+
+    private static ConcurrentQueue<BuildMessageEventArgs> CaptureMessages(UploadHelixTestResults task)
+    {
+        var messages = new ConcurrentQueue<BuildMessageEventArgs>();
+        var engine = new Mock<IBuildEngine>();
+        engine.Setup(e => e.LogMessageEvent(It.IsAny<BuildMessageEventArgs>()))
+            .Callback<BuildMessageEventArgs>(messages.Enqueue);
+        task.BuildEngine = engine.Object;
+        return messages;
+    }
 
     private static ITaskItem WorkItem(string job, string name, string runId, bool failed)
     {
