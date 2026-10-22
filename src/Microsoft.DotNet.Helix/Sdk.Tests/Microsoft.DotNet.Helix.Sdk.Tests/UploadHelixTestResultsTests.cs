@@ -21,8 +21,8 @@ public class UploadHelixTestResultsTests
 {
     [Theory]
     [InlineData(0, 0)]
-    [InlineData(2, 3)]
-    public async Task UploadAsync_LogsVisibleStageProgressAndSummary(int fileCount, int resultCount)
+    [InlineData(2, 4)]
+    public async Task UploadAsync_LogsConciseSummaryAndDetailedStages(int fileCount, int resultCount)
     {
         var task = CreateTask(WorkItem("job", "work-item", "101", failed: false));
         ConcurrentQueue<BuildMessageEventArgs> messages = CaptureMessages(task);
@@ -35,8 +35,9 @@ public class UploadHelixTestResultsTests
         {
             Assert.Contains(messages, message => message.Message == downloadSummary);
             return Task.FromResult(new PreparedTestResults(
-                [.. Enumerable.Range(0, resultCount).Select(i => new AggregatedResult(AggregationType.Single, $"Test{i}", 1, "Passed"))],
-                AllPassed: true));
+                [.. Enumerable.Range(0, resultCount).Select(i => new AggregatedResult(AggregationType.Single, $"Test{i}", 1,
+                    i == 0 ? "Failed" : i == 1 ? "NotExecuted" : "Passed"))],
+                AllPassed: resultCount == 0));
         });
         var publisher = new DelegateResultPublisher((runId, results, prepared, ct) =>
         {
@@ -55,12 +56,21 @@ public class UploadHelixTestResultsTests
 
         Assert.Contains(messages, message => message.Message ==
             "Processing Helix test results for 1 completed work item(s), with up to 16 work items in parallel.");
+        string outcomes = resultCount == 0 ? "" : " (1 Failed, 1 NotExecuted, 2 Passed)";
         Assert.Contains(messages, message => message.Message ==
-            $"Published {resultCount} test result(s) from 'job/work-item' to Azure Pipelines test run 101. Completed 1/1 work item(s).");
+            $"Work item 'work-item' of Helix job 'job': {resultCount} test result(s) published{outcomes}. Completed 1/1 work item(s).");
         Assert.Equal(
             $"Finished processing Helix test results: 1 succeeded, 0 failed; {resultCount} test result(s) published from 1 work item(s).",
             messages.Last().Message);
-        Assert.All(messages, message => Assert.Equal(MessageImportance.High, message.Importance));
+        Assert.Equal(3, messages.Count(message => message.Importance == MessageImportance.High));
+        Assert.Equal(
+            new[]
+            {
+                "Downloading test-result files for 'job/work-item' (Azure Pipelines test run 101).",
+                downloadSummary,
+                preparationSummary,
+            },
+            messages.Where(message => message.Importance == MessageImportance.Low).Select(message => message.Message));
     }
 
     [Fact]

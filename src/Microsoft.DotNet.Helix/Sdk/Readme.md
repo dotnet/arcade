@@ -62,10 +62,12 @@ downloads raw result files, and publishes them with the same C# readers and publ
 Helix Job Monitor. All uploads finish before test runs are closed and failures
 are checked. This mode requires waiting for work-item completion.
 
-- High-importance build logs show when the build is waiting for all jobs, then
-  report per-work-item download, parsing/aggregation, and publication progress,
-  including file/result counts and a final success/failure summary. Work items
-  with no supported result files are reported explicitly.
+- Default build logs show when the build is waiting for all jobs, when result
+  processing starts, one summary per work item with published result counts,
+  top-level test outcome counts and overall work-item progress, and a final
+  success/failure summary. Work items with no results report a zero count.
+  Download, parsing/aggregation, and publication stages are available at detailed
+  or diagnostic MSBuild verbosity.
 - Supported formats: xUnit XML (`*testResults.xml`, `*test-results.xml`,
   `*test_results.xml`), JUnit XML (`*junit-results.xml`, `*junitresults.xml`), and
   TRX (`*.trx`).
