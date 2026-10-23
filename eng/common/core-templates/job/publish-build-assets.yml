@@ -42,8 +42,11 @@ parameters:
 
   officialBuildId: ''
 
+  # V4 variants register disjoint asset sets from one pipeline run as separate BAR builds.
+  buildVariant: ''
+
 jobs:
-- job: Asset_Registry_Publish
+- job: Asset_Registry_Publish${{ parameters.buildVariant }}
 
   dependsOn: ${{ parameters.dependsOn }}
   timeoutInMinutes: 150
@@ -67,6 +70,16 @@ jobs:
       value: ${{ parameters.officialBuildId }}
     ${{ else }}:
       value: $(Build.BuildNumber)
+  - name: MergedManifestArtifactName
+    ${{ if eq(parameters.buildVariant, '') }}:
+      value: AssetManifests
+    ${{ else }}:
+      value: AssetManifests_${{ parameters.buildVariant }}
+  - name: ReleaseConfigsArtifactName
+    ${{ if eq(parameters.buildVariant, '') }}:
+      value: ReleaseConfigs
+    ${{ else }}:
+      value: ReleaseConfigs_${{ parameters.buildVariant }}
 
   pool:
     # We don't use the collection uri here because it might vary (.visualstudio.com vs. dev.azure.com)
@@ -135,6 +148,8 @@ jobs:
           /p:IsAssetlessBuild=${{ parameters.isAssetlessBuild }}
           /p:MaestroApiEndpoint=https://maestro.dot.net
           /p:OfficialBuildId=$(OfficialBuildId)
+          /p:BuildVariant='${{ parameters.buildVariant }}'
+          /p:MergedManifestArtifactName='$(MergedManifestArtifactName)'
           -runtimeSourceFeed https://ci.dot.net/internal
           -runtimeSourceFeedKey '$(dotnetbuilds-internal-container-read-token-base64)'
 
@@ -165,7 +180,7 @@ jobs:
           is1ESPipeline: ${{ parameters.is1ESPipeline }}
           args:
             targetPath: '$(Build.ArtifactStagingDirectory)/MergedManifest.xml'
-            artifactName: AssetManifests
+            artifactName: $(MergedManifestArtifactName)
             displayName: 'Publish Merged Manifest'
             retryCountOnTaskFailure: 10 # for any files being locked
             isProduction: false # just metadata for publishing
@@ -176,7 +191,7 @@ jobs:
         args:
           displayName: Publish ReleaseConfigs Artifact
           targetPath: '$(Build.StagingDirectory)/ReleaseConfigs'
-          artifactName: ReleaseConfigs
+          artifactName: $(ReleaseConfigsArtifactName)
           retryCountOnTaskFailure: 10 # for any files being locked
           isProduction: false # just metadata for publishing
 
@@ -186,6 +201,7 @@ jobs:
           BARBuildId: ${{ parameters.BARBuildId }}
           PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
           is1ESPipeline: ${{ parameters.is1ESPipeline }}
+          releaseConfigsArtifactName: $(ReleaseConfigsArtifactName)
           
       # Darc is targeting 8.0, so make sure it's installed
       - task: UseDotNet@2

@@ -26,6 +26,12 @@ try {
     exit 1
   }
 
+  . $PSScriptRoot\get-build-manifest-artifacts.ps1
+  $manifestArtifacts = Get-BuildManifestArtifacts -BuildInfo $buildInfo
+  Write-Host "##vso[task.setvariable variable=MergedManifestArtifactName]$($manifestArtifacts.ManifestArtifact)"
+  Write-Host "##vso[task.setvariable variable=ReleaseConfigsArtifactName]$($manifestArtifacts.ReleaseConfigsArtifact)"
+  Write-Host "##vso[task.setvariable variable=IsBuildVariant]$($manifestArtifacts.IsVariant.ToString().ToLowerInvariant())"
+
   $channels = $PromoteToChannelIds -split "-"
   $channelNames = @()
   foreach ($channelId in $channels) {

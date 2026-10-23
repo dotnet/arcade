@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -52,6 +53,8 @@ public class PublishBuildToMaestro : MSBuildTaskBase, ICancelableTask
     public string AssetVersion { get; set; }
 
     public string MergedManifestArtifactName { get; set; } = "AssetManifests";
+
+    public string BuildVariant { get; set; } = "";
 
     [Output]
     public int BuildId { get; set; }
@@ -113,6 +116,24 @@ public class PublishBuildToMaestro : MSBuildTaskBase, ICancelableTask
 
             Log.LogMessage(MessageImportance.High, "Starting build metadata push to the Build Asset Registry...");
 
+            if (!Regex.IsMatch(BuildVariant, @"^[A-Za-z0-9_]*$"))
+            {
+                Log.LogError("BuildVariant must contain only ASCII letters, digits, and underscores.");
+                return false;
+            }
+            if (BuildVariant.Length > 0 && IsAssetlessBuild)
+            {
+                Log.LogError("BuildVariant requires a V4 build with assets.");
+                return false;
+            }
+            if (BuildVariant.Length > 0 &&
+                MergedManifestArtifactName != "AssetManifests" &&
+                MergedManifestArtifactName != $"AssetManifests_{BuildVariant}")
+            {
+                Log.LogError("A build variant's merged manifest artifact must be named AssetManifests_<BuildVariant>.");
+                return false;
+            }
+
             if (!Directory.Exists(ManifestsPath) && !IsAssetlessBuild)
             {
                 Log.LogError($"Required folder '{ManifestsPath}' does not exist.");
@@ -142,6 +163,16 @@ public class PublishBuildToMaestro : MSBuildTaskBase, ICancelableTask
                     // Always drop Internal artifacts when pushing a build to Maestro.
                     buildModel = _buildModelFactory.CreateMergedModel(parsedManifests,
                         ArtifactVisibility.External);
+
+                    if (buildModel == null)
+                    {
+                        return false;
+                    }
+                    if (BuildVariant.Length > 0 && buildModel.Identity.PublishingVersion != PublishingInfraVersion.V4)
+                    {
+                        Log.LogError("BuildVariant requires V4 publishing.");
+                        return false;
+                    }
 
                     FillInMissingBuildIdentityProperties(buildModel.Identity);
 
@@ -727,7 +758,9 @@ public class PublishBuildToMaestro : MSBuildTaskBase, ICancelableTask
     {
         string repoName = mergedModel.Identity.Name ?? GetRepoName(mergedModel.Identity.AzureDevOpsRepository);
         string buildNumber = mergedModel.Identity.AzureDevOpsBuildNumber;
-        string id = $"assets/manifests/{repoName}/{buildNumber}/{Path.GetFileName(manifestFileName)}";
+        // The variant is part of the immutable blob ID, not just the pipeline artifact name.
+        string variantPath = BuildVariant.Length == 0 ? "" : $"variants/{BuildVariant}/";
+        string id = $"assets/manifests/{repoName}/{buildNumber}/{variantPath}{Path.GetFileName(manifestFileName)}";
 
         var mergedManifestAsset = new BlobArtifactModel()
         {
@@ -741,7 +774,8 @@ public class PublishBuildToMaestro : MSBuildTaskBase, ICancelableTask
 
         if (mergedModel.Identity.PublishingVersion >= PublishingInfraVersion.V4)
         {
-            mergedManifestAsset.PipelineArtifactName = MergedManifestArtifactName;
+            mergedManifestAsset.PipelineArtifactName = BuildVariant.Length == 0
+                ? MergedManifestArtifactName : $"AssetManifests_{BuildVariant}";
             mergedManifestAsset.PipelineArtifactPath = Path.GetFileName(manifestFileName);
         }
 
