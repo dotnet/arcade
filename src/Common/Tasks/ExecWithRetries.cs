@@ -9,13 +9,21 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
+#if ARCADE_SDK_BUILD_TASKS_ASSEMBLY
+namespace Microsoft.DotNet.Arcade.Sdk;
+#else
 namespace Microsoft.DotNet.Build.Tasks.Installers;
+#endif
 
 /// <summary>
 /// Run a command and retry if the exit code is not 0.
 /// </summary>
-public class ExecWithRetries : Microsoft.Build.Utilities.Task, ICancelableTask
+[MSBuildMultiThreadableTask]
+public class ExecWithRetries : Microsoft.Build.Utilities.Task, ICancelableTask, IMultiThreadableTask
 {
+    /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+    public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
     [Required]
     public string Command { get; set; }
 
@@ -32,7 +40,7 @@ public class ExecWithRetries : Microsoft.Build.Utilities.Task, ICancelableTask
 
     /// <summary>
     /// A constant, in seconds, added to (base^retries) to find the delay before retrying.
-    /// 
+    ///
     /// The default is -1 to make the first retry instant, because ((base^0)-1) == 0.
     /// </summary>
     public double RetryDelayConstant { get; set; } = -1;
@@ -66,6 +74,12 @@ public class ExecWithRetries : Microsoft.Build.Utilities.Task, ICancelableTask
             _runningExec = new Exec
             {
                 BuildEngine = BuildEngine,
+                // Exec derives from ToolTask, which resolves WorkingDirectory and builds the child
+                // process environment through TaskEnvironment. MSBuild only injects that into tasks
+                // it instantiates itself, so this nested instance has to be given ours explicitly;
+                // otherwise a relative WorkingDirectory would resolve against the shared node's
+                // current directory instead of the project directory.
+                TaskEnvironment = TaskEnvironment,
                 Command = Command,
                 WorkingDirectory = WorkingDirectory,
                 IgnoreStandardErrorWarningFormat = IgnoreStandardErrorWarningFormat,

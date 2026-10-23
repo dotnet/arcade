@@ -1,6 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AwesomeAssertions;
@@ -20,6 +22,7 @@ public class CreateXHarnessAppleWorkItemsTests
     private readonly MockFileSystem _fileSystem;
     private readonly Mock<IProvisioningProfileProvider> _profileProvider;
     private readonly Mock<IZipArchiveManager> _zipArchiveManager;
+    private readonly MockBuildEngine _buildEngine;
     private readonly CreateXHarnessAppleWorkItems _task;
 
     public CreateXHarnessAppleWorkItemsTests()
@@ -35,9 +38,16 @@ public class CreateXHarnessAppleWorkItemsTests
                 _fileSystem.Files.Add(zipPath, "zip of " + folder);
             });
 
+        _buildEngine = new MockBuildEngine();
+
         _task = new CreateXHarnessAppleWorkItems()
         {                
-            BuildEngine = new MockBuildEngine(),
+            BuildEngine = _buildEngine,
+            // Relative paths must resolve against a directory owned by this test instance. The
+            // default TaskEnvironment.Fallback resolves them against the process current
+            // directory, which is global state that tests running in parallel can change.
+            TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment(
+                Path.Combine(Path.GetTempPath(), "xharness-apple-tests", Guid.NewGuid().ToString("N"))),
         };
     }
 
@@ -72,7 +82,7 @@ public class CreateXHarnessAppleWorkItemsTests
 
         // Act
         using var provider = collection.BuildServiceProvider();
-        _task.InvokeExecute(provider).Should().BeTrue();
+        _task.InvokeExecute(provider).Should().BeTrue("the task should have succeeded, but it logged: {0}", _buildEngine.ErrorSummary);
 
         // Verify
         _task.WorkItems.Length.Should().Be(1);
@@ -114,11 +124,11 @@ public class CreateXHarnessAppleWorkItemsTests
             CreateAppBundle("apps/System.Bar.app", "ios-simulator-64_13.5"),
         };
 
-        _fileSystem.Files.Add("apps/xharness-payload-system.foo.zip", "archive");
+        _fileSystem.Files.Add(_task.TaskEnvironment.GetAbsolutePath("apps/xharness-payload-system.foo.zip"), "archive");
 
         // Act
         using var provider = collection.BuildServiceProvider();
-        _task.InvokeExecute(provider).Should().BeTrue();
+        _task.InvokeExecute(provider).Should().BeTrue("the task should have succeeded, but it logged: {0}", _buildEngine.ErrorSummary);
 
         // Verify
         _task.WorkItems.Length.Should().Be(2);
@@ -139,6 +149,33 @@ public class CreateXHarnessAppleWorkItemsTests
     }
 
     [Fact]
+    public void RelativeAppBundlePathsResolveAgainstTheProjectDirectory()
+    {
+        var collection = CreateMockServiceCollection();
+        _task.ConfigureServices(collection);
+        _task.AppBundles = new[]
+        {
+            CreateAppBundle("apps/System.Foo.app", "ios-simulator-64_13.5"),
+        };
+
+        // Act
+        using var provider = collection.BuildServiceProvider();
+        _task.InvokeExecute(provider).Should().BeTrue("the task should have succeeded, but it logged: {0}", _buildEngine.ErrorSummary);
+
+        // Verify the relative path was anchored to the task's project directory rather than to the
+        // process current directory, which other tests running in parallel may change.
+        string projectDirectory = _task.TaskEnvironment.ProjectDirectory.Value;
+        string expectedAppBundlePath = _task.TaskEnvironment.GetAbsolutePath("apps/System.Foo.app");
+        string expectedArchivePath = _task.TaskEnvironment.GetAbsolutePath("apps/xharness-payload-system.foo.zip");
+        expectedAppBundlePath.Should().StartWith(projectDirectory);
+
+        _zipArchiveManager
+            .Verify(x => x.ArchiveDirectory(expectedAppBundlePath, expectedArchivePath, true), Times.Once);
+
+        _task.WorkItems.Single().GetMetadata("PayloadArchive").Should().Be(expectedArchivePath);
+    }
+
+    [Fact]
     public void CustomCommandsAreExecuted()
     {
         var collection = CreateMockServiceCollection();
@@ -150,7 +187,7 @@ public class CreateXHarnessAppleWorkItemsTests
 
         // Act
         using var provider = collection.BuildServiceProvider();
-        _task.InvokeExecute(provider).Should().BeTrue();
+        _task.InvokeExecute(provider).Should().BeTrue("the task should have succeeded, but it logged: {0}", _buildEngine.ErrorSummary);
 
         // Verify
         _task.WorkItems.Length.Should().Be(1);
@@ -179,7 +216,7 @@ public class CreateXHarnessAppleWorkItemsTests
 
         // Act
         using var provider = collection.BuildServiceProvider();
-        _task.InvokeExecute(provider).Should().BeTrue();
+        _task.InvokeExecute(provider).Should().BeTrue("the task should have succeeded, but it logged: {0}", _buildEngine.ErrorSummary);
 
         // Verify
         _task.WorkItems.Length.Should().Be(2);
@@ -223,7 +260,7 @@ public class CreateXHarnessAppleWorkItemsTests
 
         // Act
         using var provider = collection.BuildServiceProvider();
-        _task.InvokeExecute(provider).Should().BeTrue();
+        _task.InvokeExecute(provider).Should().BeTrue("the task should have succeeded, but it logged: {0}", _buildEngine.ErrorSummary);
 
         // Verify
         _task.WorkItems.Length.Should().Be(1);
@@ -318,7 +355,7 @@ public class CreateXHarnessAppleWorkItemsTests
             mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.AppBundlePath)).Returns(appBundlePath);
         }
 
-        _fileSystem.CreateDirectory(appBundlePath ?? itemSpec);
+        _fileSystem.CreateDirectory(_task.TaskEnvironment.GetAbsolutePath(appBundlePath ?? itemSpec));
 
         return mockBundle.Object;
     }
