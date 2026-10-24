@@ -307,6 +307,45 @@ Most frequent cause of this is that there is no Default Channel configured for t
 
 **Note:** only packages and blobs described in at least one build manifest will be published.
 
+### Can I publish only some blobs from a build?
+
+Pass `/p:BlobAssetIdPattern=<pattern>` through
+`artifactsPublishingAdditionalParameters` (or Darc's
+`--artifact-publishing-parameters`). This optional string is a .NET regular expression
+matched against the full blob `Id` from each loaded build manifest, case-sensitively
+and with `RegexOptions.CultureInvariant`. Matching uses `Regex.IsMatch` semantics:
+use anchors when you want to restrict the beginning or end of the ID. Regex inline
+options remain supported. Each match has a one-second timeout.
+For command-line forwarding, use MSBuild's `%7C` escape for alternation (`|`) to
+avoid shell pipe parsing and reliance on embedded quotes surviving Darc or Windows
+PowerShell argument forwarding. MSBuild decodes `%7C` to `|` before passing the
+property to the task. The task API itself accepts the raw regex string, not an
+MSBuild-escaped value. Quote other shell-sensitive arguments and escape
+MSBuild-special characters as needed.
+
+The caller owns selection logic; no selection files or custom manifests are needed.
+The [publishing task](../src/Microsoft.DotNet.Build.Tasks.Feed/src/PublishArtifactsInManifest.cs)
+computes the complete selection across all manifests before changing any in-memory
+model or starting the individual V3 or V4 publishers. Original manifest files are
+not changed. For example, to select daily or preview assets and explicitly include
+a shared manifest archive:
+
+- Daily: `/p:BuildQuality=daily /p:BlobAssetIdPattern=^dotnetup/[^/]+-daily[.]%7C^assets/manifests/`
+- Preview: `/p:BuildQuality=preview /p:BlobAssetIdPattern=^dotnetup/[^/]+-preview[.]%7C^assets/manifests/`
+
+Only selected blobs are eligible for publication and associated latest-link updates.
+Include shared blobs, such as a manifest archive, explicitly if they should also be
+published. Packages and PDBs are not filtered by this property. Existing feed
+shipping/nonshipping filters still apply.
+
+An invalid regex, a regex match timeout, or zero matching blobs across all supplied
+manifests fails publishing before any model is changed, any publisher runs, or the
+build is assigned to a channel. A manifest with no matches is allowed if another
+manifest has a match. When the property is null or empty, existing publishing
+behavior is unchanged (whitespace is treated as a pattern, not as empty).
+BAR registration remains complete and channel membership remains build-level.
+`BuildQuality` still controls link destinations, not asset selection.
+
 ### Where can I see publishing logs in V1?
 
 The publishing logs are stored inside an Azure DevOps artifacts container named `PostBuildLogs`. Each activated post-build channel/stage will have a subfolder under `PostBuildLogs`. Each job in a publishing channel/stage will have `.binlogs` in the container.
