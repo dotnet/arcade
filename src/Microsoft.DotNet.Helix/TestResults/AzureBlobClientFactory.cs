@@ -5,7 +5,7 @@ using System;
 using Azure;
 using Azure.Storage.Blobs;
 
-namespace Microsoft.DotNet.Helix.JobMonitor;
+namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
 internal sealed class AzureBlobClientFactory : IBlobClientFactory
 {

@@ -23,7 +23,7 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
     private readonly IAzureDevOpsResultPublisher _resultPublisher;
     private readonly IHelixService _helix;
     private readonly MonitorState _state;
-    private readonly JobMonitorMetrics _metrics;
+    private readonly TestReportingMetrics _metrics;
     private readonly ConcurrentDictionary<string, JobUploadSession> _sessions =
         new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<int, long> _remainingWorkItemsByPoll = [];
@@ -41,7 +41,7 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         IAzureDevOpsResultPublisher resultPublisher,
         IHelixService helix,
         MonitorState state,
-        JobMonitorMetrics metrics)
+        TestReportingMetrics metrics)
     {
         _logger = logger;
         _options = options;
@@ -229,7 +229,7 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         try
         {
             WorkItemTestResults downloaded;
-            long downloadStartedAt = JobMonitorMetrics.StartOperation();
+            long downloadStartedAt = TestReportingMetrics.StartOperation();
             try
             {
                 downloaded = await ExecuteDownloadWithRetryAsync(
@@ -338,7 +338,7 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
             {
                 int testRunId = await session.GetOrCreateTestRunAsync(
                     () => CreateTestRunAsync(session.Job.TestRunName, cancellationToken));
-                long completeStartedAt = JobMonitorMetrics.StartOperation();
+                long completeStartedAt = TestReportingMetrics.StartOperation();
                 try
                 {
                     await _azdo.CompleteTestRunAsync(
@@ -384,7 +384,7 @@ internal sealed class TestResultUploadPipeline : IAsyncDisposable
         string testRunName,
         CancellationToken cancellationToken)
     {
-        long startedAt = JobMonitorMetrics.StartOperation();
+        long startedAt = TestReportingMetrics.StartOperation();
         try
         {
             return await _azdo.CreateTestRunAsync(testRunName, cancellationToken);

@@ -9,6 +9,7 @@
     <Project Path="src/Microsoft.DotNet.Helix/JobMonitor/Microsoft.DotNet.Helix.JobMonitor.csproj" />
     <Project Path="src/Microsoft.DotNet.Helix/JobSender/Microsoft.DotNet.Helix.JobSender.csproj" />
     <Project Path="src/Microsoft.DotNet.Helix/Sdk/Microsoft.DotNet.Helix.Sdk.csproj" />
+    <Project Path="src/Microsoft.DotNet.Helix/TestResults/Microsoft.DotNet.Helix.TestResults.csproj" />
   </Folder>
   <Folder Name="/Microsoft.DotNet.SwaggerGenerator/">
     <Project Path="src/Microsoft.DotNet.SwaggerGenerator/Microsoft.DotNet.SwaggerGenerator.CmdLine/Microsoft.DotNet.SwaggerGenerator.CmdLine.csproj" />

@@ -4,7 +4,6 @@
 using System.Text;
 using System.Text.Json;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
-using Microsoft.DotNet.Helix.JobMonitor;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
@@ -21,19 +20,19 @@ internal sealed class AzureDevOpsResultPublisher : IAzureDevOpsResultPublisher
 
     private readonly ILogger _logger;
     private readonly bool _useFullyQualifiedTestName;
-    private readonly JobMonitorMetrics _metrics;
+    private readonly TestReportingMetrics _metrics;
     private readonly IAzureDevOpsResultTransport _transport;
 
     internal AzureDevOpsResultPublisher(
         ILogger logger,
         bool useFullyQualifiedTestName,
         IAzureDevOpsResultTransport transport,
-        JobMonitorMetrics? metrics = null)
+        TestReportingMetrics? metrics = null)
     {
         _logger = logger;
         _useFullyQualifiedTestName = useFullyQualifiedTestName;
         _transport = transport;
-        _metrics = metrics ?? new JobMonitorMetrics();
+        _metrics = metrics ?? new TestReportingMetrics();
     }
 
     public Task<long> PublishAsync(
@@ -60,7 +59,7 @@ internal sealed class AzureDevOpsResultPublisher : IAzureDevOpsResultPublisher
             return 0;
         }
 
-        long publishStartedAt = JobMonitorMetrics.StartOperation();
+        long publishStartedAt = TestReportingMetrics.StartOperation();
         try
         {
             return await UploadTestResultsWithCountAsync(
@@ -114,10 +113,10 @@ internal sealed class AzureDevOpsResultPublisher : IAzureDevOpsResultPublisher
 
         string response = await _transport.PublishResultsAsync(testRunId, testCaseResults, cancellationToken);
         IReadOnlyList<PublishedTestCaseResultReference> publishedResults = ReadPublishedResults(response);
-        if (publishedResults.Count == 0)
+        if (publishedResults.Count != converted.Count)
         {
-            _logger.LogWarning("The test run appears to have been closed, aborting test result uploads.");
-            return [];
+            throw new AzureDevOpsReportingError(
+                $"Azure DevOps returned {publishedResults.Count} results for {converted.Count} uploaded results in test run {testRunId}.");
         }
 
         List<PublishedTestCase> publishedTestCases = [];
@@ -126,8 +125,7 @@ internal sealed class AzureDevOpsResultPublisher : IAzureDevOpsResultPublisher
         {
             if (published.Id == -1)
             {
-                _logger.LogWarning("Azure DevOps test ID returned -1, unable to attach files.");
-                continue;
+                throw new AzureDevOpsReportingError("Azure DevOps returned an invalid test result ID; attachments could not be published.");
             }
 
             async Task IterateSubResultsAsync(
@@ -139,7 +137,7 @@ internal sealed class AzureDevOpsResultPublisher : IAzureDevOpsResultPublisher
                 {
                     if (originalSubResults.Count > 0)
                     {
-                        _logger.LogError("Published results do not include sub-results, attachments lost.");
+                        throw new AzureDevOpsReportingError("Published results do not include the uploaded sub-results.");
                     }
 
                     return;
@@ -147,8 +145,7 @@ internal sealed class AzureDevOpsResultPublisher : IAzureDevOpsResultPublisher
 
                 if (publishedSubResults.Count != originalSubResults.Count)
                 {
-                    _logger.LogError("Published sub-result counts do not match uploaded attachments. Attachments lost.");
-                    return;
+                    throw new AzureDevOpsReportingError("Published sub-result counts do not match the uploaded sub-results.");
                 }
 
                 foreach ((PublishedSubResultReference publishedSubResult, AggregatedResult originalSubResult) subTriplet in publishedSubResults.Zip(originalSubResults, (publishedSubResult, originalSubResult) => (publishedSubResult, originalSubResult)))
