@@ -8,7 +8,7 @@
 
   <!--
     When the new standalone Helix Job Monitor is in charge of reporting test results, the in-build
-    Python reporter and Azure DevOps test run management must be disabled to avoid duplicate test
+    inline reporter and Azure DevOps test run management must be disabled to avoid duplicate test
     runs and conflicting result uploads.
   -->
   <PropertyGroup Condition="'$(EnableHelixJobMonitor)' == 'true'">
@@ -27,7 +27,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ImportAzurePipelinesTargets Condition="$(EnableAzurePipelinesReporter) AND $(AzurePipelinesAvailable)">true</ImportAzurePipelinesTargets>
+    <ImportAzurePipelinesTargets Condition="$(EnableAzurePipelinesReporter) AND $(AzurePipelinesAvailable) AND '$(EnableHelixJobMonitor)' != 'true'">true</ImportAzurePipelinesTargets>
     <ImportAzurePipelinesTargets Condition="'$(ImportAzurePipelinesTargets)' != 'true'">false</ImportAzurePipelinesTargets>
   </PropertyGroup>
 
@@ -37,7 +37,7 @@
   </PropertyGroup>
 
   <Target Name="ValidateAzurePipelinesConfiguration"
-          Condition="$(EnableAzurePipelinesReporter) AND '$(HelixTargetQueue)' == ''">
+          Condition="$(EnableAzurePipelinesReporter) AND '$(EnableHelixJobMonitor)' != 'true' AND '$(HelixTargetQueue)' == ''">
     <Error Condition="!$(AzurePipelinesAvailable)" Text="Azure Pipelines SYSTEM_ACCESSTOKEN variable not found. Either the build is not running in Azure Pipelines, or the current step is not configured correctly. Please configure this step with the System.AccessToken variable, see: https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=vsts&amp;tabs=yaml%2Cbatch#systemaccesstoken"/>
   </Target>
 

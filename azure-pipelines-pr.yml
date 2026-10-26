@@ -39,6 +39,9 @@ variables:
 - template: /eng/common-variables.yml
 - template: /eng/common/templates/variables/pool-providers.yml
 
+# TEMPORARY: exercise inline C# Helix reporting without Job Monitor.
+# Revert this pipeline-only change before merging the PR.
+
 resources:
   containers:
   - container: LinuxContainer
@@ -147,7 +150,7 @@ stages:
               _BuildConfig: Release
         # Upload the non-Helix (inline) unit test results, including the Arcade SDK validation
         # RepoTests, from artifacts/TestResults. Helix test results are published separately by
-        # the Helix Job Monitor.
+        # the inline C# reporter in the Helix submission step.
         enablePublishTestResults: true
         variables:
         - _Testing: Helix
@@ -178,6 +181,7 @@ stages:
             -projects $(System.DefaultWorkingDirectory)\tests\UnitTests.proj
             /bl:$(System.DefaultWorkingDirectory)\artifacts\log\$(_BuildConfig)\Helix.binlog
             /p:RestoreUsingNuGetTargets=false
+            /p:EnableHelixJobMonitor=false
           displayName: Submit Helix Tests
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -194,7 +198,7 @@ stages:
               _BuildConfig: Debug
         # Upload the non-Helix (inline) unit test results, including the Arcade SDK validation
         # RepoTests, from artifacts/TestResults. Helix test results are published separately by
-        # the Helix Job Monitor.
+        # the inline C# reporter in the Helix submission step.
         enablePublishTestResults: true
         variables:
         - _Testing: Helix
@@ -220,22 +224,11 @@ stages:
             --projects $(System.DefaultWorkingDirectory)/tests/UnitTests.proj
             /bl:$(System.DefaultWorkingDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
             /p:RestoreUsingNuGetTargets=false
+            /p:EnableHelixJobMonitor=false
           displayName: Submit Helix Tests
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
-
-  # Helix Job Monitor runs as a job within the Test stage so it can monitor
-  # Helix work items submitted by the other jobs in this stage.
-  - template: /eng/common/core-templates/job/helix-job-monitor.yml
-    parameters:
-      timeoutInMinutes: 90
-      # Arcade's own tests intentionally exercise failure paths, so test failures should
-      # not be promoted to work-item failures or trigger resubmissions here.
-      failWorkItemsWithFailedTests: false
-      # Install from the nupkg produced by the Build stage's Windows_NT Release job.
-      toolNupkgArtifactName: Artifacts_Windows_NT_Release
-      toolNupkgArtifactSubPath: packages/Release/NonShipping
 
 - stage: Test_XHarness
   displayName: Test XHarness SDK
@@ -278,6 +271,7 @@ stages:
             -projects $(System.DefaultWorkingDirectory)/tests/XHarness.Apple.SimulatorTests.proj
             /bl:$(System.DefaultWorkingDirectory)/artifacts/log/$(_BuildConfig)/XHarness.Apple.Simulator.Tests.binlog
             /p:RestoreUsingNuGetTargets=false
+            /p:EnableHelixJobMonitor=false
           displayName: XHarness Apple Simulator Helix Testing
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -309,6 +303,7 @@ stages:
             -projects $(System.DefaultWorkingDirectory)/tests/XHarness.Apple.DeviceTests.proj
             /bl:$(System.DefaultWorkingDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Apple.Device.Tests.binlog
             /p:RestoreUsingNuGetTargets=false
+            /p:EnableHelixJobMonitor=false
           displayName: XHarness Apple Device Helix Testing
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -340,6 +335,7 @@ stages:
             -projects $(System.DefaultWorkingDirectory)/tests/XHarness.Android.SimulatorTests.proj
             /bl:$(System.DefaultWorkingDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.Simulator.Tests.binlog
             /p:RestoreUsingNuGetTargets=false
+            /p:EnableHelixJobMonitor=false
           displayName: XHarness Android Helix Testing (Linux)
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -370,18 +366,8 @@ stages:
             -projects $(System.DefaultWorkingDirectory)\tests\XHarness.Android.DeviceTests.proj
             /bl:$(System.DefaultWorkingDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.Device.Tests.binlog
             /p:RestoreUsingNuGetTargets=false
+            /p:EnableHelixJobMonitor=false
           displayName: XHarness Android Helix Testing (Windows)
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
-
-  # Helix Job Monitor runs as a job within the XHarness test stage too
-  - template: /eng/common/core-templates/job/helix-job-monitor.yml
-    parameters:
-      timeoutInMinutes: 90
-      # Arcade's own tests intentionally exercise failure paths, so test failures should
-      # not be promoted to work-item failures or trigger resubmissions here.
-      failWorkItemsWithFailedTests: false
-      # Install from the nupkg produced by the Build stage's Windows_NT Release job.
-      toolNupkgArtifactName: Artifacts_Windows_NT_Release
-      toolNupkgArtifactSubPath: packages/Release/NonShipping
