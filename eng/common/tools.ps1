@@ -159,6 +159,15 @@ function Exec-BlockVerbosely([scriptblock] $block) {
   Write-Host "--- Done running script block!"
 }
 
+# Returns global.json's sdk.version, or $null if it is not specified.
+function GetGlobalJsonSdkVersion() {
+  $sdkProperty = $GlobalJson.PSObject.Properties['sdk']
+  if ($sdkProperty -and $sdkProperty.Value.PSObject.Properties['version']) {
+    return $sdkProperty.Value.version
+  }
+  return $null
+}
+
 # createSdkLocationFile parameter enables a file being generated under the toolset directory
 # which writes the sdk's location into. This is only necessary for cmd --> powershell invocations
 # as dot sourcing isn't possible.
@@ -208,6 +217,15 @@ function InitializeDotNetCli([bool]$install, [bool]$createSdkLocationFile) {
     }
 
     $env:DOTNET_INSTALL_DIR = $dotnetRoot
+  }
+
+  # global.json's sdk.version is what `dotnet` enforces for any command run inside the repo,
+  # while tools.dotnet is the SDK Arcade runs with. They are normally identical, but a repo may pin
+  # different versions. Install sdk.version as well so that `dotnet` from the returned root works
+  # anywhere in the repo, not only in scripts that run repo-specific setup.
+  $repoSdkVersion = GetGlobalJsonSdkVersion
+  if ($install -and $repoSdkVersion -and ($repoSdkVersion -ne $dotnetSdkVersion) -and (-not (Test-Path (Join-Path $dotnetRoot "sdk\$repoSdkVersion")))) {
+    InstallDotNetSdk $dotnetRoot $repoSdkVersion -noPath
   }
 
   # Creates a temporary file under the toolset dir.

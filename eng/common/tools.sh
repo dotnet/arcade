@@ -130,6 +130,17 @@ function ReadGlobalVersion {
   fi
 }
 
+# Sets _ReadGlobalSdkVersion to global.json's sdk.version, or to an empty string if it is not specified.
+function ReadGlobalSdkVersion {
+  _ReadGlobalSdkVersion=""
+
+  if command -v jq &> /dev/null; then
+    _ReadGlobalSdkVersion="$(jq -r '.sdk.version // empty' "$global_json_file")"
+  elif [[ "$(cat "$global_json_file")" =~ \"sdk\"[[:space:]]*:[[:space:]]*\{[^}]*\"version\"[[:space:]]*:[[:space:]]*\"([^\"]+) ]]; then
+    _ReadGlobalSdkVersion=${BASH_REMATCH[1]}
+  fi
+}
+
 function InitializeDotNetCli {
   if [[ -n "${_InitializeDotNetCli:-}" ]]; then
     return
@@ -183,6 +194,16 @@ function InitializeDotNetCli {
         ExitWithExitCode 1
       fi
     fi
+  fi
+
+  # global.json's sdk.version is what `dotnet` enforces for any command run inside the repo,
+  # while tools.dotnet is the SDK Arcade runs with. They are normally identical, but a repo may pin
+  # different versions. Install sdk.version as well so that `dotnet` from the returned root works
+  # anywhere in the repo, not only in scripts that run repo-specific setup.
+  ReadGlobalSdkVersion
+  local repo_sdk_version=$_ReadGlobalSdkVersion
+  if [[ "$install" == true && -n "$repo_sdk_version" && "$repo_sdk_version" != "$dotnet_sdk_version" && ! -d "$dotnet_root/sdk/$repo_sdk_version" ]]; then
+    InstallDotNetSdk "$dotnet_root" "$repo_sdk_version"
   fi
 
   # Add dotnet to PATH. This prevents any bare invocation of dotnet in custom
