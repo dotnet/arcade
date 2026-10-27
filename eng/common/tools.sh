@@ -142,7 +142,11 @@ function ReadGlobalSdkVersion {
 }
 
 function TestGlobalJsonSdk {
-  (cd "$repo_root" && "$1/dotnet" --version) >/dev/null 2>&1
+  (
+    cd "$1" || exit 1
+    local dotnet="$PWD/dotnet"
+    cd "$repo_root" && "$dotnet" --version
+  ) >/dev/null 2>&1
 }
 
 function InitializeDotNetCli {

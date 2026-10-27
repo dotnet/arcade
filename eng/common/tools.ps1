@@ -173,6 +173,7 @@ function Test-GlobalJsonSdk([string]$dotnetRoot) {
   if (!(Test-Path $dotnet)) {
     return $false
   }
+  $dotnet = (Resolve-Path -LiteralPath $dotnet).ProviderPath
   Push-Location $RepoRoot
   try {
     # SDK resolution failure is expected here, including with Windows PowerShell's native stderr handling.
