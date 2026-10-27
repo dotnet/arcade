@@ -16,7 +16,14 @@ done
 disable_configure_toolset_import=1
 source "$(dirname "${BASH_SOURCE[0]}")/../common/tools.sh"
 root=$(mktemp -d)
-trap 'rm -rf -- "$root"' EXIT
+cleanup() {
+  local status=$?
+  if [[ "$status" != 0 ]]; then
+    Write-PipelineTelemetryError -category 'Build' "SDK initialization regression failed (${scenario:-setup})."
+  fi
+  rm -rf -- "$root"
+}
+trap cleanup EXIT
 
 add_sdk() {
   local destination=$1 version=$2
