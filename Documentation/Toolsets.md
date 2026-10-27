@@ -33,17 +33,3 @@ At a high level, toolsets not built by Arcade are managed by:
 * New tools and tool versions are added to the Azure blob location.  (no replacements, only adds)
 * Script updates are deployed to each repo using automation
 * When absolutely necessary, a repo can "pin" to a specific "channel", or branch/fork.  (see "servicing" document for policy around this)
-
-## .NET SDK initialization
-
-`global.json` uses `tools.dotnet` to specify the SDK that Arcade provisions and
-`sdk.version` to configure the .NET CLI's SDK resolver. When these versions differ,
-`InitializeDotNetCli` checks SDK resolution from the repository root before
-installing an additional SDK. Successful resolution, including roll-forward, is
-preserved. If resolution fails, Arcade installs `sdk.version` alongside
-`tools.dotnet`, without replacing the engineering SDK's host.
-
-An external installation is reused only when it already satisfies this resolution
-check. Otherwise, installation uses the existing fallback directory:
-`DOTNET_GLOBAL_INSTALL_DIR`, if set, or the repository's `.dotnet` directory.
-Initialization with installation disabled retains its existing behavior.
