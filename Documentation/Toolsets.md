@@ -47,15 +47,3 @@ An external installation is reused only when it already satisfies this resolutio
 check. Otherwise, installation uses the existing fallback directory:
 `DOTNET_GLOBAL_INSTALL_DIR`, if set, or the repository's `.dotnet` directory.
 Initialization with installation disabled retains its existing behavior.
-
-The regression checks below require an installation containing two SDKs from
-different major versions. They use the actual .NET host for SDK resolution and
-stage existing SDK files instead of downloading or modifying the installation.
-
-```powershell
-.\eng\validation\validate-sdk-initialization.ps1 -DotNetRoot C:\dotnet -RepositorySdkVersion 8.0.100 -ToolsSdkVersion 10.0.300
-```
-
-```bash
-./eng/validation/validate-sdk-initialization.sh /path/to/dotnet 8.0.100 10.0.300
-```
