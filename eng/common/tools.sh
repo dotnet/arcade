@@ -141,6 +141,10 @@ function ReadGlobalSdkVersion {
   fi
 }
 
+function TestGlobalJsonSdk {
+  (cd "$repo_root" && "$1/dotnet" --version) >/dev/null 2>&1
+}
+
 function InitializeDotNetCli {
   if [[ -n "${_InitializeDotNetCli:-}" ]]; then
     return
@@ -173,14 +177,18 @@ function InitializeDotNetCli {
   local dotnet_sdk_version=$_ReadGlobalVersion
   ReadGlobalSdkVersion
   local repo_sdk_version=$_ReadGlobalSdkVersion
+  local ensure_repo_sdk=false
+  if [[ "$install" == true && -n "$repo_sdk_version" && "$repo_sdk_version" != "$dotnet_sdk_version" ]]; then
+    ensure_repo_sdk=true
+  fi
   local dotnet_root=""
 
-  # Reuse an installation only if it contains the required SDKs for this invocation.
+  # Reuse an installation only if it can resolve the repository SDK, including roll-forward.
   # Otherwise use the fallback directory to avoid writing to a protected installation.
   if [[ $global_json_has_runtimes == false &&
         -n "${DOTNET_INSTALL_DIR:-}" &&
-        -d "$DOTNET_INSTALL_DIR/sdk/$dotnet_sdk_version" &&
-        ( "$install" != true || -z "$repo_sdk_version" || -d "$DOTNET_INSTALL_DIR/sdk/$repo_sdk_version" ) ]]; then
+        -d "$DOTNET_INSTALL_DIR/sdk/$dotnet_sdk_version" ]] &&
+     { [[ "$ensure_repo_sdk" == false ]] || TestGlobalJsonSdk "$DOTNET_INSTALL_DIR"; }; then
     dotnet_root="$DOTNET_INSTALL_DIR"
   else
     if [[ -n "${DOTNET_GLOBAL_INSTALL_DIR:-}" ]]; then
@@ -201,9 +209,13 @@ function InitializeDotNetCli {
     fi
   fi
 
-  # Repository-local dotnet commands resolve sdk.version, which may differ from tools.dotnet.
-  if [[ "$install" == true && -n "$repo_sdk_version" && "$repo_sdk_version" != "$dotnet_sdk_version" && ! -d "$dotnet_root/sdk/$repo_sdk_version" ]]; then
+  # Do not install an exact pin if the CLI already resolves a compatible SDK.
+  if [[ "$ensure_repo_sdk" == true ]] && ! TestGlobalJsonSdk "$dotnet_root"; then
     InstallDotNetSdk "$dotnet_root" "$repo_sdk_version"
+    if ! TestGlobalJsonSdk "$dotnet_root"; then
+      Write-PipelineTelemetryError -category 'InitializeToolset' "Unable to resolve the SDK specified by '$global_json_file'."
+      ExitWithExitCode 1
+    fi
   fi
 
   # Add dotnet to PATH. This prevents any bare invocation of dotnet in custom

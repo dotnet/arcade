@@ -168,6 +168,23 @@ function GetGlobalJsonSdkVersion() {
   return $null
 }
 
+function Test-GlobalJsonSdk([string]$dotnetRoot) {
+  $dotnet = Join-Path $dotnetRoot (GetExecutableFileName 'dotnet')
+  if (!(Test-Path $dotnet)) {
+    return $false
+  }
+  Push-Location $RepoRoot
+  try {
+    # SDK resolution failure is expected here, including with Windows PowerShell's native stderr handling.
+    $ErrorActionPreference = 'Continue'
+    & $dotnet --version *> $null
+    return $LASTEXITCODE -eq 0
+  }
+  finally {
+    Pop-Location
+  }
+}
+
 # createSdkLocationFile parameter enables a file being generated under the toolset directory
 # which writes the sdk's location into. This is only necessary for cmd --> powershell invocations
 # as dot sourcing isn't possible.
@@ -196,13 +213,14 @@ function InitializeDotNetCli([bool]$install, [bool]$createSdkLocationFile) {
 
   $dotnetSdkVersion = $GlobalJson.tools.dotnet
   $repoSdkVersion = GetGlobalJsonSdkVersion
+  $ensureRepoSdk = $install -and $repoSdkVersion -and ($repoSdkVersion -ne $dotnetSdkVersion)
 
-  # Reuse an installation only if it contains the required SDKs for this invocation.
+  # Reuse an installation only if it can resolve the repository SDK, including roll-forward.
   # Otherwise use the fallback directory to avoid writing to a protected installation.
   if ((-not $globalJsonHasRuntimes) -and
       (-not [string]::IsNullOrEmpty($env:DOTNET_INSTALL_DIR)) -and
       (Test-Path (Join-Path $env:DOTNET_INSTALL_DIR "sdk\$dotnetSdkVersion")) -and
-      ((-not $install) -or (-not $repoSdkVersion) -or (Test-Path (Join-Path $env:DOTNET_INSTALL_DIR "sdk\$repoSdkVersion")))) {
+      ((-not $ensureRepoSdk) -or (Test-GlobalJsonSdk $env:DOTNET_INSTALL_DIR))) {
     $dotnetRoot = $env:DOTNET_INSTALL_DIR
   } else {
     if (-not [string]::IsNullOrEmpty($env:DOTNET_GLOBAL_INSTALL_DIR)) {
@@ -223,9 +241,14 @@ function InitializeDotNetCli([bool]$install, [bool]$createSdkLocationFile) {
     $env:DOTNET_INSTALL_DIR = $dotnetRoot
   }
 
-  # Repository-local dotnet commands resolve sdk.version, which may differ from tools.dotnet.
-  if ($install -and $repoSdkVersion -and ($repoSdkVersion -ne $dotnetSdkVersion) -and (-not (Test-Path (Join-Path $dotnetRoot "sdk\$repoSdkVersion")))) {
-    InstallDotNetSdk $dotnetRoot $repoSdkVersion -noPath
+  # Do not install an exact pin if the CLI already resolves a compatible SDK.
+  if ($ensureRepoSdk -and (-not (Test-GlobalJsonSdk $dotnetRoot))) {
+    InstallDotNet -dotnetRoot $dotnetRoot -version $repoSdkVersion -skipNonVersionedFiles $true `
+      -runtimeSourceFeed $runtimeSourceFeed -runtimeSourceFeedKey $runtimeSourceFeedKey -noPath
+    if (-not (Test-GlobalJsonSdk $dotnetRoot)) {
+      Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Unable to resolve the SDK specified by '$RepoRoot\global.json'."
+      ExitWithExitCode 1
+    }
   }
 
   # Creates a temporary file under the toolset dir.
