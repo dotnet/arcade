@@ -195,10 +195,14 @@ function InitializeDotNetCli([bool]$install, [bool]$createSdkLocationFile) {
   }
 
   $dotnetSdkVersion = $GlobalJson.tools.dotnet
+  $repoSdkVersion = GetGlobalJsonSdkVersion
 
-  # Use dotnet installation specified in DOTNET_INSTALL_DIR if it contains the required SDK version,
-  # otherwise install the dotnet CLI and SDK to repo local .dotnet directory to avoid potential permission issues.
-  if ((-not $globalJsonHasRuntimes) -and (-not [string]::IsNullOrEmpty($env:DOTNET_INSTALL_DIR)) -and (Test-Path(Join-Path $env:DOTNET_INSTALL_DIR "sdk\$dotnetSdkVersion"))) {
+  # Reuse an installation only if it contains the required SDKs for this invocation.
+  # Otherwise use the fallback directory to avoid writing to a protected installation.
+  if ((-not $globalJsonHasRuntimes) -and
+      (-not [string]::IsNullOrEmpty($env:DOTNET_INSTALL_DIR)) -and
+      (Test-Path (Join-Path $env:DOTNET_INSTALL_DIR "sdk\$dotnetSdkVersion")) -and
+      ((-not $install) -or (-not $repoSdkVersion) -or (Test-Path (Join-Path $env:DOTNET_INSTALL_DIR "sdk\$repoSdkVersion")))) {
     $dotnetRoot = $env:DOTNET_INSTALL_DIR
   } else {
     if (-not [string]::IsNullOrEmpty($env:DOTNET_GLOBAL_INSTALL_DIR)) {
@@ -219,11 +223,7 @@ function InitializeDotNetCli([bool]$install, [bool]$createSdkLocationFile) {
     $env:DOTNET_INSTALL_DIR = $dotnetRoot
   }
 
-  # global.json's sdk.version is what `dotnet` enforces for any command run inside the repo,
-  # while tools.dotnet is the SDK Arcade runs with. They are normally identical, but a repo may pin
-  # different versions. Install sdk.version as well so that `dotnet` from the returned root works
-  # anywhere in the repo, not only in scripts that run repo-specific setup.
-  $repoSdkVersion = GetGlobalJsonSdkVersion
+  # Repository-local dotnet commands resolve sdk.version, which may differ from tools.dotnet.
   if ($install -and $repoSdkVersion -and ($repoSdkVersion -ne $dotnetSdkVersion) -and (-not (Test-Path (Join-Path $dotnetRoot "sdk\$repoSdkVersion")))) {
     InstallDotNetSdk $dotnetRoot $repoSdkVersion -noPath
   }

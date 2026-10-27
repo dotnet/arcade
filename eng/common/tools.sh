@@ -171,11 +171,16 @@ function InitializeDotNetCli {
 
   ReadGlobalVersion "dotnet"
   local dotnet_sdk_version=$_ReadGlobalVersion
+  ReadGlobalSdkVersion
+  local repo_sdk_version=$_ReadGlobalSdkVersion
   local dotnet_root=""
 
-  # Use dotnet installation specified in DOTNET_INSTALL_DIR if it contains the required SDK version,
-  # otherwise install the dotnet CLI and SDK to repo local .dotnet directory to avoid potential permission issues.
-  if [[ $global_json_has_runtimes == false && -n "${DOTNET_INSTALL_DIR:-}" && -d "$DOTNET_INSTALL_DIR/sdk/$dotnet_sdk_version" ]]; then
+  # Reuse an installation only if it contains the required SDKs for this invocation.
+  # Otherwise use the fallback directory to avoid writing to a protected installation.
+  if [[ $global_json_has_runtimes == false &&
+        -n "${DOTNET_INSTALL_DIR:-}" &&
+        -d "$DOTNET_INSTALL_DIR/sdk/$dotnet_sdk_version" &&
+        ( "$install" != true || -z "$repo_sdk_version" || -d "$DOTNET_INSTALL_DIR/sdk/$repo_sdk_version" ) ]]; then
     dotnet_root="$DOTNET_INSTALL_DIR"
   else
     if [[ -n "${DOTNET_GLOBAL_INSTALL_DIR:-}" ]]; then
@@ -196,12 +201,7 @@ function InitializeDotNetCli {
     fi
   fi
 
-  # global.json's sdk.version is what `dotnet` enforces for any command run inside the repo,
-  # while tools.dotnet is the SDK Arcade runs with. They are normally identical, but a repo may pin
-  # different versions. Install sdk.version as well so that `dotnet` from the returned root works
-  # anywhere in the repo, not only in scripts that run repo-specific setup.
-  ReadGlobalSdkVersion
-  local repo_sdk_version=$_ReadGlobalSdkVersion
+  # Repository-local dotnet commands resolve sdk.version, which may differ from tools.dotnet.
   if [[ "$install" == true && -n "$repo_sdk_version" && "$repo_sdk_version" != "$dotnet_sdk_version" && ! -d "$dotnet_root/sdk/$repo_sdk_version" ]]; then
     InstallDotNetSdk "$dotnet_root" "$repo_sdk_version"
   fi
