@@ -31,7 +31,7 @@
     <NetFrameworkCurrent>net481</NetFrameworkCurrent>
 
     <!-- Lowest supported version of .NET Framework the time of the release of NetCurrent. -->
-    <NetFrameworkMinimum>net462</NetFrameworkMinimum>
+    <NetFrameworkMinimum>net47</NetFrameworkMinimum>
 
     <!-- The version of .NET Framework that tools (i.e. msbuild tasks) should target. -->
     <NetFrameworkToolCurrent>net472</NetFrameworkToolCurrent>
