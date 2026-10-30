@@ -43,6 +43,7 @@
   </ItemGroup>
  
   <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.DotNet.Build.Tasks.Feed.Tests" />
     <Compile Include="..\Common\Internal\EnumExtensions.cs" />
   </ItemGroup>
 
