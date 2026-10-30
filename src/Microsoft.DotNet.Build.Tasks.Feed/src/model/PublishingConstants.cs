@@ -2430,6 +2430,18 @@ public class PublishingConstants
             symbolTargetType: SymbolPublishVisibility.Public,
             flatten: false),
 
+        // 18.14
+        new TargetChannelConfig(
+            id: 11053,
+            isInternal: false,
+            publishingInfraVersion: PublishingInfraVersion.Latest,
+            akaMSChannelNames: [],
+            akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
+            akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+            targetFeeds: DotNetToolsFeeds,
+            symbolTargetType: SymbolPublishVisibility.Public,
+            flatten: false),
+
         // VS 18 - Latest
         new TargetChannelConfig(
             id: 10709,
