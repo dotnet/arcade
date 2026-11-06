@@ -29,13 +29,41 @@ Versions of the package can be found by browsing the feed at https://dev.azure.c
 
 The examples can all be run with `dotnet msbuild`. Internal queues (usually any queue not ending in `.Open`) require either:
 
-- `HelixUseEntraAuthentication=true` with an available `DefaultIdentityTokenCredential`, or
-- the legacy `HelixAccessToken` environment variable or MSBuild property.
+- `HelixUseEntraAuthentication=true` with an available `DefaultIdentityTokenCredential` whose identity is authorized for Helix job submission, or
+- a personal Helix token supplied through the `HelixAccessToken` environment variable or MSBuild property, including for private local submissions.
 
-When Entra authentication is explicitly enabled, any legacy access token still
-injected by an existing variable group is ignored with a warning. Entra
-authentication supports Azure Pipelines workload identity, managed identity,
-and Azure CLI credentials and refreshes access tokens based on their expiry.
+When a direct SDK invocation enables Entra authentication and also supplies a
+legacy access token, the token is ignored with a warning. The Azure Pipelines
+template does not forward `HelixAccessToken` when Entra authentication is
+enabled, so the template path has no token to warn about. Entra authentication
+supports Azure Pipelines workload identity, managed identity, and Azure CLI
+credentials and refreshes access tokens based on their expiry. It is not
+available in source-built Arcade.
+
+Azure Pipelines can use Arcade's `send-to-helix.yml` template to configure the
+authenticated session. The template accepts
+`HelixUseEntraAuthentication` and `HelixAzureSubscription`, runs the SDK under
+`AzureCLI@2` with a renewable workload identity session, and selects the Helix
+scope from `HelixBaseUri`. See
+[Sending Jobs to Helix](../../../Documentation/AzureDevOps/SendingJobsToHelix.md#recommended-entra-id-authentication)
+for setup and migration guidance.
+
+If your pipeline invokes the SDK directly, pass
+`/p:HelixUseEntraAuthentication=true` to MSBuild (or set that property in the
+project) and run it inside an authenticated `AzureCLI@2` task with
+`keepAzSessionActive: true`. Select the service connection through the task's
+`azureSubscription` input, not an MSBuild property: `HelixAzureSubscription`
+is a `send-to-helix.yml` template parameter only. See the
+[direct MSBuild example](../../../Documentation/AzureDevOps/SendingJobsToHelix.md#direct-msbuild-invocations),
+including how to preserve the Azure DevOps reporting token.
+
+For private local submissions, use a personal **Helix token**, not an Azure
+DevOps PAT, and keep `HelixUseEntraAuthentication=false`. Supply the token
+securely through the `HelixAccessToken` environment variable rather than
+command-line arguments. An interactive Azure CLI user login alone is not
+currently a supported replacement: the Entra job-submission roles are
+application-only. See [Private local submissions](../../../Documentation/AzureDevOps/SendingJobsToHelix.md#private-local-submissions)
+for the local command and authorization limitations.
 
 You will also need to set the following environment variables before building:
 
