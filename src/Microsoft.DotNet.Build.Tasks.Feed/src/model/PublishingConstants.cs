@@ -1534,6 +1534,17 @@ public class PublishingConstants
             targetFeeds: DotNet10InternalFeeds,
             symbolTargetType: SymbolPublishVisibility.Internal),
 
+        // .NET 10.0.4xx SDK Release Internal,
+        new TargetChannelConfig(
+            id: 10743,
+            isInternal: true,
+            publishingInfraVersion: PublishingInfraVersion.Latest,
+            akaMSChannelNames: ["internal/10.0.4xx-release"],
+            akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
+            akaMSDoNotCreateLinkPatterns: UnifiedBuildAkaMSDoNotCreateLinkPatterns,
+            targetFeeds: DotNet10InternalFeeds,
+            symbolTargetType: SymbolPublishVisibility.Internal),
+
         // .NET 10.0.404 SDK Release Internal,
         new TargetChannelConfig(
             id: 11195,
@@ -1793,50 +1804,6 @@ public class PublishingConstants
             isInternal: true,
             publishingInfraVersion: PublishingInfraVersion.Latest,
             akaMSChannelNames: ["internal/10.0.427-release"],
-            akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
-            akaMSDoNotCreateLinkPatterns: UnifiedBuildAkaMSDoNotCreateLinkPatterns,
-            targetFeeds: DotNet10InternalFeeds,
-            symbolTargetType: SymbolPublishVisibility.Internal),
-
-        // .NET 10 RC 2,
-        new TargetChannelConfig(
-            id: 6498,
-            isInternal: false,
-            publishingInfraVersion: PublishingInfraVersion.Latest,
-            akaMSChannelNames: ["10.0-rc2"],
-            akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
-            akaMSDoNotCreateLinkPatterns: UnifiedBuildAkaMSDoNotCreateLinkPatterns,
-            targetFeeds: DotNet10Feeds,
-            symbolTargetType: SymbolPublishVisibility.Public),
-
-        // .NET 10 RC 2 Internal,
-        new TargetChannelConfig(
-            id: 6500,
-            isInternal: true,
-            publishingInfraVersion: PublishingInfraVersion.Latest,
-            akaMSChannelNames: ["internal/10.0-rc2"],
-            akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
-            akaMSDoNotCreateLinkPatterns: UnifiedBuildAkaMSDoNotCreateLinkPatterns,
-            targetFeeds: DotNet10InternalFeeds,
-            symbolTargetType: SymbolPublishVisibility.Internal),
-
-        // .NET 10.0.1xx RC 2,
-        new TargetChannelConfig(
-            id: 6577,
-            isInternal: false,
-            publishingInfraVersion: PublishingInfraVersion.Latest,
-            akaMSChannelNames: ["10.0.1xx-rc2"],
-            akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
-            akaMSDoNotCreateLinkPatterns: UnifiedBuildAkaMSDoNotCreateLinkPatterns,
-            targetFeeds: DotNet10Feeds,
-            symbolTargetType: SymbolPublishVisibility.Public),
-
-        // .NET 10.0.1xx RC 2 Internal,
-        new TargetChannelConfig(
-            id: 6579,
-            isInternal: true,
-            publishingInfraVersion: PublishingInfraVersion.Latest,
-            akaMSChannelNames: ["internal/10.0.1xx-rc2"],
             akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
             akaMSDoNotCreateLinkPatterns: UnifiedBuildAkaMSDoNotCreateLinkPatterns,
             targetFeeds: DotNet10InternalFeeds,
@@ -2638,34 +2605,12 @@ public class PublishingConstants
             targetFeeds: DotNet11Feeds,
             symbolTargetType: SymbolPublishVisibility.Public),
 
-        // .NET 11 RC 2,
-        new TargetChannelConfig(
-            id: 10802,
-            isInternal: false,
-            publishingInfraVersion: PublishingInfraVersion.Latest,
-            akaMSChannelNames: ["11.0-rc2"],
-            akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
-            akaMSDoNotCreateLinkPatterns: UnifiedBuildAkaMSDoNotCreateLinkPatterns,
-            targetFeeds: DotNet11Feeds,
-            symbolTargetType: SymbolPublishVisibility.Public),
-
         // .NET 11 RC 1 Internal,
         new TargetChannelConfig(
             id: 10808,
             isInternal: true,
             publishingInfraVersion: PublishingInfraVersion.Latest,
             akaMSChannelNames: ["internal/11.0-rc1"],
-            akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
-            akaMSDoNotCreateLinkPatterns: UnifiedBuildAkaMSDoNotCreateLinkPatterns,
-            targetFeeds: DotNet11InternalFeeds,
-            symbolTargetType: SymbolPublishVisibility.Internal),
-
-        // .NET 11 RC 2 Internal,
-        new TargetChannelConfig(
-            id: 10807,
-            isInternal: true,
-            publishingInfraVersion: PublishingInfraVersion.Latest,
-            akaMSChannelNames: ["internal/11.0-rc2"],
             akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
             akaMSDoNotCreateLinkPatterns: UnifiedBuildAkaMSDoNotCreateLinkPatterns,
             targetFeeds: DotNet11InternalFeeds,
@@ -2682,34 +2627,12 @@ public class PublishingConstants
             targetFeeds: DotNet11Feeds,
             symbolTargetType: SymbolPublishVisibility.Public),
 
-        // .NET 11.0.1xx SDK RC 2,
-        new TargetChannelConfig(
-            id: 10804,
-            isInternal: false,
-            publishingInfraVersion: PublishingInfraVersion.Latest,
-            akaMSChannelNames: ["11.0.1xx-rc2"],
-            akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
-            akaMSDoNotCreateLinkPatterns: UnifiedBuildAkaMSDoNotCreateLinkPatterns,
-            targetFeeds: DotNet11Feeds,
-            symbolTargetType: SymbolPublishVisibility.Public),
-
         // .NET 11.0.1xx SDK RC 1 Internal,
         new TargetChannelConfig(
             id: 10806,
             isInternal: true,
             publishingInfraVersion: PublishingInfraVersion.Latest,
             akaMSChannelNames: ["internal/11.0.1xx-rc1"],
-            akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
-            akaMSDoNotCreateLinkPatterns: UnifiedBuildAkaMSDoNotCreateLinkPatterns,
-            targetFeeds: DotNet11InternalFeeds,
-            symbolTargetType: SymbolPublishVisibility.Internal),
-
-        // .NET 11.0.1xx SDK RC 2 Internal,
-        new TargetChannelConfig(
-            id: 10805,
-            isInternal: true,
-            publishingInfraVersion: PublishingInfraVersion.Latest,
-            akaMSChannelNames: ["internal/11.0.1xx-rc2"],
             akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
             akaMSDoNotCreateLinkPatterns: UnifiedBuildAkaMSDoNotCreateLinkPatterns,
             targetFeeds: DotNet11InternalFeeds,
