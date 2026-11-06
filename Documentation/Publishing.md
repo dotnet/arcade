@@ -31,15 +31,6 @@ Match it in pipeline templates using `publishingVersion` for `publish-build-asse
 and `publishingInfraVersion` for `post-build.yml`. Both publishing paths pass that
 value to `darc add-build-to-channel --publishing-infra-version`.
 
-The promotion pipeline accepts `PublishingInfraVersion=4` to skip downloading the
-V3 merged manifest and PDB artifacts. Version `3` remains the default and attempts
-both manifest downloads for compatibility with older callers that also pass `3`
-for V4 builds. The manifest itself still determines which publishing task runs.
-
-Deploy promotion-pipeline support for `4` first, then update darc to a version
-that accepts `--publishing-infra-version 4`, before updating the shared templates
-to forward `4`. Older darc versions reject `4` before queueing promotion.
-
 ## Basic onboarding scenario for new repositories to the current publishing version (V3)
 
 In order to use the new publishing mechanism, the easiest way to start is by turning your existing build pipeline into an AzDO YAML stage, and then making use of a YAML template ([eng/common/templates/post-build/post-build.yml](https://github.com/dotnet/arcade/blob/66175ebd3756697a3ca515e16cd5ffddc30582cd/eng/common/templates/post-build/post-build.yml)) provided by Arcade to use the default publishing stages. The process is explained below step by step.

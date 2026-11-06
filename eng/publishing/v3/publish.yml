@@ -50,6 +50,7 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       displayName: Download V3 PDB Artifacts
+      # Legacy callers pass 3 even for V4 builds, so 3 must still attempt both versions.
       condition: and(succeeded(), ne('${{ parameters.publishingInfraVersion }}', '4'))
       continueOnError: true
       enabled: true
