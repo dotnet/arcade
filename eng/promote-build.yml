@@ -52,6 +52,9 @@ parameters:
   default: ' '
 
 trigger: none
+variables:
+- name: DOTNET_CLI_TELEMETRY_SESSIONID
+  value: azdo-$(System.CollectionId)-$(System.TeamProjectId)-$(Build.BuildId)
 resources:
   repositories:
   - repository: 1ESPipelineTemplates

@@ -31,6 +31,7 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       displayName: Download V3 Merged Manifest
+      condition: and(succeeded(), ne(variables['IsBuildVariant'], 'true'))
       continueOnError: true
       enabled: true
       inputs:
@@ -61,6 +62,7 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       displayName: Download V4 Merged Manifest
+      condition: and(succeeded(), ne(variables['IsBuildVariant'], 'true'))
       continueOnError: true
       enabled: true
       inputs:
@@ -70,9 +72,23 @@ stages:
         pipeline: $(AzDOPipelineId)
         buildId: $(AzDOBuildId)
         downloadType: 'specific'
-        artifact: AssetManifests
+        artifact: $(MergedManifestArtifactName)
         itemPattern: |
           **/MergedManifest.xml
+        downloadPath: '$(Build.ArtifactStagingDirectory)/BlobArtifacts'
+
+    - task: DownloadPipelineArtifact@2
+      displayName: Download Selected Build Variant Manifest
+      condition: and(succeeded(), eq(variables['IsBuildVariant'], 'true'))
+      inputs:
+        buildType: specific
+        buildVersionToDownload: specific
+        project: $(AzDOProject)
+        pipeline: $(AzDOPipelineId)
+        buildId: $(AzDOBuildId)
+        downloadType: 'specific'
+        artifact: $(MergedManifestArtifactName)
+        itemPattern: MergedManifest.xml
         downloadPath: '$(Build.ArtifactStagingDirectory)/BlobArtifacts'
 
     - task: DownloadPipelineArtifact@2
@@ -86,7 +102,7 @@ stages:
         pipeline: $(AzDOPipelineId)
         buildId: $(AzDOBuildId)
         downloadType: 'specific'
-        artifact: ReleaseConfigs
+        artifact: $(ReleaseConfigsArtifactName)
         itemPattern: |
           **/SymbolPublishingExclusionsFile.txt
         downloadPath: '$(Build.ArtifactStagingDirectory)/ReleaseConfigs'

@@ -26,6 +26,35 @@ V4 publishing is functionally very similar to V3 publishing, with the following 
 - **Stable symbol packages are no longer published to NuGet feeds** -  https://github.com/dotnet/arcade/pull/15561 - Instead, symbol packages are always published to unique blob paths.
 - **IsStable manifest bit no longer used to determine whether to create stable feeds** -  https://github.com/dotnet/arcade/pull/15561 - Instead, CouldBeStable==true is used to determine whether to create these feeds, and identify which files should go on these feeds.
 
+## Registering multiple V4 build variants from one CI run
+
+A CI run can prebuild multiple independently promotable asset sets. Run the
+[publish-build-assets job](../eng/common/core-templates/job/publish-build-assets.yml)
+once per set, with `publishingVersion: 4`, a distinct `buildVariant` (ASCII letters,
+digits, or underscores), and an `assetManifestsPattern` selecting only that
+set's original manifests. Each invocation uses Arcade's normal manifest merge and
+BAR registration, producing a separate BAR ID for the same Azure DevOps run.
+Leave `publishAssetsImmediately: false` for candidates that need later approval.
+
+For example, `buildVariant: preview` publishes metadata as `AssetManifests_preview`
+and `ReleaseConfigs_preview`. The
+[registration task](../src/Microsoft.DotNet.Build.Tasks.Feed/src/PublishBuildToMaestro.cs)
+also namespaces the archived manifest's immutable blob ID with `variants/preview/`,
+so different candidates cannot overwrite each other's archived manifests.
+
+Promote the selected candidate's BAR ID normally. The
+[promotion pipeline](../eng/publishing/v3/publish.yml) discovers its variant from the
+archived manifest asset in that BAR record and downloads only its merged manifest.
+It does not rebuild or select subsets of a combined manifest. Missing variant
+manifests fail promotion; ambiguous archived manifest records are rejected.
+Unspecified variants retain the existing job and artifact names and legacy V3/V4
+discovery behavior.
+
+Version stamping, signing, and separate per-variant output directories belong to
+the producing repository. `BuildQuality` controls the publishing link namespace;
+it neither changes embedded versions nor selects a variant. A variant can be
+promoted to any applicable channel without adding a branch or changing the CDN.
+
 ## Basic onboarding scenario for new repositories to the current publishing version (V3)
 
 In order to use the new publishing mechanism, the easiest way to start is by turning your existing build pipeline into an AzDO YAML stage, and then making use of a YAML template ([eng/common/templates/post-build/post-build.yml](https://github.com/dotnet/arcade/blob/66175ebd3756697a3ca515e16cd5ffddc30582cd/eng/common/templates/post-build/post-build.yml)) provided by Arcade to use the default publishing stages. The process is explained below step by step.
