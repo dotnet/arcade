@@ -10,11 +10,12 @@ using Microsoft.DotNet.ProductConstructionService.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
 
@@ -64,6 +65,12 @@ public class PublishArtifactsInManifest : MSBuildTaskBase
     /// </summary>
     [Required]
     public ITaskItem[] AssetManifestPaths { get; set; }
+
+    /// <summary>
+    /// Optional case-sensitive, culture-invariant .NET regular expression applied to each full
+    /// blob asset ID. When null or empty, all blobs in the asset manifests are eligible.
+    /// </summary>
+    public string BlobAssetIdPattern { get; set; }
 
     /// <summary>
     /// Full path to the folder containing blob assets.
@@ -296,6 +303,11 @@ public class PublishArtifactsInManifest : MSBuildTaskBase
                 return false;
             }
 
+            if (!SelectBlobAssets(tasks))
+            {
+                return false;
+            }
+
             // Process all manifests in parallel
             var results = await Task.WhenAll(
                 tasks.Select(t => t.ExecuteAsync())
@@ -318,6 +330,48 @@ public class PublishArtifactsInManifest : MSBuildTaskBase
             Log.LogErrorFromException(e, true);
             return false;
         }
+    }
+
+    private bool SelectBlobAssets(PublishArtifactsInManifestBase[] tasks)
+    {
+        if (string.IsNullOrEmpty(BlobAssetIdPattern))
+        {
+            return true;
+        }
+
+        List<BlobArtifactModel>[] selectedBlobs;
+        try
+        {
+            var pattern = new Regex(BlobAssetIdPattern, RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+            // Evaluate every manifest before mutating any model or starting any publisher.
+            selectedBlobs = tasks.Select(task => task.BuildModel.Artifacts.Blobs
+                .Where(blob => pattern.IsMatch(blob.Id)).ToList()).ToArray();
+        }
+        catch (ArgumentException e)
+        {
+            Log.LogError($"Invalid BlobAssetIdPattern: {e.Message}");
+            return false;
+        }
+        catch (RegexMatchTimeoutException e)
+        {
+            Log.LogError($"BlobAssetIdPattern exceeded the regex match timeout of {e.MatchTimeout.TotalSeconds} second(s).");
+            return false;
+        }
+
+        int selectedCount = selectedBlobs.Sum(blobs => blobs.Count);
+        if (selectedCount == 0)
+        {
+            Log.LogError("BlobAssetIdPattern did not match any blobs across the asset manifests.");
+            return false;
+        }
+
+        for (int i = 0; i < tasks.Length; i++)
+        {
+            tasks[i].BuildModel.Artifacts.Blobs = selectedBlobs[i];
+        }
+
+        Log.LogMessage(MessageImportance.High, $"Selected {selectedCount} blobs for publishing using BlobAssetIdPattern.");
+        return true;
     }
 
     protected virtual async Task PromoteBuildToChannelsAsync()
