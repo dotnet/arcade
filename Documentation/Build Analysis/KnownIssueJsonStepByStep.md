@@ -8,7 +8,7 @@ This is a summarized version of our documentation, you can always look at [Compl
 1. Write the error message: <sup>  Additional documentation on [how to write an error message](KnownIssues.md#filling-out-known-issues-json-blob) or [known issues with a list of errors](KnownIssues.md#filling-out-known-issues-with-a-list-of-errors)</sup>
     - If you use “ErrorMessage” select the part of the line that you want to match.
     - If you use "ErrorPattern" write the regex that matches your error message. Use [regex101](https://regex101.com/) (choose `.NET (C#)` flavor with `Single line`, `Insensitive`, `No backtracking` flags enabled) to test it.
-    - To escape special characters in json, use: [freeformatter](https://www.freeformatter.com/json-escape.html).
+    - To escape special characters in json, use: [freeformatter](https://jsonviewertool.com/json-escape).
 1. Set BuildRetry to `true` if you would like to enable automatic build retries for any build that matches the error.
 1. Set ExcludeConsoleLog to `true` if you would like to exclude the Helix console logs from the search space. 
 

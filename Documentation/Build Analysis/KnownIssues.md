@@ -61,7 +61,7 @@ There are two ways to report a Known Issue: one is via Build Analysis and the ot
 1. You should set `ExcludeConsoleLog` to `true` if you want to exclude console logs from Known Issues matching
 1. You are done but [what happens after a Known Issue is created?](#what-happens-after-creating-or-updating-a-known-issue)
 
-Note: You need to escape special characters to make your JSON valid, to do it you can use online tools like [freeformatter](https://www.freeformatter.com/json-escape.html).
+Note: You need to escape special characters to make your JSON valid, to do it you can use online tools like [freeformatter](https://jsonviewertool.com/json-escape).
 
 For example, if your error message is `text "using" quotes`
 
