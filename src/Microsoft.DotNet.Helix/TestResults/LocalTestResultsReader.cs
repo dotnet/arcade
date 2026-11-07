@@ -3,6 +3,7 @@
 
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Arcade.Common;
@@ -16,25 +17,31 @@ public sealed class LocalTestResultsReader
     private readonly ILogger _logger;
     private readonly TestResultAttachmentMode _attachmentMode;
     private readonly IFileSystem _fileSystem;
+    private readonly bool _qualifyTrxTestNames;
 
     public LocalTestResultsReader(ILogger logger)
         : this(logger, TestResultAttachmentMode.Failed)
     {
     }
 
-    public LocalTestResultsReader(ILogger logger, TestResultAttachmentMode attachmentMode)
-        : this(logger, attachmentMode, new FileSystem())
+    public LocalTestResultsReader(
+        ILogger logger,
+        TestResultAttachmentMode attachmentMode,
+        bool qualifyTrxTestNames = false)
+        : this(logger, attachmentMode, new FileSystem(), qualifyTrxTestNames)
     {
     }
 
     public LocalTestResultsReader(
         ILogger logger,
         TestResultAttachmentMode attachmentMode,
-        IFileSystem fileSystem)
+        IFileSystem fileSystem,
+        bool qualifyTrxTestNames = false)
     {
         _logger = logger;
         _attachmentMode = attachmentMode;
         _fileSystem = fileSystem;
+        _qualifyTrxTestNames = qualifyTrxTestNames;
     }
 
     public static bool LooksLikeTestResultFile(string path)
@@ -55,12 +62,13 @@ public sealed class LocalTestResultsReader
 
     public async Task<IReadOnlyList<TestResult>> ReadResultFileAsync(
         string filePath,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool failOnParseError = false)
     {
         try
         {
             var results = new List<TestResult>();
-            await foreach (TestResult result in ReadResultsAsync(filePath, cancellationToken))
+            await foreach (TestResult result in ReadResultsAsync(filePath, cancellationToken, failOnParseError))
             {
                 results.Add(result);
             }
@@ -74,13 +82,18 @@ public sealed class LocalTestResultsReader
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to parse test results file '{Path}'.", filePath);
+            if (failOnParseError)
+            {
+                throw;
+            }
             return [];
         }
     }
 
     private async IAsyncEnumerable<TestResult> ReadResultsAsync(
         string filePath,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken,
+        bool failOnParseError)
     {
         string rootName = await ReadRootNameAsync(filePath, cancellationToken);
         string workItemName = _fileSystem.GetFileName(_fileSystem.GetDirectoryName(filePath)) ?? string.Empty;
@@ -125,6 +138,10 @@ public sealed class LocalTestResultsReader
                 break;
 
             default:
+                if (failOnParseError)
+                {
+                    throw new InvalidDataException($"Test result file '{filePath}' has unsupported root element '{rootName}'.");
+                }
                 _logger.LogWarning(
                     "Test result file '{Path}' has unsupported root element '{RootElement}' and will be skipped.",
                     filePath,
@@ -165,7 +182,28 @@ public sealed class LocalTestResultsReader
 
             using XmlReader subtree = reader.ReadSubtree();
             await subtree.ReadAsync();
-            yield return convert(XElement.Load(subtree, LoadOptions.PreserveWhitespace));
+            XElement element = XElement.Load(subtree, LoadOptions.PreserveWhitespace);
+            foreach (XElement result in EnumerateResultElements(element, elementName))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return convert(result);
+            }
+        }
+    }
+
+    private static IEnumerable<XElement> EnumerateResultElements(XElement element, string elementName)
+    {
+        foreach (XElement child in element.Elements())
+        {
+            foreach (XElement result in EnumerateResultElements(child, elementName))
+            {
+                yield return result;
+            }
+        }
+
+        if (element.Name.LocalName == elementName)
+        {
+            yield return element;
         }
     }
 
@@ -220,7 +258,7 @@ public sealed class LocalTestResultsReader
             ParseDouble(GetAttribute(test, "time")),
             outcome,
             GetAttribute(failure, "exception-type"),
-            failure?.Elements().FirstOrDefault(static x => x.Name.LocalName == "message")?.Value?.Trim(),
+            UnescapeXunitMessage(failure?.Elements().FirstOrDefault(static x => x.Name.LocalName == "message")?.Value),
             failure?.Elements().FirstOrDefault(static x => x.Name.LocalName == "stack-trace")?.Value?.Trim(),
             test.Elements().FirstOrDefault(static x => x.Name.LocalName == "reason")?.Value?.Trim(),
             attachments);
@@ -228,7 +266,8 @@ public sealed class LocalTestResultsReader
 
     private TestResult ReadJUnitResult(XElement test, string workItemName)
     {
-        XElement? failure = test.Elements().FirstOrDefault(static x => x.Name.LocalName is "failure" or "error");
+        XElement? failure = test.Elements().FirstOrDefault(static x => x.Name.LocalName == "failure")
+            ?? test.Elements().FirstOrDefault(static x => x.Name.LocalName == "error");
         XElement? skipped = test.Elements().FirstOrDefault(static x => x.Name.LocalName == "skipped");
         string className = GetAttribute(test, "classname") ?? workItemName;
         string method = GetAttribute(test, "name") ?? string.Empty;
@@ -253,9 +292,9 @@ public sealed class LocalTestResultsReader
             method,
             ParseDouble(GetAttribute(test, "time")),
             outcome,
-            null,
-            failure?.Value?.Trim(),
-            null,
+            GetAttribute(failure, "type"),
+            GetAttribute(failure, "message"),
+            failure?.Value,
             skipped?.Value?.Trim(),
             attachments);
     }
@@ -271,21 +310,28 @@ public sealed class LocalTestResultsReader
         string method = definition?.Method ?? GetAttribute(result, "testName") ?? string.Empty;
         string displayName = GetAttribute(result, "testName")
             ?? (!string.IsNullOrEmpty(className) ? $"{className}.{method}" : method);
+        if (_qualifyTrxTestNames && !string.IsNullOrEmpty(className)
+            && !displayName.StartsWith(className + ".", StringComparison.Ordinal))
+        {
+            displayName = $"{className}.{displayName}";
+        }
 
-        XElement? output = result.Descendants().FirstOrDefault(static x => x.Name.LocalName == "Output");
-        string? failureMessage = output?.Descendants().FirstOrDefault(static x => x.Name.LocalName == "Message")?.Value?.Trim();
+        XElement? output = result.Elements().FirstOrDefault(static x => x.Name.LocalName == "Output");
+        XElement? errorInfo = output?.Elements().FirstOrDefault(static x => x.Name.LocalName == "ErrorInfo");
+        string? standardOutput = output?.Elements().FirstOrDefault(static x => x.Name.LocalName == "StdOut")?.Value;
+        string? failureMessage = errorInfo?.Elements().FirstOrDefault(static x => x.Name.LocalName == "Message")?.Value?.Trim();
         string outcome = NormalizeOutcome(GetAttribute(result, "outcome"));
 
         List<TestResultAttachment> attachments = [];
         AddAttachmentIfEnabled(
             attachments,
             "stdout.txt",
-            output?.Descendants().FirstOrDefault(static x => x.Name.LocalName == "StdOut")?.Value?.Trim(),
+            standardOutput?.Trim(),
             outcome);
         AddAttachmentIfEnabled(
             attachments,
             "stderr.txt",
-            output?.Descendants().FirstOrDefault(static x => x.Name.LocalName == "StdErr")?.Value?.Trim(),
+            output?.Elements().FirstOrDefault(static x => x.Name.LocalName == "StdErr")?.Value?.Trim(),
             outcome);
 
         return new TestResult(
@@ -296,9 +342,9 @@ public sealed class LocalTestResultsReader
             ParseDuration(GetAttribute(result, "duration")),
             outcome,
             null,
-            failureMessage,
-            output?.Descendants().FirstOrDefault(static x => x.Name.LocalName == "StackTrace")?.Value?.Trim(),
-            string.Equals(outcome, "Skip", StringComparison.Ordinal) ? failureMessage : null,
+            string.Equals(outcome, "Skip", StringComparison.Ordinal) ? null : failureMessage,
+            errorInfo?.Elements().FirstOrDefault(static x => x.Name.LocalName == "StackTrace")?.Value?.Trim(),
+            string.Equals(outcome, "Skip", StringComparison.Ordinal) ? standardOutput ?? failureMessage : null,
             attachments);
     }
 
@@ -313,6 +359,22 @@ public sealed class LocalTestResultsReader
 
     private static string? GetAttribute(XElement? element, string name)
         => element?.Attribute(name)?.Value;
+
+    private static string? UnescapeXunitMessage(string? value)
+        => value is null ? null : Regex.Replace(value, @"\\x[0-9a-fA-F]{2,4}|\\[^x]", static match =>
+            match.Value[1] switch
+            {
+                'x' => ((char)int.Parse(match.Value.AsSpan(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture)).ToString(),
+                'r' => "\r",
+                'n' => "\n",
+                't' => "\t",
+                '0' => "\0",
+                'a' => "\a",
+                'b' => "\b",
+                'v' => "\v",
+                'f' => "\f",
+                _ => match.Value[1].ToString(),
+            });
 
     private static double ParseDouble(string? value)
         => double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double result) ? result : 0;

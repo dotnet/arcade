@@ -3,7 +3,7 @@
 
 using System;
 using AwesomeAssertions;
-using Microsoft.DotNet.Helix.JobMonitor;
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Xunit;
 
 #nullable enable
