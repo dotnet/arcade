@@ -37,7 +37,21 @@ secrets:
       hasWebhookSecret: false
       hasOAuthSecret: false
 
+  dotnet-vscode-csharp-release-tags:
+    type: github-app-secret
+    parameters:
+      hasPrivateKey: true
+      hasWebhookSecret: false
+      hasOAuthSecret: false
+
   oneloc-localization-app:
+    type: github-app-secret
+    parameters:
+      hasPrivateKey: true
+      hasWebhookSecret: false
+      hasOAuthSecret: false
+
+  dotnet-roslyn-issue-tagger:
     type: github-app-secret
     parameters:
       hasPrivateKey: true
@@ -85,19 +99,6 @@ secrets:
     type: github-account
     parameters:
       Name: dotnet-renovate-bot
-
-  #Publish-Build-Assets
-  BotAccount-dotnet-maestro-bot-PAT:
-    type: github-access-token
-    parameters:
-      gitHubBotAccountSecret: BotAccount-dotnet-maestro-bot
-      gitHubBotAccountName: dotnet-maestro-bot
-
-  BotAccount-dotnet-bot-repo-PAT:
-    type: github-access-token
-    parameters:
-      gitHubBotAccountSecret: BotAccount-dotnet-bot
-      gitHubBotAccountName: dotnet-bot
 
   akams-client-id:
     type: text
