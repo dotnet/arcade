@@ -17,6 +17,10 @@ namespace Microsoft.DotNet.Helix.Sdk;
 /// </summary>
 public class InstallDotNetTool : MSBuildTaskBase
 {
+#pragma warning restore MSBuildTask0013
+    /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+    public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
     /// <summary>
     /// The name of the tool to install (same as the NuGet package name, e.g. Microsoft.DotNet.XHarness.CLI)
     /// </summary>

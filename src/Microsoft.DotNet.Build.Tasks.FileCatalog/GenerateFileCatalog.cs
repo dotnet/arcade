@@ -4,7 +4,7 @@
 using System;
 using System.IO;
 using Microsoft.Build.Framework;
-using BuildTask = Microsoft.Build.Utilities.Task;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.FileCatalog;
 

@@ -3,7 +3,6 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.DotNet.Build.Tasks;
 using Microsoft.Extensions.DependencyModel;
 using NuGet.RuntimeModel;
 using System;

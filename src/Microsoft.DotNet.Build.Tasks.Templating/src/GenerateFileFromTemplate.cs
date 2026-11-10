@@ -29,6 +29,9 @@ namespace Microsoft.DotNet.Build.Tasks.Templating;
 /// </summary>
 public class GenerateFileFromTemplate : Microsoft.Build.Utilities.Task
 {
+    /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+    public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
     /// <summary>
     /// The template file using the variable syntax <c>${VarName}</c>.
     /// If your template file needs to output this format, you can escape the dollar sign with a backtick e.g. <c>`${NotReplaced}</c>.

@@ -19,6 +19,9 @@ namespace Microsoft.DotNet.Arcade.Sdk;
 /// </summary>
 public sealed class ExtractNgenMethodList : Microsoft.Build.Utilities.Task
 {
+    /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+    public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
     /// <summary>
     /// This is the XML file produced by passing -dxml to ibcmerge. It will be transformed into the set of
     /// methods marked for NGEN in the assembly

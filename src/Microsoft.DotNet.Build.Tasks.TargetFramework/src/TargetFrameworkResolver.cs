@@ -5,6 +5,7 @@ using NuGet.Client;
 using NuGet.ContentModel;
 using NuGet.Frameworks;
 using NuGet.RuntimeModel;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 

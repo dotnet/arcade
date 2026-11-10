@@ -10,7 +10,10 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
+using Azure.Core;
+using Microsoft.DotNet.ArcadeAzureIntegration;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.Extensions.Logging;
 

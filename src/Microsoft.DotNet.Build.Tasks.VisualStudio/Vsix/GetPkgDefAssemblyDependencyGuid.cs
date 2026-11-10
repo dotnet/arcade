@@ -64,5 +64,7 @@ public sealed class GetPkgDefAssemblyDependencyGuid : Microsoft.Build.Utilities.
 
             item.SetMetadata(OutputMetadata, new Guid(reducedHash).ToString("B").ToUpperInvariant());
         }
+
+        return !Log.HasLoggedErrors;
     }
 }

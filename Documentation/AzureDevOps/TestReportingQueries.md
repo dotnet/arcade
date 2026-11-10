@@ -5,7 +5,7 @@ The following is a list of default queries to use to look up information about f
 Click [here](TestReportingData.md) to learn more about the data we're collecting. 
 
 Caveats (updated July 14, 2022): 
-- Because this data is stored in an internal data source, it is unfortunately currently only available to Microsoft employees. (If you are an internal Microsoft employee, you can request access from the [.NET Engineering Services team](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/How-to-get-a-hold-of-Engineering-Servicing).)
+- Because this data is stored in an internal data source, it is unfortunately currently only available to Microsoft employees. (If you are an internal Microsoft employee, you can request access from the [.NET Engineering Services team](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1907/Contact-Engineering-Services).)
 
 ## Index
   - [Tests That Have Changed Failure Rate in the Last Week](#tests-that-have-changed-failure-rate-in-the-last-week)
@@ -24,7 +24,7 @@ Caveats (updated July 14, 2022):
 
 Variables: 
 - `targetSignificance`: Target statistical likelihood that the failure change is due to a change in the last week. (The closer to 1 this value is, the more likely the test changed.)
-- `repo`: Repository to filter on. Set to empty string to inclue all repositories. Default is `dotnet/runtime`.
+- `repo`: Repository to filter on. Set to empty string to include all repositories. Default is `dotnet/runtime`.
 - `minimumHistoricalData`: Minimum number of historical data points (e.g. how many times the test has run) to include to avoid new tests, (`0` includes all tests)
 ```
 let targetSignificance = 0.95;
@@ -51,7 +51,7 @@ This query will return a list of tests that have failed a certain percentage in 
 
 Variables: 
 - `ts`: [Kusto timespan format](https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan). Default is `7d`.
-- `repo`: Repository to filter on. Set to empty string to inclue all repositories. Default is `dotnet/runtime`.
+- `repo`: Repository to filter on. Set to empty string to include all repositories. Default is `dotnet/runtime`.
 - `failureThreshold`: Double value denoting failure rate percentage. Default is `0.1` or 10%. 
 - `excludeAlwaysFailing`: Set to true to filter out tests that are always failing to get a list of tests that are "flakey". Default is `true`.
 
@@ -86,7 +86,7 @@ Calculate the expected value (E[_Y_]) for how often a test is likely to pass on 
 
 Variables: 
 - `ts`: [Kusto timespan format](https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan). Default is `7d`.
-- `repo`: Repository to filter on. Set to empty string to inclue all repositories. Default is `dotnet/runtime`.
+- `repo`: Repository to filter on. Set to empty string to include all repositories. Default is `dotnet/runtime`.
 - `excludeAlwaysPassing`: Set to true to filter out tests that are always passing. Default is `true`.
 
 ```
@@ -118,7 +118,7 @@ Retries are meant to unblock and prevent a build from failing due to failing tes
 
 Variables: 
 - `ts`: [Kusto timespan format](https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan). Default is `14d`.
-- `repo`: Repository to filter on. Set to empty string to inclue all repositories. Default is `dotnet/arcade`.
+- `repo`: Repository to filter on. Set to empty string to include all repositories. Default is `dotnet/arcade`.
 
 ```
 let ts = 14d;                      // Timespan value
@@ -149,7 +149,7 @@ Query suggested by @dougbu for getting the overall average pass rate for tests, 
 Variables: 
 - `ts`: [Kusto timespan format](https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan). How many days ago to query.
 - `definition`: Build definition name. 
-- `repo`: Repository to filter on. Set to empty string to inclue all repositories. 
+- `repo`: Repository to filter on. Set to empty string to include all repositories. 
 - `branch`: Name of the target branch. 
 - `testName`: Test name. 
 - `excludeAlwaysPassing`: Set to true to filter out tests that are always passing. 

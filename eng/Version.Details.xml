@@ -66,7 +66,7 @@
     </Dependency>
     <!-- Necessary for source-build. This allows the live version of the dependency
          to flow in and eliminates related prebuilts. -->
-    <Dependency Name="Microsoft.Extensions.DependencyInjection" Version="10.0.13">
+    <Dependency Name="Microsoft.Extensions.DependencyInjection" Version="10.0.14">
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>6aa72daa24f66c01c3d7b6a32519e9d21396deec</Sha>
     </Dependency>
@@ -84,13 +84,13 @@
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>6aa72daa24f66c01c3d7b6a32519e9d21396deec</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.13">
+    <Dependency Name="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.14">
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>6aa72daa24f66c01c3d7b6a32519e9d21396deec</Sha>
     </Dependency>
     <!-- Necessary for source-build. This allows the live version of the dependency
          to flow in and eliminates related prebuilts. -->
-    <Dependency Name="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13">
+    <Dependency Name="Microsoft.Extensions.Logging.Abstractions" Version="10.0.14">
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>6aa72daa24f66c01c3d7b6a32519e9d21396deec</Sha>
     </Dependency>
@@ -129,21 +129,25 @@
       <Sha>edfc2b7a7579cbfdb4f08e783b6a6507f71eb07c</Sha>
     </Dependency>
     <!-- Dependencies required for source build to lift to the previously-source-built version. -->
-    <Dependency Name="Microsoft.Build" Version="17.12.50">
+    <Dependency Name="Microsoft.Build" Version="18.8.2">
       <Uri>https://github.com/dotnet/msbuild</Uri>
-      <Sha>d1cce8d7cc03c23a4f1bad8e9240714fd9d199a3</Sha>
+      <Sha>ce25c01082c9c46cd02ad1ff3ff8f16fe5cc2f44</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Build.Framework" Version="17.12.50">
+    <Dependency Name="Microsoft.Build.Framework" Version="18.8.2">
       <Uri>https://github.com/dotnet/msbuild</Uri>
-      <Sha>d1cce8d7cc03c23a4f1bad8e9240714fd9d199a3</Sha>
+      <Sha>ce25c01082c9c46cd02ad1ff3ff8f16fe5cc2f44</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Build.Tasks.Core" Version="17.12.50">
+    <Dependency Name="Microsoft.Build.Tasks.Core" Version="18.8.2">
       <Uri>https://github.com/dotnet/msbuild</Uri>
-      <Sha>d1cce8d7cc03c23a4f1bad8e9240714fd9d199a3</Sha>
+      <Sha>ce25c01082c9c46cd02ad1ff3ff8f16fe5cc2f44</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Build.Utilities.Core" Version="17.12.50">
+    <Dependency Name="Microsoft.Build.Utilities.Core" Version="18.8.2">
       <Uri>https://github.com/dotnet/msbuild</Uri>
-      <Sha>d1cce8d7cc03c23a4f1bad8e9240714fd9d199a3</Sha>
+      <Sha>ce25c01082c9c46cd02ad1ff3ff8f16fe5cc2f44</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.Build.TaskAuthoring.Analyzer" Version="18.12.0-1.26454.2">
+      <Uri>https://github.com/dotnet/msbuild</Uri>
+      <Sha>5955a5fd29dcd23282a71a04d1cfb35f0a7a0e66</Sha>
     </Dependency>
     <!-- NuGet dependencies required for source build to lift to the previously-source-built version.
          Arcade redistributes these in its MSBuild task packages and needs real executable assemblies,

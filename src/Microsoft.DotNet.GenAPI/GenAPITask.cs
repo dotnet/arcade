@@ -8,7 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Tasks;
 using Microsoft.Cci;
 using Microsoft.Cci.Extensions;
 using Microsoft.Cci.Extensions.CSharp;
@@ -16,6 +15,7 @@ using Microsoft.Cci.Filters;
 using Microsoft.Cci.Writers;
 using Microsoft.Cci.Writers.CSharp;
 using Microsoft.Cci.Writers.Syntax;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.GenAPI;
 

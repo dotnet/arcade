@@ -3,7 +3,6 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.DotNet.Build.Tasks;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,6 +16,9 @@ namespace Microsoft.DotNet.CMake.Sdk;
 /// </summary>
 public class GetCMakeArtifactsFromFileApi : BuildTask
 {
+    /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+    public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
     /// <summary>
     /// The CMake build output directory containing the File API response.
     /// </summary>

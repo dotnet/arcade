@@ -17,6 +17,9 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio;
 /// </summary>
 public sealed class GetRunSettingsSessionConfiguration : Microsoft.Build.Utilities.Task
 {
+    /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+    public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
     /// <summary>
     /// Absolute path to the OptProf.json config file.
     /// </summary>

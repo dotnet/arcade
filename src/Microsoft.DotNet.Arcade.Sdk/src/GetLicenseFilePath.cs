@@ -15,6 +15,9 @@ namespace Microsoft.DotNet.Arcade.Sdk;
 /// </summary>
 public class GetLicenseFilePath : Microsoft.Build.Utilities.Task
 {
+    /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
+    public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
     /// <summary>
     /// Full path to the directory to search for the license file.
     /// </summary>

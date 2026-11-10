@@ -26,6 +26,24 @@ public class LocateDotNet : Microsoft.Build.Utilities.Task
             Paths = paths;
             Value = value;
         }
+
+        var sdkVersion = match.Groups[1].Value;
+
+        var fileName = (Path.DirectorySeparatorChar == '\\') ? "dotnet.exe" : "dotnet";
+        // Split with RemoveEmptyEntries, so no entry is empty and GetAbsolutePath cannot reject one.
+        var dotNetDir = paths.Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(p => File.Exists(TaskEnvironment.GetAbsolutePath(Path.Combine(p, fileName))));
+
+        if (dotNetDir == null || !Directory.Exists(TaskEnvironment.GetAbsolutePath(Path.Combine(dotNetDir, "sdk", sdkVersion))))
+        {
+            Log.LogError($"Unable to find dotnet with SDK version '{sdkVersion}'");
+            return;
+        }
+
+        // GetAbsolutePath absolutizes but does not canonicalize, so canonicalize explicitly to keep
+        // this [Output] in the same form the previous Path.GetFullPath produced. PATH entries
+        // routinely carry '..' segments and trailing separators.
+        DotNetPath = TaskEnvironment.GetAbsolutePath(Path.Combine(dotNetDir, fileName)).GetCanonicalForm();
+        BuildEngine4.RegisterTaskObject(cacheKey, DotNetPath, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: true);
     }
 
     [Required]

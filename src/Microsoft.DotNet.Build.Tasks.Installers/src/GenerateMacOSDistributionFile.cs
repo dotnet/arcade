@@ -3,7 +3,6 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.DotNet.Build.Tasks;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -40,7 +39,7 @@ public class GenerateMacOSDistributionFile : BuildTask
 
             var titleElement = new XElement("title", $"{ProductBrandName} ({TargetArchitecture})");
 
-                var archScriptContent = @"function IsX64Machine() {
+            var archScriptContent = @"function IsX64Machine() {
     var machine = system.sysctl(""hw.machine"");
     var cputype = system.sysctl(""hw.cputype"");
     var cpu64 = system.sysctl(""hw.cpu64bit_capable"");
