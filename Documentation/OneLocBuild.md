@@ -1,5 +1,14 @@
 # Localization with OneLocBuild in Arcade
 
+> **Arcade release/8.0:** Both OneLocBuild job templates are intentionally no-ops.
+> They retain their existing parameters, job names, dependencies, and pool selection
+> for pipeline compatibility, but only log that localization is disabled. They do
+> not check out sources, generate localization files, access Ceapex or GitHub App
+> credentials, run OneLocBuild, or publish localization artifacts. Existing checked-in translations
+> are unchanged. This behavior applies when consumers adopt these release/8.0
+> templates; it does not change other Arcade branches or repository-local pipelines.
+> The integration documentation below describes the former active behavior.
+
 As of April 1, 2021, all .NET repositories will be using OneLocBuild for localization. Documentation on this system can
 be found [here](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task).
 This system is **not a replacement for Xliff-Tasks**; rather, it is replacing the localization team's old system called
@@ -201,27 +210,12 @@ The parameters that can be passed to the template are as follows:
 | `LclSource` | `LclFilesInRepo` | This passes the `LclSource` input to the OneLocBuild task as described in [its documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). For most repos, this should be set to `LclFilesfromPackage`. |
 | `LclPackageId` | `''` | When `LclSource` is set to `LclFilesfromPackage`, this passes in the package ID as described in the [OneLocBuild task documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=scenario-2%3A-lcl-files-from-a-package). |
 | `CeapexServiceConnection` | `'dnceng-onelocbuild-ceapex'` | The project-scoped WIF service connection used to acquire a short-lived token for the Ceapex feeds. OneLocBuild supports only `dnceng/internal` and `DevDiv/DevDiv`; pipelines must be authorized to use the connection. |
-| `GitHubAppServiceConnection` | `'dnceng-oneloc-githubapp'` | Project-scoped WIF service connection used to read the App credentials from Key Vault. Arcade remaps this default to `devdiv-oneloc-githubapp` in `DevDiv/DevDiv`. |
-| `GitHubAppKeyVaultName` | `'EngKeyVault'` | Key Vault containing the Secret Manager-managed GitHub App credentials. |
-| `GitHubAppIdSecretName` | `'oneloc-localization-app-app-id'` | Secret Manager projection containing the GitHub App ID. |
-| `GitHubAppPrivateKeySecretName` | `'oneloc-localization-app-app-private-key'` | Secret Manager projection containing the PEM private key. |
+| `GitHubAppServiceConnection` | `'dnceng-oneloc-githubapp'` | The WIF service connection used to sign the App JWT. Arcade remaps this default to `devdiv-oneloc-githubapp` in `DevDiv/DevDiv`. |
+| `GitHubAppClientId` | `'Iv23lijBU8x3gc9lDOc9'` | The GitHub App client ID. |
+| `GitHubAppKeyVaultName` | `'EngKeyVault'` | Key Vault containing the App RSA signing key. |
+| `GitHubAppKeyName` | `'oneloc-localization-app-key'` | The App RSA signing key name. |
 | `condition` | `''` | Allows for conditionalizing the template's steps on build-time variables. |
 | `JobNameSuffix` | `''` | Allows for custom job name suffix. This is helpful for disambiguation in case of need for more then one OneLocBuild job run - e.g. as a way to set multiple package IDs. |
-
-GitHub OneLoc pipelines must be authorized to use their project's GitHub App WIF service
-connection. Its identity needs `Key Vault Secrets User` access scoped to the two configured
-secrets. Only the short-lived installation token is passed to OneLocBuild; no
-`OneLocBuildVariables` import or legacy RSA fallback is used.
-
-The previous RSA parameters have been removed. Job-template callers must remove
-`GitHubAppClientId` and `GitHubAppKeyName`; the service-connection and vault-name parameters
-remain. Direct callers of `get-github-app-token.yml` must replace `keyName` and `appClientId`
-with `appIdSecretName` and `appPrivateKeySecretName`. Standard OneLoc job callers use the
-defaults above without additional parameters.
-
-Credential-retrieval changes require a protected internal canary before merge. Public PR
-validation cannot exercise the WIF connection or private-key retrieval. Confirm App-token
-creation and the intended localization check-in path before retiring any legacy key.
 
 It is recommended that you set `LclSource` and `LclPackageId` as shown in the example above.
 
