@@ -14,7 +14,6 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using TaskLoggingHelper = Microsoft.Build.Utilities.TaskLoggingHelper;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging;
 

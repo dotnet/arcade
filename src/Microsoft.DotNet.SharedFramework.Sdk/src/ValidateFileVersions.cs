@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
+using Microsoft.DotNet.Build.Tasks;
 
 namespace Microsoft.DotNet.SharedFramework.Sdk;
 

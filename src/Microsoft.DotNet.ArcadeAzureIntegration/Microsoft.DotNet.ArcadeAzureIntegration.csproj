@@ -12,7 +12,6 @@
     <Compile Remove="AzureCliCredentialWithAzNoUpdateWrapper.cs" />
     <Compile Remove="DefaultIdentityTokenCredential.cs" />
     <Compile Remove="DefaultIdentityTokenCredentialOptions.cs" />
-    <Compile Remove="TokenCredentialAuthenticationHandler.cs" />
     <Compile Remove="TokenCredentialShortCache.cs" />
   </ItemGroup>
 

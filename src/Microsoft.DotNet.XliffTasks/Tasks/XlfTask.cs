@@ -5,7 +5,6 @@ using Microsoft.Build.Utilities;
 using System;
 using System.IO;
 using XliffTasks.Model;
-using Microsoft.Build.Framework;
 
 namespace XliffTasks.Tasks;
 

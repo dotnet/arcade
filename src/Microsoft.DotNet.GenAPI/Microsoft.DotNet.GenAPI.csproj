@@ -10,6 +10,9 @@
     <NoWarn>$(NoWarn);0436</NoWarn>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Common\Internal\BuildTask.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Tasks.Core" />

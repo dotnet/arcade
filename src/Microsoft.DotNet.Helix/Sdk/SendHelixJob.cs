@@ -540,52 +540,6 @@ public class SendHelixJob : HelixTask
                 yield return part;
             }
         }
-
-        AbsolutePath payloadPath = TaskEnvironment.GetAbsolutePath(path);
-        if (Directory.Exists(payloadPath))
-        {
-            string includeDirectoryNameStr = correlationPayload.GetMetadata(MetadataNames.IncludeDirectoryName);
-            if (!bool.TryParse(includeDirectoryNameStr, out bool includeDirectoryName))
-            {
-                includeDirectoryName = false;
-            }
-
-            Log.LogMessage(
-                MessageImportance.Low,
-                $"Adding Correlation Payload Directory '{path}', destination '{destination}'"
-            );
-            return def.WithCorrelationPayloadDirectory(payloadPath, includeDirectoryName, destination);
-
-        }
-
-        if (File.Exists(payloadPath))
-        {
-            string asArchiveStr = correlationPayload.GetMetadata(MetadataNames.AsArchive);
-            if (!bool.TryParse(asArchiveStr, out bool asArchive))
-            {
-                // With no other information, default to true, since that was the previous behavior
-                // before we added the option
-                asArchive = true;
-            }
-
-            if (asArchive)
-            {
-                Log.LogMessage(
-                    MessageImportance.Low,
-                    $"Adding Correlation Payload Archive '{path}', destination '{destination}'"
-                );
-                return def.WithCorrelationPayloadArchive(payloadPath, destination);
-            }
-
-            Log.LogMessage(
-                MessageImportance.Low,
-                $"Adding Correlation Payload File '{path}', destination '{destination}'"
-            );
-            return def.WithCorrelationPayloadFiles(payloadPath);
-        }
-
-        Log.LogError(FailureCategory.Build, $"Correlation Payload '{path}' not found.");
-        return def;
     }
 
     private IJobDefinition AddCorrelationPayload(IJobDefinition def, ITaskItem correlationPayload)

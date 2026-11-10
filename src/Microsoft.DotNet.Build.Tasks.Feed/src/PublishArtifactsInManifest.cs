@@ -3,7 +3,6 @@
 
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Build.Manifest;
 using Microsoft.DotNet.ProductConstructionService.Client;

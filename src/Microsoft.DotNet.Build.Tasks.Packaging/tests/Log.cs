@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using AwesomeAssertions;
-using Microsoft.Build.Framework;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests;

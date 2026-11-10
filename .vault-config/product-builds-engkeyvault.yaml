@@ -12,12 +12,6 @@ references:
       name: helixkv
 
 keys:
-  # Retain the signing keys until both consumers are migrated to the
-  # github-app-secret private keys declared below.
-  dotnet-monitor-release-app-key:
-    type: RSA
-    size: 2048
-
   oneloc-localization-app-key:
     type: RSA
     size: 2048
@@ -45,7 +39,32 @@ secrets:
     parameters:
       Name: dotnet-renovate-bot
 
+  #Publish-Build-Assets
+  BotAccount-dotnet-maestro-bot-PAT:
+    type: github-access-token
+    parameters:
+      gitHubBotAccountSecret: BotAccount-dotnet-maestro-bot
+      gitHubBotAccountName: dotnet-maestro-bot
+
+  BotAccount-dotnet-bot-repo-PAT:
+    type: github-access-token
+    parameters:
+      gitHubBotAccountSecret: BotAccount-dotnet-bot
+      gitHubBotAccountName: dotnet-bot
+
   akams-client-id:
     type: text
     parameters:
       description: Client id for akams app
+
+  #OneLocBuildVariables
+  dn-bot-ceapex-package-r:
+    type: azure-devops-access-token
+    parameters:
+      domainAccountName: dn-bot
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: dn-bot-ceapex-package-r
+      organizations: ceapex
+      scopes: packaging

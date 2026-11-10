@@ -12,5 +12,8 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Common\Internal\BuildTask.cs" />
+  </ItemGroup>
 
 </Project>

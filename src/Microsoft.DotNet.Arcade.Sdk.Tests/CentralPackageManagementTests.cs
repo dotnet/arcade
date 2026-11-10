@@ -167,32 +167,4 @@ public class CentralPackageManagementTests
 
         return null;
     }
-
-    private static IEnumerable<string> GetImplicitPackageReferenceIds(string targetsFile)
-    {
-        XDocument doc;
-        try
-        {
-            doc = XDocument.Load(targetsFile);
-        }
-        catch (System.Xml.XmlException)
-        {
-            // Non-XML files with .targets/.props extension — skip
-            yield break;
-        }
-
-        foreach (var element in doc.Descendants().Where(e => e.Name.LocalName == "PackageReference"))
-        {
-            var isImplicit = element.Attribute("IsImplicitlyDefined")?.Value;
-            if (string.Equals(isImplicit, "true", StringComparison.OrdinalIgnoreCase))
-            {
-                var id = element.Attribute("Include")?.Value;
-                if (id != null)
-                {
-                    yield return id;
-                }
-            }
-        }
-    }
-
 }

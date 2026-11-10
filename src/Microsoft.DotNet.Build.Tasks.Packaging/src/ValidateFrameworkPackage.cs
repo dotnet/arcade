@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NuGet.Frameworks;
@@ -96,4 +97,3 @@ public class ValidateFrameworkPackage : ValidationTask
         return string.IsNullOrEmpty(Runtime) ? target.CompileAssets : target.RuntimeAssets;
     }
 }
-

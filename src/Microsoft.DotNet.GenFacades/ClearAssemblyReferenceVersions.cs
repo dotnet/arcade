@@ -3,6 +3,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.Build.Tasks;
 using System;
 using System.IO;
 using System.Reflection.Metadata;

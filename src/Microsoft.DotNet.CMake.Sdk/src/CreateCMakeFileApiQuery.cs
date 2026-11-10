@@ -3,6 +3,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.Build.Tasks;
 using System;
 using System.IO;
 
@@ -13,9 +14,6 @@ namespace Microsoft.DotNet.CMake.Sdk;
 /// </summary>
 public class CreateCMakeFileApiQuery : BuildTask
 {
-    /// <summary>Injected by MSBuild so paths resolve against the project directory in multithreaded builds.</summary>
-    public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
-
     /// <summary>
     /// The CMake build output directory where the query should be created.
     /// </summary>

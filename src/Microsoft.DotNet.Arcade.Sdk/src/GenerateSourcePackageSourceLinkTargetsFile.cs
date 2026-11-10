@@ -110,35 +110,7 @@ public sealed class GenerateSourcePackageSourceLinkTargetsFile : Microsoft.Build
             hash = BitConverter.ToString(hashAlg.ComputeHash(Encoding.UTF8.GetBytes(packageId)), 0, 20).Replace("-", "");
         }
 
-        if (!EndsWithSeparator(innerMostRootItemSpec))
-        {
-            Log.LogError($"SourceRoot must end with a directory separator: '{innerMostRootItemSpec}'");
-            return null;
-        }
-
-        var relativePathToSourceRoot = projectDir.Substring(innerMostRootItemSpec.Length);
-        var contentFilesSourceLinkUrl = innerMostRootSourceLinkUrl.Replace("*", Uri.EscapeUriString(relativePathToSourceRoot.Replace('\\', '/')) + "*");
-        return GetTargetsFileContent(PackageId, contentFilesSourceLinkUrl);
-    }
-
-    private static bool EndsWithSeparator(string path)
-    {
-        char last = path[path.Length - 1];
-        return last == Path.DirectorySeparatorChar || last == Path.AltDirectorySeparatorChar;
-    }
-
-    private static string EndWithSeparator(string path)
-        => EndsWithSeparator(path) ? path : path + Path.DirectorySeparatorChar;
-
-    private static string GetTargetsFileContent(string packageId, string sourceLinkUrl)
-    {
-        string hash;
-        using (var hashAlg = SHA256.Create())
-        {
-            hash = BitConverter.ToString(hashAlg.ComputeHash(Encoding.UTF8.GetBytes(packageId)), 0, 20).Replace("-", "");
-        }
-
-        return $@"<?xml version=""1.0"" encoding=""utf-8""?>
+            return $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
   <Target Name=""_AddSourcePackageSourceRoot_{hash}"" BeforeTargets=""InitializeSourceControlInformation"">
     <ItemGroup>
