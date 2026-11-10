@@ -54,27 +54,7 @@ extends:
           enableMicrobuild: true
           enablePublishUsingPipelines: true
           enableSourceIndex: true
-          enableSourceBuild: true
-          sourceBuildParameters:
-            defaultManagedPlatform:
-              name: Managed
-              # Keep Node task handlers on the host without changing the source-build image.
-              container: ''
-              buildScript: >-
-                docker run --rm --init
-                --user "$(id -u):$(id -g)"
-                --env HOME=/tmp
-                --env TF_BUILD --env BUILD_BUILDNUMBER --env BUILD_SOURCEBRANCH --env BUILD_SOURCEVERSION
-                --env BUILD_BUILDID --env BUILD_REPOSITORY_NAME --env SYSTEM_DEFINITIONID
-                --env BUILD_REPOSITORY_URI --env BUILD_SOURCESDIRECTORY --env BUILD_ARTIFACTSTAGINGDIRECTORY
-                --env SYSTEM_TEAMPROJECT --env SYSTEM_COLLECTIONURI --env SYSTEM_TEAMFOUNDATIONCOLLECTIONURI
-                --env POSTBUILDSIGN
-                --volume /etc/passwd:/etc/passwd:ro
-                --volume /etc/group:/etc/group:ro
-                --volume "$(Pipeline.Workspace):$(Pipeline.Workspace)"
-                --workdir "$(Build.SourcesDirectory)"
-                mcr.microsoft.com/dotnet-buildtools/prereqs:centos-7
-                ./build.sh
+          enableSourceBuild: false
           workspace:
             clean: all
           jobs:
