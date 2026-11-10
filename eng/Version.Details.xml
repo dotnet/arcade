@@ -66,7 +66,7 @@
     </Dependency>
     <!-- Necessary for source-build. This allows the live version of the dependency
          to flow in and eliminates related prebuilts. -->
-    <Dependency Name="Microsoft.Extensions.DependencyInjection" Version="10.0.13">
+    <Dependency Name="Microsoft.Extensions.DependencyInjection" Version="10.0.14">
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>6aa72daa24f66c01c3d7b6a32519e9d21396deec</Sha>
     </Dependency>
@@ -84,13 +84,13 @@
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>6aa72daa24f66c01c3d7b6a32519e9d21396deec</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.13">
+    <Dependency Name="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.14">
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>6aa72daa24f66c01c3d7b6a32519e9d21396deec</Sha>
     </Dependency>
     <!-- Necessary for source-build. This allows the live version of the dependency
          to flow in and eliminates related prebuilts. -->
-    <Dependency Name="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13">
+    <Dependency Name="Microsoft.Extensions.Logging.Abstractions" Version="10.0.14">
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>6aa72daa24f66c01c3d7b6a32519e9d21396deec</Sha>
     </Dependency>
