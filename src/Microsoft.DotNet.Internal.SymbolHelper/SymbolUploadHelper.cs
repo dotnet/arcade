@@ -7,6 +7,7 @@ using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -262,6 +263,35 @@ public sealed class SymbolUploadHelper
         return await RunSymbolCommand(arguments, pathToAdd, logger).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Resolves the destination path of an archive entry, ensuring it stays within <paramref name="extractDir"/>.
+    /// </summary>
+    public static bool TryGetSafeExtractionPath(string extractDir, string entryName, [NotNullWhen(true)] out string? entryPath)
+    {
+        entryPath = null;
+
+        if (string.IsNullOrEmpty(entryName) || Path.IsPathRooted(entryName))
+        {
+            return false;
+        }
+
+        string root = Path.GetFullPath(extractDir);
+        if (!Path.EndsInDirectorySeparator(root))
+        {
+            root += Path.DirectorySeparatorChar;
+        }
+
+        string candidate = Path.GetFullPath(Path.Combine(root, entryName));
+        StringComparison comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        if (!candidate.StartsWith(root, comparison) || candidate.Length == root.Length)
+        {
+            return false;
+        }
+
+        entryPath = candidate;
+        return true;
+    }
+
     private async Task<int> AddPackageToRequestCore(string name, string packagePath, ScopedTracer logger)
     {
         // Create a temporary directory to extract the package contents.
@@ -288,8 +318,13 @@ public sealed class SymbolUploadHelper
                     continue;
                 }
 
+                if (!TryGetSafeExtractionPath(packageExtractDir, entry.FullName, out string? entryPath))
+                {
+                    logger.Error("Package {0} contains entry '{1}' that resolves outside of the extraction directory", packagePath, entry.FullName);
+                    return -1;
+                }
+
                 logger.Verbose("Extracting {0}", entry.FullName);
-                string entryPath = Path.Combine(packageExtractDir, entry.FullName);
                 _ = Directory.CreateDirectory(Path.GetDirectoryName(entryPath)!);
                 using Stream entryStream = entry.Open();
                 using FileStream entryFile = File.Create(entryPath);
