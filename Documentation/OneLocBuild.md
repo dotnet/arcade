@@ -1,5 +1,14 @@
 # Localization with OneLocBuild in Arcade
 
+> **Arcade release/8.0:** Both OneLocBuild job templates are intentionally no-ops.
+> They retain their existing parameters, job names, dependencies, and pool selection
+> for pipeline compatibility, but only log that localization is disabled. They do
+> not check out sources, generate localization files, access Ceapex or GitHub App
+> credentials, run OneLocBuild, or publish localization artifacts. Existing checked-in translations
+> are unchanged. This behavior applies when consumers adopt these release/8.0
+> templates; it does not change other Arcade branches or repository-local pipelines.
+> The integration documentation below describes the former active behavior.
+
 As of April 1, 2021, all .NET repositories will be using OneLocBuild for localization. Documentation on this system can
 be found [here](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task).
 This system is **not a replacement for Xliff-Tasks**; rather, it is replacing the localization team's old system called
