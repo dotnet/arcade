@@ -4,6 +4,7 @@
 #
 # Requirements (per GitHub App you want to authenticate as):
 #   - The GitHub App's private key imported as a Key Vault RSA key.
+#   - Read access to the configured App-ID secret projection.
 #   - The Azure service connection passed via `azureSubscription` must have
 #     the `Sign` action on that key.
 #   - The App must be installed on the target organization/account
@@ -26,7 +27,7 @@ parameters:
 - name: keyName
   type: string
 
-- name: appClientId
+- name: appIdSecretName
   type: string
 
 # Login of the organization or user account whose installation we should
@@ -67,6 +68,6 @@ steps:
       & "$(System.DefaultWorkingDirectory)/eng/common/Get-GitHubAppToken.ps1" `
           -KeyVaultName '${{ parameters.keyVaultName }}' `
           -KeyName '${{ parameters.keyName }}' `
-          -AppClientId '${{ parameters.appClientId }}' `
+          -AppIdSecretName '${{ parameters.appIdSecretName }}' `
           -InstallationOwner '${{ parameters.installationOwner }}' `
           -OutputVariableName '${{ parameters.outputVariableName }}'
