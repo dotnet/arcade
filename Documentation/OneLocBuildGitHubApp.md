@@ -37,8 +37,8 @@ If App token minting or authentication fails, the job fails; there is no stored-
    specific repository must be selected in that installation.** The App can only open a PR against a
    repository it is installed on. This is what actually grants the App permission to your repo.
 2. **Your pipeline must run in `dnceng/internal` or `DevDiv/DevDiv` and be authorized to use its
-   project's GitHub App WIF service connection.** That identity needs the `Sign` action on the
-   App's RSA key, not read access to private-key secrets.
+   project's GitHub App WIF service connection.** That identity needs read access to the App-ID
+   projection and the `Sign` action on the App's RSA key, not read access to private-key secrets.
 
 The .NET Engineering Services team manages the App credentials, Key Vault permissions, and
 service connections.
@@ -83,9 +83,10 @@ The project-specific WIF service connection signs with the App's RSA key in EngK
 | `dnceng/internal` | `dnceng-oneloc-githubapp` |
 | `DevDiv/DevDiv` | `devdiv-oneloc-githubapp` |
 
-Each identity needs the `Sign` action on `oneloc-localization-app-key`. Each pipeline must be
-authorized to use its project's service connection. The public App Client ID is configured
-in the template and is not fetched from a secret.
+Each identity needs read access to `oneloc-localization-app-app-id` and the `Sign` action on
+`oneloc-localization-app-key`. Each pipeline must be authorized to use its project's service
+connection. The JWT issuer is read from the configured App-ID secret projection; it is not
+hardcoded in the template. The private key is never retrieved.
 
 ### GitHub App parameters
 
@@ -93,7 +94,7 @@ in the template and is not fetched from a secret.
 |:-:|:-:|-|
 | `GitHubAppServiceConnection` | `dnceng-oneloc-githubapp` | WIF service connection authorized to sign with the App's key. DevDiv automatically selects `devdiv-oneloc-githubapp` when this default is unchanged. |
 | `GitHubAppKeyVaultName` | `EngKeyVault` | Key Vault holding the RSA signing key. |
-| `GitHubAppClientId` | `Iv23lijBU8x3gc9lDOc9` | Public GitHub App Client ID used as the JWT issuer. |
+| `GitHubAppIdSecretName` | `oneloc-localization-app-app-id` | App-ID secret projection whose value is used as the JWT issuer. |
 | `GitHubAppKeyName` | `oneloc-localization-app-key` | RSA key used for server-side signing. |
 
 The token is minted for the installation on the `GitHubOrg` account (default `dotnet`), so make sure
@@ -104,20 +105,23 @@ The token is minted for the installation on the `GitHubOrg` account (default `do
 The Key Vault RSA signing interface is restored. Local PEM signing and the
 pipeline-variable credential interface are not supported.
 
-Standard OneLoc job callers must remove `GitHubAppIdSecretName` and
-`GitHubAppPrivateKeySecretName` (or the older `GitHubAppId` and `GitHubAppPrivateKey` parameters).
-The defaults above select the existing OneLoc signing key. Custom Apps must instead set
-`GitHubAppClientId` and `GitHubAppKeyName` to their public issuer and provisioned RSA key.
+Standard OneLoc job callers retain `GitHubAppIdSecretName` and replace
+`GitHubAppPrivateKeySecretName` with `GitHubAppKeyName`. The older `GitHubAppId` and
+`GitHubAppPrivateKey` pipeline-variable parameters are not supported. The defaults above select
+the existing OneLoc App-ID projection and signing key. Custom Apps must instead set
+`GitHubAppIdSecretName` and `GitHubAppKeyName` to their configured App-ID projection and
+provisioned RSA key.
 `GitHubAppServiceConnection` and `GitHubAppKeyVaultName` retain their meanings.
 
-Direct callers of `get-github-app-token.yml` must replace `appIdSecretName` and
-`appPrivateKeySecretName` with `appClientId` and `keyName`, keeping `azureSubscription` and
-`keyVaultName`. The PowerShell helper accepts the corresponding `-AppClientId` and `-KeyName`
+Direct callers of `get-github-app-token.yml` retain `appIdSecretName` and replace
+`appPrivateKeySecretName` with `keyName`, keeping `azureSubscription` and
+`keyVaultName`. The PowerShell helper accepts the corresponding `-AppIdSecretName` and `-KeyName`
 arguments. There is no local-signing or stored-PAT fallback.
 
 Before switching a custom App, verify that its RSA key is provisioned in Key Vault,
-corresponds to an active GitHub App private key, and grants the service connection the
-`Sign` action. A PEM secret is not interchangeable with a Key Vault key. Do not remove
+corresponds to an active GitHub App private key, and grants the service connection read access to
+the App-ID projection and the `Sign` action on the key. A PEM secret is not interchangeable with
+a Key Vault key. Do not remove
 or rotate the active signing key until its replacement has passed a protected canary.
 Secret Manager's `github-app-secret` PEM projection does not itself synchronize RSA keys;
 rotation must coordinate the GitHub App and the Key Vault key.
@@ -139,7 +143,10 @@ signing key, so syntax and unit checks alone do not validate this boundary.
 - **The App-token step is skipped.** The App path activates when `RepoType` is `gitHub`.
 - **Key Vault signing fails.** Confirm the pipeline is authorized to use its project's
   GitHub App service connection, the configured RSA key exists and is enabled, and the identity
-  has the `Sign` action on that key. Do not grant secret-read access as a workaround.
+  has the `Sign` action on that key. Do not grant private-key secret-read access as a workaround.
+- **App-ID secret lookup fails.** Confirm the configured projection exists, is nonempty, and the
+  service connection can read that projection. The helper uses the secret's value as the issuer
+  without deserializing its expiry metadata.
 - **`404`/`Not Found` when requesting the installation token.** The App is not installed on the
   `GitHubOrg` account, or your repository was not selected in the installation. Complete Step 1.
 - **PR fails to open on your repo.** Ensure the App has `Contents` and `Pull requests` (read &

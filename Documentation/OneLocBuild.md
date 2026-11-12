@@ -203,14 +203,14 @@ The parameters that can be passed to the template are as follows:
 | `CeapexServiceConnection` | `'dnceng-onelocbuild-ceapex'` | The project-scoped WIF service connection used to acquire a short-lived token for the Ceapex feeds. OneLocBuild supports only `dnceng/internal` and `DevDiv/DevDiv`; pipelines must be authorized to use the connection. |
 | `GitHubAppServiceConnection` | `'dnceng-oneloc-githubapp'` | Project-scoped WIF service connection authorized to sign with the App's Key Vault key. DevDiv automatically uses `devdiv-oneloc-githubapp` when this default is unchanged. |
 | `GitHubAppKeyVaultName` | `'EngKeyVault'` | Key Vault containing the GitHub App's RSA signing key. |
-| `GitHubAppClientId` | `'Iv23lijBU8x3gc9lDOc9'` | Public GitHub App client ID (or numeric App ID) used as the JWT issuer. |
+| `GitHubAppIdSecretName` | `'oneloc-localization-app-app-id'` | App-ID secret projection whose value is used as the JWT issuer. |
 | `GitHubAppKeyName` | `'oneloc-localization-app-key'` | RSA key used by the Key Vault Sign operation; the private key is not retrieved by the pipeline. |
 | `condition` | `''` | Allows for conditionalizing the template's steps on build-time variables. |
 | `JobNameSuffix` | `''` | Allows for custom job name suffix. This is helpful for disambiguation in case of need for more then one OneLocBuild job run - e.g. as a way to set multiple package IDs. |
 
 GitHub OneLoc pipelines must be authorized to use their project's GitHub App WIF service
-connection. The service connection needs the Sign action on the configured RSA key, not
-permission to download its private key or read a PEM secret.
+connection. The service connection needs read access to the App-ID projection and the Sign action
+on the configured RSA key, not permission to download its private key or read a PEM secret.
 
 Pipelines using the private-key-secret parameters must switch back to server-side signing. See
 [Authenticating OneLocBuild's GitHub check-in with the GitHub App](OneLocBuildGitHubApp.md#migrating-from-private-key-secrets)
