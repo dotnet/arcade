@@ -4,6 +4,7 @@
 #
 # Requirements:
 #   - The GitHub App's private key imported as a Key Vault RSA key.
+#   - Read access to the configured App-ID secret projection.
 #   - The federated Azure service connection must have the `Sign` action on
 #     that key. Reading private-key secrets is neither required nor supported.
 #   - The App must be installed on the target organization/account
@@ -14,7 +15,7 @@
 
 [CmdletBinding()]
 param(
-    # Name of the Key Vault holding the GitHub App's RSA signing key.
+    # Key Vault holding the App-ID projection and RSA signing key.
     [Parameter(Mandatory = $true)]
     [string] $KeyVaultName,
 
@@ -23,10 +24,10 @@ param(
     [ValidateNotNullOrEmpty()]
     [string] $KeyName,
 
-    # Public GitHub App Client ID (or numeric App ID), used as the JWT issuer.
+    # Secret Manager projection containing the GitHub App's public ID.
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
-    [string] $AppClientId,
+    [string] $AppIdSecretName,
 
     # Login of the organization or user account whose installation we should
     # mint the token for (e.g. `dotnet`, `microsoft`).
@@ -53,6 +54,47 @@ function ConvertTo-Base64Url([byte[]] $bytes) {
     return [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
 }
 
+Write-Host "Reading GitHub App ID from secret '$AppIdSecretName' in vault '$KeyVaultName'..."
+$previousNativeCommandErrorPreference = $PSNativeCommandUseErrorActionPreference
+try {
+    $PSNativeCommandUseErrorActionPreference = $false
+    $keyVaultAccessToken = az account get-access-token `
+        --resource https://vault.azure.net `
+        --query accessToken `
+        --output tsv `
+        --only-show-errors
+    $tokenExitCode = $LASTEXITCODE
+}
+catch {
+    Write-PipelineTelemetryError -Category 'Build' -Message "Failed to acquire an Azure Key Vault access token: $_"
+    exit 1
+}
+finally {
+    $PSNativeCommandUseErrorActionPreference = $previousNativeCommandErrorPreference
+}
+if ($tokenExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($keyVaultAccessToken)) {
+    Write-PipelineTelemetryError -Category 'Build' -Message "'az account get-access-token' failed with exit code $tokenExitCode while acquiring an Azure Key Vault access token."
+    exit 1
+}
+
+$escapedSecretName = [Uri]::EscapeDataString($AppIdSecretName)
+try {
+    # Read only the ID value: CLI secret deserialization fails on year-9999 expiry metadata.
+    $appIdResponse = Invoke-RestMethod `
+        -Uri "https://$KeyVaultName.vault.azure.net/secrets/${escapedSecretName}?api-version=7.4" `
+        -Headers @{ Authorization = "Bearer $keyVaultAccessToken" } `
+        -Method Get
+}
+catch {
+    Write-PipelineTelemetryError -Category 'Build' -Message "Failed to read App ID secret '$AppIdSecretName' from vault '$KeyVaultName': $_. Verify the service connection can read this App-ID projection."
+    exit 1
+}
+$appId = [string] $appIdResponse.value
+if ([string]::IsNullOrWhiteSpace($appId)) {
+    Write-PipelineTelemetryError -Category 'Build' -Message "App ID secret '$AppIdSecretName' in vault '$KeyVaultName' is empty."
+    exit 1
+}
+
 # Build JWT header and payload. Use [ordered] hashtables so JSON
 # serialization is deterministic.
 $jwtHeader = [ordered]@{
@@ -63,7 +105,7 @@ $now = [System.DateTimeOffset]::UtcNow
 $jwtPayload = [ordered]@{
     iat = $now.AddMinutes(-1).ToUnixTimeSeconds()
     exp = $now.AddMinutes(5).ToUnixTimeSeconds()
-    iss = $AppClientId
+    iss = $appId
 }
 
 $headerEncoded  = ConvertTo-Base64Url ([System.Text.Encoding]::UTF8.GetBytes(($jwtHeader  | ConvertTo-Json -Compress)))
