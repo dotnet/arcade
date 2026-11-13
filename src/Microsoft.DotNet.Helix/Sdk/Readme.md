@@ -54,6 +54,59 @@ env:
   SYSTEM_ACCESSTOKEN: $(System.AccessToken) # We need to set this env var to publish helix results to Azure DevOps
 ```
 
+### Publishing test results to Azure DevOps
+
+`EnableAzurePipelinesReporter` defaults to `true` when `SYSTEM_ACCESSTOKEN` is
+available. The submitting build waits for all submitted Helix jobs to finish,
+downloads raw result files, and publishes them with the same C# readers and publisher used by the
+Helix Job Monitor. All uploads finish before test runs are closed and failures
+are checked. This mode requires waiting for work-item completion.
+
+- Default build logs show when the build is waiting for all jobs, when result
+  processing starts, one summary per work item with published result counts,
+  top-level test outcome counts and overall work-item progress, and a final
+  success/failure summary. Work items with no results report a zero count.
+  Download, parsing/aggregation, and publication stages are available at detailed
+  or diagnostic MSBuild verbosity.
+- Supported formats: xUnit XML (`*testResults.xml`, `*test-results.xml`,
+  `*test_results.xml`), JUnit XML (`*junit-results.xml`, `*junitresults.xml`), and
+  TRX (`*.trx`).
+- Results in the working directory are collected recursively into
+  `HELIX_WORKITEM_UPLOAD_ROOT`, preserving relative paths. Files already in the
+  upload directory are not copied again, including when directory names contain
+  brackets or other glob characters.
+- Helix workers only upload raw files to Helix storage. They do not run the
+  Python Azure DevOps reporter or receive the build's Azure DevOps token.
+- Downloads use `HelixResultsDestinationDir`, defaulting to
+  `artifacts/helixresults` under the build sources or project directory.
+- Download, parse, and publishing failures fail inline reporting. Failed-test
+  and work-item failure policies remain controlled by the existing properties.
+  A work-item reporting failure does not cancel unrelated uploads: all work
+  items are processed before errors are reported. Caller cancellation still
+  stops the batch.
+  After a reporting failure, completed work-item execution results are still
+  published and test runs are closed without retrying the failed upload or
+  clearing the original error.
+- Existing inline work-item execution results, test-run names, test identities,
+  expected failures, and flaky-test support are preserved.
+- Inline TRX names retain the class prefix (without duplicating an existing
+  prefix), keeping same-named MSTest methods in different classes distinct.
+  Nested MSTest `InnerResults` rows are also published, with diagnostics scoped
+  to each row's own output. xUnit XML custom display names remain unchanged.
+- Diagnostic mappings retain the Python reporter's behavior: JUnit `failure`/`error`
+  attributes supply the exception type and failure message, with element text as
+  the stack trace; skipped TRX tests use `Output/StdOut` as the skip reason
+  (falling back to `ErrorInfo/Message` when stdout is absent); xUnit failure
+  messages decode the framework's backslash escapes.
+- With `EnableHelixJobMonitor=true`, the submitting job does not wait or publish;
+  the monitor owns reporting. Local builds and explicit reporting opt-out
+  continue to work without an Azure DevOps token.
+
+Custom producers of the removed Python reporter's JSON/pickle format must emit
+one of the supported XML formats instead. Place results in the working directory
+or directly in `HELIX_WORKITEM_UPLOAD_ROOT`; no worker-side Azure DevOps
+parameters are needed.
+
 ### Helix Job Monitor for Azure DevOps
 
 If you want to decouple Helix test execution from the build agents that submit the work, use the Helix Job Monitor.

@@ -112,6 +112,28 @@ steps:
     # other parameters here
 ```
 
+## Publishing test results
+
+The SDK publishes test results from the Azure DevOps build using C#, not from
+the Helix worker:
+
+- Without Job Monitor: submit, wait for completion, download results, publish,
+  close test runs, and check failures.
+- With Job Monitor: submit and return; the monitor downloads and publishes
+  results using the same C# implementation.
+- Workers collect raw xUnit/JUnit XML and TRX files from the working directory
+  into `HELIX_WORKITEM_UPLOAD_ROOT`, preserving nested paths. Results written
+  directly to that directory are also supported.
+- `EnableAzurePipelinesReporter` remains the inline reporting switch and defaults
+  to enabled when `SYSTEM_ACCESSTOKEN` is available. Inline reporting requires
+  waiting for completion; use the monitor for submit-only jobs.
+- Only the publishing build job needs `SYSTEM_ACCESSTOKEN`. The SDK no longer
+  forwards the Azure DevOps token to workers or ships a Python Azure DevOps
+  reporter.
+
+For supported filenames, reporting policies, and migration from the removed
+JSON/pickle format, see [Publishing test results to Azure DevOps](../../src/Microsoft.DotNet.Helix/Sdk/Readme.md#publishing-test-results-to-azure-devops).
+
 ## The Simple Case
 
 The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `send-to-helix` template in `eng/common/templates/steps/send-to-helix.yml` from your `azure-pipelines.yml` file.

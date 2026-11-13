@@ -13,6 +13,8 @@ using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
 
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
+
 namespace Microsoft.DotNet.Helix.Sdk.Tests.Fakes;
 
 internal sealed class FakeHelixService : IHelixService

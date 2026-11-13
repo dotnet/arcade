@@ -3,6 +3,6 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Helix.JobMonitor;
+namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
 public record WorkItemTestResults(string JobName, string WorkItemName, List<string> TestResultFiles);

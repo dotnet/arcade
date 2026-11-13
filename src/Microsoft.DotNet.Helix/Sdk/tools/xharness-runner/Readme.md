@@ -65,6 +65,11 @@ There are some required configuration properties that need to be set for the SDK
 </ItemGroup>
 ```
 
+Azure DevOps reporting runs in C# on the build agent after Helix completion, or
+in the standalone Helix Job Monitor. Workers only stage raw XML/TRX results;
+they do not need the Python Azure DevOps reporter or the build's Azure DevOps
+token. See [Publishing test results](../../Readme.md#publishing-test-results-to-azure-devops).
+
 ### iOS/tvOS .app bundle payloads
 
 To execute .app bundles, declare one or more `XHarnessAppBundleToTest` items:
@@ -321,4 +326,3 @@ You have two options how to achieve this:
   - The function accepts a string parameter - a reason message that will be reported to Helix, e.g. "Failed to install app X.Y (XHarness returned 86)".
 - Creating a file in the working directory called `.retry` with the reason message set as its content.
   - You can also create a `.reboot` file which will reboot the machine after the job is over. This is also recommended as it might resolve some of the issues. It will also increase the chance some other Helix agent will pick up the re-tried job.
-

@@ -10,6 +10,8 @@ using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
 using Microsoft.Extensions.Logging;
 
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
+
 namespace Microsoft.DotNet.Helix.JobMonitor;
 
 /// <summary>
@@ -229,7 +231,7 @@ internal sealed class StatusReporter
     }
 
     public void LogPerformanceMetrics(
-        JobMonitorMetricsSnapshot metrics,
+        TestReportingMetricsSnapshot metrics,
         UploadPipelineSnapshot uploads,
         bool isPartial = false)
     {

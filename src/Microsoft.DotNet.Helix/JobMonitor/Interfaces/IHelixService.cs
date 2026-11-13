@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.Helix.JobMonitor.Models;
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
 namespace Microsoft.DotNet.Helix.JobMonitor;
 
