@@ -4,7 +4,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NuGet.Versioning;
@@ -74,15 +73,12 @@ public class CheckRequiredDotNetVersion : Task, IMultiThreadableTask
                 return false;
             }
 
-            // avoid Newtonsoft.Json dependency
-            var match = Regex.Match(globalJson, $@"""dotnet""\s*:\s*""([^""]+)""");
-            if (!match.Success)
+            if (!GlobalJson.TryGetDotNetSdkVersion(globalJson, globalJsonPath, out var minSdkVersionStr, out var error))
             {
-                Log.LogError($"Unable to determine dotnet version from file '{globalJsonPath}'.");
+                Log.LogError(error);
                 return false;
             }
 
-            var minSdkVersionStr = match.Groups[1].Value;
             if (!SemanticVersion.TryParse(minSdkVersionStr, out var minSdkVersion))
             {
                 Log.LogError($"DotNet version specified in '{globalJsonPath}' is invalid: {minSdkVersionStr}.");

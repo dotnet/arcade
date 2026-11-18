@@ -243,7 +243,7 @@ function InitializeDotNetCli([bool]$install, [bool]$createSdkLocationFile) {
 
 # True if global.json sets 'tools.downloadSdkVersion' to true, i.e. the SDK version to install is read from 'sdk.version'.
 function UseGlobalJsonSdkVersion() {
-  return (Get-Member -InputObject $GlobalJson.tools -Name 'downloadSdkVersion') -and ($GlobalJson.tools.downloadSdkVersion -eq $true)
+  return (Get-Member -InputObject $GlobalJson.tools -Name 'downloadSdkVersion') -and ($GlobalJson.tools.downloadSdkVersion -is [bool]) -and $GlobalJson.tools.downloadSdkVersion
 }
 
 # True if global.json specifies a .NET SDK to install, either via 'tools.dotnet' or via 'tools.downloadSdkVersion'.

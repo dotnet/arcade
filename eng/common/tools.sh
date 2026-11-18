@@ -149,11 +149,13 @@ function ReadDotNetSdkVersion {
   fi
 
   _ReadDotNetSdkVersion=""
-  local sdk_version_regex='"sdk"[[:space:]]*:[[:space:]]*[{][^}]*"version"[[:space:]]*:[[:space:]]*"([^"]+)"'
+  # Matches "sdk": { ... "version": "<value>" }. Quoted strings are consumed as a whole so that braces
+  # inside them (e.g. in "errorMessage") don't end the sdk object. The version is the third capture group.
+  local sdk_version_regex='"sdk"[[:space:]]*:[[:space:]]*[{]([^"}]|"([^"\\]|\\.)*")*"version"[[:space:]]*:[[:space:]]*"([^"]+)"'
   if command -v jq &> /dev/null; then
     _ReadDotNetSdkVersion="$(jq -r '.sdk.version // empty' "$global_json_file")"
   elif [[ "$(cat "$global_json_file")" =~ $sdk_version_regex ]]; then
-    _ReadDotNetSdkVersion=${BASH_REMATCH[1]}
+    _ReadDotNetSdkVersion=${BASH_REMATCH[3]}
   fi
 
   if [[ -z "$_ReadDotNetSdkVersion" ]]; then
