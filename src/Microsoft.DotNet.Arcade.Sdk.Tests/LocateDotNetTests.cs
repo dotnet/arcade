@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Arcade.Sdk.Tests;
 
-public class GlobalJsonTests
+public class LocateDotNetTests
 {
     [Theory]
     [InlineData("""{ "tools": { "dotnet": "1.0.100" } }""", "1.0.100")]
@@ -13,14 +13,14 @@ public class GlobalJsonTests
     [InlineData("""{ "sdk": { "version": "2.0.100" }, "tools": { "downloadSdkVersion": true } }""", "2.0.100")]
     [InlineData("""
         {
-          // comments and trailing commas are allowed in global.json
+          // comments and trailing commas are tolerated by the parser
           "tools": { "dotnet": "1.0.100", "downloadSdkVersion": true, },
           "sdk": { "errorMessage": "Install SDK {2.0.100}.", "version": "2.0.100-preview.1" },
         }
         """, "2.0.100-preview.1")]
     public void TryGetDotNetSdkVersionReturnsVersion(string content, string expectedVersion)
     {
-        Assert.True(GlobalJson.TryGetDotNetSdkVersion(content, "global.json", out string version, out string error));
+        Assert.True(LocateDotNet.TryGetDotNetSdkVersion(content, "global.json", out string version, out string error));
         Assert.Equal(expectedVersion, version);
         Assert.Null(error);
     }
@@ -31,7 +31,7 @@ public class GlobalJsonTests
     [InlineData("""{ "tools": """, "Unable to parse file")]
     public void TryGetDotNetSdkVersionReportsError(string content, string expectedError)
     {
-        Assert.False(GlobalJson.TryGetDotNetSdkVersion(content, "global.json", out string version, out string error));
+        Assert.False(LocateDotNet.TryGetDotNetSdkVersion(content, "global.json", out string version, out string error));
         Assert.Null(version);
         Assert.Contains(expectedError, error);
     }
