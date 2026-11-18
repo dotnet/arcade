@@ -58,40 +58,26 @@ Write-Host "Reading GitHub App ID from secret '$AppIdSecretName' in vault '$KeyV
 $previousNativeCommandErrorPreference = $PSNativeCommandUseErrorActionPreference
 try {
     $PSNativeCommandUseErrorActionPreference = $false
-    $keyVaultAccessToken = az account get-access-token `
+    # az keyvault secret show fails for this projection with Errno 22; az rest keeps authentication in Azure CLI.
+    $escapedSecretName = [Uri]::EscapeDataString($AppIdSecretName)
+    $appId = az rest `
+        --method get `
+        --url "https://$KeyVaultName.vault.azure.net/secrets/${escapedSecretName}?api-version=7.4" `
         --resource https://vault.azure.net `
-        --query accessToken `
+        --query value `
         --output tsv `
         --only-show-errors
-    $tokenExitCode = $LASTEXITCODE
+    $secretExitCode = $LASTEXITCODE
 }
 catch {
-    Write-PipelineTelemetryError -Category 'Build' -Message "Failed to acquire an Azure Key Vault access token: $_"
+    Write-PipelineTelemetryError -Category 'Build' -Message "Failed to read App ID secret '$AppIdSecretName' from vault '$KeyVaultName' with Azure CLI: $_"
     exit 1
 }
 finally {
     $PSNativeCommandUseErrorActionPreference = $previousNativeCommandErrorPreference
 }
-if ($tokenExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($keyVaultAccessToken)) {
-    Write-PipelineTelemetryError -Category 'Build' -Message "'az account get-access-token' failed with exit code $tokenExitCode while acquiring an Azure Key Vault access token."
-    exit 1
-}
-
-$escapedSecretName = [Uri]::EscapeDataString($AppIdSecretName)
-try {
-    # Read only the ID value: CLI secret deserialization fails on year-9999 expiry metadata.
-    $appIdResponse = Invoke-RestMethod `
-        -Uri "https://$KeyVaultName.vault.azure.net/secrets/${escapedSecretName}?api-version=7.4" `
-        -Headers @{ Authorization = "Bearer $keyVaultAccessToken" } `
-        -Method Get
-}
-catch {
-    Write-PipelineTelemetryError -Category 'Build' -Message "Failed to read App ID secret '$AppIdSecretName' from vault '$KeyVaultName': $_. Verify the service connection can read this App-ID projection."
-    exit 1
-}
-$appId = [string] $appIdResponse.value
-if ([string]::IsNullOrWhiteSpace($appId)) {
-    Write-PipelineTelemetryError -Category 'Build' -Message "App ID secret '$AppIdSecretName' in vault '$KeyVaultName' is empty."
+if ($secretExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($appId)) {
+    Write-PipelineTelemetryError -Category 'Build' -Message "'az rest' failed with exit code $secretExitCode while reading App ID secret '$AppIdSecretName' from vault '$KeyVaultName'. Verify the service connection can read this App-ID projection."
     exit 1
 }
 
