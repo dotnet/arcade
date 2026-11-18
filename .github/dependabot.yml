@@ -10,6 +10,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      microsoft-diagnostics:
+        patterns:
+          - "Microsoft.Diagnostics.NETCore.Client"
+          - "Microsoft.Diagnostics.Runtime"
     ignore:
       # Manually updated dependencies
       - dependency-name: "Microsoft.Build.NoTargets"
@@ -24,6 +29,7 @@ updates:
       - dependency-name: "Microsoft.Build.Framework"
       - dependency-name: "Microsoft.Build.Tasks.Core"
       - dependency-name: "Microsoft.Build.Utilities.Core"
+      - dependency-name: "Microsoft.Build.TaskAuthoring.Analyzer"
       - dependency-name: "Microsoft.CodeAnalysis.CSharp"
       - dependency-name: "Microsoft.Deployment.DotNet.Releases"
       - dependency-name: "Microsoft.DiaSymReader.Converter"

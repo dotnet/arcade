@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using Microsoft.Arcade.Common;
 
 #nullable enable
@@ -64,7 +65,9 @@ public class MockFileSystem : IFileSystem
     public void CopyFile(string sourceFileName, string destFileName, bool overwrite = false) => Files[destFileName] = Files[sourceFileName];
 
     public Stream GetFileStream(string path, FileMode mode, FileAccess access)
-        => FileExists(path) ? new MemoryStream() : new MockFileStream(this, path);
+        => access == FileAccess.Read && FileExists(path)
+            ? new MemoryStream(Encoding.UTF8.GetBytes(Files[path]))
+            : new MockFileStream(this, path, mode);
 
     public FileAttributes GetAttributes(string path)
     {
@@ -101,11 +104,18 @@ public class MockFileSystem : IFileSystem
         private readonly string _path;
         private bool _disposed = false;
 
-        public MockFileStream(MockFileSystem fileSystem, string path)
-            : base(fileSystem.FileExists(path) ? System.Text.Encoding.UTF8.GetBytes(fileSystem.Files[path]) : new byte[2048])
+        public MockFileStream(MockFileSystem fileSystem, string path, FileMode mode)
         {
             _fileSystem = fileSystem;
             _path = path;
+
+            // Create and Truncate start empty; other modes retain contents in an expandable stream.
+            if (mode != FileMode.Create && mode != FileMode.Truncate && fileSystem.FileExists(path))
+            {
+                byte[] contents = Encoding.UTF8.GetBytes(fileSystem.Files[path]);
+                Write(contents, 0, contents.Length);
+                Position = 0;
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -116,7 +126,7 @@ public class MockFileSystem : IFileSystem
                 _disposed = true;
                 using var sr = new StreamReader(this);
                 Seek(0, SeekOrigin.Begin);
-                _fileSystem.WriteToFile(_path, sr.ReadToEnd().Replace("\0", ""));
+                _fileSystem.WriteToFile(_path, sr.ReadToEnd());
             }
         }
     }

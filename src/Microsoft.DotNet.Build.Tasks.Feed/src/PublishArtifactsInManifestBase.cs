@@ -216,6 +216,8 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
 
     protected LatestLinksManager LinkManager { get; set; } = null;
 
+    private readonly ConcurrentQueue<(HashSet<string> Assets, TargetFeedConfig FeedConfig)> _pendingLatestLinks = new();
+
     /// <summary>
     /// For functions where retry is possible, max number of retries to perform
     /// </summary>
@@ -931,7 +933,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
 
         await Task.WhenAll(publishTasks);
 
-        Log.LogMessage(MessageImportance.High, "\nCompleted publishing of packages: ");
+        Log.LogMessage(MessageImportance.High, "\nCompleted publishing of packages.");
     }
 
     protected virtual HashSet<PackageArtifactModel> SplitPackageByAssetSelection(HashSet<PackageArtifactModel> packages, TargetFeedConfig feedConfig)
@@ -954,19 +956,19 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         // Must set automatic decompression when dealing with build artifacts. Not required for pipeline artifacts.
         handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
-        var client = new HttpClient(handler);
-        client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
-
         // Trim so a whitespace-only token (e.g. from MSBuild metadata) is treated as "no token"
         // and cleanly falls back to Entra auth instead of throwing in CreateAzdoAuthHeader.
         string effectiveToken = (tokenOverride ?? AzdoApiToken)?.Trim();
         if (!string.IsNullOrEmpty(effectiveToken))
         {
+            var client = new HttpClient(handler);
+            client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
             client.DefaultRequestHeaders.Authorization = CreateAzdoAuthHeader(effectiveToken);
+            return client;
         }
         else
         {
-            // No token provided; acquire an Entra token via DefaultIdentityTokenCredential.
+            // No token provided; acquire an Entra token via DefaultIdentityTokenCredential with dynamic per-request refresh.
             // This supports AzurePipelinesCredential (from AzureCLI@2), ManagedIdentity, WorkloadIdentity, and AzureCLI
             try
             {
@@ -975,16 +977,25 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                     {
                         ManagedIdentityClientId = ManagedIdentityClientId
                     });
-                var tokenRequestContext = new global::Azure.Core.TokenRequestContext(new[] { "499b84ac-1321-427f-aa17-267ca6975798/.default" });
-                var accessToken = credential.GetToken(tokenRequestContext, CancellationToken.None);
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
+                var tokenRequestContext = new global::Azure.Core.TokenRequestContext(TokenCredentialAuthenticationHandler.AzureDevOpsScopes);
+                // Validate that a token can be acquired up front before passing the client to the caller
+                credential.GetToken(tokenRequestContext, CancellationToken.None);
+
+                var authHandler = new TokenCredentialAuthenticationHandler(
+                    credential,
+                    TokenCredentialAuthenticationHandler.AzureDevOpsScopes,
+                    handler);
+
+                var client = new HttpClient(authHandler);
+                client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
+                return client;
             }
             catch (Exception e)
             {
                 // Token acquisition failed before the client is handed to the caller's `using`,
-                // so dispose it here to avoid leaking the underlying handler/sockets on repeated
+                // so dispose the handler here to avoid leaking the underlying handler/sockets on repeated
                 // failures (e.g. a misconfigured service connection).
-                client.Dispose();
+                handler.Dispose();
                 throw new InvalidOperationException(
                     "Failed to acquire an Entra token for Azure DevOps. Provide a token (e.g. 'AzdoApiToken' for artifact " +
                     "download or 'AzureDevOpsFeedsKey' for feed publishing), or run under an AzureCLI@2 task with " +
@@ -992,8 +1003,6 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
                     "can obtain a token.", e);
             }
         }
-
-        return client;
     }
 
     /// <summary>
@@ -1211,7 +1220,7 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
 
         await Task.WhenAll(publishTasks);
 
-        Log.LogMessage(MessageImportance.High, "\nCompleted publishing of blobs: ");
+        Log.LogMessage(MessageImportance.High, "\nCompleted publishing of blobs.");
     }
 
     /// <summary>
@@ -1754,34 +1763,45 @@ public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities
         if (feedConfig.Type == FeedType.AzureStorageContainer &&
             feedConfig.LatestLinkShortUrlPrefixes.Any())
         {
-
-            if (LinkManager == null)
-            {
-                // If there is a client cert supplied, use that.
-                // Otherwise, use the client secret.
-                if (AkaMSClientCertificate != null)
-                {
-                    LinkManager = new LatestLinksManager(
-                        AkaMSClientId,
-                        AkaMSClientCertificate,
-                        AkaMSTenant,
-                        AkaMSGroupOwner,
-                        AkaMSCreatedBy,
-                        AkaMsOwners,
-                        Log);
-                }
-                else
-                {
-                    throw new InvalidOperationException("Cannot create latest links for feed config without aka.ms authentication information");
-                }
-            }
-
-            // The latest links should be updated only after the publishing is complete, to avoid
-            // dead links in the interim.
-            await LinkManager.CreateOrUpdateLatestLinksAsync(
-                blobAssets.Select(b => b.Id).ToHashSet(),
-                feedConfig);
+            _pendingLatestLinks.Enqueue((blobAssets.Select(b => b.Id).ToHashSet(), feedConfig));
         }
+    }
+
+    protected async Task PublishAssetLocationsAndLatestLinksAsync(IProductConstructionServiceApi client)
+    {
+        await PersistPendingAssetLocationAsync(client);
+
+        // The latest links should be updated only after publishing is complete, to avoid
+        // dead links in the interim.
+        while (!Log.HasLoggedErrors && _pendingLatestLinks.TryDequeue(out var pendingLinks))
+        {
+            await CreateOrUpdateLatestLinksAsync(pendingLinks.Assets, pendingLinks.FeedConfig);
+        }
+    }
+
+    protected virtual async Task CreateOrUpdateLatestLinksAsync(HashSet<string> assets, TargetFeedConfig feedConfig)
+    {
+        if (LinkManager == null)
+        {
+            // If there is a client cert supplied, use that.
+            if (AkaMSClientCertificate != null)
+            {
+                LinkManager = new LatestLinksManager(
+                    AkaMSClientId,
+                    AkaMSClientCertificate,
+                    AkaMSTenant,
+                    AkaMSGroupOwner,
+                    AkaMSCreatedBy,
+                    AkaMsOwners,
+                    Log);
+            }
+            else
+            {
+                throw new InvalidOperationException("Cannot create latest links for feed config without aka.ms authentication information");
+            }
+        }
+
+        await LinkManager.CreateOrUpdateLatestLinksAsync(assets, feedConfig);
     }
 
     private async Task PublishAssetsUsingStreamingPublishingAsync(
