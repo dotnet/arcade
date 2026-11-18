@@ -122,7 +122,7 @@ By default, a NativeProjectReference will not build the native project. It assum
 
 #### Referencing CMake targets with CMakeProjectReference
 
-To build and copy the artifacts for particular CMake targets, add a `CMakeProjectReference` item. Its `CMakeTargets` metadata contains the target names to build:
+To build and copy the artifacts for particular CMake targets, add a `CMakeProjectReference` item. Its `CMakeTargets` metadata contains the case-sensitive target names to build:
 
 ```xml
 <ItemGroup>

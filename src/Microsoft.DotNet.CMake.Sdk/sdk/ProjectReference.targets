@@ -100,6 +100,7 @@
              Targets="CopyNativeProjectBinariesFromFileApi"
              Properties="ReferencedCMakeLists=%(NativeProjectReferenceNormalized.Identity);
                          ReferencedCMakeProject=%(NativeProjectReferenceNormalized.CMakeProject);
+                         ReferencedNativeBuild=%(NativeProjectReferenceNormalized.BuildNative);
                          %(NativeProjectReferenceNormalized.AdditionalProperties)"
              Condition="'@(NativeProjectReference)' != ''" />
 
@@ -127,6 +128,8 @@
 
     <PropertyGroup>
       <_SourceDirectory>$([System.IO.Path]::GetDirectoryName($(ReferencedCMakeLists)))</_SourceDirectory>
+      <_SynchronizeCMakeFileApi>false</_SynchronizeCMakeFileApi>
+      <_SynchronizeCMakeFileApi Condition="'$(ReferencedCMakeTargets)' != '' or '$(ReferencedNativeBuild)' == 'true'">true</_SynchronizeCMakeFileApi>
     </PropertyGroup>
 
     <!-- Get artifacts from File API -->
@@ -134,6 +137,7 @@
       CMakeOutputDir="$(_CMakeOutputDir)"
       SourceDirectory="$(_SourceDirectory)"
       CMakeTargets="$(ReferencedCMakeTargets)"
+      SynchronizeWithCMakeBuild="$(_SynchronizeCMakeFileApi)"
       Configuration="$(_Configuration)">
       <Output TaskParameter="Artifacts" ItemName="NativeProjectBinaries" />
     </GetCMakeArtifactsFromFileApi>

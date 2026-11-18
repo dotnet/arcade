@@ -3,10 +3,6 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Tasks;
-using System;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
 
 namespace Microsoft.DotNet.CMake.Sdk;
 
@@ -20,48 +16,7 @@ public sealed class ExecWithMutex : Exec
 
     public override bool Execute()
     {
-        using var mutex = CreateMutex(MutexName);
-        bool ownsMutex = false;
-
-        try
-        {
-            try
-            {
-                mutex.WaitOne();
-            }
-            catch (AbandonedMutexException)
-            {
-            }
-
-            ownsMutex = true;
-            return base.Execute();
-        }
-        finally
-        {
-            if (ownsMutex)
-            {
-                mutex.ReleaseMutex();
-            }
-        }
-    }
-
-    private Mutex CreateMutex(string path)
-    {
-        string key = TaskEnvironment.GetAbsolutePath(path).GetCanonicalForm().Value;
-        using var hasher = SHA256.Create();
-        string hash = Convert.ToBase64String(hasher.ComputeHash(Encoding.UTF8.GetBytes(key)))
-            .TrimEnd('=')
-            .Replace('+', '-')
-            .Replace('/', '_');
-
-#if NETFRAMEWORK
-        return new Mutex(false, $"Local\\Microsoft.DotNet.CMake.Sdk.{hash}");
-#else
-        return new Mutex(
-            false,
-            $"Microsoft.DotNet.CMake.Sdk.{hash}",
-            new NamedWaitHandleOptions { CurrentUserOnly = true },
-            out _);
-#endif
+        using var mutex = CMakeBuildMutex.Acquire(TaskEnvironment, MutexName);
+        return base.Execute();
     }
 }

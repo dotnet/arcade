@@ -43,6 +43,11 @@ public class GetCMakeArtifactsFromFileApi : Task, IMultiThreadableTask
     public string Configuration { get; set; }
 
     /// <summary>
+    /// Synchronizes the File API read with native builds using the same output directory.
+    /// </summary>
+    public bool SynchronizeWithCMakeBuild { get; set; }
+
+    /// <summary>
     /// Output: The list of artifact file paths.
     /// </summary>
     [Output]
@@ -53,6 +58,14 @@ public class GetCMakeArtifactsFromFileApi : Task, IMultiThreadableTask
         try
         {
             string replyDir = Path.Combine(CMakeOutputDir, ".cmake", "api", "v1", "reply");
+
+            if (SynchronizeWithCMakeBuild && !Directory.Exists(TaskEnvironment.GetAbsolutePath(CMakeOutputDir)))
+            {
+                Log.LogError("CMake File API reply directory does not exist: {0}", replyDir);
+                return false;
+            }
+
+            using var mutex = SynchronizeWithCMakeBuild ? CMakeBuildMutex.Acquire(TaskEnvironment, CMakeOutputDir) : null;
             
             AbsolutePath replyDirPath = TaskEnvironment.GetAbsolutePath(replyDir);
             if (!Directory.Exists(replyDirPath))
@@ -133,19 +146,8 @@ public class GetCMakeArtifactsFromFileApi : Task, IMultiThreadableTask
             if (!string.IsNullOrEmpty(CMakeTargets))
             {
                 var requestedTargets = CMakeTargets.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                var missingTargets = requestedTargets
-                    .Where(requestedTarget => !config.Targets.Any(target =>
-                        string.Equals(target.Name, requestedTarget, StringComparison.OrdinalIgnoreCase)))
-                    .ToArray();
-                if (missingTargets.Length > 0)
-                {
-                    Log.LogError(
-                        "The requested CMake target(s) were not found in the File API response: {0}.",
-                        string.Join(", ", missingTargets));
-                    return false;
-                }
-
-                targets = config.Targets.Where(t => requestedTargets.Contains(t.Name, StringComparer.OrdinalIgnoreCase));
+                // Generator-provided targets such as "install" are not present in the codemodel.
+                targets = config.Targets.Where(t => requestedTargets.Contains(t.Name, StringComparer.Ordinal));
                 Log.LogMessage(MessageImportance.Low, "Found {0} requested CMake target(s) for configuration '{1}'.", targets.Count(), Configuration);
             }
             else
