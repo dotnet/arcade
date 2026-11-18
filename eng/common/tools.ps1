@@ -185,7 +185,7 @@ function InitializeDotNetCli([bool]$install, [bool]$createSdkLocationFile) {
     }
   }
 
-  $dotnetSdkVersion = $GlobalJson.tools.dotnet
+  $dotnetSdkVersion = GetDotNetSdkVersion
 
   # Use dotnet installation specified in DOTNET_INSTALL_DIR if it contains the required SDK version,
   # otherwise install the dotnet CLI and SDK to repo local .dotnet directory to avoid potential permission issues.
@@ -239,6 +239,30 @@ function InitializeDotNetCli([bool]$install, [bool]$createSdkLocationFile) {
   Write-PipelineSetVariable -Name 'DOTNET_NOLOGO' -Value '1'
 
   return $global:_DotNetInstallDir = $dotnetRoot
+}
+
+# True if global.json sets 'tools.downloadSdkVersion' to true, i.e. the SDK version to install is read from 'sdk.version'.
+function UseGlobalJsonSdkVersion() {
+  return (Get-Member -InputObject $GlobalJson.tools -Name 'downloadSdkVersion') -and ($GlobalJson.tools.downloadSdkVersion -eq $true)
+}
+
+# True if global.json specifies a .NET SDK to install, either via 'tools.dotnet' or via 'tools.downloadSdkVersion'.
+function GlobalJsonSpecifiesDotNetSdk() {
+  return (Get-Member -InputObject $GlobalJson.tools -Name 'dotnet') -or (UseGlobalJsonSdkVersion)
+}
+
+# Returns the .NET SDK version to install: 'sdk.version' if 'tools.downloadSdkVersion' is true, otherwise 'tools.dotnet'.
+function GetDotNetSdkVersion() {
+  if (-not (UseGlobalJsonSdkVersion)) {
+    return $GlobalJson.tools.dotnet
+  }
+
+  if ((Get-Member -InputObject $GlobalJson -Name 'sdk') -and (Get-Member -InputObject $GlobalJson.sdk -Name 'version') -and $GlobalJson.sdk.version) {
+    return $GlobalJson.sdk.version
+  }
+
+  Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "/global.json must specify 'sdk.version' when 'tools.downloadSdkVersion' is true."
+  ExitWithExitCode 1
 }
 
 function Retry($downloadBlock, $maxRetries = 5) {
@@ -590,13 +614,13 @@ function InitializeBuildTool() {
 
   # Initialize dotnet cli if listed in 'tools'
   $dotnetRoot = $null
-  if (Get-Member -InputObject $GlobalJson.tools -Name 'dotnet') {
+  if (GlobalJsonSpecifiesDotNetSdk) {
     $dotnetRoot = InitializeDotNetCli -install:$restore
   }
 
   if ($msbuildEngine -eq 'dotnet') {
     if (!$dotnetRoot) {
-      Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "/global.json must specify 'tools.dotnet'."
+      Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "/global.json must specify 'tools.dotnet' or 'tools.downloadSdkVersion'."
       ExitWithExitCode 1
     }
     $dotnetPath = Join-Path $dotnetRoot (GetExecutableFileName 'dotnet')
@@ -625,11 +649,11 @@ function GetDefaultMSBuildEngine() {
     return 'vs'
   }
 
-  if (Get-Member -InputObject $GlobalJson.tools -Name 'dotnet') {
+  if (GlobalJsonSpecifiesDotNetSdk) {
     return 'dotnet'
   }
 
-  Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "-msbuildEngine must be specified, or /global.json must specify 'tools.dotnet' or 'tools.vs'."
+  Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "-msbuildEngine must be specified, or /global.json must specify 'tools.dotnet', 'tools.downloadSdkVersion' or 'tools.vs'."
   ExitWithExitCode 1
 }
 

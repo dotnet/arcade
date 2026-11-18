@@ -449,6 +449,20 @@ We include `tools/dotnet` to install the SDK version requested and `sdk` to ensu
 }
 ```
 
+Alternatively, set `tools/downloadSdkVersion` to `true` to install the SDK version specified in `sdk/version` instead of `tools/dotnet`. This avoids duplicating the version and allows tools that only understand the `sdk` section (e.g. Dependabot) to keep the SDK up-to-date. When `tools/downloadSdkVersion` is `true`, `tools/dotnet` is ignored. When it is `false` (the default) or omitted, the version specified in `tools/dotnet` is installed.
+
+```json
+{
+  "sdk": {
+    "version": "7.0.116",
+    "rollForward": "latestFeature"
+  },
+  "tools": {
+    "downloadSdkVersion": true
+  }
+}
+```
+
 ### /NuGet.config
 
 `/NuGet.config` file is present and specifies the MyGet feed to retrieve Arcade SDK from and other feeds required by the repository like so:
