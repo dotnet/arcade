@@ -91,8 +91,8 @@ public class LocateDotNet : Task, IMultiThreadableTask
     }
 
     /// <summary>
-    /// Reads the .NET SDK version that Arcade installs from global.json content: 'sdk.version' if
-    /// 'tools.downloadSdkVersion' is true, otherwise 'tools.dotnet'.
+    /// Reads the .NET SDK version that Arcade installs from global.json content: 'tools.dotnet' if
+    /// specified, otherwise 'sdk.version'.
     /// Keep in sync with eng/common/tools.ps1 and eng/common/tools.sh.
     /// </summary>
     internal static bool TryGetDotNetSdkVersion(string globalJsonContent, string globalJsonPath, out string version, out string error)
@@ -115,25 +115,13 @@ public class LocateDotNet : Task, IMultiThreadableTask
         {
             JsonElement root = document.RootElement;
 
-            if (TryGetProperty(root, "tools", out JsonElement tools) &&
-                TryGetProperty(tools, "downloadSdkVersion", out JsonElement downloadSdkVersion) &&
-                downloadSdkVersion.ValueKind == JsonValueKind.True)
-            {
-                if (TryGetNonEmptyString(root, "sdk", "version", out version))
-                {
-                    return true;
-                }
-
-                error = $"File '{globalJsonPath}' must specify 'sdk.version' when 'tools.downloadSdkVersion' is true.";
-                return false;
-            }
-
-            if (TryGetNonEmptyString(root, "tools", "dotnet", out version))
+            if (TryGetNonEmptyString(root, "tools", "dotnet", out version) ||
+                TryGetNonEmptyString(root, "sdk", "version", out version))
             {
                 return true;
             }
 
-            error = $"Unable to determine dotnet version from file '{globalJsonPath}'.";
+            error = $"Unable to determine dotnet version from file '{globalJsonPath}'. Specify 'tools.dotnet' or 'sdk.version'.";
             return false;
         }
     }

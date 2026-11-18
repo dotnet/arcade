@@ -9,13 +9,13 @@ public class LocateDotNetTests
 {
     [Theory]
     [InlineData("""{ "tools": { "dotnet": "1.0.100" } }""", "1.0.100")]
-    [InlineData("""{ "sdk": { "version": "2.0.100" }, "tools": { "downloadSdkVersion": false, "dotnet": "1.0.100" } }""", "1.0.100")]
-    [InlineData("""{ "sdk": { "version": "2.0.100" }, "tools": { "downloadSdkVersion": true } }""", "2.0.100")]
+    [InlineData("""{ "sdk": { "version": "2.0.100" }, "tools": { "dotnet": "1.0.100" } }""", "1.0.100")]
+    [InlineData("""{ "sdk": { "version": "2.0.100" }, "tools": { "vs": { } } }""", "2.0.100")]
     [InlineData("""
         {
           // comments and trailing commas are tolerated by the parser
-          "tools": { "dotnet": "1.0.100", "downloadSdkVersion": true, },
-          "sdk": { "errorMessage": "Install SDK {2.0.100}.", "version": "2.0.100-preview.1" },
+          "sdk": { "errorMessage": "Install SDK {2.0.100}.", "version": "2.0.100-preview.1", },
+          "msbuild-sdks": { "Microsoft.DotNet.Arcade.Sdk": "1.0.0" },
         }
         """, "2.0.100-preview.1")]
     public void TryGetDotNetSdkVersionReturnsVersion(string content, string expectedVersion)
@@ -26,8 +26,7 @@ public class LocateDotNetTests
     }
 
     [Theory]
-    [InlineData("""{ "sdk": { "version": "2.0.100" } }""", "Unable to determine dotnet version")]
-    [InlineData("""{ "tools": { "downloadSdkVersion": true, "dotnet": "1.0.100" } }""", "must specify 'sdk.version'")]
+    [InlineData("""{ "sdk": { "rollForward": "latestFeature" }, "tools": { "vs": { } } }""", "Unable to determine dotnet version")]
     [InlineData("""{ "tools": """, "Unable to parse file")]
     public void TryGetDotNetSdkVersionReportsError(string content, string expectedError)
     {

@@ -241,19 +241,9 @@ function InitializeDotNetCli([bool]$install, [bool]$createSdkLocationFile) {
   return $global:_DotNetInstallDir = $dotnetRoot
 }
 
-# True if global.json sets 'tools.downloadSdkVersion' to true, i.e. the SDK version to install is read from 'sdk.version'.
-function UseGlobalJsonSdkVersion() {
-  return (Get-Member -InputObject $GlobalJson.tools -Name 'downloadSdkVersion') -and ($GlobalJson.tools.downloadSdkVersion -is [bool]) -and $GlobalJson.tools.downloadSdkVersion
-}
-
-# True if global.json specifies a .NET SDK to install, either via 'tools.dotnet' or via 'tools.downloadSdkVersion'.
-function GlobalJsonSpecifiesDotNetSdk() {
-  return (Get-Member -InputObject $GlobalJson.tools -Name 'dotnet') -or (UseGlobalJsonSdkVersion)
-}
-
-# Returns the .NET SDK version to install: 'sdk.version' if 'tools.downloadSdkVersion' is true, otherwise 'tools.dotnet'.
+# Returns the .NET SDK version to install: 'tools.dotnet' if specified, otherwise 'sdk.version', otherwise $null.
 function GetDotNetSdkVersion() {
-  if (-not (UseGlobalJsonSdkVersion)) {
+  if ((Get-Member -InputObject $GlobalJson.tools -Name 'dotnet') -and $GlobalJson.tools.dotnet) {
     return $GlobalJson.tools.dotnet
   }
 
@@ -261,8 +251,12 @@ function GetDotNetSdkVersion() {
     return $GlobalJson.sdk.version
   }
 
-  Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "/global.json must specify 'sdk.version' when 'tools.downloadSdkVersion' is true."
-  ExitWithExitCode 1
+  return $null
+}
+
+# True if global.json specifies a .NET SDK version to install, either via 'tools.dotnet' or via 'sdk.version'.
+function GlobalJsonSpecifiesDotNetSdk() {
+  return [bool](GetDotNetSdkVersion)
 }
 
 function Retry($downloadBlock, $maxRetries = 5) {
@@ -612,7 +606,7 @@ function InitializeBuildTool() {
     $msbuildEngine = GetDefaultMSBuildEngine
   }
 
-  # Initialize dotnet cli if listed in 'tools'
+  # Initialize dotnet cli if global.json specifies a .NET SDK version ('tools.dotnet' or 'sdk.version')
   $dotnetRoot = $null
   if (GlobalJsonSpecifiesDotNetSdk) {
     $dotnetRoot = InitializeDotNetCli -install:$restore
@@ -620,7 +614,7 @@ function InitializeBuildTool() {
 
   if ($msbuildEngine -eq 'dotnet') {
     if (!$dotnetRoot) {
-      Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "/global.json must specify 'tools.dotnet' or 'tools.downloadSdkVersion'."
+      Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "/global.json must specify 'tools.dotnet' or 'sdk.version'."
       ExitWithExitCode 1
     }
     $dotnetPath = Join-Path $dotnetRoot (GetExecutableFileName 'dotnet')
@@ -653,7 +647,7 @@ function GetDefaultMSBuildEngine() {
     return 'dotnet'
   }
 
-  Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "-msbuildEngine must be specified, or /global.json must specify 'tools.dotnet', 'tools.downloadSdkVersion' or 'tools.vs'."
+  Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "-msbuildEngine must be specified, or /global.json must specify 'tools.dotnet', 'sdk.version' or 'tools.vs'."
   ExitWithExitCode 1
 }
 
@@ -962,8 +956,13 @@ $ToolsDir = Join-Path $RepoRoot '.tools'
 $LogDir = Join-Path (Join-Path $ArtifactsDir 'log') $configuration
 $TempDir = Join-Path (Join-Path $ArtifactsDir 'tmp') $configuration
 $GlobalJson = Get-Content -Raw -Path (Join-Path $RepoRoot 'global.json') | ConvertFrom-Json
+# The 'tools' section is optional (the SDK version can come from 'sdk.version'). Default it to an empty object
+# so that code inspecting it doesn't need to handle a missing section.
+if (-not (Get-Member -InputObject $GlobalJson -Name 'tools')) {
+  $GlobalJson | Add-Member -NotePropertyName 'tools' -NotePropertyValue ([pscustomobject]@{})
+}
 # true if global.json contains a "runtimes" section
-$globalJsonHasRuntimes = if ($GlobalJson.tools.PSObject.Properties.Name -Match 'runtimes') { $true } else { $false }
+$globalJsonHasRuntimes = [bool](Get-Member -InputObject $GlobalJson.tools -Name 'runtimes')
 
 Create-Directory $ToolsetDir
 Create-Directory $TempDir
