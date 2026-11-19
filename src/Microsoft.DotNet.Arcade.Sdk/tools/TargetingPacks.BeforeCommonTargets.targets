@@ -121,9 +121,13 @@
     ILCompiler's SingleEntry.targets can only handle the rids meant for end-users.
     It doesn't work when using a non-portable SDK to build an SDK with a different non-portable RID.
     We set IlcHostRuntimeIdentifier/IlcTargetOS to provide it with the information it needs.
+    For linux-bionic and linux-musl, TargetOS is just 'linux', so IlcTargetOS is derived from TargetRid
+    to preserve the libc flavor ILCompiler uses to select flavor-specific settings.
   -->
   <PropertyGroup Condition="'$(DotNetBuildSourceOnly)' == 'true'">
     <IlcHostRuntimeIdentifier Condition="'$(IlcHostRuntimeIdentifier)' == ''">$(NETCoreSdkRuntimeIdentifier)</IlcHostRuntimeIdentifier>
+    <IlcTargetOS Condition="'$(IlcTargetOS)' == '' and $(TargetRid.StartsWith('linux-bionic-'))">linux-bionic</IlcTargetOS>
+    <IlcTargetOS Condition="'$(IlcTargetOS)' == '' and $(TargetRid.StartsWith('linux-musl-'))">linux-musl</IlcTargetOS>
     <IlcTargetOS Condition="'$(IlcTargetOS)' == ''">$(TargetOS)</IlcTargetOS>
   </PropertyGroup>
   <ItemGroup Condition="'$(DotNetBuildSourceOnly)' == 'true'">
