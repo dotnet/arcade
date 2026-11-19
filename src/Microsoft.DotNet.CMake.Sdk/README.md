@@ -94,6 +94,8 @@ If you want to drive a native CMake build with this SDK, add a .proj file next t
 
 Building this project will configure and build the CMakeLists.txt project with the default generator provided by the SDK (Visual Studio on Windows, Unix Makefiles off-Windows).
 
+The build checks that `CMakeDefines` and `CMakeArguments` match those used during configuration. Use separate `CMakeOutputDir` directories for projects with different configure inputs.
+
 #### Referencing Native assets with NativeProjectReference
 
 An important feature of the Microsoft.DotNet.CMake.Sdk is that it enables the user to reference their native assets from a managed project. This is the most valuable in a testing scenario such as the CoreCLR test tree since it does not currently do any special handling of multiple architectures.

@@ -223,11 +223,17 @@
 
   <Target Name="Configure"
     DependsOnTargets="GetConfigScript;CreateFileApiQuery">
+    <Hash ItemsToHash="@(CMakeDefines->'-D%(Identity)=%(Value)');@(CMakeArguments)" IgnoreCase="false">
+      <Output TaskParameter="HashResult" PropertyName="_CMakeConfigureFingerprint" />
+    </Hash>
     <ExecWithMutex WorkingDirectory="$(MSBuildProjectDirectory)"
       MutexName="$(CMakeOutputDir)"
       Command="
       $(CMakeCompilerSearchScript)
       $(CMakeConfigScript)" />
+    <WriteLinesToFile File="$(CMakeOutputDir)\.cmake\configure.fingerprint"
+                      Lines="$(_CMakeConfigureFingerprint)"
+                      Overwrite="true" />
   </Target>
 
   <Target Name="CoreCompile" DependsOnTargets="Configure;GetBuildScript">
@@ -235,6 +241,16 @@
       <!-- Don't set IntermediateAssembly since this is not produced -->
       <IntermediateAssembly Remove="@(IntermediateAssembly)" />
     </ItemGroup>
+    <Hash ItemsToHash="@(CMakeDefines->'-D%(Identity)=%(Value)');@(CMakeArguments)" IgnoreCase="false">
+      <Output TaskParameter="HashResult" PropertyName="_CMakeBuildFingerprint" />
+    </Hash>
+    <Error Condition="!Exists('$(CMakeOutputDir)\.cmake\configure.fingerprint')"
+           Text="The CMake configure fingerprint is missing. Run Configure before building." />
+    <ReadLinesFromFile File="$(CMakeOutputDir)\.cmake\configure.fingerprint">
+      <Output TaskParameter="Lines" PropertyName="_CMakeStoredConfigureFingerprint" />
+    </ReadLinesFromFile>
+    <Error Condition="'$(_CMakeStoredConfigureFingerprint)' != '$(_CMakeBuildFingerprint)'"
+           Text="CMakeDefines or CMakeArguments differ from the configured build tree. Use a separate CMakeOutputDir for different CMake configurations." />
     <ExecWithMutex WorkingDirectory="$(MSBuildProjectDirectory)"
       MutexName="$(CMakeOutputDir)"
       Command="
