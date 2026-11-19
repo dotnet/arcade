@@ -72,11 +72,7 @@ async def download_package_index_parallel(mirror, arch, suites, check_sig, keyri
         tasks = [fetch_suite_indexes(session, mirror, arch, suite, ["main", "universe"], check_sig, keyring) for suite in suites]
         # Let every task finish before the session closes so one failure doesn't
         # surface as noisy "Session is closed" errors from the others.
-        suite_results = await asyncio.gather(*tasks, return_exceptions=True)
-
-    for result in suite_results:
-        if isinstance(result, BaseException):
-            raise result
+        suite_results = await gather_all(*tasks)
 
     merged_content = ""
     for results in suite_results:
@@ -103,9 +99,18 @@ async def fetch_url(session, url, max_retries=3, retry_delay=2):
         except (asyncio.TimeoutError, aiohttp.ClientError) as e:
             print(f"Error downloading {url}: {type(e).__name__} - {e}. Retrying...")
 
-        await asyncio.sleep(retry_delay * (attempt + 1))
+        if attempt < max_retries - 1:
+            await asyncio.sleep(retry_delay * (attempt + 1))
 
     raise Exception(f"Failed to download {url} after {max_retries} attempts.")
+
+async def gather_all(*coroutines):
+    """Run coroutines concurrently, letting all finish before raising the first failure."""
+    results = await asyncio.gather(*coroutines, return_exceptions=True)
+    for result in results:
+        if isinstance(result, BaseException):
+            raise result
+    return results
 
 async def fetch_suite_indexes(session, mirror, arch, suite, components, check_sig, keyring, max_attempts=5, retry_delay=10):
     """Fetch the package indexes for one suite.
@@ -116,12 +121,12 @@ async def fetch_suite_indexes(session, mirror, arch, suite, components, check_si
     the whole suite from a fresh signed Release.
     """
     if not check_sig:
-        return [await fetch_unverified_index(session, mirror, arch, suite, component) for component in components]
+        return await gather_all(*(fetch_unverified_index(session, mirror, arch, suite, component) for component in components))
 
     for attempt in range(1, max_attempts + 1):
         try:
             release_content = await fetch_release_file(session, mirror, suite, keyring)
-            return [await fetch_verified_index(session, mirror, arch, suite, component, release_content) for component in components]
+            return await gather_all(*(fetch_verified_index(session, mirror, arch, suite, component, release_content) for component in components))
         except Exception as e:
             if attempt == max_attempts:
                 raise
