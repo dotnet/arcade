@@ -26,13 +26,13 @@ internal sealed class HelixService : IHelixService
     private readonly ILogger _logger;
     private readonly IHelixApi _helixApi;
     private readonly IBlobClientFactory _blobClientFactory;
-    private readonly IFileSystem _fileSystem;
-    private readonly JobMonitorMetrics _metrics;
+    private readonly HelixTestResultsDownloader _testResultsDownloader;
+    private readonly TestReportingMetrics _metrics;
 
     public HelixService(
         IHelixApi helixApi,
         ILogger logger,
-        JobMonitorMetrics metrics = null)
+        TestReportingMetrics metrics = null)
         : this(helixApi, logger, new AzureBlobClientFactory(), new FileSystem(), metrics)
     {
     }
@@ -42,13 +42,14 @@ internal sealed class HelixService : IHelixService
         ILogger logger,
         IBlobClientFactory blobClientFactory,
         IFileSystem fileSystem,
-        JobMonitorMetrics metrics = null)
+        TestReportingMetrics metrics = null)
     {
         _helixApi = helixApi ?? throw new ArgumentNullException(nameof(helixApi));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _blobClientFactory = blobClientFactory ?? throw new ArgumentNullException(nameof(blobClientFactory));
-        _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
-        _metrics = metrics ?? new JobMonitorMetrics();
+        _metrics = metrics ?? new TestReportingMetrics();
+        _testResultsDownloader = new HelixTestResultsDownloader(
+            helixApi, logger, _metrics, _blobClientFactory, fileSystem ?? throw new ArgumentNullException(nameof(fileSystem)));
     }
 
     public async Task<IReadOnlyList<HelixJobInfo>> GetJobsForBuildAsync(
@@ -96,95 +97,12 @@ internal sealed class HelixService : IHelixService
         ];
     }
 
-    public async Task<WorkItemTestResults> DownloadTestResultsAsync(
+    public Task<WorkItemTestResults> DownloadTestResultsAsync(
         string jobName,
         string workItemName,
         string workingDirectory,
         CancellationToken cancellationToken)
-    {
-        List<Exception> transientFailures = [];
-        string outputDirectory = _fileSystem.PathCombine(workingDirectory, SanitizeDirName(jobName));
-        _fileSystem.CreateDirectory(outputDirectory);
-
-        JobResultsUri resultsUri = await RetryAsync(() => _helixApi.Job.ResultsAsync(jobName), cancellationToken);
-        IImmutableList<UploadedFile> availableFiles = await RetryAsync(
-            () => _helixApi.WorkItem.ListFilesAsync(workItemName, jobName, false),
-            cancellationToken);
-
-        availableFiles = [.. availableFiles.Where(f => LooksLikeTestResultFile(f.Name))];
-        if (availableFiles.Count == 0)
-        {
-            return new WorkItemTestResults(jobName, workItemName, []);
-        }
-
-        string workItemDirectory = _fileSystem.PathCombine(outputDirectory, SanitizeDirName(workItemName));
-        _fileSystem.CreateDirectory(workItemDirectory);
-
-        List<string> workItemFiles = [];
-        foreach (UploadedFile file in availableFiles)
-        {
-            string relativePath = NormalizeUploadedFilePath(file.Name);
-            string destinationFile = _fileSystem.PathCombine(workItemDirectory, relativePath);
-            string directory = _fileSystem.GetDirectoryName(destinationFile);
-            if (!string.IsNullOrEmpty(directory))
-            {
-                _fileSystem.CreateDirectory(directory);
-            }
-
-            try
-            {
-                IBlobClient blobClient = _blobClientFactory.CreateBlobClient(file.Link, resultsUri.ResultsUriRSAS);
-                await blobClient.DownloadToAsync(destinationFile, cancellationToken);
-                workItemFiles.Add(destinationFile);
-                _metrics.RecordResultBlobDownload(failed: false);
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (Exception ex) when (TransientFailureDetector.IsTransient(ex))
-            {
-                _metrics.RecordResultBlobDownload(failed: true);
-                transientFailures.Add(ex);
-                _logger.LogWarning(ex,
-                    "Transient failure downloading '{FileName}' for '{JobName}/{WorkItemName}'. "
-                    + "The remaining files will still be attempted before the work item is retried.",
-                    file.Name,
-                    jobName,
-                    workItemName);
-            }
-            catch (Exception ex)
-            {
-                _metrics.RecordResultBlobDownload(failed: true);
-                _logger.LogWarning(ex, "Failed to download '{FileName}' for '{JobName}/{WorkItemName}'.", file.Name, jobName, workItemName);
-            }
-        }
-
-        if (transientFailures.Count > 0)
-        {
-            throw new IOException(
-                $"One or more transient test-result downloads failed for Helix job '{jobName}'.",
-                new AggregateException(transientFailures));
-        }
-
-        return new WorkItemTestResults(jobName, workItemName, workItemFiles);
-    }
-
-    private static bool LooksLikeTestResultFile(string path)
-        => LocalTestResultsReader.LooksLikeTestResultFile(path);
-
-    private static string NormalizeUploadedFilePath(string path)
-        => path.Replace('\\', System.IO.Path.DirectorySeparatorChar).Replace('/', System.IO.Path.DirectorySeparatorChar);
-
-    private static string SanitizeDirName(string value)
-    {
-        foreach (char invalidChar in System.IO.Path.GetInvalidFileNameChars())
-        {
-            value = value.Replace(invalidChar, '-');
-        }
-
-        return value;
-    }
+        => _testResultsDownloader.DownloadAsync(jobName, workItemName, workingDirectory, cancellationToken);
 
     public async Task<IReadOnlyCollection<WorkItemSummary>> ListWorkItemsAsync(
         string jobName,

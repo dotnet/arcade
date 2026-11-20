@@ -6,7 +6,7 @@ using Azure;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Microsoft.DotNet.Helix.Client;
-using Microsoft.DotNet.Helix.JobMonitor;
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Moq;
 using Xunit;
 

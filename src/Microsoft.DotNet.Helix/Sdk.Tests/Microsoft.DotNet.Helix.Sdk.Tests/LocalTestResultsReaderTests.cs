@@ -125,13 +125,29 @@ public class LocalTestResultsReaderTests
         Assert.Equal("Passed", result.Result);
     }
 
+    [Theory]
+    [InlineData("<assemblies><test", typeof(System.Xml.XmlException))]
+    [InlineData("<notTestResults />", typeof(InvalidDataException))]
+    public async Task LocalTestResultsReader_StrictModeReportsMalformedOrUnsupportedFiles(string content, Type exceptionType)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        _fileSystem.CreateDirectory(directory);
+        string file = Path.Combine(directory, "testResults.xml");
+        _fileSystem.WriteToFile(file, content);
+        var reader = CreateReader();
+
+        Assert.Empty(await reader.ReadResultFileAsync(file));
+        await Assert.ThrowsAsync(exceptionType, () =>
+            reader.ReadResultFileAsync(file, failOnParseError: true));
+    }
+
     [Fact]
-    public async Task LocalTestResultsReader_CombinesPackedAndXmlResultsAcrossWorkItems()
+    public async Task LocalTestResultsReader_CombinesResultsAcrossWorkItems()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-        string packedDirectory = Path.Combine(tempDirectory, "packed-item");
+        string firstDirectory = Path.Combine(tempDirectory, "first-item");
         string xmlDirectory = Path.Combine(tempDirectory, "xml-item");
-        _fileSystem.CreateDirectory(packedDirectory);
+        _fileSystem.CreateDirectory(firstDirectory);
         _fileSystem.CreateDirectory(xmlDirectory);
 
         string filePath = Path.Combine(xmlDirectory, "testResults.xml");
@@ -155,8 +171,11 @@ public class LocalTestResultsReaderTests
         Assert.Contains(aggregate, static x => x.Name == "Xml.Tests.Passes");
     }
 
-    [Fact]
-    public async Task LocalTestResultsReader_TrxWithUnqualifiedTestName_DerivesFullyQualifiedName()
+    [Theory]
+    [InlineData(false, "MyMethod")]
+    [InlineData(true, "Ns.MyTests.MyMethod")]
+    public async Task LocalTestResultsReader_TrxWithUnqualifiedTestName_DerivesFullyQualifiedName(
+        bool qualifyTrxTestNames, string expectedName)
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
         string workItemDirectory = Path.Combine(tempDirectory, "work-item");
@@ -180,16 +199,108 @@ public class LocalTestResultsReaderTests
                 </TestRun>
                 """);
 
-        var reader = CreateReader();
+        var reader = new LocalTestResultsReader(_logger, TestResultAttachmentMode.Failed, _fileSystem, qualifyTrxTestNames);
         IReadOnlyList<TestResult> resultSets = await reader.ReadResultFileAsync(filePath);
 
         TestResult test = Assert.Single(resultSets);
-        Assert.Equal("MyMethod", test.Name);
+        Assert.Equal(expectedName, test.Name);
         Assert.Equal("Ns.MyTests.MyMethod", test.FullyQualifiedName);
 
         AggregatedResult aggregated = Assert.Single(new ResultAggregator().Aggregate([resultSets], useFullyQualifiedName: true));
         Assert.Equal("Ns.MyTests.MyMethod", aggregated.FullyQualifiedName);
         Assert.Equal("Passed", aggregated.Result);
+    }
+
+    [Theory]
+    [InlineData("failure", "")]
+    [InlineData("failure", "  at Sample.Tests.Test()\n  at TestRunner.Run()")]
+    [InlineData("error", "")]
+    [InlineData("error", "  at Sample.Tests.Test()\n  at TestRunner.Run()")]
+    public async Task LocalTestResultsReader_JUnitPreservesFailureDiagnostics(string elementName, string stackTrace)
+    {
+        string file = Path.Combine(Path.GetTempPath(), "work-item", "junit-results.xml");
+        _fileSystem.WriteToFile(file, $"""
+            <testsuite>
+              <testcase classname="Sample.Tests" name="Test" time="0.125">
+                <{elementName} type="AssertionError" message="assertion failed">{stackTrace}</{elementName}>
+              </testcase>
+            </testsuite>
+            """);
+
+        TestResult result = Assert.Single(await CreateReader().ReadResultFileAsync(file, failOnParseError: true));
+
+        Assert.Equal("Fail", result.Result);
+        Assert.Equal("AssertionError", result.ExceptionType);
+        Assert.Equal("assertion failed", result.FailureMessage);
+        Assert.Equal(stackTrace, result.StackTrace);
+    }
+
+    [Fact]
+    public async Task LocalTestResultsReader_JUnitPrefersFailureOverError()
+    {
+        string file = Path.Combine(Path.GetTempPath(), "work-item", "junit-results.xml");
+        _fileSystem.WriteToFile(file, """
+            <testsuite>
+              <testcase classname="Sample.Tests" name="Test">
+                <error message="secondary error">error stack</error>
+                <failure message="assertion failed">failure stack</failure>
+              </testcase>
+            </testsuite>
+            """);
+
+        TestResult result = Assert.Single(await CreateReader().ReadResultFileAsync(file, failOnParseError: true));
+
+        Assert.Equal("assertion failed", result.FailureMessage);
+        Assert.Equal("failure stack", result.StackTrace);
+    }
+
+    [Theory]
+    [InlineData("<StdOut>test is disabled</StdOut>", "", "test is disabled")]
+    [InlineData("<StdOut>test is disabled</StdOut>", "<ErrorInfo><Message>other message</Message></ErrorInfo>", "test is disabled")]
+    [InlineData("", "<ErrorInfo><Message>fallback reason</Message></ErrorInfo>", "fallback reason")]
+    public async Task LocalTestResultsReader_TrxPreservesSkipReason(
+        string standardOutput, string errorInfo, string expectedReason)
+    {
+        string file = Path.Combine(Path.GetTempPath(), "work-item", "results.trx");
+        _fileSystem.WriteToFile(file, $"""
+            <TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+              <Results>
+                <UnitTestResult testName="Test" outcome="NotExecuted">
+                  <Output>{standardOutput}{errorInfo}</Output>
+                </UnitTestResult>
+              </Results>
+            </TestRun>
+            """);
+
+        TestResult result = Assert.Single(await CreateReader().ReadResultFileAsync(file, failOnParseError: true));
+
+        Assert.Equal("Skip", result.Result);
+        Assert.Equal(expectedReason, result.SkipReason);
+        Assert.Null(result.FailureMessage);
+        Assert.Empty(result.Attachments);
+    }
+
+    [Theory]
+    [InlineData(@"first\r\nsecond\tvalue", "first\r\nsecond\tvalue")]
+    [InlineData(@"\0\a\b\v\f", "\0\a\b\v\f")]
+    [InlineData(@"\x41\x0042\x263A", "AB\u263A")]
+    [InlineData(@"\x123\x12", "\u0123\u0012")]
+    [InlineData("""slash\\quote\"unknown\q""", "slash\\quote\"unknownq")]
+    [InlineData(@"\xZ1\x1", @"\xZ1\x1")]
+    public async Task LocalTestResultsReader_XunitDecodesEscapedFailureMessage(string escaped, string expected)
+    {
+        string file = Path.Combine(Path.GetTempPath(), "work-item", "testResults.xml");
+        _fileSystem.WriteToFile(file, $"""
+            <assemblies><assembly><collection>
+              <test name="Sample.Tests.Test" type="Sample.Tests" method="Test" result="Fail">
+                <failure><message>{escaped}</message></failure>
+              </test>
+            </collection></assembly></assemblies>
+            """);
+
+        TestResult result = Assert.Single(await CreateReader().ReadResultFileAsync(file, failOnParseError: true));
+
+        Assert.Equal(expected, result.FailureMessage);
     }
 
     private static int ExpectedAttachmentCount(string format)

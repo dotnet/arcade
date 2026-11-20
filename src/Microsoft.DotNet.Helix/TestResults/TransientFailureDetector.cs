@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Azure;
 using Microsoft.DotNet.Helix.Client;
 
-namespace Microsoft.DotNet.Helix.JobMonitor;
+namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
 internal static class TransientFailureDetector
 {

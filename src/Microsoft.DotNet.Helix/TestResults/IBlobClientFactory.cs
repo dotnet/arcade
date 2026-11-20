@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Microsoft.DotNet.Helix.JobMonitor;
+namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
 internal interface IBlobClientFactory
 {

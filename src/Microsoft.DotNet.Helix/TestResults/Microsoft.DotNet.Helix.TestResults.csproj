@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>$(NetMinimum)</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>annotations</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <ProjectReference Include="..\..\Common\Microsoft.Arcade.Common\Microsoft.Arcade.Common.csproj" />
+    <ProjectReference Include="..\Client\CSharp\Microsoft.DotNet.Helix.Client.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.DotNet.Helix.JobMonitor" />
+    <InternalsVisibleTo Include="Microsoft.DotNet.Helix.Sdk" />
+    <InternalsVisibleTo Include="Microsoft.DotNet.Helix.Sdk.Tests" />
+  </ItemGroup>
+</Project>

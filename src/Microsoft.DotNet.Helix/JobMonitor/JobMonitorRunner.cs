@@ -38,7 +38,7 @@ internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
     private readonly string _helixSource;
 
     private readonly MonitorState _state = new();
-    private readonly JobMonitorMetrics _metrics;
+    private readonly TestReportingMetrics _metrics;
     private readonly StatusReporter _reporter;
     private readonly TestResultUploadPipeline _uploads;
     private PollStatusSnapshot _latestStatus;
@@ -78,7 +78,7 @@ internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
         IHelixService helix,
         Func<TimeSpan, CancellationToken, Task> delayFunc,
         Func<TimeSpan, CancellationToken, Task> statusDelayFunc = null,
-        JobMonitorMetrics metrics = null,
+        TestReportingMetrics metrics = null,
         ITestResultProcessor resultProcessor = null,
         IAzureDevOpsResultPublisher resultPublisher = null)
     {
@@ -88,7 +88,7 @@ internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
         _helix = helix ?? throw new ArgumentNullException(nameof(helix));
         _delayFunc = delayFunc ?? Task.Delay;
         _statusDelayFunc = statusDelayFunc ?? Task.Delay;
-        _metrics = metrics ?? new JobMonitorMetrics();
+        _metrics = metrics ?? new TestReportingMetrics();
         Directory.CreateDirectory(_options.WorkingDirectory);
 
         _helixSource = HelixJobSource.Compute(
@@ -770,7 +770,7 @@ internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
         JobMonitorOptions options,
         ILogger logger)
     {
-        var metrics = new JobMonitorMetrics();
+        var metrics = new TestReportingMetrics();
         var azureDevOps = new AzureDevOpsService(options, logger, metrics);
         var resultProcessor = new TestResultProcessor(
             options.TestResultAttachmentMode,
@@ -894,5 +894,5 @@ internal sealed class JobMonitorRunner : IJobMonitorRunner, IDisposable
         ITestResultProcessor ResultProcessor,
         IAzureDevOpsResultPublisher ResultPublisher,
         IHelixService Helix,
-        JobMonitorMetrics Metrics);
+        TestReportingMetrics Metrics);
 }

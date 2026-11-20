@@ -24,7 +24,7 @@ public class StopAzurePipelinesTestRun : AzureDevOpsTask
         await RetryAsync(
             async () =>
             {
-                Log.LogMessage(MessageImportance.High, $"Stopping Azure Pipelines Test Run {TestRunName} (Results: {CollectionUri}{TeamProject}/_build/results?buildId={BuildId}&view=ms.vss-test-web.build-test-results-tab )");
+                Log.LogMessage(MessageImportance.High, $"Stopping Azure Pipelines Test Run {TestRunName} (ID: {TestRunId}).");
 
                 using (var req =
                     new HttpRequestMessage(
