@@ -44,7 +44,8 @@ async def download_file(session, url, dest_path, max_retries=3, retry_delay=2, t
             print(f"Error downloading {url}: {type(e).__name__} - {e}. Retrying...")
 
         attempt += 1
-        await asyncio.sleep(retry_delay)
+        if attempt < max_retries:
+            await asyncio.sleep(retry_delay)
 
     raise Exception(f"Failed to download {url} after {max_retries} attempts.")
 
