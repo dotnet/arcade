@@ -127,6 +127,11 @@ async def fetch_suite_indexes(session, mirror, arch, suite, components, check_si
     for attempt in range(1, max_attempts + 1):
         try:
             release_content = await fetch_release_file(session, mirror, suite, keyring)
+            if release_content is None:
+                # Suites such as Debian's <codename>-security live in a separate
+                # archive, so the mirror may not carry them at all.
+                print(f"Skipped suite: {mirror}/dists/{suite} (doesn't exist)")
+                return []
             return await gather_all(*(fetch_verified_index(session, mirror, arch, suite, component, release_content) for component in components))
         except Exception as e:
             if attempt == max_attempts:
@@ -182,6 +187,8 @@ async def fetch_release_file(session, mirror, suite, keyring):
     Prefer the inline-signed InRelease, which carries content and signature in
     one file. The detached Release and Release.gpg pair can come from two
     different snapshots when the mirror updates between requests.
+
+    Returns None when the mirror doesn't carry the suite.
     """
     inrelease = await fetch_url(session, f"{mirror}/dists/{suite}/InRelease")
     if inrelease is not None:
@@ -203,9 +210,12 @@ async def fetch_release_file(session, mirror, suite, keyring):
         return result.stdout.decode('utf-8')
 
     release = await fetch_url(session, f"{mirror}/dists/{suite}/Release")
+    if release is None:
+        return None
+
     release_gpg = await fetch_url(session, f"{mirror}/dists/{suite}/Release.gpg")
-    if release is None or release_gpg is None:
-        raise Exception(f"No InRelease or Release/Release.gpg found for {suite}")
+    if release_gpg is None:
+        raise Exception(f"Release for {suite} has no InRelease or Release.gpg signature")
 
     with tempfile.NamedTemporaryFile() as release_file, tempfile.NamedTemporaryFile() as release_gpg_file:
         release_file.write(release)
