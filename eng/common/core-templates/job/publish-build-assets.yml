@@ -86,7 +86,11 @@ jobs:
 
   - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - checkout: ${{ parameters.repositoryAlias }}
-      fetchDepth: 3
+      fetchDepth: 1
+      fetchTags: false
+      fetchFilter: blob:none
+      # Cone-mode sparse checkout also includes all root-level files (e.g. global.json and NuGet.config).
+      sparseCheckoutDirectories: eng .config
       clean: true
 
     - ${{ if eq(parameters.isAssetlessBuild, 'false') }}:
