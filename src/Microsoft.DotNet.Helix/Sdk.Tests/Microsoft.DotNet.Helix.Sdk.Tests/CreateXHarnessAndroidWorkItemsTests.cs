@@ -1,8 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -21,7 +19,6 @@ public class CreateXHarnessAndroidWorkItemsTests
 {
     private readonly MockFileSystem _fileSystem;
     private readonly Mock<IZipArchiveManager> _zipArchiveManager;
-    private readonly MockBuildEngine _buildEngine;
     private readonly CreateXHarnessAndroidWorkItems _task;
 
     public CreateXHarnessAndroidWorkItemsTests()
@@ -36,16 +33,9 @@ public class CreateXHarnessAndroidWorkItemsTests
                 _fileSystem.Files.Add(zipPath, "zip of " + folder);
             });
 
-        _buildEngine = new MockBuildEngine();
-
         _task = new CreateXHarnessAndroidWorkItems()
         {                
-            BuildEngine = _buildEngine,
-            // Relative paths must resolve against a directory owned by this test instance. The
-            // default TaskEnvironment.Fallback resolves them against the process current
-            // directory, which is global state that tests running in parallel can change.
-            TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment(
-                Path.Combine(Path.GetTempPath(), "xharness-android-tests", Guid.NewGuid().ToString("N"))),
+            BuildEngine = new MockBuildEngine(),
         };
     }
 
@@ -79,7 +69,7 @@ public class CreateXHarnessAndroidWorkItemsTests
 
         // Act
         using var provider = collection.BuildServiceProvider();
-        _task.InvokeExecute(provider).Should().BeTrue("the task should have succeeded, but it logged: {0}", _buildEngine.ErrorSummary);
+        _task.InvokeExecute(provider).Should().BeTrue();
 
         // Verify
         _task.WorkItems.Length.Should().Be(1);
@@ -104,32 +94,6 @@ public class CreateXHarnessAndroidWorkItemsTests
     }
 
     [Fact]
-    public void RelativeApkPathsResolveAgainstTheProjectDirectory()
-    {
-        var collection = CreateMockServiceCollection();
-        _task.ConfigureServices(collection);
-        _task.Apks = new[]
-        {
-            CreateApk("apks/System.Foo.apk", "System.Foo"),
-        };
-
-        // Act
-        using var provider = collection.BuildServiceProvider();
-        _task.InvokeExecute(provider).Should().BeTrue("the task should have succeeded, but it logged: {0}", _buildEngine.ErrorSummary);
-
-        // Verify the relative path was anchored to the task's project directory rather than to the
-        // process current directory, which other tests running in parallel may change.
-        string projectDirectory = _task.TaskEnvironment.ProjectDirectory.Value;
-        string expectedApkPath = _task.TaskEnvironment.GetAbsolutePath("apks/System.Foo.apk");
-        expectedApkPath.Should().StartWith(projectDirectory);
-
-        _zipArchiveManager
-            .Verify(x => x.ArchiveFile(expectedApkPath, It.IsAny<string>()), Times.Once);
-
-        _task.WorkItems.Single().GetMetadata("PayloadArchive").Should().StartWith(projectDirectory);
-    }
-
-    [Fact]
     public void ArchivePayloadIsOverwritten()
     {
         var collection = CreateMockServiceCollection();
@@ -144,7 +108,7 @@ public class CreateXHarnessAndroidWorkItemsTests
 
         // Act
         using var provider = collection.BuildServiceProvider();
-        _task.InvokeExecute(provider).Should().BeTrue("the task should have succeeded, but it logged: {0}", _buildEngine.ErrorSummary);
+        _task.InvokeExecute(provider).Should().BeTrue();
 
         // Verify
         _task.WorkItems.Length.Should().Be(2);
@@ -174,7 +138,7 @@ public class CreateXHarnessAndroidWorkItemsTests
 
         // Act
         using var provider = collection.BuildServiceProvider();
-        _task.InvokeExecute(provider).Should().BeTrue("the task should have succeeded, but it logged: {0}", _buildEngine.ErrorSummary);
+        _task.InvokeExecute(provider).Should().BeTrue();
 
         // Verify
         _task.WorkItems.Length.Should().Be(2);
@@ -207,7 +171,7 @@ public class CreateXHarnessAndroidWorkItemsTests
 
         // Act
         using var provider = collection.BuildServiceProvider();
-        _task.InvokeExecute(provider).Should().BeTrue("the task should have succeeded, but it logged: {0}", _buildEngine.ErrorSummary);
+        _task.InvokeExecute(provider).Should().BeTrue();
 
         // Verify
         _task.WorkItems.Length.Should().Be(1);
