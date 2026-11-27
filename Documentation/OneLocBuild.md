@@ -180,7 +180,7 @@ Repositories can also generate a custom LocProject.json during the build. Use `p
     SkipLocProjectJsonGeneration: true
     LocProjectPath: Localize/LocProject.json
     preSteps:
-    - script: ./generate-locproject.sh Localize/LocProject.json
+    - powershell: ./generate-locproject.ps1 Localize/LocProject.json
       displayName: Generate custom LocProject.json
 ```
 
